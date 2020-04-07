@@ -30,7 +30,7 @@ public class InputHandler
 	//TODO: Poll the WASD** keys manually, only calc the mouse delta, once the movement needs to be calcualted.
 	public InputHandler(long windowID)
 	{
-		z -= 20;
+		z -= 3;
 		
 		inputThread = new Thread(() -> {
 			

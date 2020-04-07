@@ -5,10 +5,12 @@ import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.VBOWrapper;
+import de.ecconia.java.opentung.libwrap.VAOWrapper;
+import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
@@ -31,21 +33,22 @@ public class OpenTUNG
 		ShaderProgram program = new ShaderProgram("basicShader");
 		program.use();
 		
-		VBOWrapper vbo = new VBOWrapper(program);
+		SimpleInverterModel inverter = new SimpleInverterModel();
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 		
 		GL11.glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
 		
 		long past = System.currentTimeMillis();
 		int finishedRenderings = 0;
 		
 		while(!window.shouldClose())
 		{
-			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 			
 			Location loc = handler.getCurrentPosition();
-			loc.print();
+//			loc.print();
 			//Setting up view matrix:
 			view.identity();
 			view.rotate(loc.getNeck(), 1, 0, 0); //Neck
@@ -56,13 +59,15 @@ public class OpenTUNG
 			program.setUniform(0, projection.getMat());
 			program.setUniform(1, view.getMat());
 			
-			model.identity();
-			model.translate(0, 0, 0);
-			
-			program.setUniform(2, model.getMat());
-			
-			vbo.use();
-			vbo.draw();
+			for(int i = 0; i < 10; i++)
+			{
+				model.identity();
+				model.translate(0.4f * (float) i, 0, 0);
+				
+				program.setUniform(2, model.getMat());
+				
+				inverter.draw();
+			}
 			
 			window.update();
 			
