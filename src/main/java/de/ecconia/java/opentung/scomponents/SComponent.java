@@ -22,26 +22,47 @@ public abstract class SComponent
 	
 	protected void placeCube(float cx, float cy, float cz, float hw, float hh, float hd, float r, float g, float b, IntHolder o)
 	{
-		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, o.getAndInc(6)); //0 Right Bottom Back
-		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, o.getAndInc(6)); //1 Right Bottom Front
-		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, o.getAndInc(6)); //2 Left  Bottom Front
-		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, o.getAndInc(6)); //3 Left  Bottom Back
-		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, o.getAndInc(6)); //4 Right Top    Back
-		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, o.getAndInc(6)); //5 Right Top    Front
-		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, o.getAndInc(6)); //6 Left  Top    Front
-		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, o.getAndInc(6)); //7 Left  Top    Back
+		//Front:
+		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //2 Left  Bottom Front
+		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //1 Right Bottom Front
+		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //5 Right Top    Front
+		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //6 Left  Top    Front
+		//Right:
+		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //1 Right Bottom Front
+		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //0 Right Bottom Back
+		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //4 Right Top    Back
+		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //5 Right Top    Front
+		//Back:
+		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //0 Right Bottom Back
+		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //3 Left  Bottom Back
+		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //7 Left  Top    Back
+		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //4 Right Top    Back
+		//Left:
+		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //3 Left  Bottom Back
+		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //2 Left  Bottom Front
+		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //6 Left  Top    Front
+		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //7 Left  Top    Back
+		//Up:
+		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //6 Left  Top    Front
+		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //5 Right Top    Front
+		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //4 Right Top    Back
+		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //7 Left  Top    Back
+		//Down:
+		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //2 Left  Bottom Front
+		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //1 Right Bottom Front
+		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //0 Right Bottom Back
+		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //3 Left  Bottom Back
+		
 	}
 	
 	protected void placeCubeIndices(IntHolder o, int offset, Integer skip)
 	{
-		//            1     2    3 First triangle
-		//            1     -    3     2 Second triangle
-		addIndices(2, 1, 5, 6, o.getAndInc(6), offset); //Front
-		addIndices(1, 0, 4, 5, o.getAndInc(6), offset); //Right
-		addIndices(0, 3, 7, 4, o.getAndInc(6), offset); //Back
-		addIndices(3, 2, 6, 7, o.getAndInc(6), offset); //Left
-		addIndices(6, 5, 4, 7, o.getAndInc(6), offset); //Up
-		addIndices(2, 1, 0, 3, o.getAndInc(6), offset); //Bot
+		addIndices(0, 1, 2, 3, o.getAndInc(6), offset); //Front
+		addIndices(4, 5, 6, 7, o.getAndInc(6), offset); //Right
+		addIndices(8, 9, 10, 11, o.getAndInc(6), offset); //Back
+		addIndices(12, 13, 14, 15, o.getAndInc(6), offset); //Left
+		addIndices(16, 17, 18, 19, o.getAndInc(6), offset); //Up
+		addIndices(20, 21, 22, 23, o.getAndInc(6), offset); //Bot
 	}
 	
 	private void addIndices(int a, int b, int c, int d, int o, int indexOffset)
@@ -54,14 +75,17 @@ public abstract class SComponent
 		indices[o] = (short) (indexOffset + c);
 	}
 	
-	private void addVertex(float x, float y, float z, float r, float g, float b, int o)
+	private void addVertex(float x, float y, float z, float r, float g, float b, float nx, float ny, float nz, int o)
 	{
 		vertices[o++] = x; //X
 		vertices[o++] = y; //Y
 		vertices[o++] = z; //Z
 		vertices[o++] = r; //R
 		vertices[o++] = g; //G
-		vertices[o] = b; //B
+		vertices[o++] = b; //B
+		vertices[o++] = nx; //NormalX
+		vertices[o++] = ny; //NormalY
+		vertices[o] = nz; //NormalZ
 	}
 	
 	protected static class IntHolder

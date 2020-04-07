@@ -5,7 +5,6 @@ import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.VAOWrapper;
 import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
