@@ -42,28 +42,28 @@ public class ShaderProgram
 		int fragmentShaderID = GL30.glCreateShader(GL30.GL_FRAGMENT_SHADER);
 		GL30.glShaderSource(fragmentShaderID, fShaderCode);
 		GL30.glCompileShader(fragmentShaderID);
-
+		
 		if(GL30.glGetShaderi(fragmentShaderID, GL30.GL_COMPILE_STATUS) == GL30.GL_FALSE)
 		{
 			String errorText = GL30.glGetShaderInfoLog(fragmentShaderID, GL30.glGetShaderi(fragmentShaderID, GL30.GL_INFO_LOG_LENGTH));
 			throw new RuntimeException("Error loading Fragment shader: >" + errorText + "<");
 		}
-
+		
 		//Program:
 		id = GL30.glCreateProgram();
 		GL30.glAttachShader(id, vertexShaderID);
 		GL30.glAttachShader(id, fragmentShaderID);
 		GL30.glLinkProgram(id);
-
+		
 		if(GL30.glGetProgrami(id, GL30.GL_LINK_STATUS) == GL30.GL_FALSE)
 		{
 			String errorText = GL30.glGetProgramInfoLog(id, GL30.glGetProgrami(id, GL30.GL_INFO_LOG_LENGTH));
 			throw new RuntimeException("Error creating Program: >" + errorText + "<");
 		}
-
+		
 		GL30.glDeleteShader(vertexShaderID);
 		GL30.glDeleteShader(fragmentShaderID);
-
+		
 		//Uniform stuff:
 		List<String> uniforms = new ArrayList<>();
 		for(String line : vShaderCode.split("\n"))
@@ -75,15 +75,15 @@ public class ShaderProgram
 				{
 					throw new RuntimeException("Weird uniform variable declaration: " + line);
 				}
-
+				
 				String variable = parts[2];
 				variable = variable.substring(0, variable.indexOf(';'));
-
+				
 				System.out.println("Shader " + name + " has uniform variable: " + variable);
 				uniforms.add(variable);
 			}
 		}
-
+		
 		uniformIDs = new int[uniforms.size()];
 		for(int i = 0; i < uniforms.size(); i++)
 		{
