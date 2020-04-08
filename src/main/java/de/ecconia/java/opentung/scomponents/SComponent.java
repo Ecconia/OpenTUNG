@@ -20,49 +20,86 @@ public abstract class SComponent
 		vao.draw();
 	}
 	
-	protected void placeCube(float cx, float cy, float cz, float hw, float hh, float hd, float r, float g, float b, IntHolder o)
+	protected void placeCube(float cx, float cy, float cz, float hw, float hh, float hd, float r, float g, float b, IntHolder o, Direction skip)
 	{
 		//Front:
-		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //2 Left  Bottom Front
-		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //1 Right Bottom Front
-		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //5 Right Top    Front
-		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //6 Left  Top    Front
+		if(skip != Direction.zN)
+		{
+			addVertex(cx - hw, cy - hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //2 Left  Bottom Front
+			addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //1 Right Bottom Front
+			addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //5 Right Top    Front
+			addVertex(cx - hw, cy + hh, cz - hd, r, g, b, +0, +0, -1, o.getAndInc(9)); //6 Left  Top    Front
+		}
 		//Right:
-		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //1 Right Bottom Front
-		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //0 Right Bottom Back
-		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //4 Right Top    Back
-		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //5 Right Top    Front
+		if(skip != Direction.xP)
+		{
+			addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //1 Right Bottom Front
+			addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //0 Right Bottom Back
+			addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //4 Right Top    Back
+			addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +1, +0, +0, o.getAndInc(9)); //5 Right Top    Front
+		}
 		//Back:
-		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //0 Right Bottom Back
-		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //3 Left  Bottom Back
-		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //7 Left  Top    Back
-		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //4 Right Top    Back
-		//Left:
-		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //3 Left  Bottom Back
-		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //2 Left  Bottom Front
-		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //6 Left  Top    Front
-		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //7 Left  Top    Back
+		if(skip != Direction.zP)
+		{
+			addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //0 Right Bottom Back
+			addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //3 Left  Bottom Back
+			addVertex(cx - hw, cy + hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //7 Left  Top    Back
+			addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +0, +0, +1, o.getAndInc(9)); //4 Right Top    Back
+		}
+		// Left:
+		if(skip != Direction.xN)
+		{
+			addVertex(cx - hw, cy - hh, cz + hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //3 Left  Bottom Back
+			addVertex(cx - hw, cy - hh, cz - hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //2 Left  Bottom Front
+			addVertex(cx - hw, cy + hh, cz - hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //6 Left  Top    Front
+			addVertex(cx - hw, cy + hh, cz + hd, r, g, b, -1, +0, +0, o.getAndInc(9)); //7 Left  Top    Back
+		}
 		//Up:
-		addVertex(cx - hw, cy + hh, cz - hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //6 Left  Top    Front
-		addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //5 Right Top    Front
-		addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //4 Right Top    Back
-		addVertex(cx - hw, cy + hh, cz + hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //7 Left  Top    Back
+		if(skip != Direction.yP)
+		{
+			addVertex(cx - hw, cy + hh, cz - hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //6 Left  Top    Front
+			addVertex(cx + hw, cy + hh, cz - hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //5 Right Top    Front
+			addVertex(cx + hw, cy + hh, cz + hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //4 Right Top    Back
+			addVertex(cx - hw, cy + hh, cz + hd, r, g, b, +0, +1, +0, o.getAndInc(9)); //7 Left  Top    Back
+		}
 		//Down:
-		addVertex(cx - hw, cy - hh, cz - hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //2 Left  Bottom Front
-		addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //1 Right Bottom Front
-		addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //0 Right Bottom Back
-		addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //3 Left  Bottom Back
+		if(skip != Direction.yN)
+		{
+			addVertex(cx - hw, cy - hh, cz - hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //2 Left  Bottom Front
+			addVertex(cx + hw, cy - hh, cz - hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //1 Right Bottom Front
+			addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //0 Right Bottom Back
+			addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //3 Left  Bottom Back
+		}
 		
 	}
 	
-	protected void placeCubeIndices(IntHolder o, int offset, Integer skip)
+	protected void placeCubeIndices(IntHolder o, int indexOffset, Direction direction)
 	{
-		addIndices(0, 1, 2, 3, o.getAndInc(6), offset); //Front
-		addIndices(4, 5, 6, 7, o.getAndInc(6), offset); //Right
-		addIndices(8, 9, 10, 11, o.getAndInc(6), offset); //Back
-		addIndices(12, 13, 14, 15, o.getAndInc(6), offset); //Left
-		addIndices(16, 17, 18, 19, o.getAndInc(6), offset); //Up
-		addIndices(20, 21, 22, 23, o.getAndInc(6), offset); //Bot
+		int i = 0;
+		if(direction != Direction.zN)
+		{
+			addIndices(i++, i++, i++, i++, o.getAndInc(6), indexOffset); //Front
+		}
+		if(direction != Direction.xP)
+		{
+			addIndices(i++, i++, i++, i++, o.getAndInc(6), indexOffset); //Right
+		}
+		if(direction != Direction.zP)
+		{
+			addIndices(i++, i++, i++, i++, o.getAndInc(6), indexOffset); //Back
+		}
+		if(direction != Direction.xN)
+		{
+			addIndices(i++, i++, i++, i++, o.getAndInc(6), indexOffset); //Left
+		}
+		if(direction != Direction.yP)
+		{
+			addIndices(i++, i++, i++, i++, o.getAndInc(6), indexOffset); //Up
+		}
+		if(direction != Direction.yN)
+		{
+			addIndices(i++, i++, i++, i++, o.getAndInc(6), indexOffset); //Bot
+		}
 	}
 	
 	private void addIndices(int a, int b, int c, int d, int o, int indexOffset)
@@ -98,5 +135,15 @@ public abstract class SComponent
 			value += amount;
 			return val;
 		}
+	}
+	
+	protected static enum Direction
+	{
+		xP,
+		xN,
+		yP,
+		yN,
+		zP,
+		zN;
 	}
 }
