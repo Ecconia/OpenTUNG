@@ -46,6 +46,11 @@ public class SWindowWrapper
 		});
 	}
 	
+	public void setVsync(boolean state)
+	{
+		GLFW.glfwSwapInterval(state ? 1 : 0);
+	}
+	
 	public void place()
 	{
 //		try(MemoryStack stack = MemoryStack.stackPush())
@@ -60,7 +65,7 @@ public class SWindowWrapper
 //		}
 		
 		GLFW.glfwMakeContextCurrent(windowID);
-		GLFW.glfwSwapInterval(1);
+		setVsync(true);
 		GLFW.glfwShowWindow(windowID);
 	}
 	
