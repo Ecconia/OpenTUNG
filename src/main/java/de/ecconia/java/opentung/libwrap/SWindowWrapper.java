@@ -6,13 +6,14 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class SWindowWrapper
 {
 	private final int oWidth, oHeight;
 	private final long windowID;
 	
-	private Dimension dim;
+	private AtomicReference<Dimension> dim = new AtomicReference<>();
 	
 	public SWindowWrapper(int width, int height, String title)
 	{
@@ -41,7 +42,7 @@ public class SWindowWrapper
 		
 		GLFW.glfwSetWindowSizeCallback(windowID, (window, width2, height2) -> {
 			System.out.println(Thread.currentThread().getName());
-			dim = new Dimension(width2, height2);
+			dim.set(new Dimension(width2, height2));
 		});
 	}
 	
@@ -81,5 +82,10 @@ public class SWindowWrapper
 	public void update()
 	{
 		GLFW.glfwSwapBuffers(windowID);
+	}
+	
+	public Dimension getNewDimension()
+	{
+		return dim.getAndSet(null);
 	}
 }
