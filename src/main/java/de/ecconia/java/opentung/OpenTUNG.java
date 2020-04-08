@@ -5,7 +5,9 @@ import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.scomponents.SimpleBlotterModel;
 import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
+import de.ecconia.java.opentung.scomponents.SimplePeg;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -35,6 +37,8 @@ public class OpenTUNG
 		program.use();
 		
 		SimpleInverterModel inverter = new SimpleInverterModel();
+		SimpleBlotterModel blotter = new SimpleBlotterModel();
+		SimplePeg peg = new SimplePeg();
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 		
@@ -68,15 +72,20 @@ public class OpenTUNG
 			program.setUniform(1, view.getMat());
 			program.setUniform(3, view.getMat());
 			
-			for(int i = 0; i < 10; i++)
-			{
-				model.identity();
-				model.translate(0.4f * (float) i, 0, 0);
-				
-				program.setUniform(2, model.getMat());
-				
-				inverter.draw();
-			}
+			model.identity();
+			model.translate(0.4f * (float) 0, 0, 0);
+			program.setUniform(2, model.getMat());
+			inverter.draw();
+			
+			model.identity();
+			model.translate(0.4f * (float) 1, 0, 0);
+			program.setUniform(2, model.getMat());
+			blotter.draw();
+			
+			model.identity();
+			model.translate(0.4f * (float) 2, 0, 0);
+			program.setUniform(2, model.getMat());
+			peg.draw();
 			
 			window.update();
 			
