@@ -18,20 +18,20 @@ import java.awt.*;
 public class OpenTUNG
 {
 	private static final Matrix projection = new Matrix();
-	private static final Matrix view = new Matrix();
 	private static final Matrix model = new Matrix();
 	
 	private static int fps = 1100;
 	
-	private static InputHandler handler;
+	private static InputHandler inputHandler;
 	private static ShaderProgram program;
+	private static Camera camera;
 	
 	public static void main(String[] args)
 	{
 		System.out.println("LWJGL version: " + Version.getVersion());
 		
 		SWindowWrapper window = new SWindowWrapper(500, 500, "OpenTUNG FPS: ?");
-		handler = new InputHandler(window.getID());
+		inputHandler = new InputHandler(window.getID());
 		window.place();
 		window.setVsync(fps == 0);
 		
@@ -92,7 +92,7 @@ public class OpenTUNG
 			}
 		}
 		
-		handler.stop();
+		inputHandler.stop();
 	}
 	
 	private static SimpleInverterModel inverter;
@@ -108,6 +108,8 @@ public class OpenTUNG
 		blotter = new SimpleBlotterModel();
 		peg = new SimplePeg();
 		
+		camera = new Camera(inputHandler);
+		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 		
 		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
@@ -116,18 +118,10 @@ public class OpenTUNG
 	
 	private static void render()
 	{
-		Location loc = handler.getCurrentPosition();
-//			loc.print();
-		//Setting up view matrix:
-		view.identity();
-		view.rotate(loc.getNeck(), 1, 0, 0); //Neck
-		view.rotate(loc.getRotation(), 0, 1, 0); //Rotation
-		view.translate(loc.getX(), -loc.getY(), loc.getZ());
-		
 		program.use();
 		program.setUniform(0, projection.getMat());
-		program.setUniform(1, view.getMat());
-		program.setUniform(3, view.getMat());
+		program.setUniform(1, camera.getMatrix());
+		program.setUniform(3, camera.getMatrix());
 		
 		model.identity();
 		model.translate(0.4f * (float) 0, 0, 0);

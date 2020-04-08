@@ -34,9 +34,6 @@ public class InputHandler
 		
 		inputThread = new Thread(() -> {
 			
-//			long past = System.currentTimeMillis();
-//			int finishedRenderings = 0;
-			
 			while(!Thread.currentThread().isInterrupted())
 			{
 				GLFW.glfwPollEvents();
@@ -47,16 +44,6 @@ public class InputHandler
 				//Remove the processed delta
 				mouseXChange = 0;
 				mouseYChange = 0;
-				
-				//FPS counting:
-//				finishedRenderings++;
-//				long now = System.currentTimeMillis();
-//				if(now - past > 1000)
-//				{
-//					past = now;
-//					System.out.println("UPS: " + finishedRenderings);
-//					finishedRenderings = 0;
-//				}
 				
 				try
 				{
