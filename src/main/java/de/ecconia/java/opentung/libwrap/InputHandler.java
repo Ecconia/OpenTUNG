@@ -178,7 +178,7 @@ public class InputHandler
 	{
 		//Mouse:
 		
-		this.rotation -= mouseXChange;
+		this.rotation -= (float) mouseXChange * 0.333f;
 		while(this.rotation > 360)
 		{
 			this.rotation -= 360;
@@ -187,7 +187,7 @@ public class InputHandler
 		{
 			this.rotation += 360;
 		}
-		this.neck -= mouseYChange;
+		this.neck -= (float) mouseYChange * 0.333f;
 		while(this.neck > 90)
 		{
 			this.neck = 90;
@@ -255,7 +255,7 @@ public class InputHandler
 			}
 		}
 		
-		final float distance = 0.15f;
+		final float distance = 0.05f;
 		if(l || r || f || b)
 		{
 			walkInDirection(direction, distance);
