@@ -11,6 +11,8 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
+import java.awt.*;
+
 public class OpenTUNG
 {
 	private static final Matrix projection = new Matrix();
@@ -44,6 +46,13 @@ public class OpenTUNG
 		
 		while(!window.shouldClose())
 		{
+			Dimension newSize = window.getNewDimension();
+			if(newSize != null)
+			{
+				GL30.glViewport(0, 0, newSize.width, newSize.height);
+				projection.perspective(45f, (float) newSize.width / (float) newSize.height, 0.1f, 100000f);
+			}
+			
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 			
 			Location loc = handler.getCurrentPosition();

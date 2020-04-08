@@ -5,10 +5,14 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryUtil;
 
+import java.awt.*;
+
 public class SWindowWrapper
 {
 	private final int oWidth, oHeight;
 	private final long windowID;
+	
+	private Dimension dim;
 	
 	public SWindowWrapper(int width, int height, String title)
 	{
@@ -34,6 +38,11 @@ public class SWindowWrapper
 		{
 			throw new RuntimeException("Failed to create the GLFW window");
 		}
+		
+		GLFW.glfwSetWindowSizeCallback(windowID, (window, width2, height2) -> {
+			System.out.println(Thread.currentThread().getName());
+			dim = new Dimension(width2, height2);
+		});
 	}
 	
 	public void place()
