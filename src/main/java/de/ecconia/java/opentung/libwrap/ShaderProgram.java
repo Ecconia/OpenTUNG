@@ -65,8 +65,24 @@ public class ShaderProgram
 		GL30.glDeleteShader(fragmentShaderID);
 		
 		//Uniform stuff:
+		List<String> uniformsVertex = scanForUniforms(name, vShaderCode);
+		List<String> uniformsFragment = scanForUniforms(name, fShaderCode);
+		
+		uniformIDs = new int[uniformsVertex.size() + uniformsFragment.size()];
+		for(int i = 0; i < uniformsVertex.size(); i++)
+		{
+			uniformIDs[i] = GL30.glGetUniformLocation(id, uniformsVertex.get(i));
+		}
+		for(int i = 0; i < uniformsFragment.size(); i++)
+		{
+			uniformIDs[i + uniformsVertex.size()] = GL30.glGetUniformLocation(id, uniformsFragment.get(i));
+		}
+	}
+	
+	private static List<String> scanForUniforms(String name, String source)
+	{
 		List<String> uniforms = new ArrayList<>();
-		for(String line : vShaderCode.split("\n"))
+		for(String line : source.split("\n"))
 		{
 			if(line.startsWith("uniform"))
 			{
@@ -83,12 +99,7 @@ public class ShaderProgram
 				uniforms.add(variable);
 			}
 		}
-		
-		uniformIDs = new int[uniforms.size()];
-		for(int i = 0; i < uniforms.size(); i++)
-		{
-			uniformIDs[i] = GL30.glGetUniformLocation(id, uniforms.get(i));
-		}
+		return uniforms;
 	}
 	
 	public void use()

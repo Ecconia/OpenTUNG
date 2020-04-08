@@ -36,7 +36,7 @@ public class OpenTUNG
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 		
-		GL11.glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 		
 		long past = System.currentTimeMillis();
@@ -57,6 +57,7 @@ public class OpenTUNG
 			program.use();
 			program.setUniform(0, projection.getMat());
 			program.setUniform(1, view.getMat());
+			program.setUniform(3, view.getMat());
 			
 			for(int i = 0; i < 10; i++)
 			{
