@@ -1,17 +1,26 @@
 package de.ecconia.java.opentung.scomponents;
 
-import de.ecconia.java.opentung.libwrap.VAOWrapper;
+import de.ecconia.java.opentung.libwrap.vaos.CubicColoredVAO;
+import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 
 public abstract class SComponent
 {
 	protected float[] vertices;
 	protected short[] indices;
 	
-	private VAOWrapper vao;
+	private GenericVAO vao;
 	
 	protected void upload()
 	{
-		vao = new VAOWrapper(vertices, indices);
+		upload(ShaderType.CubicColored);
+	}
+	
+	protected void upload(ShaderType type)
+	{
+		if(type == ShaderType.CubicColored)
+		{
+			vao = new CubicColoredVAO(vertices, indices);
+		}
 	}
 	
 	public void draw()
@@ -137,7 +146,7 @@ public abstract class SComponent
 		}
 	}
 	
-	protected static enum Direction
+	protected enum Direction
 	{
 		xP,
 		xN,
@@ -145,5 +154,10 @@ public abstract class SComponent
 		yN,
 		zP,
 		zN;
+	}
+	
+	protected enum ShaderType
+	{
+		CubicColored,
 	}
 }
