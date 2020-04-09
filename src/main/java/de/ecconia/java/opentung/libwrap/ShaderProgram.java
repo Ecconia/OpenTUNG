@@ -1,11 +1,15 @@
 package de.ecconia.java.opentung.libwrap;
 
+import com.sun.prism.ps.Shader;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -126,13 +130,19 @@ public class ShaderProgram
 	{
 		try
 		{
-			File file = new File(path);
-			if(!file.exists())
+			InputStream stream = ShaderProgram.class.getClassLoader().getResourceAsStream("shaders/" + path);
+			if(stream == null)
 			{
 				return null;
 			}
 			
-			List<String> lines = Files.readAllLines(file.toPath());
+			List<String> lines = new ArrayList<>();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+			String tmp;
+			while((tmp = reader.readLine()) != null)
+			{
+				lines.add(tmp);
+			}
 			
 			String ret = "";
 			for(String line : lines)
