@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.scomponents;
 
 import de.ecconia.java.opentung.libwrap.vaos.CubicColoredVAO;
+import de.ecconia.java.opentung.libwrap.vaos.DynamicBoardVAO;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 
 public abstract class SComponent
@@ -20,6 +21,10 @@ public abstract class SComponent
 		if(type == ShaderType.CubicColored)
 		{
 			vao = new CubicColoredVAO(vertices, indices);
+		}
+		else if(type == ShaderType.DynamicBoard)
+		{
+			vao = new DynamicBoardVAO(vertices, indices);
 		}
 	}
 	
@@ -79,7 +84,6 @@ public abstract class SComponent
 			addVertex(cx + hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //0 Right Bottom Back
 			addVertex(cx - hw, cy - hh, cz + hd, r, g, b, +0, -1, +0, o.getAndInc(9)); //3 Left  Bottom Back
 		}
-		
 	}
 	
 	protected void placeCubeIndices(IntHolder o, int indexOffset, Direction direction)
@@ -159,5 +163,6 @@ public abstract class SComponent
 	protected enum ShaderType
 	{
 		CubicColored,
+		DynamicBoard,
 	}
 }

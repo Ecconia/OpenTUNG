@@ -1,16 +1,13 @@
 package de.ecconia.java.opentung.libwrap;
 
-import com.sun.prism.ps.Shader;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,6 +121,16 @@ public class ShaderProgram
 	public void setUniform(int id, float[] matrix)
 	{
 		GL30.glUniformMatrix4fv(uniformIDs[id], false, matrix);
+	}
+	
+	public void setUniformV2(int id, float[] vec)
+	{
+		GL30.glUniform2fv(uniformIDs[id], vec);
+	}
+	
+	public void setUniformV4(int id, float[] vec)
+	{
+		GL30.glUniform4fv(uniformIDs[id], vec);
 	}
 	
 	private static String loadFile(String path)

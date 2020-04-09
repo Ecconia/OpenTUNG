@@ -1,11 +1,11 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.libwrap.InputHandler;
-import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.scomponents.SimpleBlotterModel;
+import de.ecconia.java.opentung.scomponents.SimpleDynamicBoard;
 import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
 import de.ecconia.java.opentung.scomponents.SimplePeg;
 import org.lwjgl.Version;
@@ -20,10 +20,9 @@ public class OpenTUNG
 	private static final Matrix projection = new Matrix();
 	private static final Matrix model = new Matrix();
 	
-	private static int fps = 1100;
+	private static int fps = 30;
 	
 	private static InputHandler inputHandler;
-	private static ShaderProgram program;
 	private static Camera camera;
 	
 	public static void main(String[] args)
@@ -95,18 +94,23 @@ public class OpenTUNG
 		inputHandler.stop();
 	}
 	
+	private static ShaderProgram program;
 	private static SimpleInverterModel inverter;
 	private static SimpleBlotterModel blotter;
 	private static SimplePeg peg;
 	
+	private static ShaderProgram dynamicBoardShader;
+	private static SimpleDynamicBoard dBoard;
+	
 	private static void init()
 	{
 		program = new ShaderProgram("basicShader");
-		program.use();
+		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		
 		inverter = new SimpleInverterModel();
 		blotter = new SimpleBlotterModel();
 		peg = new SimplePeg();
+		dBoard = new SimpleDynamicBoard();
 		
 		camera = new Camera(inputHandler);
 		
@@ -116,25 +120,48 @@ public class OpenTUNG
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
+	private static float color = 0;
+	
 	private static void render()
 	{
-		program.use();
-		program.setUniform(0, projection.getMat());
-		program.setUniform(1, camera.getMatrix());
-		program.setUniform(3, camera.getMatrix());
+		float[] view = camera.getMatrix();
+
+		dynamicBoardShader.use();
+		dynamicBoardShader.setUniform(0, projection.getMat());
+		dynamicBoardShader.setUniform(1, view);
+		dynamicBoardShader.setUniform(5, view);
+
+		Color c = Color.getHSBColor(color, 1.0f, 1.0f);
+		color += 0.01f;
+		if(color > 1f)
+		{
+			color = 0f;
+		}
 		
 		model.identity();
-		model.translate(0.4f * (float) 0, 0, 0);
+		dynamicBoardShader.setUniform(2, model.getMat());
+		dynamicBoardShader.setUniformV2(3, new float[] {3f, 3f});
+		dynamicBoardShader.setUniformV4(4, new float[] {(float) c.getRed() / 255f,(float) c.getGreen() / 255f,(float) c.getBlue() / 255f, 1f});
+		
+		dBoard.draw();
+		
+		program.use();
+		program.setUniform(0, projection.getMat());
+		program.setUniform(1, view);
+		program.setUniform(3, view);
+		
+		model.identity();
+		model.translate(0.4f * (float) 0, 1, 0);
 		program.setUniform(2, model.getMat());
 		inverter.draw();
 		
 		model.identity();
-		model.translate(0.4f * (float) 1, 0, 0);
+		model.translate(0.4f * (float) 1, 1, 0);
 		program.setUniform(2, model.getMat());
 		blotter.draw();
 		
 		model.identity();
-		model.translate(0.4f * (float) 2, 0, 0);
+		model.translate(0.4f * (float) 2, 1, 0);
 		program.setUniform(2, model.getMat());
 		peg.draw();
 	}
