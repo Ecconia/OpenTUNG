@@ -4,8 +4,11 @@ precision mediump float;
 in vec4 tColor; //Color (diffuse) of this fragment
 in vec3 tPosition; //Camera position of this fragment
 in vec3 tNormal; //Normal of this fragment
+in vec2 tTextureCoords;
 
 uniform mat4 view2;
+
+uniform sampler2D textureVar;
 
 out vec4 outColor;
 
@@ -21,22 +24,23 @@ void main()
 	vec3 sourceAmbient = vec3(1.0, 1.0, 1.0);
 	vec3 sourceDiffuse = vec3(1.0, 1.0, 1.0);
 
-	vec3 materialAmbient = tColor.rgb * 0.6;
-	vec3 materialDiffuse = tColor.rgb * 0.4;
+	vec3 realColor = texture(textureVar, tTextureCoords).rgb * tColor.rgb;
+	vec3 materialAmbient = realColor * 0.6;
+	vec3 materialDiffuse = realColor * 0.4;
 
 	//Loop:
 	vec3 lightPosition = (vec4(sourcePosition, 1.0)).xyz; //view2 *
 	vec3 vL = lightPosition - tPosition; //Vector from Vertex to Lightsource
 	float d = length(vL); //Get distance from the Vertex to the Lightsource
 	//float fatt = min(1.0, 1.0 / (sourceC[i].x + sourceC[i].y * d + sourceC[i].z * d * d)); //Disabled.
-	float fatt = 1.0;
+	//float fatt = 1.0;
 	vL = normalize(vL); //Fix length of vector L
 
-	color += sourceAmbient * materialAmbient
-	 + fatt * (
-		sourceDiffuse * materialDiffuse * max(0.0, dot(normal, vL))
+	color += sourceAmbient * materialAmbient +
+	 //+ fatt * (
+		sourceDiffuse * materialDiffuse * max(0.0, dot(normal, vL));
 		//+ sourceSpecular[i] * tMaterialSpecular * pow(max(0.0, dot(reflect(-vL, normal), vV)), tMaterialN)
-	);
+	//);
 
 	outColor = vec4(color, tColor.a); //Alpha
 }

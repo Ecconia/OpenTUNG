@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.libwrap.InputHandler;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.scomponents.SimpleBlotterModel;
 import de.ecconia.java.opentung.scomponents.SimpleDynamicBoard;
 import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
@@ -99,13 +100,19 @@ public class OpenTUNG
 	private static SimpleBlotterModel blotter;
 	private static SimplePeg peg;
 	
+	private static TextureWrapper boardTexture;
 	private static ShaderProgram dynamicBoardShader;
 	private static SimpleDynamicBoard dBoard;
 	
 	private static void init()
 	{
+		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
+		
 		program = new ShaderProgram("basicShader");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
+		
+		boardTexture = new TextureWrapper();
 		
 		inverter = new SimpleInverterModel();
 		blotter = new SimpleBlotterModel();
@@ -115,9 +122,6 @@ public class OpenTUNG
 		camera = new Camera(inputHandler);
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
-		
-		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
-		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
 	private static float color = 0;
@@ -131,7 +135,7 @@ public class OpenTUNG
 		dynamicBoardShader.setUniform(1, view);
 		dynamicBoardShader.setUniform(5, view);
 
-		Color c = Color.getHSBColor(color, 1.0f, 1.0f);
+		Color c = Color.getHSBColor(color, 1.0f, 1.0f); //Color.white;
 		color += 0.01f;
 		if(color > 1f)
 		{
@@ -140,10 +144,12 @@ public class OpenTUNG
 		
 		model.identity();
 		dynamicBoardShader.setUniform(2, model.getMat());
-		dynamicBoardShader.setUniformV2(3, new float[] {3f, 3f});
+		dynamicBoardShader.setUniformV2(3, new float[] {10f, 10f});
 		dynamicBoardShader.setUniformV4(4, new float[] {(float) c.getRed() / 255f,(float) c.getGreen() / 255f,(float) c.getBlue() / 255f, 1f});
 		
 		dBoard.draw();
+		
+		float h = 0.075f + 0.15f;
 		
 		program.use();
 		program.setUniform(0, projection.getMat());
@@ -151,17 +157,17 @@ public class OpenTUNG
 		program.setUniform(3, view);
 		
 		model.identity();
-		model.translate(0.4f * (float) 0, 1, 0);
+		model.translate(0.6f * (float) -1 + 0.15f, h, 0.15f);
 		program.setUniform(2, model.getMat());
 		inverter.draw();
 		
 		model.identity();
-		model.translate(0.4f * (float) 1, 1, 0);
+		model.translate(0.6f * (float) 0 + 0.15f, h, 0.15f);
 		program.setUniform(2, model.getMat());
 		blotter.draw();
 		
 		model.identity();
-		model.translate(0.4f * (float) 2, 1, 0);
+		model.translate(0.6f * (float) 1 + 0.15f, h, 0.15f);
 		program.setUniform(2, model.getMat());
 		peg.draw();
 	}

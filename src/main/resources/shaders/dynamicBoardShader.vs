@@ -15,6 +15,7 @@ uniform vec4 color;
 out vec4 tColor;
 out vec3 tPosition;
 out vec3 tNormal;
+out vec2 tTextureCoords;
 
 void main()
 {
@@ -27,4 +28,9 @@ void main()
 	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement
 	tPosition = transformedPos.xyz; //The position in camera system, to be use for light calculation
 	tNormal = normalize((inverse(transpose(transformMat)) * vec4(inNormal, 0.0)).xyz);
+
+	vec2 surfaceCoord = vec2(inTexture.x * size.x, inTexture.y * size.y);
+	vec2 sideCoord = inTexture;
+
+	tTextureCoords = (inIsSideMultiplicator) * sideCoord + (1 - inIsSideMultiplicator) * surfaceCoord;
 }
