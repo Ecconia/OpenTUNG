@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.tungboard.netremoting.FieldResolver;
 public class Array extends Object
 {
 	private final Field[] entries;
+	private final Field proto;
 	
 	public Array(ParseBundle b)
 	{
@@ -26,7 +27,7 @@ public class Array extends Object
 		int length = b.sInt();
 		//Skip LowerBounds, cause type 0.
 		
-		Field proto = FieldResolver.parseSimpleField(b);
+		proto = FieldResolver.parseSimpleField(b);
 		
 //		System.out.println("Array: ID: " + id + " type: " + arrayType + " rank: " + rank + " length: " + length + " etype: " + proto.getClass().getSimpleName());
 		
@@ -36,5 +37,15 @@ public class Array extends Object
 			entries[i] = proto.copy();
 			entries[i].parseContent(b);
 		}
+	}
+	
+	public Field getProto()
+	{
+		return proto;
+	}
+	
+	public Field[] getEntries()
+	{
+		return entries;
 	}
 }

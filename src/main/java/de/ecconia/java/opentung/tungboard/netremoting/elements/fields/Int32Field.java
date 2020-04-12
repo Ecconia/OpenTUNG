@@ -22,4 +22,9 @@ public class Int32Field extends Field
 		
 //		System.out.println("Read int32: " + value);
 	}
+	
+	public int getValue()
+	{
+		return value;
+	}
 }

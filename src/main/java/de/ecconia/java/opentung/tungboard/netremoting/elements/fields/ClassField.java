@@ -56,4 +56,9 @@ public class ClassField extends Field
 			throw new RuntimeException("Unknown object record ID: " + recordTag);
 		}
 	}
+	
+	public Object getValue()
+	{
+		return value;
+	}
 }

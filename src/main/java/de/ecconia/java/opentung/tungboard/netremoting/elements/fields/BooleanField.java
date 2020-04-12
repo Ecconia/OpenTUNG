@@ -34,4 +34,9 @@ public class BooleanField extends Field
 		
 //		System.out.println("Read boolean: " + value);
 	}
+	
+	public boolean getValue()
+	{
+		return value;
+	}
 }

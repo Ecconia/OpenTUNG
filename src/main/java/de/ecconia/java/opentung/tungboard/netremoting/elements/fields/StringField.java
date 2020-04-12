@@ -23,4 +23,16 @@ public class StringField extends Field
 		
 //		System.out.println("Read string: " + text);
 	}
+	
+	public String getValue()
+	{
+		if(text == null)
+		{
+			return null;
+		}
+		else
+		{
+			return text.getContent();
+		}
+	}
 }

@@ -22,4 +22,9 @@ public class FloatField extends Field
 		
 //		System.out.println("Read float: " + value);
 	}
+	
+	public float getValue()
+	{
+		return value;
+	}
 }
