@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.tungboard.netremoting.aresolveable;
+package de.ecconia.java.opentung.tungboard.netremoting;
 
 import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
@@ -9,7 +9,7 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.Int32Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.StringField;
 
-public class ResolveField
+public class FieldResolver
 {
 	public static Field[] parseFileds(ParseBundle b)
 	{

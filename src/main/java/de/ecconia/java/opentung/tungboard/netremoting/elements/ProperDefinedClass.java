@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
 import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.aresolveable.ResolveField;
+import de.ecconia.java.opentung.tungboard.netremoting.FieldResolver;
 
 public class ProperDefinedClass extends Class
 {
@@ -10,7 +10,7 @@ public class ProperDefinedClass extends Class
 		b.readAndStoreID(this);
 		
 		this.name = b.string();
-		this.fields = ResolveField.parseFileds(b);
+		this.fields = FieldResolver.parseFileds(b);
 		this.library = b.readLibraryAndResolve();
 		
 //		System.out.println("Class: ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");

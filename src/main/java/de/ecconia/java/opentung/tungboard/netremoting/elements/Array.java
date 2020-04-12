@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
 import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.aresolveable.ResolveField;
+import de.ecconia.java.opentung.tungboard.netremoting.FieldResolver;
 
 public class Array extends Object
 {
@@ -26,7 +26,7 @@ public class Array extends Object
 		int length = b.sInt();
 		//Skip LowerBounds, cause type 0.
 		
-		Field proto = ResolveField.parseSimpleField(b);
+		Field proto = FieldResolver.parseSimpleField(b);
 		
 //		System.out.println("Array: ID: " + id + " type: " + arrayType + " rank: " + rank + " length: " + length + " etype: " + proto.getClass().getSimpleName());
 		
