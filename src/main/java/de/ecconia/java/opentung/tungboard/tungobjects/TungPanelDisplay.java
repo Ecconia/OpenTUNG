@@ -4,28 +4,24 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.Int32Field;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungPanelDisplay extends TungObject
 {
-	private TungAngles angle;
-	private TungPosition position;
-	
 	private TungColorEnum color;
 	
 	public TungPanelDisplay(Class clazz)
 	{
 		for(Field field : clazz.getFields())
 		{
+			if(checkField(field))
+			{
+				continue;
+			}
+			
 			String name = field.getName();
-			if("LocalEulerAngles".equals(name))
-			{
-				angle = new TungAngles(field);
-			}
-			else if("LocalPosition".equals(name))
-			{
-				position = new TungPosition(field);
-			}
-			else if("Color".equals(name))
+			if("Color".equals(name))
 			{
 				ClassField cField = (ClassField) field;
 				Class valueClass = (Class) cField.getValue();
@@ -34,16 +30,6 @@ public class TungPanelDisplay extends TungObject
 				color = TungColorEnum.lookup(val.getValue());
 			}
 		}
-	}
-	
-	public TungAngles getAngle()
-	{
-		return angle;
-	}
-	
-	public TungPosition getPosition()
-	{
-		return position;
 	}
 	
 	public TungColorEnum getColor()

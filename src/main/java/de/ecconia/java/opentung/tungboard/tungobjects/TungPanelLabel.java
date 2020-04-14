@@ -4,12 +4,10 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.StringField;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungPanelLabel extends TungObject
 {
-	private TungAngles angle;
-	private TungPosition position;
-	
 	private float fontSize;
 	private String text;
 	
@@ -17,16 +15,13 @@ public class TungPanelLabel extends TungObject
 	{
 		for(Field field : clazz.getFields())
 		{
+			if(checkField(field))
+			{
+				continue;
+			}
+			
 			String name = field.getName();
-			if("LocalEulerAngles".equals(name))
-			{
-				angle = new TungAngles(field);
-			}
-			else if("LocalPosition".equals(name))
-			{
-				position = new TungPosition(field);
-			}
-			else if("FontSize".equals(name))
+			if("FontSize".equals(name))
 			{
 				if(field instanceof FloatField)
 				{
@@ -49,16 +44,6 @@ public class TungPanelLabel extends TungObject
 				}
 			}
 		}
-	}
-	
-	public TungAngles getAngle()
-	{
-		return angle;
-	}
-	
-	public TungPosition getPosition()
-	{
-		return position;
 	}
 	
 	public float getFontSize()

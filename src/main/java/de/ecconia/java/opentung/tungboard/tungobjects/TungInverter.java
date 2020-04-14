@@ -3,27 +3,23 @@ package de.ecconia.java.opentung.tungboard.tungobjects;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.BooleanField;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungInverter extends TungObject
 {
 	private boolean outputOn;
-	private TungAngles angle;
-	private TungPosition position;
 	
 	public TungInverter(Class clazz)
 	{
 		for(Field field : clazz.getFields())
 		{
+			if(checkField(field))
+			{
+				continue;
+			}
+			
 			String name = field.getName();
-			if("LocalEulerAngles".equals(name))
-			{
-				angle = new TungAngles(field);
-			}
-			else if("LocalPosition".equals(name))
-			{
-				position = new TungPosition(field);
-			}
-			else if("OutputOn".equals(name))
+			if("OutputOn".equals(name))
 			{
 				if(field instanceof BooleanField)
 				{
@@ -40,15 +36,5 @@ public class TungInverter extends TungObject
 	public boolean isOutputOn()
 	{
 		return outputOn;
-	}
-	
-	public TungAngles getAngle()
-	{
-		return angle;
-	}
-	
-	public TungPosition getPosition()
-	{
-		return position;
 	}
 }

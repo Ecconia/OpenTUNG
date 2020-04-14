@@ -1,17 +1,18 @@
-package de.ecconia.java.opentung.tungboard.tungobjects;
+package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
+import de.ecconia.java.opentung.tungboard.tungobjects.common.Vector3;
 
-public class TungColor
+public class TungAngles implements Vector3
 {
-	private float r;
-	private float g;
-	private float b;
+	private float x;
+	private float y;
+	private float z;
 	
-	public TungColor(Field field)
+	public TungAngles(Field field)
 	{
 		if(field instanceof ClassField)
 		{
@@ -27,33 +28,33 @@ public class TungColor
 				for(Field innerField : clazz.getFields())
 				{
 					String name = innerField.getName();
-					if("r".equals(name))
+					if("x".equals(name))
 					{
 						if(innerField instanceof FloatField)
 						{
-							r = ((FloatField) innerField).getValue();
+							x = ((FloatField) innerField).getValue();
 						}
 						else
 						{
 							throw new RuntimeException("Expected FloatField as inner value, but got " + innerField.getClass().getSimpleName());
 						}
 					}
-					else if("g".equals(name))
+					else if("y".equals(name))
 					{
 						if(innerField instanceof FloatField)
 						{
-							g = ((FloatField) innerField).getValue();
+							y = ((FloatField) innerField).getValue();
 						}
 						else
 						{
 							throw new RuntimeException("Expected FloatField as inner value, but got " + innerField.getClass().getSimpleName());
 						}
 					}
-					else if("b".equals(name))
+					else if("z".equals(name))
 					{
 						if(innerField instanceof FloatField)
 						{
-							b = ((FloatField) innerField).getValue();
+							z = ((FloatField) innerField).getValue();
 						}
 						else
 						{
@@ -77,18 +78,21 @@ public class TungColor
 		}
 	}
 	
-	public float getR()
+	@Override
+	public float getX()
 	{
-		return r;
+		return x;
 	}
 	
-	public float getG()
+	@Override
+	public float getY()
 	{
-		return g;
+		return y;
 	}
 	
-	public float getB()
+	@Override
+	public float getZ()
 	{
-		return b;
+		return z;
 	}
 }

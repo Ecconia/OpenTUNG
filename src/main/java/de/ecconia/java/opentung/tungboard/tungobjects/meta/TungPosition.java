@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.tungboard.tungobjects;
+package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;

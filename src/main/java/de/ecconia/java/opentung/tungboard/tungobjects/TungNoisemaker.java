@@ -3,28 +3,23 @@ package de.ecconia.java.opentung.tungboard.tungobjects;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungNoisemaker extends TungObject
 {
-	private TungAngles angle;
-	private TungPosition position;
-	
 	private float frequency;
 	
 	public TungNoisemaker(Class clazz)
 	{
 		for(Field field : clazz.getFields())
 		{
+			if(checkField(field))
+			{
+				continue;
+			}
+			
 			String name = field.getName();
-			if("LocalEulerAngles".equals(name))
-			{
-				angle = new TungAngles(field);
-			}
-			else if("LocalPosition".equals(name))
-			{
-				position = new TungPosition(field);
-			}
-			else if("ToneFrequency".equals(name))
+			if("ToneFrequency".equals(name))
 			{
 				if(field instanceof FloatField)
 				{
@@ -36,16 +31,6 @@ public class TungNoisemaker extends TungObject
 				}
 			}
 		}
-	}
-	
-	public TungAngles getAngle()
-	{
-		return angle;
-	}
-	
-	public TungPosition getPosition()
-	{
-		return position;
 	}
 	
 	public float getFrequency()

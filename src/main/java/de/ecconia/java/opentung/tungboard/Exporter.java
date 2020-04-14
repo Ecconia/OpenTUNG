@@ -1,26 +1,26 @@
 package de.ecconia.java.opentung.tungboard;
 
-import de.ecconia.java.opentung.tungboard.tungobjects.TungAngles;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungColor;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungColorDisplay;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungColorEnum;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDelayer;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungNoisemaker;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungObject;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelButton;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelColorDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungPosition;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughBlotter;
@@ -289,7 +289,7 @@ public class Exporter
 		w.writeInt(board.getZ());
 		storeColor(board.getColor(), -index++);
 		storePosition(board.getPosition(), -index++);
-		storeAngles(board.getAngle(), -index++);
+		storeAngles(board.getAngles(), -index++);
 		
 		int arrayID = index++;
 		writeMemberReference(arrayID);
@@ -311,7 +311,7 @@ public class Exporter
 		}
 		
 		storePosition(peg.getPosition(), -index++);
-		storeAngles(peg.getAngle(), -index++);
+		storeAngles(peg.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -330,7 +330,7 @@ public class Exporter
 		}
 		
 		storePosition(button.getPosition(), -index++);
-		storeAngles(button.getAngle(), -index++);
+		storeAngles(button.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -349,7 +349,7 @@ public class Exporter
 		}
 		
 		storePosition(button.getPosition(), -index++);
-		storeAngles(button.getAngle(), -index++);
+		storeAngles(button.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -370,7 +370,7 @@ public class Exporter
 		w.writeBoolean(wire.isInputInput());
 		w.writeFloat(wire.getLength());
 		storePosition(wire.getPosition(), -index++);
-		storeAngles(wire.getAngle(), -index++);
+		storeAngles(wire.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -390,7 +390,7 @@ public class Exporter
 		
 		w.writeFloat(noisemaker.getFrequency());
 		storePosition(noisemaker.getPosition(), -index++);
-		storeAngles(noisemaker.getAngle(), -index++);
+		storeAngles(noisemaker.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -410,7 +410,7 @@ public class Exporter
 		
 		w.writeBoolean(inverter.isOutputOn());
 		storePosition(inverter.getPosition(), -index++);
-		storeAngles(inverter.getAngle(), -index++);
+		storeAngles(inverter.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -430,7 +430,7 @@ public class Exporter
 		
 		w.writeBoolean(blotter.isOutputOn());
 		storePosition(blotter.getPosition(), -index++);
-		storeAngles(blotter.getAngle(), -index++);
+		storeAngles(blotter.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -450,7 +450,7 @@ public class Exporter
 		
 		w.writeBoolean(throughBlotter.isOutputOn());
 		storePosition(throughBlotter.getPosition(), -index++);
-		storeAngles(throughBlotter.getAngle(), -index++);
+		storeAngles(throughBlotter.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -471,7 +471,7 @@ public class Exporter
 		writeString(panelLabel.getText(), index++);
 		w.writeFloat(panelLabel.getFontSize());
 		storePosition(panelLabel.getPosition(), -index++);
-		storeAngles(panelLabel.getAngle(), -index++);
+		storeAngles(panelLabel.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -492,7 +492,7 @@ public class Exporter
 		writeString(label.getText(), index++);
 		w.writeFloat(label.getFontSize());
 		storePosition(label.getPosition(), -index++);
-		storeAngles(label.getAngle(), -index++);
+		storeAngles(label.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -511,7 +511,7 @@ public class Exporter
 		}
 		
 		storePosition(throughPeg.getPosition(), -index++);
-		storeAngles(throughPeg.getAngle(), -index++);
+		storeAngles(throughPeg.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -530,7 +530,7 @@ public class Exporter
 		}
 		
 		storePosition(snappingPeg.getPosition(), -index++);
-		storeAngles(snappingPeg.getAngle(), -index++);
+		storeAngles(snappingPeg.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -550,7 +550,7 @@ public class Exporter
 		
 		w.writeBoolean(tswitch.isOn());
 		storePosition(tswitch.getPosition(), -index++);
-		storeAngles(tswitch.getAngle(), -index++);
+		storeAngles(tswitch.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -570,7 +570,7 @@ public class Exporter
 		
 		w.writeBoolean(panelSwitch.isOn());
 		storePosition(panelSwitch.getPosition(), -index++);
-		storeAngles(panelSwitch.getAngle(), -index++);
+		storeAngles(panelSwitch.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -590,7 +590,7 @@ public class Exporter
 		
 		writeDisplayColor(display.getColor(), -index++);
 		storePosition(display.getPosition(), -index++);
-		storeAngles(display.getAngle(), -index++);
+		storeAngles(display.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -610,7 +610,7 @@ public class Exporter
 		
 		writeDisplayColor(display.getColor(), -index++);
 		storePosition(display.getPosition(), -index++);
-		storeAngles(display.getAngle(), -index++);
+		storeAngles(display.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -629,7 +629,7 @@ public class Exporter
 		}
 		
 		storePosition(mount.getPosition(), -index++);
-		storeAngles(mount.getAngle(), -index++);
+		storeAngles(mount.getAngles(), -index++);
 		
 		int arrayID = index++;
 		writeMemberReference(arrayID);
@@ -653,7 +653,7 @@ public class Exporter
 		w.writeBoolean(delayer.isOutputOn());
 		w.writeInt(delayer.getDelayCount());
 		storePosition(delayer.getPosition(), -index++);
-		storeAngles(delayer.getAngle(), -index++);
+		storeAngles(delayer.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -672,7 +672,7 @@ public class Exporter
 		}
 		
 		storePosition(colorDisplay.getPosition(), -index++);
-		storeAngles(colorDisplay.getAngle(), -index++);
+		storeAngles(colorDisplay.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	
@@ -691,7 +691,7 @@ public class Exporter
 		}
 		
 		storePosition(panelColorDisplay.getPosition(), -index++);
-		storeAngles(panelColorDisplay.getAngle(), -index++);
+		storeAngles(panelColorDisplay.getAngles(), -index++);
 		w.writeByte(REC_NULL); //Children...
 	}
 	

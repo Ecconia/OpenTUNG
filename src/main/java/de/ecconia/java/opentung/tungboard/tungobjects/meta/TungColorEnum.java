@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.tungboard.tungobjects;
+package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
 public enum TungColorEnum
 {

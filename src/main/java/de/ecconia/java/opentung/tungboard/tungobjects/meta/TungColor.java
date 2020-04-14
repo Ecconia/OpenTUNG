@@ -1,17 +1,17 @@
-package de.ecconia.java.opentung.tungboard.tungobjects;
+package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
 
-public class TungAngles
+public class TungColor
 {
-	private float x;
-	private float y;
-	private float z;
+	private float r;
+	private float g;
+	private float b;
 	
-	public TungAngles(Field field)
+	public TungColor(Field field)
 	{
 		if(field instanceof ClassField)
 		{
@@ -27,33 +27,33 @@ public class TungAngles
 				for(Field innerField : clazz.getFields())
 				{
 					String name = innerField.getName();
-					if("x".equals(name))
+					if("r".equals(name))
 					{
 						if(innerField instanceof FloatField)
 						{
-							x = ((FloatField) innerField).getValue();
+							r = ((FloatField) innerField).getValue();
 						}
 						else
 						{
 							throw new RuntimeException("Expected FloatField as inner value, but got " + innerField.getClass().getSimpleName());
 						}
 					}
-					else if("y".equals(name))
+					else if("g".equals(name))
 					{
 						if(innerField instanceof FloatField)
 						{
-							y = ((FloatField) innerField).getValue();
+							g = ((FloatField) innerField).getValue();
 						}
 						else
 						{
 							throw new RuntimeException("Expected FloatField as inner value, but got " + innerField.getClass().getSimpleName());
 						}
 					}
-					else if("z".equals(name))
+					else if("b".equals(name))
 					{
 						if(innerField instanceof FloatField)
 						{
-							z = ((FloatField) innerField).getValue();
+							b = ((FloatField) innerField).getValue();
 						}
 						else
 						{
@@ -77,18 +77,18 @@ public class TungAngles
 		}
 	}
 	
-	public float getX()
+	public float getR()
 	{
-		return x;
+		return r;
 	}
 	
-	public float getY()
+	public float getG()
 	{
-		return y;
+		return g;
 	}
 	
-	public float getZ()
+	public float getB()
 	{
-		return z;
+		return b;
 	}
 }

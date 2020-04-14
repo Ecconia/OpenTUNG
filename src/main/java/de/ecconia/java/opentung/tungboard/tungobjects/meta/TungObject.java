@@ -1,11 +1,65 @@
-package de.ecconia.java.opentung.tungboard.tungobjects;
+package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungColorDisplay;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungDelayer;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungNoisemaker;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelButton;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelColorDisplay;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungSwitch;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughBlotter;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
+import de.ecconia.java.opentung.tungboard.tungobjects.common.Angles;
+import de.ecconia.java.opentung.tungboard.tungobjects.common.Position;
 
-public class TungObject
+public class TungObject implements Angles, Position
 {
+	private TungAngles angles;
+	private TungPosition position;
+	
+	protected boolean checkField(Field field)
+	{
+		String name = field.getName();
+		if("LocalEulerAngles".equals(name))
+		{
+			angles = new TungAngles(field);
+			return true;
+		}
+		else if("LocalPosition".equals(name))
+		{
+			position = new TungPosition(field);
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public TungAngles getAngles()
+	{
+		return angles;
+	}
+	
+	@Override
+	public TungPosition getPosition()
+	{
+		return position;
+	}
+	
 	protected TungObject convertComponent(Field field)
 	{
 		//Assume its a class...
