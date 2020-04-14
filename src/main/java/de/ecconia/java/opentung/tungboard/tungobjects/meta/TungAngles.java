@@ -95,4 +95,19 @@ public class TungAngles implements Vector3
 	{
 		return z;
 	}
+	
+	public void fix()
+	{
+		x = fix(x);
+		y = fix(y);
+		z = fix(z);
+	}
+	
+	private float fix(float f)
+	{
+		f /= 22.5f;
+		f = Math.round(f);
+		f *= 22.5f;
+		return f;
+	}
 }

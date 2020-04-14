@@ -91,4 +91,19 @@ public class TungPosition
 	{
 		return z;
 	}
+	
+	public void fix()
+	{
+		x = fix(x);
+		y = fix(y);
+		z = fix(z);
+	}
+	
+	private float fix(float f)
+	{
+		f /= 0.075f;
+		f = Math.round(f);
+		f *= 0.075;
+		return f;
+	}
 }

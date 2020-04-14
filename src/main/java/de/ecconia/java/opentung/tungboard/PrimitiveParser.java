@@ -5,6 +5,8 @@ import de.ecconia.java.opentung.tungboard.netremoting.ParsedFile;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Object;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
+import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 import java.io.File;
 
@@ -17,8 +19,7 @@ public class PrimitiveParser
 	
 	public PrimitiveParser()
 	{
-		ParsedFile pf = NRParser.parse(new File("boards/ASDF.tungboard"));
-//		ParsedFile pf = NRParser.parse(new File("boards/16Bit-Paralell-CLA-ALU.tungboard"));
+		ParsedFile pf = NRParser.parse(new File("boards/16Bit-Paralell-CLA-ALU.tungboard"));
 		
 		Object object = pf.getRootElements().get(0);
 		Class firstClass;
@@ -35,11 +36,28 @@ public class PrimitiveParser
 		{
 			TungBoard board = new TungBoard(firstClass);
 			
+			//Fixer:
+			fix(board);
+			
 			new Exporter(new File("boards/output.tungboard"), board);
 		}
 		else
 		{
 			throw new RuntimeException("First Class has wrong type: " + firstClass.getName());
+		}
+	}
+	
+	private void fix(TungChildable holder)
+	{
+		for(TungObject to : holder.getChildren())
+		{
+			to.getPosition().fix();
+			to.getAngles().fix();
+			
+			if(to instanceof TungChildable)
+			{
+				fix((TungChildable) to);
+			}
 		}
 	}
 }
