@@ -12,6 +12,19 @@ public enum TungColorEnum
 	White,
 	Cyan,
 	;
+	
+	private int index;
+	
+	public void setIndex(int index)
+	{
+		this.index = index;
+	}
+	
+	public int getIndex()
+	{
+		return index;
+	}
+	
 	private static TungColorEnum[] colors;
 	
 	static
@@ -20,6 +33,7 @@ public enum TungColorEnum
 		for(int i = 0; i < colors.length; i++)
 		{
 			colors[i] = values()[i];
+			colors[i].setIndex(i);
 		}
 	}
 	

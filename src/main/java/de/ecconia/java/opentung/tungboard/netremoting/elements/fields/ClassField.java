@@ -50,6 +50,7 @@ public class ClassField extends Field
 		else if(recordTag == 10)
 		{
 			value = null;
+//			System.out.println("Read Class: NULL");
 		}
 		else
 		{

@@ -13,7 +13,7 @@ public class ProperDefinedClass extends Class
 		this.fields = FieldResolver.parseFileds(b);
 		this.library = b.readLibraryAndResolve();
 		
-//		System.out.println("Class: ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");
+//		System.out.println("ClassFull: ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");
 		
 		for(Field field : fields)
 		{

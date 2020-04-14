@@ -45,4 +45,9 @@ public class TungPanelDisplay extends TungObject
 	{
 		return position;
 	}
+	
+	public TungColorEnum getColor()
+	{
+		return color;
+	}
 }

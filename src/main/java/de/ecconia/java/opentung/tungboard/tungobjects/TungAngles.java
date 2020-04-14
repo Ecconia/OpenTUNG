@@ -7,9 +7,9 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField
 
 public class TungAngles
 {
-	float x;
-	float y;
-	float z;
+	private float x;
+	private float y;
+	private float z;
 	
 	public TungAngles(Field field)
 	{
@@ -75,5 +75,20 @@ public class TungAngles
 		{
 			throw new RuntimeException("Expected ClassField, but got " + field.getClass().getSimpleName());
 		}
+	}
+	
+	public float getX()
+	{
+		return x;
+	}
+	
+	public float getY()
+	{
+		return y;
+	}
+	
+	public float getZ()
+	{
+		return z;
 	}
 }

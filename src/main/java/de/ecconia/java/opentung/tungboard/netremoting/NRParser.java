@@ -37,6 +37,7 @@ public class NRParser
 		while(true)
 		{
 			int tag = reader.readUnsignedByte();
+//			System.out.print("\n-> ");
 			switch(tag)
 			{
 				case 0:
@@ -60,6 +61,7 @@ public class NRParser
 					break;
 				}
 				case 11:
+//					System.out.println("End.");
 					break loop;
 				case 12:
 				{

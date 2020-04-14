@@ -17,7 +17,8 @@ public class PrimitiveParser
 	
 	public PrimitiveParser()
 	{
-		ParsedFile pf = NRParser.parse(new File("ASDF.tungboard"));
+		ParsedFile pf = NRParser.parse(new File("boards/ASDF.tungboard"));
+//		ParsedFile pf = NRParser.parse(new File("boards/16Bit-Paralell-CLA-ALU.tungboard"));
 		
 		Object object = pf.getRootElements().get(0);
 		Class firstClass;
@@ -32,7 +33,9 @@ public class PrimitiveParser
 		
 		if(TungBoard.NAME.equals(firstClass.getName()))
 		{
-			new TungBoard(firstClass);
+			TungBoard board = new TungBoard(firstClass);
+			
+			new Exporter(new File("boards/output.tungboard"), board);
 		}
 		else
 		{

@@ -6,6 +6,7 @@ public class Text extends Object
 {
 	private String text;
 	
+	//Unused (Might happen when string templating):
 	public Text(ParseBundle b)
 	{
 		this(b, false);
@@ -25,6 +26,8 @@ public class Text extends Object
 		b.readAndStoreID(this);
 		
 		text = b.string();
+		
+//		System.out.println("String: ID: " + id + " Text: \"" + text + "\"");
 	}
 	
 	public String getContent()

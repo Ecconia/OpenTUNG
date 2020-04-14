@@ -7,9 +7,9 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField
 
 public class TungColor
 {
-	float r;
-	float g;
-	float b;
+	private float r;
+	private float g;
+	private float b;
 	
 	public TungColor(Field field)
 	{
@@ -75,5 +75,20 @@ public class TungColor
 		{
 			throw new RuntimeException("Expected ClassField, but got " + field.getClass().getSimpleName());
 		}
+	}
+	
+	public float getR()
+	{
+		return r;
+	}
+	
+	public float getG()
+	{
+		return g;
+	}
+	
+	public float getB()
+	{
+		return b;
 	}
 }

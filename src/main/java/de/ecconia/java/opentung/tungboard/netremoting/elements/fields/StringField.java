@@ -20,8 +20,6 @@ public class StringField extends Field
 	public void parseContent(ParseBundle b)
 	{
 		text = new Text(b, true);
-		
-//		System.out.println("Read string: " + text);
 	}
 	
 	public String getValue()

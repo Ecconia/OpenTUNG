@@ -14,6 +14,8 @@ public class FieldVarReference extends Object
 		
 		refId = b.sInt();
 		b.addResolver(this);
+		
+//		System.out.println("Resolver: To: " + refId);
 	}
 	
 	public void resolve(ParsedFile file)

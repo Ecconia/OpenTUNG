@@ -3,7 +3,6 @@ package de.ecconia.java.opentung.tungboard.tungobjects;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.BooleanField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.Int32Field;
 
 public class TungDelayer extends TungObject
@@ -62,7 +61,7 @@ public class TungDelayer extends TungObject
 		return position;
 	}
 	
-	public float getDelayCount()
+	public int getDelayCount()
 	{
 		return delayCount;
 	}

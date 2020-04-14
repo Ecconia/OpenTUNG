@@ -45,4 +45,9 @@ public class TungDisplay extends TungObject
 	{
 		return position;
 	}
+	
+	public TungColorEnum getColor()
+	{
+		return color;
+	}
 }

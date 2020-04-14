@@ -14,7 +14,7 @@ public class ReferencedClass extends Class
 		this.library = clazz.getLibrary();
 		this.fields = clazz.getFieldCopy();
 		
-//		System.out.println("Class: ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");
+//		System.out.println("ClassRef(" + templateID + "): ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");
 		
 		for(Field field : fields)
 		{
