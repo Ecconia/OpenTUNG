@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.Int32Field;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRInt32Field;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.Angles;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
@@ -15,9 +15,9 @@ public class TungBoard extends TungChildable implements Angles
 	private int z;
 	private TungColor color;
 	
-	public TungBoard(Class clazz)
+	public TungBoard(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			if(checkField(field))
 			{
@@ -31,9 +31,9 @@ public class TungBoard extends TungChildable implements Angles
 			}
 			else if("x".equals(name))
 			{
-				if(field instanceof Int32Field)
+				if(field instanceof NRInt32Field)
 				{
-					x = ((Int32Field) field).getValue();
+					x = ((NRInt32Field) field).getValue();
 				}
 				else
 				{
@@ -42,9 +42,9 @@ public class TungBoard extends TungChildable implements Angles
 			}
 			else if("z".equals(name))
 			{
-				if(field instanceof Int32Field)
+				if(field instanceof NRInt32Field)
 				{
-					z = ((Int32Field) field).getValue();
+					z = ((NRInt32Field) field).getValue();
 				}
 				else
 				{

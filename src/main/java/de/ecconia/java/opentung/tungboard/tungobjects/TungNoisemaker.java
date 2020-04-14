@@ -1,17 +1,17 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungNoisemaker extends TungObject
 {
 	private float frequency;
 	
-	public TungNoisemaker(Class clazz)
+	public TungNoisemaker(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			if(checkField(field))
 			{
@@ -21,9 +21,9 @@ public class TungNoisemaker extends TungObject
 			String name = field.getName();
 			if("ToneFrequency".equals(name))
 			{
-				if(field instanceof FloatField)
+				if(field instanceof NRFloatField)
 				{
-					frequency = ((FloatField) field).getValue();
+					frequency = ((NRFloatField) field).getValue();
 				}
 				else
 				{

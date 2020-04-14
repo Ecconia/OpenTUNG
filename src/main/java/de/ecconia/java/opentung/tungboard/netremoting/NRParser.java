@@ -1,10 +1,10 @@
 package de.ecconia.java.opentung.tungboard.netremoting;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Array;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Header;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Library;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.ProperDefinedClass;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.ReferencedClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArray;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRHeader;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRProperDefinedClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRReferencedClass;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.nio.file.Files;
 
 public class NRParser
 {
-	public static ParsedFile parse(File file)
+	public static NRFile parse(File file)
 	{
 		try
 		{
@@ -28,10 +28,10 @@ public class NRParser
 		return null;
 	}
 	
-	private static ParsedFile parse(ByteReader reader)
+	private static NRFile parse(ByteReader reader)
 	{
-		ParsedFile pf = new ParsedFile();
-		ParseBundle b = new ParseBundle(reader, pf);
+		NRFile pf = new NRFile();
+		NRParseBundle b = new NRParseBundle(reader, pf);
 		
 		loop:
 		while(true)
@@ -42,22 +42,22 @@ public class NRParser
 			{
 				case 0:
 				{
-					pf.setHeader(new Header(b));
+					pf.setHeader(new NRHeader(b));
 					break;
 				}
 				case 1:
 				{
-					pf.addRoot(new ReferencedClass(b));
+					pf.addRoot(new NRReferencedClass(b));
 					break;
 				}
 				case 5:
 				{
-					pf.addRoot(new ProperDefinedClass(b));
+					pf.addRoot(new NRProperDefinedClass(b));
 					break;
 				}
 				case 7:
 				{
-					pf.addRoot(new Array(b));
+					pf.addRoot(new NRArray(b));
 					break;
 				}
 				case 11:
@@ -65,7 +65,7 @@ public class NRParser
 					break loop;
 				case 12:
 				{
-					pf.registerLibrary(new Library(b));
+					pf.registerLibrary(new NRLibrary(b));
 					break;
 				}
 				default:

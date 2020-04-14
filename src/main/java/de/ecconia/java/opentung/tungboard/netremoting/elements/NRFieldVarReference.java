@@ -1,14 +1,14 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.ParsedFile;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.NRFile;
 
-public class FieldVarReference extends Object
+public class NRFieldVarReference extends NRObject
 {
 	private final int refId;
 	private final ResolveCall callable;
 	
-	public FieldVarReference(ParseBundle b, ResolveCall callable)
+	public NRFieldVarReference(NRParseBundle b, ResolveCall callable)
 	{
 		this.callable = callable;
 		
@@ -18,13 +18,13 @@ public class FieldVarReference extends Object
 //		System.out.println("Resolver: To: " + refId);
 	}
 	
-	public void resolve(ParsedFile file)
+	public void resolve(NRFile file)
 	{
 		callable.onCall(file.getObject(refId));
 	}
 	
 	public interface ResolveCall
 	{
-		void onCall(Object object);
+		void onCall(NRObject object);
 	}
 }

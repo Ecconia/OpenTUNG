@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.tungboard.tungobjects.common;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Array;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Object;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArray;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ public class TungChildable extends TungObject
 	private final List<TungObject> children = new ArrayList<>();
 	
 	@Override
-	protected boolean checkField(Field field)
+	protected boolean checkField(NRField field)
 	{
 		if(super.checkField(field))
 		{
@@ -24,14 +24,14 @@ public class TungChildable extends TungObject
 		String name = field.getName();
 		if("Children".equals(name))
 		{
-			if(field instanceof ClassField)
+			if(field instanceof NRClassField)
 			{
 				//Drop class check, get value
-				Object value = ((ClassField) field).getValue();
-				if(value instanceof Array)
+				NRObject value = ((NRClassField) field).getValue();
+				if(value instanceof NRArray)
 				{
 					//Skip type check
-					for(Field entry : ((Array) value).getEntries())
+					for(NRField entry : ((NRArray) value).getEntries())
 					{
 						TungObject component = convertComponent(entry);
 						if(component != null)

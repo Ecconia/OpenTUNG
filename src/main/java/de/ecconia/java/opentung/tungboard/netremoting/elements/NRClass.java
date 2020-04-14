@@ -1,17 +1,17 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-public abstract class Class extends Object
+public abstract class NRClass extends NRObject
 {
-	protected Library library;
-	protected Field[] fields;
+	protected NRLibrary library;
+	protected NRField[] fields;
 	protected String name;
 	
-	public Library getLibrary()
+	public NRLibrary getLibrary()
 	{
 		return library;
 	}
 	
-	public Field[] getFields()
+	public NRField[] getFields()
 	{
 		return fields;
 	}
@@ -21,14 +21,14 @@ public abstract class Class extends Object
 		return name;
 	}
 	
-	protected Field[] getFieldCopy()
+	protected NRField[] getFieldCopy()
 	{
 		if(fields == null)
 		{
 			throw new RuntimeException("Requested field copy of class " + this.getClass().getSimpleName() + ", but fields are not set yet.");
 		}
 		
-		Field[] fieldsCopy = new Field[fields.length];
+		NRField[] fieldsCopy = new NRField[fields.length];
 		for(int i = 0; i < fields.length; i++)
 		{
 			fieldsCopy[i] = fields[i].copy();

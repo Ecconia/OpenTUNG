@@ -1,23 +1,23 @@
 package de.ecconia.java.opentung.tungboard.netremoting;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Library;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Object;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Header;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRHeader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ParsedFile
+public class NRFile
 {
-	private Header header;
-	private final Map<Integer, Library> libraries = new HashMap<>();
-	private final Map<Integer, Object> objects = new HashMap<>();
-	private final List<Object> rootObjects = new ArrayList<>();
+	private NRHeader header;
+	private final Map<Integer, NRLibrary> libraries = new HashMap<>();
+	private final Map<Integer, NRObject> objects = new HashMap<>();
+	private final List<NRObject> rootObjects = new ArrayList<>();
 	
-	public void setHeader(Header header)
+	public void setHeader(NRHeader header)
 	{
 		if(this.header != null)
 		{
@@ -26,12 +26,12 @@ public class ParsedFile
 		this.header = header;
 	}
 	
-	public Header getHeader()
+	public NRHeader getHeader()
 	{
 		return header;
 	}
 	
-	public void registerLibrary(Library library)
+	public void registerLibrary(NRLibrary library)
 	{
 		if(libraries.put(library.getId(), library) != null)
 		{
@@ -39,9 +39,9 @@ public class ParsedFile
 		}
 	}
 	
-	public Library getLibrary(int id)
+	public NRLibrary getLibrary(int id)
 	{
-		Library lib = libraries.get(id);
+		NRLibrary lib = libraries.get(id);
 		if(lib == null)
 		{
 			throw new RuntimeException("Library with ID " + id + " does not exist.");
@@ -49,7 +49,7 @@ public class ParsedFile
 		return lib;
 	}
 	
-	public void registerObject(Object object)
+	public void registerObject(NRObject object)
 	{
 		if(objects.put(object.getId(), object) != null)
 		{
@@ -57,36 +57,36 @@ public class ParsedFile
 		}
 	}
 	
-	public Class getClazz(int objectID)
+	public NRClass getClazz(int objectID)
 	{
-		Object object = objects.get(objectID);
+		NRObject object = objects.get(objectID);
 		if(object == null)
 		{
 			throw new RuntimeException("Class with ID " + objectID + " was referenced, but doesn't exist.");
 		}
-		else if(!(object instanceof Class))
+		else if(!(object instanceof NRClass))
 		{
 			throw new RuntimeException("ObjectThing with ID " + objectID + " was referenced as class, but is " + object.getClass().getSimpleName() + ".");
 		}
 		else
 		{
-			return (Class) object;
+			return (NRClass) object;
 		}
 	}
 	
-	public void addRoot(Object thing)
+	public void addRoot(NRObject thing)
 	{
 		rootObjects.add(thing);
 	}
 	
-	public List<Object> getRootElements()
+	public List<NRObject> getRootElements()
 	{
 		return rootObjects;
 	}
 	
-	public Object getObject(int refId)
+	public NRObject getObject(int refId)
 	{
-		Object obj = objects.get(refId);
+		NRObject obj = objects.get(refId);
 		if(obj == null)
 		{
 			throw new RuntimeException("Requested Object with ID " + refId + " does not exist.");

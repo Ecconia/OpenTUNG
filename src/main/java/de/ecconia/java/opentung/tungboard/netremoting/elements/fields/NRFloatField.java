@@ -1,22 +1,22 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements.fields;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
 
-public class FloatField extends Field
+public class NRFloatField extends NRField
 {
 	private float value;
 	
 	@Override
-	public Field copy()
+	public NRField copy()
 	{
-		Field field = new FloatField();
+		NRField field = new NRFloatField();
 		field.setName(getName());
 		return field;
 	}
 	
 	@Override
-	public void parseContent(ParseBundle b)
+	public void parseContent(NRParseBundle b)
 	{
 		value = b.reader.readFloatLE();
 		

@@ -1,14 +1,14 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungSnappingPeg extends TungObject
 {
-	public TungSnappingPeg(Class clazz)
+	public TungSnappingPeg(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			checkField(field);
 		}

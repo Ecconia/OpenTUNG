@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.java.opentung.tungboard.netremoting.NRParser;
-import de.ecconia.java.opentung.tungboard.netremoting.ParsedFile;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Object;
+import de.ecconia.java.opentung.tungboard.netremoting.NRFile;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
@@ -19,13 +19,13 @@ public class PrimitiveParser
 	
 	public PrimitiveParser()
 	{
-		ParsedFile pf = NRParser.parse(new File("boards/16Bit-Paralell-CLA-ALU.tungboard"));
+		NRFile pf = NRParser.parse(new File("boards/16Bit-Paralell-CLA-ALU.tungboard"));
 		
-		Object object = pf.getRootElements().get(0);
-		Class firstClass;
-		if(object instanceof Class)
+		NRObject object = pf.getRootElements().get(0);
+		NRClass firstClass;
+		if(object instanceof NRClass)
 		{
-			firstClass = (Class) object;
+			firstClass = (NRClass) object;
 		}
 		else
 		{

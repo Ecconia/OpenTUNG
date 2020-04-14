@@ -1,17 +1,17 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.BooleanField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRBooleanField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungBlotter extends TungObject
 {
 	private boolean outputOn;
 	
-	public TungBlotter(Class clazz)
+	public TungBlotter(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			if(checkField(field))
 			{
@@ -21,9 +21,9 @@ public class TungBlotter extends TungObject
 			String name = field.getName();
 			if("OutputOn".equals(name))
 			{
-				if(field instanceof BooleanField)
+				if(field instanceof NRBooleanField)
 				{
-					outputOn = ((BooleanField) field).getValue();
+					outputOn = ((NRBooleanField) field).getValue();
 				}
 				else
 				{

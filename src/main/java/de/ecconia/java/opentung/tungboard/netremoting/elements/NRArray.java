@@ -1,14 +1,14 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.FieldResolver;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.NRFieldResolver;
 
-public class Array extends Object
+public class NRArray extends NRObject
 {
-	private final Field[] entries;
-	private final Field proto;
+	private final NRField[] entries;
+	private final NRField proto;
 	
-	public Array(ParseBundle b)
+	public NRArray(NRParseBundle b)
 	{
 		b.readAndStoreID(this);
 		
@@ -27,11 +27,11 @@ public class Array extends Object
 		int length = b.sInt();
 		//Skip LowerBounds, cause type 0.
 		
-		proto = FieldResolver.parseSimpleField(b);
+		proto = NRFieldResolver.parseSimpleField(b);
 		
 //		System.out.println("Array: ID: " + id + " type: " + arrayType + " rank: " + rank + " length: " + length + " etype: " + proto.getClass().getSimpleName());
 		
-		entries = new Field[length];
+		entries = new NRField[length];
 		for(int i = 0; i < length; i++)
 		{
 			entries[i] = proto.copy();
@@ -39,12 +39,12 @@ public class Array extends Object
 		}
 	}
 	
-	public Field getProto()
+	public NRField getProto()
 	{
 		return proto;
 	}
 	
-	public Field[] getEntries()
+	public NRField[] getEntries()
 	{
 		return entries;
 	}

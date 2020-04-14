@@ -1,17 +1,16 @@
 package de.ecconia.java.opentung.tungboard.netremoting;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Library;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.BooleanField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.Int32Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.StringField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRBooleanField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRInt32Field;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRStringField;
 
-public class FieldResolver
+public class NRFieldResolver
 {
-	public static Field[] parseFileds(ParseBundle b)
+	public static NRField[] parseFileds(NRParseBundle b)
 	{
 		int amount = b.sInt();
 		String[] names = new String[amount];
@@ -26,7 +25,7 @@ public class FieldResolver
 			roughTypes[i] = b.uByte();
 		}
 		
-		Field[] fields = new Field[amount];
+		NRField[] fields = new NRField[amount];
 		for(int i = 0; i < amount; i++)
 		{
 			int roughType = roughTypes[i];
@@ -37,17 +36,17 @@ public class FieldResolver
 				if(fineType == 1)
 				{
 					//Boolean:
-					fields[i] = new BooleanField();
+					fields[i] = new NRBooleanField();
 				}
 				else if(fineType == 8)
 				{
 					//Int32:
-					fields[i] = new Int32Field();
+					fields[i] = new NRInt32Field();
 				}
 				else if(fineType == 11)
 				{
 					//Single/Float
-					fields[i] = new FloatField();
+					fields[i] = new NRFloatField();
 				}
 				else
 				{
@@ -57,14 +56,14 @@ public class FieldResolver
 			else if(roughType == 1)
 			{
 				//StringType:
-				fields[i] = new StringField();
+				fields[i] = new NRStringField();
 			}
 			else if(roughType == 4)
 			{
 				//ClassType:
 				String className = b.string();
-				Library library = b.readLibraryAndResolve();
-				fields[i] = new ClassField(className, library);
+				NRLibrary library = b.readLibraryAndResolve();
+				fields[i] = new NRClassField(className, library);
 			}
 			else
 			{
@@ -77,7 +76,7 @@ public class FieldResolver
 		return fields;
 	}
 	
-	public static Field parseSimpleField(ParseBundle b)
+	public static NRField parseSimpleField(NRParseBundle b)
 	{
 		int roughType = b.uByte();
 		if(roughType == 0)
@@ -87,17 +86,17 @@ public class FieldResolver
 			if(fineType == 1)
 			{
 				//Boolean:
-				return new BooleanField();
+				return new NRBooleanField();
 			}
 			else if(fineType == 8)
 			{
 				//Int32:
-				return new Int32Field();
+				return new NRInt32Field();
 			}
 			else if(fineType == 11)
 			{
 				//Single/Float
-				return new FloatField();
+				return new NRFloatField();
 			}
 			else
 			{
@@ -107,14 +106,14 @@ public class FieldResolver
 		else if(roughType == 1)
 		{
 			//StringType:
-			return new StringField();
+			return new NRStringField();
 		}
 		else if(roughType == 4)
 		{
 			//ClassType:
 			String className = b.string();
-			Library library = b.readLibraryAndResolve();
-			return new ClassField(className, library);
+			NRLibrary library = b.readLibraryAndResolve();
+			return new NRClassField(className, library);
 		}
 		else
 		{

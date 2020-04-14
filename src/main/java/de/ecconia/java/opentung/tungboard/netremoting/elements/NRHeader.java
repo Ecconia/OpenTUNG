@@ -1,15 +1,15 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 
-public class Header extends Object
+public class NRHeader extends NRObject
 {
 	private final int rootID;
 	private final int headerID;
 	private final int majorVersion;
 	private final int minorVersion;
 	
-	public Header(ParseBundle b)
+	public NRHeader(NRParseBundle b)
 	{
 		rootID = b.sInt();
 		headerID = b.sInt();

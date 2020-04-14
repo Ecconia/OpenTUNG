@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 
-public abstract class Field
+public abstract class NRField
 {
 	private String name;
 	
@@ -16,7 +16,7 @@ public abstract class Field
 		this.name = name;
 	}
 	
-	public abstract Field copy();
+	public abstract NRField copy();
 	
-	public abstract void parseContent(ParseBundle b);
+	public abstract void parseContent(NRParseBundle b);
 }

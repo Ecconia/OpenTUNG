@@ -1,22 +1,22 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 
-public class ReferencedClass extends Class
+public class NRReferencedClass extends NRClass
 {
-	public ReferencedClass(ParseBundle b)
+	public NRReferencedClass(NRParseBundle b)
 	{
 		b.readAndStoreID(this);
 		
 		int templateID = b.sInt();
-		Class clazz = b.getClass(templateID);
+		NRClass clazz = b.getClass(templateID);
 		this.name = clazz.getName();
 		this.library = clazz.getLibrary();
 		this.fields = clazz.getFieldCopy();
 		
 //		System.out.println("ClassRef(" + templateID + "): ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");
 		
-		for(Field field : fields)
+		for(NRField field : fields)
 		{
 			field.parseContent(b);
 		}

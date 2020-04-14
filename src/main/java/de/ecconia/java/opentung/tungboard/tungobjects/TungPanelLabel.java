@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.StringField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRStringField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungPanelLabel extends TungObject
@@ -11,9 +11,9 @@ public class TungPanelLabel extends TungObject
 	private float fontSize;
 	private String text;
 	
-	public TungPanelLabel(Class clazz)
+	public TungPanelLabel(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			if(checkField(field))
 			{
@@ -23,9 +23,9 @@ public class TungPanelLabel extends TungObject
 			String name = field.getName();
 			if("FontSize".equals(name))
 			{
-				if(field instanceof FloatField)
+				if(field instanceof NRFloatField)
 				{
-					fontSize = ((FloatField) field).getValue();
+					fontSize = ((NRFloatField) field).getValue();
 				}
 				else
 				{
@@ -34,9 +34,9 @@ public class TungPanelLabel extends TungObject
 			}
 			else if("text".equals(name))
 			{
-				if(field instanceof StringField)
+				if(field instanceof NRStringField)
 				{
-					text = ((StringField) field).getValue();
+					text = ((NRStringField) field).getValue();
 				}
 				else
 				{

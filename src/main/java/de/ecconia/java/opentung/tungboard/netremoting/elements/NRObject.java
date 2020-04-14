@@ -1,14 +1,14 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-public abstract class Object
+public abstract class NRObject
 {
 	protected int id;
 	
-	public Object()
+	public NRObject()
 	{
 	}
 	
-	public Object(int id)
+	public NRObject(int id)
 	{
 		this.id = id;
 	}

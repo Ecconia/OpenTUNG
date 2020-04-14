@@ -1,17 +1,17 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.BooleanField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRBooleanField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungPanelSwitch extends TungObject
 {
 	private boolean isOn;
 	
-	public TungPanelSwitch(Class clazz)
+	public TungPanelSwitch(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			if(checkField(field))
 			{
@@ -21,9 +21,9 @@ public class TungPanelSwitch extends TungObject
 			String name = field.getName();
 			if("on".equals(name))
 			{
-				if(field instanceof BooleanField)
+				if(field instanceof NRBooleanField)
 				{
-					isOn = ((BooleanField) field).getValue();
+					isOn = ((NRBooleanField) field).getValue();
 				}
 				else
 				{

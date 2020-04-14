@@ -1,22 +1,22 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements.fields;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
 
-public class BooleanField extends Field
+public class NRBooleanField extends NRField
 {
 	private boolean value;
 	
 	@Override
-	public Field copy()
+	public NRField copy()
 	{
-		Field field = new BooleanField();
+		NRField field = new NRBooleanField();
 		field.setName(getName());
 		return field;
 	}
 	
 	@Override
-	public void parseContent(ParseBundle b)
+	public void parseContent(NRParseBundle b)
 	{
 		int val = b.uByte();
 		if(val == 0)

@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
@@ -32,7 +32,7 @@ public class TungObject implements Angles, Position
 	private TungAngles angles;
 	private TungPosition position;
 	
-	protected boolean checkField(Field field)
+	protected boolean checkField(NRField field)
 	{
 		String name = field.getName();
 		if("LocalEulerAngles".equals(name))
@@ -60,10 +60,10 @@ public class TungObject implements Angles, Position
 		return position;
 	}
 	
-	protected TungObject convertComponent(Field field)
+	protected TungObject convertComponent(NRField field)
 	{
 		//Assume its a class...
-		Class childClass = (Class) ((ClassField) field).getValue();
+		NRClass childClass = (NRClass) ((NRClassField) field).getValue();
 		String className = childClass.getName();
 		if("SavedObjects.SavedCircuitBoard".equals(className))
 		{

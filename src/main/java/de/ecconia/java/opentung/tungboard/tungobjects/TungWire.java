@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.tungboard.tungobjects;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.BooleanField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRBooleanField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
 public class TungWire extends TungObject
@@ -11,9 +11,9 @@ public class TungWire extends TungObject
 	private float length;
 	private boolean inputInput;
 	
-	public TungWire(Class clazz)
+	public TungWire(NRClass clazz)
 	{
-		for(Field field : clazz.getFields())
+		for(NRField field : clazz.getFields())
 		{
 			if(checkField(field))
 			{
@@ -23,9 +23,9 @@ public class TungWire extends TungObject
 			String name = field.getName();
 			if("length".equals(name))
 			{
-				if(field instanceof FloatField)
+				if(field instanceof NRFloatField)
 				{
-					length = ((FloatField) field).getValue();
+					length = ((NRFloatField) field).getValue();
 				}
 				else
 				{
@@ -34,9 +34,9 @@ public class TungWire extends TungObject
 			}
 			else if("InputInput".equals(name))
 			{
-				if(field instanceof BooleanField)
+				if(field instanceof NRBooleanField)
 				{
-					inputInput = ((BooleanField) field).getValue();
+					inputInput = ((NRBooleanField) field).getValue();
 				}
 				else
 				{

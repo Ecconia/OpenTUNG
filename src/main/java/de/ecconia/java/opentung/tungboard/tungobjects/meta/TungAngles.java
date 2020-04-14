@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.Vector3;
 
 public class TungAngles implements Vector3
@@ -12,27 +12,27 @@ public class TungAngles implements Vector3
 	private float y;
 	private float z;
 	
-	public TungAngles(Field field)
+	public TungAngles(NRField field)
 	{
-		if(field instanceof ClassField)
+		if(field instanceof NRClassField)
 		{
-			Object value = ((ClassField) field).getValue();
+			Object value = ((NRClassField) field).getValue();
 			if(value == null)
 			{
 				throw new RuntimeException("Expected value, but got null");
 			}
 			
-			if(value instanceof Class)
+			if(value instanceof NRClass)
 			{
-				Class clazz = (Class) value;
-				for(Field innerField : clazz.getFields())
+				NRClass clazz = (NRClass) value;
+				for(NRField innerField : clazz.getFields())
 				{
 					String name = innerField.getName();
 					if("x".equals(name))
 					{
-						if(innerField instanceof FloatField)
+						if(innerField instanceof NRFloatField)
 						{
-							x = ((FloatField) innerField).getValue();
+							x = ((NRFloatField) innerField).getValue();
 						}
 						else
 						{
@@ -41,9 +41,9 @@ public class TungAngles implements Vector3
 					}
 					else if("y".equals(name))
 					{
-						if(innerField instanceof FloatField)
+						if(innerField instanceof NRFloatField)
 						{
-							y = ((FloatField) innerField).getValue();
+							y = ((NRFloatField) innerField).getValue();
 						}
 						else
 						{
@@ -52,9 +52,9 @@ public class TungAngles implements Vector3
 					}
 					else if("z".equals(name))
 					{
-						if(innerField instanceof FloatField)
+						if(innerField instanceof NRFloatField)
 						{
-							z = ((FloatField) innerField).getValue();
+							z = ((NRFloatField) innerField).getValue();
 						}
 						else
 						{

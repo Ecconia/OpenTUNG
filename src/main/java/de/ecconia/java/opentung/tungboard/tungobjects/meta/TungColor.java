@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.tungboard.tungobjects.meta;
 
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Class;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.Field;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.ClassField;
-import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.FloatField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
 
 public class TungColor
 {
@@ -11,27 +11,27 @@ public class TungColor
 	private float g;
 	private float b;
 	
-	public TungColor(Field field)
+	public TungColor(NRField field)
 	{
-		if(field instanceof ClassField)
+		if(field instanceof NRClassField)
 		{
-			Object value = ((ClassField) field).getValue();
+			Object value = ((NRClassField) field).getValue();
 			if(value == null)
 			{
 				throw new RuntimeException("Expected value, but got null");
 			}
 			
-			if(value instanceof Class)
+			if(value instanceof NRClass)
 			{
-				Class clazz = (Class) value;
-				for(Field innerField : clazz.getFields())
+				NRClass clazz = (NRClass) value;
+				for(NRField innerField : clazz.getFields())
 				{
 					String name = innerField.getName();
 					if("r".equals(name))
 					{
-						if(innerField instanceof FloatField)
+						if(innerField instanceof NRFloatField)
 						{
-							r = ((FloatField) innerField).getValue();
+							r = ((NRFloatField) innerField).getValue();
 						}
 						else
 						{
@@ -40,9 +40,9 @@ public class TungColor
 					}
 					else if("g".equals(name))
 					{
-						if(innerField instanceof FloatField)
+						if(innerField instanceof NRFloatField)
 						{
-							g = ((FloatField) innerField).getValue();
+							g = ((NRFloatField) innerField).getValue();
 						}
 						else
 						{
@@ -51,9 +51,9 @@ public class TungColor
 					}
 					else if("b".equals(name))
 					{
-						if(innerField instanceof FloatField)
+						if(innerField instanceof NRFloatField)
 						{
-							b = ((FloatField) innerField).getValue();
+							b = ((NRFloatField) innerField).getValue();
 						}
 						else
 						{

@@ -1,18 +1,18 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.ParseBundle;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 
-public class Text extends Object
+public class NRText extends NRObject
 {
 	private String text;
 	
 	//Unused (Might happen when string templating):
-	public Text(ParseBundle b)
+	public NRText(NRParseBundle b)
 	{
 		this(b, false);
 	}
 	
-	public Text(ParseBundle b, boolean checkTag)
+	public NRText(NRParseBundle b, boolean checkTag)
 	{
 		if(checkTag)
 		{
