@@ -41,7 +41,6 @@ public class SWindowWrapper
 		}
 		
 		GLFW.glfwSetWindowSizeCallback(windowID, (window, width2, height2) -> {
-			System.out.println(Thread.currentThread().getName());
 			dim.set(new Dimension(width2, height2));
 		});
 	}

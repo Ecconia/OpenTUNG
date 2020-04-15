@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.InputHandler;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import org.lwjgl.Version;
@@ -101,5 +102,6 @@ public class OpenTUNG
 	private static void render()
 	{
 		worldView.render();
+		interactables.render();
 	}
 }

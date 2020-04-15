@@ -30,6 +30,15 @@ public class Matrix
 		StolenFloatUtils.multMatrix(mat, tmpMat);
 	}
 	
+	public void scale(float x, float y, float z)
+	{
+		StolenFloatUtils.makeIdentity(tmpMat);
+		tmpMat[0] = x;
+		tmpMat[5] = y;
+		tmpMat[10] = z;
+		StolenFloatUtils.multMatrix(mat, tmpMat);
+	}
+	
 	public void rotate(final float angle, float x, float y, float z)
 	{
 		StolenFloatUtils.multMatrix(mat, makeRotationAxis(tmpMat, angle * StolenFloatUtils.PI / 180.0f, x, y, z, tmpVec));
@@ -111,4 +120,37 @@ public class Matrix
 		
 		return m;
 	}
+	
+	public void interfaceMatrix(int width, int height)
+	{
+		mat[0 + 0 * 4] = 2.0f / width;
+		mat[1 + 0 * 4] = 0.0f;
+		mat[2 + 0 * 4] = 0.0f;
+		mat[3 + 0 * 4] = 0.0f;
+		
+		mat[0 + 1 * 4] = 0.0f;
+		mat[1 + 1 * 4] = -2.0f / height;
+		mat[2 + 1 * 4] = 0.0f;
+		mat[3 + 1 * 4] = 0.0f;
+		
+		mat[0 + 2 * 4] = 0.0f;
+		mat[1 + 2 * 4] = 0.0f;
+		mat[2 + 2 * 4] = 1.0f;
+		mat[3 + 2 * 4] = 0.0f;
+		
+		mat[0 + 3 * 4] = -1.0f;
+		mat[1 + 3 * 4] = 1.0f;
+		mat[2 + 3 * 4] = 0.0f;
+		mat[3 + 3 * 4] = 1.0f;
+	}
+	
+//	public void multiplyLeft(Matrix matrix)
+//	{
+//		mat = StolenFloatUtils.multMatrix(matrix.getMat(), mat);
+//	}
+//
+//	public void multiplyRight(Matrix matrix)
+//	{
+//		mat = StolenFloatUtils.multMatrix(mat, matrix.getMat());
+//	}
 }
