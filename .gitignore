@@ -9,3 +9,7 @@
 #Idea:
 /*.iml
 /.idea/
+
+#Project:
+/boards/
+/TODOs.txt

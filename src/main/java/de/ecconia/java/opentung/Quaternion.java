@@ -5,12 +5,12 @@ public class Quaternion
 	//Identity:
 	private float x = 0.5f;
 	private float y = 0.5f;
-	private float z = 1.0f;
-	private float w = 10.0f;
+	private float z = 0.2f;
+	private float w = 5.0f;
 	
 	public Quaternion()
 	{
-		normalize();
+//		normalize();
 	}
 	
 	public float getLength()

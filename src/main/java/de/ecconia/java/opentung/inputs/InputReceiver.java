@@ -14,7 +14,7 @@ public class InputReceiver
 			{
 				GLFW.glfwPollEvents();
 				
-				processor.frame();
+				processor.postEvents();
 				
 				try
 				{

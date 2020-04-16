@@ -68,7 +68,7 @@ public class RenderPlane3D implements RenderPlane
 		dynamicBoardShader.setUniform(5, view);
 		
 		Color c = Color.getHSBColor(color, 1.0f, 1.0f); //Color.white;
-//		color += 0.01f;
+		color += 0.01f;
 		if(color > 1f)
 		{
 			color = 0f;

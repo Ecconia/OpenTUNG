@@ -102,7 +102,7 @@ public class InputProcessor
 //		}
 	}
 	
-	public void frame()
+	public void postEvents()
 	{
 		if(blockingConsumer != null)
 		{
