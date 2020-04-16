@@ -1,16 +1,25 @@
 package de.ecconia.java.opentung.crapinterface;
 
 import de.ecconia.java.opentung.RenderPlane;
+import de.ecconia.java.opentung.inputs.InputConsumer;
+import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.ColorVec;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 
-public class RenderPlane2D implements RenderPlane
+public class RenderPlane2D implements RenderPlane, InputConsumer
 {
+	private final InputProcessor inputHandler;
+	
 	private final Matrix projectionMatrix = new Matrix();
 	
 	private ShaderProgram interfaceShader;
-	private Slider[] sliders = new Slider[4];
+	private final Slider[] sliders = new Slider[4];
+	
+	public RenderPlane2D(InputProcessor inputHandler)
+	{
+		this.inputHandler = inputHandler;
+	}
 	
 	@Override
 	public void setup()
@@ -29,6 +38,11 @@ public class RenderPlane2D implements RenderPlane
 	@Override
 	public void render()
 	{
+		if(inputHandler.isCaptured())
+		{
+			return;
+		}
+		
 		interfaceShader.use();
 		interfaceShader.setUniform(0, projectionMatrix.getMat());
 		Matrix mat = new Matrix();

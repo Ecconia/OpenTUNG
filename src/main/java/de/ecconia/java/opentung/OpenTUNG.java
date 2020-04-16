@@ -104,7 +104,7 @@ public class OpenTUNG
 		
 		worldView = new RenderPlane3D(inputHandler);
 		worldView.setup();
-		interactables = new RenderPlane2D();
+		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
 	}
 	

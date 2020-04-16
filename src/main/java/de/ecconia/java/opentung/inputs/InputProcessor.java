@@ -150,4 +150,18 @@ public class InputProcessor
 	{
 		return blockingConsumer == consumer;
 	}
+	
+	public boolean isCaptured()
+	{
+		return blockingConsumer != null;
+	}
+	
+	public void focusChanged(boolean state)
+	{
+		//TBI: May fight with the setting by click or?
+		if(!state)
+		{
+			captureMode(null);
+		}
+	}
 }

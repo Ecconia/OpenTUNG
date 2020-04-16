@@ -50,7 +50,7 @@ public class InputReceiver
 			}
 		});
 		
-		GLFW.glfwSetKeyCallback(windowID, (window1, key, scancode, action, mods) -> {
+		GLFW.glfwSetKeyCallback(windowID, (windowIDC, key, scancode, action, mods) -> {
 			if(action == GLFW.GLFW_PRESS)
 			{
 				processor.keyPressed(key, scancode, mods);
@@ -59,6 +59,10 @@ public class InputReceiver
 			{
 				processor.keyReleased(key, scancode, mods);
 			}
+		});
+		
+		GLFW.glfwSetWindowFocusCallback(windowID, (windowIDC, state) -> {
+			processor.focusChanged(state);
 		});
 		
 		inputThread.start();
