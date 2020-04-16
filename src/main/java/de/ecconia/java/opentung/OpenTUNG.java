@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
-import de.ecconia.java.opentung.libwrap.InputHandler;
+import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
@@ -13,7 +13,7 @@ import java.awt.*;
 public class OpenTUNG
 {
 	private static final int fps = 30;
-	private static InputHandler inputHandler;
+	private static InputProcessor inputHandler;
 	
 	private static RenderPlane2D interactables;
 	private static RenderPlane3D worldView;
@@ -23,7 +23,7 @@ public class OpenTUNG
 		System.out.println("LWJGL version: " + Version.getVersion());
 		
 		SWindowWrapper window = new SWindowWrapper(500, 500, "OpenTUNG FPS: ?");
-		inputHandler = new InputHandler(window.getID());
+		inputHandler = new InputProcessor(window.getID());
 		window.place();
 		window.setVsync(fps == 0);
 		

@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung;
 
-import de.ecconia.java.opentung.libwrap.InputHandler;
+import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
@@ -30,9 +30,9 @@ public class RenderPlane3D implements RenderPlane
 	private static Quaternion quaternion;
 	
 	private static float color = 0.2f;
-	private static InputHandler inputHandler;
+	private InputProcessor inputHandler;
 	
-	public RenderPlane3D(InputHandler inputHandler)
+	public RenderPlane3D(InputProcessor inputHandler)
 	{
 		this.inputHandler = inputHandler;
 	}
