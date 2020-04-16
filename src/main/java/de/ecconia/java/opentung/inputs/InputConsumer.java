@@ -26,4 +26,8 @@ public interface InputConsumer
 	{
 		return false;
 	}
+	
+	default void unfocus()
+	{
+	}
 }

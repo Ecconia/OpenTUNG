@@ -42,6 +42,17 @@ public class InputProcessor
 		mouseYChange += latestY - y;
 		latestX = x;
 		latestY = y;
+		
+		if(blockingConsumer == null)
+		{
+			for(InputConsumer consumer : inputConsumers)
+			{
+				if(consumer.move(latestX, latestY, mouseXChange, mouseYChange))
+				{
+					break;
+				}
+			}
+		}
 	}
 	
 	public void cursorPressed(int button)
@@ -161,7 +172,13 @@ public class InputProcessor
 		//TBI: May fight with the setting by click or?
 		if(!state)
 		{
-			captureMode(null);
+			for(InputConsumer consumer : inputConsumers)
+			{
+				if(consumer.escapeIssued())
+				{
+					consumer.unfocus();
+				}
+			}
 		}
 	}
 }

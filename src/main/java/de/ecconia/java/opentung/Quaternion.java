@@ -3,14 +3,14 @@ package de.ecconia.java.opentung;
 public class Quaternion
 {
 	//Identity:
-	private float x = 0.5f;
-	private float y = 0.5f;
-	private float z = 0.2f;
-	private float w = 5.0f;
+	private float x = 0.0f;
+	private float y = 0.0f;
+	private float z = 0.0f;
+	private float w = 1.0f;
 	
 	public Quaternion()
 	{
-//		normalize();
+		normalize();
 	}
 	
 	public float getLength()
@@ -61,5 +61,45 @@ public class Quaternion
 		m[15] = 1;
 		
 		return m;
+	}
+	
+	public void setX(float value)
+	{
+		x = value;
+	}
+	
+	public void setY(float value)
+	{
+		y = value;
+	}
+	
+	public void setZ(float value)
+	{
+		z = value;
+	}
+	
+	public void setW(float value)
+	{
+		w = value;
+	}
+	
+	public float getX()
+	{
+		return x;
+	}
+	
+	public float getY()
+	{
+		return y;
+	}
+	
+	public float getZ()
+	{
+		return z;
+	}
+	
+	public float getW()
+	{
+		return w;
 	}
 }

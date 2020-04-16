@@ -102,10 +102,11 @@ public class OpenTUNG
 		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 		
-		worldView = new RenderPlane3D(inputHandler);
-		worldView.setup();
-		interactables = new RenderPlane2D(inputHandler);
+		Quaternion q = new Quaternion();
+		interactables = new RenderPlane2D(inputHandler, q);
 		interactables.setup();
+		worldView = new RenderPlane3D(inputHandler, q);
+		worldView.setup();
 	}
 	
 	private static void render()

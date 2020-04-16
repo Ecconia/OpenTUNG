@@ -13,28 +13,30 @@ import java.awt.*;
 
 public class RenderPlane3D implements RenderPlane
 {
-	private static Camera camera;
+	private Camera camera;
 	
-	private static final Matrix projection = new Matrix();
-	private static final Matrix model = new Matrix();
+	private final Matrix projection = new Matrix();
+	private final Matrix model = new Matrix();
 	
-	private static ShaderProgram program;
-	private static SimpleInverterModel inverter;
-	private static SimpleBlotterModel blotter;
-	private static SimplePeg peg;
+	private ShaderProgram program;
+	private SimpleInverterModel inverter;
+	private SimpleBlotterModel blotter;
+	private SimplePeg peg;
 	
-	private static TextureWrapper boardTexture;
-	private static ShaderProgram dynamicBoardShader;
-	private static SimpleDynamicBoard dBoard;
+	private TextureWrapper boardTexture;
+	private ShaderProgram dynamicBoardShader;
+	private SimpleDynamicBoard dBoard;
 	
-	private static Quaternion quaternion;
+	private Quaternion quaternion;
 	
 	private static float color = 0.2f;
-	private InputProcessor inputHandler;
 	
-	public RenderPlane3D(InputProcessor inputHandler)
+	private final InputProcessor inputHandler;
+	
+	public RenderPlane3D(InputProcessor inputHandler, Quaternion q)
 	{
 		this.inputHandler = inputHandler;
+		this.quaternion = q;
 	}
 	
 	@Override
@@ -52,7 +54,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		camera = new Camera(inputHandler);
 		
-		quaternion = new Quaternion();
+//		quaternion = new Quaternion();
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 	}

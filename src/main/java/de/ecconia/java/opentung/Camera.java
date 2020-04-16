@@ -68,6 +68,15 @@ public class Camera implements InputConsumer
 	}
 	
 	@Override
+	public void unfocus()
+	{
+		if(handler.isCaptured(this))
+		{
+			handler.captureMode(null);
+		}
+	}
+	
+	@Override
 	public void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d)
 	{
 		//Mouse:
