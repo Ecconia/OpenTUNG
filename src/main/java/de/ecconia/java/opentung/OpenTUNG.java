@@ -38,7 +38,7 @@ public class OpenTUNG
 			long past = System.currentTimeMillis();
 			int finishedRenderings = 0;
 			
-			long frameDuration = 1000L / (long) fps;
+			long frameDuration = fps != 0 ? 1000L / (long) fps : 1;
 			long lastFinishedRender = System.currentTimeMillis();
 			
 			while(!window.shouldClose())
