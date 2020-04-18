@@ -24,7 +24,8 @@ public class Camera implements InputConsumer
 		
 		handler.registerClickConsumer(this);
 		
-		z -= 3;
+		z -= 4;
+		y += 1;
 		
 		currentPosition = new Location(x, y, z, rotation, neck);
 	}
@@ -61,7 +62,7 @@ public class Camera implements InputConsumer
 			view.identity();
 			view.rotate(loc.getNeck(), 1, 0, 0); //Neck
 			view.rotate(loc.getRotation(), 0, 1, 0); //Rotation
-			view.translate(loc.getX(), -loc.getY(), loc.getZ());
+			view.translate(-loc.getX(), -loc.getY(), -loc.getZ());
 		}
 		
 		return view.getMat();
@@ -80,7 +81,7 @@ public class Camera implements InputConsumer
 	public void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d)
 	{
 		//Mouse:
-		this.rotation -= (float) mx * 0.333f;
+		this.rotation += (float) mx * 0.333f;
 		while(this.rotation > 360)
 		{
 			this.rotation -= 360;
@@ -89,7 +90,7 @@ public class Camera implements InputConsumer
 		{
 			this.rotation += 360;
 		}
-		this.neck -= (float) my * 0.333f;
+		this.neck += (float) my * 0.333f;
 		while(this.neck > 90)
 		{
 			this.neck = 90;
@@ -123,21 +124,6 @@ public class Camera implements InputConsumer
 		{
 			if(f)
 			{
-				direction += 45;
-			}
-			else if(b)
-			{
-				direction -= 45;
-			}
-			else
-			{
-				direction -= 90;
-			}
-		}
-		else if(l)
-		{
-			if(f)
-			{
 				direction -= 45;
 			}
 			else if(b)
@@ -147,6 +133,21 @@ public class Camera implements InputConsumer
 			else
 			{
 				direction += 90;
+			}
+		}
+		else if(l)
+		{
+			if(f)
+			{
+				direction += 45;
+			}
+			else if(b)
+			{
+				direction -= 45;
+			}
+			else
+			{
+				direction -= 90;
 			}
 		}
 		

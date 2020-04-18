@@ -48,6 +48,15 @@ public class Matrix
 	{
 		identity();
 		StolenFloatUtils.makePerspective(mat, 0, true, angle * StolenFloatUtils.PI / 180.0f, aspect, zNear, zFar);
+		
+		//TODO: Improve this:
+		float[] fix = new float[]{
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, -1, 0,
+				0, 0, 0, 1,
+		};
+		StolenFloatUtils.multMatrix(mat, fix);
 	}
 	
 	public void print()
@@ -143,7 +152,7 @@ public class Matrix
 		mat[2 + 3 * 4] = 0.0f;
 		mat[3 + 3 * 4] = 1.0f;
 	}
-	
+
 //	public void multiplyLeft(Matrix matrix)
 //	{
 //		mat = StolenFloatUtils.multMatrix(matrix.getMat(), mat);
