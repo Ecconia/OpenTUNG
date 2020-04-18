@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.scomponents.SimpleBlotterModel;
 import de.ecconia.java.opentung.scomponents.SimpleDynamicBoard;
 import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
@@ -27,7 +28,7 @@ public class RenderPlane3D implements RenderPlane
 	private ShaderProgram dynamicBoardShader;
 	private SimpleDynamicBoard dBoard;
 	
-	private Quaternion quaternion;
+	private final Quaternion quaternion;
 	
 	private static float color = 0.2f;
 	
@@ -53,8 +54,6 @@ public class RenderPlane3D implements RenderPlane
 		dBoard = new SimpleDynamicBoard();
 		
 		camera = new Camera(inputHandler);
-		
-//		quaternion = new Quaternion();
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 	}
