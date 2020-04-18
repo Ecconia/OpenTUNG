@@ -60,4 +60,9 @@ public class TungChildable extends TungObject
 	{
 		return children;
 	}
+	
+	public void addChildren(TungObject child)
+	{
+		children.add(child);
+	}
 }

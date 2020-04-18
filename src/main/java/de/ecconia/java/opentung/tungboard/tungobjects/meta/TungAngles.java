@@ -12,6 +12,13 @@ public class TungAngles implements Vector3
 	private float y;
 	private float z;
 	
+	public TungAngles(float x, float y, float z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	
 	public TungAngles(NRField field)
 	{
 		if(field instanceof NRClassField)

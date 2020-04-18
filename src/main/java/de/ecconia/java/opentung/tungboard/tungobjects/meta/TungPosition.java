@@ -11,6 +11,13 @@ public class TungPosition
 	private float y;
 	private float z;
 	
+	public TungPosition(float x, float y, float z)
+	{
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+	
 	public TungPosition(NRField field)
 	{
 		if(field instanceof NRClassField)

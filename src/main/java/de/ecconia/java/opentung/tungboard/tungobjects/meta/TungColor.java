@@ -7,9 +7,18 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatFie
 
 public class TungColor
 {
+	public static final TungColor preset = new TungColor(195f / 255f, 195f / 255f, 195f / 255f);
+	
 	private float r;
 	private float g;
 	private float b;
+	
+	public TungColor(float r, float g, float b)
+	{
+		this.r = r;
+		this.g = g;
+		this.b = b;
+	}
 	
 	public TungColor(NRField field)
 	{
@@ -60,10 +69,10 @@ public class TungColor
 							throw new RuntimeException("Expected FloatField as inner value, but got " + innerField.getClass().getSimpleName());
 						}
 					}
-					else
-					{
-						//Ignore for now.
-					}
+//					else
+//					{
+//						//Ignore for now.
+//					}
 				}
 			}
 			else

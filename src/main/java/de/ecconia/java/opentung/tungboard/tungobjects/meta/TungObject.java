@@ -156,4 +156,14 @@ public class TungObject implements Angles, Position
 		System.out.println("Unknown component found: " + className);
 		return null;
 	}
+	
+	public void setPosition(TungPosition position)
+	{
+		this.position = position;
+	}
+	
+	public void setAngles(TungAngles angles)
+	{
+		this.angles = angles;
+	}
 }

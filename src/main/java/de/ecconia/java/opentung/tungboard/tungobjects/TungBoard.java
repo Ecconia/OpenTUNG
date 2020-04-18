@@ -15,6 +15,18 @@ public class TungBoard extends TungChildable implements Angles
 	private int z;
 	private TungColor color;
 	
+	public TungBoard(int x, int z, TungColor color)
+	{
+		this.x = x;
+		this.z = z;
+		this.color = color;
+	}
+	
+	public TungBoard(int x, int z)
+	{
+		this(x, z, TungColor.preset);
+	}
+	
 	public TungBoard(NRClass clazz)
 	{
 		for(NRField field : clazz.getFields())

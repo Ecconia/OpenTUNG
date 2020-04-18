@@ -9,6 +9,11 @@ public class TungInverter extends TungObject
 {
 	private boolean outputOn;
 	
+	public TungInverter()
+	{
+		outputOn = true;
+	}
+	
 	public TungInverter(NRClass clazz)
 	{
 		for(NRField field : clazz.getFields())
