@@ -55,6 +55,28 @@ public class Quaternion
 		);
 	}
 	
+	public static Quaternion unityEuler(float x, float y, float z)
+	{
+		z = z / 360f * (float) Math.PI;
+		x = x / 360f * (float) Math.PI;
+		y = y / 360f * (float) Math.PI;
+		
+		float cosZ = (float) Math.cos(z);
+		float cosX = (float) Math.cos(x);
+		float cosY = (float) Math.cos(y);
+		float sinZ = (float) Math.sin(z);
+		float sinX = (float) Math.sin(x);
+		float sinY = (float) Math.sin(y);
+		
+		return new Quaternion(
+				cosZ * cosX * cosY + sinZ * sinX * sinY
+				, new Vector3(
+				-(cosX * sinY * sinZ + sinX * cosY * cosZ),
+				+(sinX * cosY * sinZ - cosX * sinY * cosZ),
+				+(sinX * sinY * cosZ - cosX * cosY * sinZ)
+		));
+	}
+	
 	//For vector rotation:
 	public Vector3 multiply(Vector3 that)
 	{
@@ -69,7 +91,7 @@ public class Quaternion
 	public float[] createMatrix()
 	{
 		float[] m = new float[16];
-
+		
 		float x = v.getX();
 		float y = v.getY();
 		float z = v.getZ();
@@ -83,23 +105,23 @@ public class Quaternion
 		float yw = y * a;
 		float zz = z * z;
 		float zw = z * a;
-
+		
 		m[0] = 1 - 2 * (yy + zz);
 		m[1] = 2 * (xy - zw);
 		m[2] = 2 * (xz + yw);
-
+		
 		m[4] = 2 * (xy + zw);
 		m[5] = 1 - 2 * (xx + zz);
 		m[6] = 2 * (yz - xw);
-
+		
 		m[8] = 2 * (xz - yw);
 		m[9] = 2 * (yz + xw);
 		m[10] = 1 - 2 * (xx + yy);
-
+		
 		//Outer rect:
 		m[3] = m[7] = m[11] = m[12] = m[13] = m[14] = 0;
 		m[15] = 1;
-
+		
 		return m;
 	}
 }

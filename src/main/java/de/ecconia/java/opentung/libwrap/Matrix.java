@@ -11,6 +11,11 @@ public class Matrix
 		identity();
 	}
 	
+	public Matrix(float[] mat)
+	{
+		this.mat = mat;
+	}
+	
 	public float[] getMat()
 	{
 		return mat;
@@ -152,14 +157,9 @@ public class Matrix
 		mat[2 + 3 * 4] = 0.0f;
 		mat[3 + 3 * 4] = 1.0f;
 	}
-
-//	public void multiplyLeft(Matrix matrix)
-//	{
-//		mat = StolenFloatUtils.multMatrix(matrix.getMat(), mat);
-//	}
-//
-//	public void multiplyRight(Matrix matrix)
-//	{
-//		mat = StolenFloatUtils.multMatrix(mat, matrix.getMat());
-//	}
+	
+	public void multiply(Matrix matrix)
+	{
+		StolenFloatUtils.multMatrix(mat, matrix.getMat());
+	}
 }

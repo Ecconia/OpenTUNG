@@ -4,7 +4,6 @@ import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
 import java.awt.Dimension;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
