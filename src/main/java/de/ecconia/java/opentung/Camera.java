@@ -78,10 +78,18 @@ public class Camera implements InputConsumer
 	}
 	
 	@Override
-	public void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d)
+	public void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d, boolean control)
 	{
+		float rotationSpeed = 0.333f;
+		float flySpeed = 0.05f;
+		if(control)
+		{
+			flySpeed = 0.15f;
+			rotationSpeed = 0.4f;
+		}
+		
 		//Mouse:
-		this.rotation += (float) mx * 0.333f;
+		this.rotation += (float) mx * rotationSpeed;
 		while(this.rotation > 360)
 		{
 			this.rotation -= 360;
@@ -90,7 +98,7 @@ public class Camera implements InputConsumer
 		{
 			this.rotation += 360;
 		}
-		this.neck += (float) my * 0.333f;
+		this.neck += (float) my * rotationSpeed;
 		while(this.neck > 90)
 		{
 			this.neck = 90;
@@ -151,19 +159,18 @@ public class Camera implements InputConsumer
 			}
 		}
 		
-		final float distance = 0.05f;
 		if(l || r || f || b)
 		{
-			walkInDirection(direction, distance);
+			walkInDirection(direction, flySpeed);
 		}
 		
 		if(u)
 		{
-			levitate(distance);
+			levitate(flySpeed);
 		}
 		else if(d)
 		{
-			levitate(-distance);
+			levitate(-flySpeed);
 		}
 		
 		currentPosition = new Location(x, y, z, rotation, neck);

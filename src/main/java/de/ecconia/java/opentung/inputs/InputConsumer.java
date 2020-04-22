@@ -18,7 +18,7 @@ public interface InputConsumer
 	}
 	
 	//No return bool, since this is only called when capture mode.
-	default void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d)
+	default void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d, boolean control)
 	{
 	}
 	

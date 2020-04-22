@@ -123,8 +123,9 @@ public class InputProcessor
 			boolean isW = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS;
 			boolean isSp = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
 			boolean isSh = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS;
+			boolean isControl = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
 			
-			blockingConsumer.movement(mouseXChange, mouseYChange, isA, isD, isW, isS, isSp, isSh);
+			blockingConsumer.movement(mouseXChange, mouseYChange, isA, isD, isW, isS, isSp, isSh, isControl);
 		}
 		
 		//Who knows who calls the blocking thing when, first lets finish all handling, then update this.
