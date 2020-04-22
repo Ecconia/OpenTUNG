@@ -22,10 +22,8 @@ public class NRParser
 		}
 		catch(IOException e)
 		{
-			e.printStackTrace();
+			throw new RuntimeException("Could not read/load tungboard file.", e);
 		}
-		
-		return null;
 	}
 	
 	private static NRFile parse(ByteReader reader)

@@ -68,10 +68,10 @@ public class TungAngles implements Vector3
 							throw new RuntimeException("Expected FloatField as inner value, but got " + innerField.getClass().getSimpleName());
 						}
 					}
-					else
-					{
-						//Ignore for now.
-					}
+//					else
+//					{
+//						//Ignore for now.
+//					}
 				}
 			}
 			else
@@ -116,5 +116,11 @@ public class TungAngles implements Vector3
 		f = Math.round(f);
 		f *= 22.5f;
 		return f;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "[X: " + x + " Y: " + y + " Z: " + z + ']';
 	}
 }

@@ -113,4 +113,10 @@ public class TungPosition
 		f *= 0.075;
 		return f;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "[X: " + x + " Y: " + y + " Z: " + z + ']';
+	}
 }
