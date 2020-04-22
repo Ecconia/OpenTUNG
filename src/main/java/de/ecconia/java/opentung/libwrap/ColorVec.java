@@ -2,6 +2,8 @@ package de.ecconia.java.opentung.libwrap;
 
 public class ColorVec
 {
+	public static final ColorVec boardColor = new ColorVec(195f / 255f, 195f / 255f, 195f / 255f);
+	
 	private final float r;
 	private final float g;
 	private final float b;

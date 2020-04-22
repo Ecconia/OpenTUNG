@@ -3,7 +3,6 @@ package de.ecconia.java.opentung;
 import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
-import de.ecconia.java.opentung.math.Quaternion;
 import java.awt.Dimension;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
@@ -102,11 +101,9 @@ public class OpenTUNG
 		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 		
-		Quaternion q = Quaternion.xp90.multiply(Quaternion.yp90);
-		
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
-		worldView = new RenderPlane3D(inputHandler, q);
+		worldView = new RenderPlane3D(inputHandler);
 		worldView.setup();
 	}
 	
