@@ -9,23 +9,23 @@ public class Vector3
 	public static final Vector3 zp = new Vector3(0, 0, 1);
 	public static final Vector3 zn = new Vector3(0, 0, -1);
 	
-	private final float x;
-	private final float y;
-	private final float z;
+	private final double x;
+	private final double y;
+	private final double z;
 	
-	public Vector3(float x, float y, float z)
+	public Vector3(double x, double y, double z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public Vector3 multiply(float factor)
+	public Vector3 multiply(double factor)
 	{
 		return new Vector3(x * factor, y * factor, z * factor);
 	}
 	
-	public Vector3 divide(float divisor)
+	public Vector3 divide(double divisor)
 	{
 		return new Vector3(x / divisor, y / divisor, z / divisor);
 	}
@@ -57,7 +57,7 @@ public class Vector3
 		);
 	}
 	
-	public Vector3 add(float x, float y, float z)
+	public Vector3 add(double x, double y, double z)
 	{
 		return new Vector3(
 				this.x + x,
@@ -76,33 +76,71 @@ public class Vector3
 		return new Vector3(-x, -y, -z);
 	}
 	
-	public float dot(Vector3 that)
+	public double dot(Vector3 that)
 	{
 		return this.x * that.x + this.y * that.y + this.z * that.z;
 	}
 	
-	public float length()
+	public double length()
 	{
-		return (float) Math.sqrt(x * x + y * y + z * z);
+		return Math.sqrt(x * x + y * y + z * z);
 	}
 	
-	public float lengthSqared()
+	public double lengthSqared()
 	{
 		return x * x + y * y + z * z;
 	}
 	
-	public float getX()
+	public double getX()
 	{
 		return x;
 	}
 	
-	public float getY()
+	public double getY()
 	{
 		return y;
 	}
 	
-	public float getZ()
+	public double getZ()
 	{
 		return z;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "[X: " + fix(x) + " Y: " + fix(y) + " Z: " + fix(z) + ']';
+	}
+	
+	private String fix(double value)
+	{
+		double a = Math.abs(value);
+		if(a == 0.0)
+		{
+			return " 0.0";
+		}
+		if(a < 0.00000000000001D)
+		{
+			return "~0.?";
+		}
+		else
+		{
+			String s = String.valueOf(value);
+			if(s.lastIndexOf('E') == -1)
+			{
+				if(s.length() > 8)
+				{
+					return s.substring(0, 8);
+				}
+				else
+				{
+					return s;
+				}
+			}
+			else
+			{
+				return s;
+			}
+		}
 	}
 }

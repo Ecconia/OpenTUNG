@@ -22,18 +22,18 @@ public class Quaternion
 	public static final Quaternion zn270 = Quaternion.angleAxis(270, Vector3.zn);
 	
 	private final Vector3 v;
-	private final float a;
+	private final double a;
 	
-	public static Quaternion angleAxis(float angle, Vector3 axis)
+	public static Quaternion angleAxis(double angle, Vector3 axis)
 	{
-		angle = angle / 360f * (float) Math.PI;
+		angle = angle / 360D * Math.PI;
 		return new Quaternion(
-				(float) Math.cos(angle),
-				axis.multiply((float) Math.sin(angle))
+				Math.cos(angle),
+				axis.multiply(Math.sin(angle))
 		);
 	}
 	
-	public Quaternion(float a, Vector3 n)
+	public Quaternion(double a, Vector3 n)
 	{
 		this.a = a;
 		this.v = n;
@@ -48,33 +48,11 @@ public class Quaternion
 	{
 		return new Quaternion(
 				this.a * that.a
-						+ this.v.dot(that.v),
+						- this.v.dot(that.v),
 				this.v.multiply(that.a)
 						.add(that.v.multiply(this.a))
 						.add(this.v.cross(that.v))
 		);
-	}
-	
-	public static Quaternion unityEuler(float x, float y, float z)
-	{
-		z = z / 360f * (float) Math.PI;
-		x = x / 360f * (float) Math.PI;
-		y = y / 360f * (float) Math.PI;
-		
-		float cosZ = (float) Math.cos(z);
-		float cosX = (float) Math.cos(x);
-		float cosY = (float) Math.cos(y);
-		float sinZ = (float) Math.sin(z);
-		float sinX = (float) Math.sin(x);
-		float sinY = (float) Math.sin(y);
-		
-		return new Quaternion(
-				cosZ * cosX * cosY + sinZ * sinX * sinY
-				, new Vector3(
-				-(cosX * sinY * sinZ + sinX * cosY * cosZ),
-				+(sinX * cosY * sinZ - cosX * sinY * cosZ),
-				+(sinX * sinY * cosZ - cosX * cosY * sinZ)
-		));
 	}
 	
 	//For vector rotation:
@@ -92,19 +70,19 @@ public class Quaternion
 	{
 		float[] m = new float[16];
 		
-		float x = v.getX();
-		float y = v.getY();
-		float z = v.getZ();
+		float x = (float) v.getX();
+		float y = (float) v.getY();
+		float z = (float) v.getZ();
 		
 		float xx = x * x;
 		float xy = x * y;
 		float xz = x * z;
-		float xw = x * a;
+		float xw = x * (float) a;
 		float yy = y * y;
 		float yz = y * z;
-		float yw = y * a;
+		float yw = y * (float) a;
 		float zz = z * z;
-		float zw = z * a;
+		float zw = z * (float) a;
 		
 		m[0] = 1 - 2 * (yy + zz);
 		m[1] = 2 * (xy - zw);
@@ -123,5 +101,54 @@ public class Quaternion
 		m[15] = 1;
 		
 		return m;
+	}
+	
+	public float getLength()
+	{
+		return (float) Math.sqrt(a * a + v.lengthSqared());
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "Q[X: " + fix(v.getX()) + " Y: " + fix(v.getY()) + " Z: " + fix(v.getZ()) + " W: " + fix(a) + " | X: " + multiply(Vector3.xp) + " Y: " + multiply(Vector3.yp) + " Z: " + multiply(Vector3.zp) + "]";
+	}
+	
+	private String fix(double value)
+	{
+		double a = Math.abs(value);
+		if(a == 0.0)
+		{
+			return " 0.0";
+		}
+		if(a < 0.00000000000001D)
+		{
+			return "~0.?";
+		}
+		else
+		{
+			String s = String.valueOf(value);
+			if(s.lastIndexOf('E') == -1)
+			{
+				if(s.length() > 8)
+				{
+					return s.substring(0, 8);
+				}
+				else
+				{
+					return s;
+				}
+			}
+			else
+			{
+				return s;
+			}
+		}
+	}
+	
+	public Quaternion normalize()
+	{
+		double length = getLength();
+		return new Quaternion(a / length, v.multiply(1d / length));
 	}
 }
