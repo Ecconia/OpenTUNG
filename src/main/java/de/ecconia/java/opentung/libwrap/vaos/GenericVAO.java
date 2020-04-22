@@ -5,7 +5,7 @@ import org.lwjgl.opengl.GL30;
 public abstract class GenericVAO
 {
 	private final int vaoID;
-	private final int amount;
+	protected final int amount;
 	
 	protected GenericVAO(float[] vertices, short indices[])
 	{

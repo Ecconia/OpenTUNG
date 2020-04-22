@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.scomponents;
 import de.ecconia.java.opentung.libwrap.vaos.CubicColoredVAO;
 import de.ecconia.java.opentung.libwrap.vaos.DynamicBoardVAO;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 
 public abstract class SComponent
 {
@@ -25,6 +26,10 @@ public abstract class SComponent
 		else if(type == ShaderType.DynamicBoard)
 		{
 			vao = new DynamicBoardVAO(vertices, indices);
+		}
+		else if(type == ShaderType.SimpleLines)
+		{
+			vao = new LineVAO(vertices, indices);
 		}
 	}
 	
@@ -164,5 +169,6 @@ public abstract class SComponent
 	{
 		CubicColored,
 		DynamicBoard,
+		SimpleLines,
 	}
 }
