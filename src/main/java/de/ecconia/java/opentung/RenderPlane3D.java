@@ -1,6 +1,12 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.java.opentung.components.Blotter;
 import de.ecconia.java.opentung.components.Board;
+import de.ecconia.java.opentung.components.Inverter;
+import de.ecconia.java.opentung.components.Peg;
+import de.ecconia.java.opentung.components.SnappingPeg;
+import de.ecconia.java.opentung.components.ThroughPeg;
+import de.ecconia.java.opentung.components.Wire;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -11,10 +17,19 @@ import de.ecconia.java.opentung.scomponents.CoordIndicator;
 import de.ecconia.java.opentung.scomponents.NormalIndicator;
 import de.ecconia.java.opentung.scomponents.SimpleBlotterModel;
 import de.ecconia.java.opentung.scomponents.SimpleDynamicBoard;
+import de.ecconia.java.opentung.scomponents.SimpleDynamicWire;
 import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
 import de.ecconia.java.opentung.scomponents.SimplePeg;
+import de.ecconia.java.opentung.scomponents.SimpleSnappingPeg;
+import de.ecconia.java.opentung.scomponents.SimpleThroughPeg;
 import de.ecconia.java.opentung.tungboard.PrimitiveParser;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
@@ -37,12 +52,16 @@ public class RenderPlane3D implements RenderPlane
 	private ShaderProgram program;
 	private SimpleInverterModel inverter;
 	private SimpleBlotterModel blotter;
+	private SimpleThroughPeg throughPeg;
 	private SimplePeg peg;
 	private CoordIndicator coords;
+	private SimpleSnappingPeg snappingPeg;
 	
 	private TextureWrapper boardTexture;
 	private ShaderProgram dynamicBoardShader;
 	private SimpleDynamicBoard dBoard;
+	private ShaderProgram wireShader;
+	private SimpleDynamicWire dWire;
 	
 	private ShaderProgram lineShader;
 	private NormalIndicator normalIndicator;
@@ -54,6 +73,13 @@ public class RenderPlane3D implements RenderPlane
 	private final InputProcessor inputHandler;
 	
 	private final List<Board> boardsToRender = new ArrayList<>();
+	private final List<Inverter> invertersToRender = new ArrayList<>();
+	private final List<Peg> pegsToRender = new ArrayList<>();
+	private final List<ThroughPeg> throughPegsToRender = new ArrayList<>();
+	private final List<Blotter> blottersToRender = new ArrayList<>();
+	private final List<SnappingPeg> snappingPegsToRender = new ArrayList<>();
+	
+	private final List<Wire> wiresToRender = new ArrayList<>();
 	
 	public RenderPlane3D(InputProcessor inputHandler)
 	{
@@ -66,6 +92,7 @@ public class RenderPlane3D implements RenderPlane
 		program = new ShaderProgram("basicShader");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		lineShader = new ShaderProgram("lineShader");
+		wireShader = new ShaderProgram("wireShader");
 		
 		boardTexture = new TextureWrapper();
 		
@@ -73,7 +100,10 @@ public class RenderPlane3D implements RenderPlane
 		blotter = new SimpleBlotterModel();
 		peg = new SimplePeg();
 		dBoard = new SimpleDynamicBoard();
+		dWire = new SimpleDynamicWire();
 		coords = new CoordIndicator();
+		throughPeg = new SimpleThroughPeg();
+		snappingPeg = new SimpleSnappingPeg();
 		
 		normalIndicator = new NormalIndicator();
 		
@@ -108,55 +138,151 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void importChild(TungObject object, Vector3 parentPosition, Quaternion parentRotation, int level, String prefix, boolean last)
 	{
-		if(object instanceof TungBoard)
+		if(object instanceof TungObject)
 		{
-			TungBoard tungBoard = (TungBoard) object;
-			System.out.println(prefix + " " + tungBoard.getX() + " " + tungBoard.getZ());
-			prefix = prefix.substring(0, prefix.length() - 2);
-			prefix += last ? "  " : "│ ";
-			
-			System.out.println(prefix + "Rot: " + tungBoard.getAngles());
-			System.out.println(prefix + "Pos: " + tungBoard.getPosition());
-			System.out.println(prefix + "Abs: " + parentPosition);
-			
+			TungObject tungObject = (TungObject) object;
 			//TODO: Now that it works, optimize. Make it one non-obsolete calculation method.
-			Quaternion qx = Quaternion.angleAxis((double) tungBoard.getAngles().getX(), Vector3.xn); //Has to be negative, cause unity *shrug*
-			Quaternion qy = Quaternion.angleAxis((double) -tungBoard.getAngles().getY(), Vector3.yp);
-			Quaternion qz = Quaternion.angleAxis((double) -tungBoard.getAngles().getZ(), Vector3.zp);
+			Quaternion qx = Quaternion.angleAxis((double) tungObject.getAngles().getX(), Vector3.xn); //Has to be negative, cause unity *shrug*
+			Quaternion qy = Quaternion.angleAxis((double) -tungObject.getAngles().getY(), Vector3.yp);
+			Quaternion qz = Quaternion.angleAxis((double) -tungObject.getAngles().getZ(), Vector3.zp);
 			Quaternion localRotation = qz.multiply(qx).multiply(qy);
 			Quaternion globalRotation = localRotation.multiply(parentRotation);
 			
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.15f * (float) tungBoard.getX(), 0, 0.15f * (float) tungBoard.getZ()));
-			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-			
-			Vector3 localPosition = new Vector3(tungBoard.getPosition().getX(), tungBoard.getPosition().getY(), tungBoard.getPosition().getZ());
-			Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-			Vector3 globalPosition = parentPosition.add(rotatedPosition);
-			
-			Board board = new Board(tungBoard.getX(), tungBoard.getZ());
-			board.setColor(new Vector3(tungBoard.getColor().getR(), tungBoard.getColor().getG(), tungBoard.getColor().getB()));
-			board.setPosition(globalPosition.add(rotatedFixPoint));
-			board.setRotation(globalRotation);
-			boardsToRender.add(board);
-			
-			List<TungObject> children = tungBoard.getChildren();
-			//For the sake of pretty debugging, get rid of all unrelevant entries.
-			Iterator<TungObject> filterIterator = children.iterator();
-			while(filterIterator.hasNext())
+			if(object instanceof TungBoard)
 			{
-				if(!(filterIterator.next() instanceof TungChildable))
+				TungBoard tungBoard = (TungBoard) object;
+				System.out.println(prefix + " " + tungBoard.getX() + " " + tungBoard.getZ());
+				prefix = prefix.substring(0, prefix.length() - 2);
+				prefix += last ? "  " : "│ ";
+				
+				System.out.println(prefix + "Rot: " + tungBoard.getAngles());
+				System.out.println(prefix + "Pos: " + tungBoard.getPosition());
+				System.out.println(prefix + "Abs: " + parentPosition);
+				
+				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.15f * (float) tungBoard.getX(), 0, 0.15f * (float) tungBoard.getZ()));
+				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+				
+				Vector3 localPosition = new Vector3(tungBoard.getPosition().getX(), tungBoard.getPosition().getY(), tungBoard.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				Board board = new Board(tungBoard.getX(), tungBoard.getZ());
+				board.setColor(new Vector3(tungBoard.getColor().getR(), tungBoard.getColor().getG(), tungBoard.getColor().getB()));
+				board.setPosition(globalPosition.add(rotatedFixPoint));
+				board.setRotation(globalRotation);
+				boardsToRender.add(board);
+				
+				List<TungObject> children = tungBoard.getChildren();
+				//For the sake of pretty debugging, get rid of all unrelevant entries.
+				Iterator<TungObject> filterIterator = children.iterator();
+				while(filterIterator.hasNext())
 				{
-					filterIterator.remove();
+					Object obj = filterIterator.next();
+					if(!(obj instanceof TungChildable || obj instanceof TungPeg || obj instanceof TungInverter || obj instanceof TungBlotter || obj instanceof TungThroughPeg || obj instanceof TungSnappingPeg || obj instanceof TungWire))
+					{
+						System.out.println("Implement: " + obj.getClass().getSimpleName());
+						filterIterator.remove();
+					}
+				}
+				
+				for(int i = 0; i < children.size(); i++)
+				{
+					TungObject child = children.get(i);
+					boolean newLast = i == (children.size() - 1);
+					String newPrefix = prefix + (newLast ? "└─" : "├─");
+					importChild(child, globalPosition, globalRotation, level, newPrefix, newLast);
 				}
 			}
-			
-			for(int i = 0; i < children.size(); i++)
+			else if(object instanceof TungPeg)
 			{
-				TungObject child = children.get(i);
-				boolean newLast = i == (children.size() - 1);
-				String newPrefix = prefix + (newLast ? "└─" : "├─");
-				importChild(child, globalPosition, globalRotation, level, newPrefix, newLast);
+				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
+				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+				
+				Peg peg = new Peg();
+				peg.setPosition(globalPosition.add(rotatedFixPoint));
+				peg.setRotation(globalRotation);
+				pegsToRender.add(peg);
 			}
+			else if(object instanceof TungInverter)
+			{
+				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
+				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+				
+				Inverter inverter = new Inverter();
+				inverter.setPosition(globalPosition.add(rotatedFixPoint));
+				inverter.setRotation(globalRotation);
+				invertersToRender.add(inverter);
+			}
+			else if(object instanceof TungBlotter)
+			{
+				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
+				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+				
+				Blotter blotter = new Blotter();
+				blotter.setPosition(globalPosition.add(rotatedFixPoint));
+				blotter.setRotation(globalRotation);
+				blottersToRender.add(blotter);
+			}
+			else if(object instanceof TungThroughPeg)
+			{
+				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
+				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+				
+				ThroughPeg throughPeg = new ThroughPeg();
+				throughPeg.setPosition(globalPosition.add(rotatedFixPoint));
+				throughPeg.setRotation(globalRotation);
+				throughPegsToRender.add(throughPeg);
+			}
+			else if(object instanceof TungSnappingPeg)
+			{
+				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, -0.06f));
+				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+				
+				SnappingPeg snappingPeg = new SnappingPeg();
+				snappingPeg.setPosition(globalPosition.add(rotatedFixPoint));
+				snappingPeg.setRotation(globalRotation);
+				snappingPegsToRender.add(snappingPeg);
+			}
+			else if(object instanceof TungWire)
+			{
+				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
+				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
+				Vector3 globalPosition = parentPosition.add(rotatedPosition);
+				
+				TungWire tungWire = (TungWire) tungObject;
+				
+				Wire wire = new Wire();
+				wire.setLength(tungWire.getLength());
+				wire.setPosition(globalPosition);
+				wire.setRotation(globalRotation);
+				wire.setPowered(false);
+				wiresToRender.add(wire);
+			}
+		}
+		else
+		{
+			System.out.println("Implement: " + object.getClass().getSimpleName());
+			return;
 		}
 	}
 	
@@ -199,6 +325,25 @@ public class RenderPlane3D implements RenderPlane
 			dBoard.draw();
 		}
 		
+		wireShader.use();
+		wireShader.setUniform(0, projection.getMat());
+		wireShader.setUniform(1, view);
+		wireShader.setUniform(5, view);
+		wireShader.setUniform(2, model.getMat());
+		
+		for(Wire wire : wiresToRender)
+		{
+			model.identity();
+			model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
+			Matrix rotMat = new Matrix(wire.getRotation().createMatrix());
+			model.multiply(rotMat);
+			wireShader.setUniform(2, model.getMat());
+			wireShader.setUniform(3, wire.getLength() / 2f);
+			wireShader.setUniform(4, wire.isPowered() ? 1.0f : 0.0f);
+			
+			this.dWire.draw();
+		}
+		
 		//Normal indicators:
 //		lineShader.use();
 //		lineShader.setUniform(0, projection.getMat());
@@ -214,12 +359,76 @@ public class RenderPlane3D implements RenderPlane
 //			normalIndicator.draw();
 //		}
 		
-		float h = 0.075f + 0.15f + 0.5f;
-		
 		program.use();
 		program.setUniform(0, projection.getMat());
 		program.setUniform(1, view);
 		program.setUniform(3, view);
+		
+		for(Peg peg : pegsToRender)
+		{
+			model.identity();
+			model.translate((float) peg.getPosition().getX(), (float) peg.getPosition().getY(), (float) peg.getPosition().getZ());
+			Matrix rotMat = new Matrix(peg.getRotation().createMatrix());
+			model.multiply(rotMat);
+			program.setUniform(2, model.getMat());
+			
+			this.peg.draw();
+		}
+		
+		for(Peg peg : pegsToRender)
+		{
+			model.identity();
+			model.translate((float) peg.getPosition().getX(), (float) peg.getPosition().getY(), (float) peg.getPosition().getZ());
+			Matrix rotMat = new Matrix(peg.getRotation().createMatrix());
+			model.multiply(rotMat);
+			program.setUniform(2, model.getMat());
+			
+			this.peg.draw();
+		}
+		
+		for(Inverter inverter : invertersToRender)
+		{
+			model.identity();
+			model.translate((float) inverter.getPosition().getX(), (float) inverter.getPosition().getY(), (float) inverter.getPosition().getZ());
+			Matrix rotMat = new Matrix(inverter.getRotation().createMatrix());
+			model.multiply(rotMat);
+			program.setUniform(2, model.getMat());
+			
+			this.inverter.draw();
+		}
+		
+		for(Blotter blotter : blottersToRender)
+		{
+			model.identity();
+			model.translate((float) blotter.getPosition().getX(), (float) blotter.getPosition().getY(), (float) blotter.getPosition().getZ());
+			Matrix rotMat = new Matrix(blotter.getRotation().createMatrix());
+			model.multiply(rotMat);
+			program.setUniform(2, model.getMat());
+			
+			this.blotter.draw();
+		}
+		
+		for(ThroughPeg blotter : throughPegsToRender)
+		{
+			model.identity();
+			model.translate((float) blotter.getPosition().getX(), (float) blotter.getPosition().getY(), (float) blotter.getPosition().getZ());
+			Matrix rotMat = new Matrix(blotter.getRotation().createMatrix());
+			model.multiply(rotMat);
+			program.setUniform(2, model.getMat());
+			
+			this.throughPeg.draw();
+		}
+		
+		for(SnappingPeg snappingPeg : snappingPegsToRender)
+		{
+			model.identity();
+			model.translate((float) snappingPeg.getPosition().getX(), (float) snappingPeg.getPosition().getY(), (float) snappingPeg.getPosition().getZ());
+			Matrix rotMat = new Matrix(snappingPeg.getRotation().createMatrix());
+			model.multiply(rotMat);
+			program.setUniform(2, model.getMat());
+			
+			this.snappingPeg.draw();
+		}
 		
 		//Cross indicators:
 //		for(Board board : boardsToRender)
@@ -232,6 +441,8 @@ public class RenderPlane3D implements RenderPlane
 //
 //			coords.draw();
 //		}
+		
+		float h = 0.075f + 0.15f + 0.5f;
 		
 		model.identity();
 		model.translate(0.6f * (float) -1 + 0.15f, h, 0.15f);

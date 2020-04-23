@@ -41,7 +41,7 @@ public class PrimitiveParser
 			TungBoard board = new TungBoard(firstClass);
 			
 			//Fixer:
-			fix(board);
+//			fix(board);
 			
 			return board;
 		}
