@@ -2,12 +2,12 @@ package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.math.Vector3;
 
-public class Board extends GenericComponent
+public class CompBoard extends CompGeneric
 {
 	private Vector3 color = new Vector3(195f / 255f, 195f / 255f, 195f / 255f);
 	private int x, z;
 	
-	public Board(int x, int z)
+	public CompBoard(int x, int z)
 	{
 		this.x = x;
 		this.z = z;

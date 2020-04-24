@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.components;
 
-public class Wire extends GenericComponent
+public class CompWire extends CompGeneric
 {
 	private float length;
 	private boolean powered;

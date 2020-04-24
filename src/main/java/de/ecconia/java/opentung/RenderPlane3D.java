@@ -1,12 +1,12 @@
 package de.ecconia.java.opentung;
 
-import de.ecconia.java.opentung.components.Blotter;
-import de.ecconia.java.opentung.components.Board;
-import de.ecconia.java.opentung.components.Inverter;
-import de.ecconia.java.opentung.components.Peg;
-import de.ecconia.java.opentung.components.SnappingPeg;
-import de.ecconia.java.opentung.components.ThroughPeg;
-import de.ecconia.java.opentung.components.Wire;
+import de.ecconia.java.opentung.components.CompBlotter;
+import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompInverter;
+import de.ecconia.java.opentung.components.CompPeg;
+import de.ecconia.java.opentung.components.CompSnappingPeg;
+import de.ecconia.java.opentung.components.CompThroughPeg;
+import de.ecconia.java.opentung.components.CompWire;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -32,12 +32,9 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import java.awt.Color;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -72,14 +69,14 @@ public class RenderPlane3D implements RenderPlane
 	
 	private final InputProcessor inputHandler;
 	
-	private final List<Board> boardsToRender = new ArrayList<>();
-	private final List<Inverter> invertersToRender = new ArrayList<>();
-	private final List<Peg> pegsToRender = new ArrayList<>();
-	private final List<ThroughPeg> throughPegsToRender = new ArrayList<>();
-	private final List<Blotter> blottersToRender = new ArrayList<>();
-	private final List<SnappingPeg> snappingPegsToRender = new ArrayList<>();
+	private final List<CompBoard> boardsToRender = new ArrayList<>();
+	private final List<CompInverter> invertersToRender = new ArrayList<>();
+	private final List<CompPeg> pegsToRender = new ArrayList<>();
+	private final List<CompThroughPeg> throughPegsToRender = new ArrayList<>();
+	private final List<CompBlotter> blottersToRender = new ArrayList<>();
+	private final List<CompSnappingPeg> snappingPegsToRender = new ArrayList<>();
 	
-	private final List<Wire> wiresToRender = new ArrayList<>();
+	private final List<CompWire> wiresToRender = new ArrayList<>();
 	
 	public RenderPlane3D(InputProcessor inputHandler)
 	{
@@ -166,7 +163,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
 				Vector3 globalPosition = parentPosition.add(rotatedPosition);
 				
-				Board board = new Board(tungBoard.getX(), tungBoard.getZ());
+				CompBoard board = new CompBoard(tungBoard.getX(), tungBoard.getZ());
 				board.setColor(new Vector3(tungBoard.getColor().getR(), tungBoard.getColor().getG(), tungBoard.getColor().getB()));
 				board.setPosition(globalPosition.add(rotatedFixPoint));
 				board.setRotation(globalRotation);
@@ -202,7 +199,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
 				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 				
-				Peg peg = new Peg();
+				CompPeg peg = new CompPeg();
 				peg.setPosition(globalPosition.add(rotatedFixPoint));
 				peg.setRotation(globalRotation);
 				pegsToRender.add(peg);
@@ -216,7 +213,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
 				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 				
-				Inverter inverter = new Inverter();
+				CompInverter inverter = new CompInverter();
 				inverter.setPosition(globalPosition.add(rotatedFixPoint));
 				inverter.setRotation(globalRotation);
 				invertersToRender.add(inverter);
@@ -230,7 +227,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
 				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 				
-				Blotter blotter = new Blotter();
+				CompBlotter blotter = new CompBlotter();
 				blotter.setPosition(globalPosition.add(rotatedFixPoint));
 				blotter.setRotation(globalRotation);
 				blottersToRender.add(blotter);
@@ -244,7 +241,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 				
-				ThroughPeg throughPeg = new ThroughPeg();
+				CompThroughPeg throughPeg = new CompThroughPeg();
 				throughPeg.setPosition(globalPosition.add(rotatedFixPoint));
 				throughPeg.setRotation(globalRotation);
 				throughPegsToRender.add(throughPeg);
@@ -258,7 +255,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, -0.06f));
 				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 				
-				SnappingPeg snappingPeg = new SnappingPeg();
+				CompSnappingPeg snappingPeg = new CompSnappingPeg();
 				snappingPeg.setPosition(globalPosition.add(rotatedFixPoint));
 				snappingPeg.setRotation(globalRotation);
 				snappingPegsToRender.add(snappingPeg);
@@ -271,7 +268,7 @@ public class RenderPlane3D implements RenderPlane
 				
 				TungWire tungWire = (TungWire) tungObject;
 				
-				Wire wire = new Wire();
+				CompWire wire = new CompWire();
 				wire.setLength(tungWire.getLength());
 				wire.setPosition(globalPosition);
 				wire.setRotation(globalRotation);
@@ -312,7 +309,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		dBoard.draw();
 		
-		for(Board board : boardsToRender)
+		for(CompBoard board : boardsToRender)
 		{
 			model.identity();
 			model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
@@ -331,7 +328,7 @@ public class RenderPlane3D implements RenderPlane
 		wireShader.setUniform(5, view);
 		wireShader.setUniform(2, model.getMat());
 		
-		for(Wire wire : wiresToRender)
+		for(CompWire wire : wiresToRender)
 		{
 			model.identity();
 			model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
@@ -364,7 +361,7 @@ public class RenderPlane3D implements RenderPlane
 		program.setUniform(1, view);
 		program.setUniform(3, view);
 		
-		for(Peg peg : pegsToRender)
+		for(CompPeg peg : pegsToRender)
 		{
 			model.identity();
 			model.translate((float) peg.getPosition().getX(), (float) peg.getPosition().getY(), (float) peg.getPosition().getZ());
@@ -375,7 +372,7 @@ public class RenderPlane3D implements RenderPlane
 			this.peg.draw();
 		}
 		
-		for(Peg peg : pegsToRender)
+		for(CompPeg peg : pegsToRender)
 		{
 			model.identity();
 			model.translate((float) peg.getPosition().getX(), (float) peg.getPosition().getY(), (float) peg.getPosition().getZ());
@@ -386,7 +383,7 @@ public class RenderPlane3D implements RenderPlane
 			this.peg.draw();
 		}
 		
-		for(Inverter inverter : invertersToRender)
+		for(CompInverter inverter : invertersToRender)
 		{
 			model.identity();
 			model.translate((float) inverter.getPosition().getX(), (float) inverter.getPosition().getY(), (float) inverter.getPosition().getZ());
@@ -397,7 +394,7 @@ public class RenderPlane3D implements RenderPlane
 			this.inverter.draw();
 		}
 		
-		for(Blotter blotter : blottersToRender)
+		for(CompBlotter blotter : blottersToRender)
 		{
 			model.identity();
 			model.translate((float) blotter.getPosition().getX(), (float) blotter.getPosition().getY(), (float) blotter.getPosition().getZ());
@@ -408,7 +405,7 @@ public class RenderPlane3D implements RenderPlane
 			this.blotter.draw();
 		}
 		
-		for(ThroughPeg blotter : throughPegsToRender)
+		for(CompThroughPeg blotter : throughPegsToRender)
 		{
 			model.identity();
 			model.translate((float) blotter.getPosition().getX(), (float) blotter.getPosition().getY(), (float) blotter.getPosition().getZ());
@@ -419,7 +416,7 @@ public class RenderPlane3D implements RenderPlane
 			this.throughPeg.draw();
 		}
 		
-		for(SnappingPeg snappingPeg : snappingPegsToRender)
+		for(CompSnappingPeg snappingPeg : snappingPegsToRender)
 		{
 			model.identity();
 			model.translate((float) snappingPeg.getPosition().getX(), (float) snappingPeg.getPosition().getY(), (float) snappingPeg.getPosition().getZ());
