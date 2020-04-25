@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
@@ -61,6 +62,16 @@ public class GenerateTestBoard
 		inverter.setPosition(new TungPosition(4.0f, 0.6f, 1.0f));
 		inverter.setAngles(new TungAngles(0, 90, 90));
 		board.addChildren(inverter);
+		
+		inverter = new TungInverter();
+		inverter.setPosition(new TungPosition(0, 0.65f, -0.15f));
+		inverter.setAngles(new TungAngles(0, 0, 0));
+		
+		TungMount mount = new TungMount();
+		mount.setPosition(new TungPosition(0, 0, 0));
+		mount.setAngles(new TungAngles(0, 0, 0));
+		mount.addChildren(inverter);
+		board.addChildren(mount);
 		
 		board.addChildren(boardX);
 		board.addChildren(boardY);
