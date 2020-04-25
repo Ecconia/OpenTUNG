@@ -1,9 +1,13 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.models.DynamicBoardModel;
+import de.ecconia.java.opentung.models.GenericModel;
 
 public class CompBoard extends CompContainer
 {
+	public static DynamicBoardModel model;
+	
 	private Vector3 color = new Vector3(195f / 255f, 195f / 255f, 195f / 255f);
 	private int x, z;
 	
@@ -33,5 +37,11 @@ public class CompBoard extends CompContainer
 	public int getZ()
 	{
 		return z;
+	}
+	
+	@Override
+	public GenericModel getModel()
+	{
+		return model;
 	}
 }

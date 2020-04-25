@@ -1,7 +1,12 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.models.DynamicWireModel;
+import de.ecconia.java.opentung.models.GenericModel;
+
 public class CompWireRaw extends CompGeneric
 {
+	public static DynamicWireModel model;
+	
 	private float length;
 	private boolean powered;
 	
@@ -28,5 +33,11 @@ public class CompWireRaw extends CompGeneric
 	public float getLength()
 	{
 		return length;
+	}
+	
+	@Override
+	public GenericModel getModel()
+	{
+		return model;
 	}
 }

@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.models.GenericModel;
+
 public class CompWire extends CompGeneric
 {
 	private float length;
@@ -28,5 +30,11 @@ public class CompWire extends CompGeneric
 	public float getLength()
 	{
 		return length;
+	}
+	
+	@Override
+	public GenericModel getModel()
+	{
+		throw new RuntimeException("No Model for this component yet.");
 	}
 }

@@ -2,6 +2,14 @@ package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.models.BlotterModel;
+import de.ecconia.java.opentung.models.DynamicBoardModel;
+import de.ecconia.java.opentung.models.DynamicWireModel;
+import de.ecconia.java.opentung.models.GenericModel;
+import de.ecconia.java.opentung.models.InverterModel;
+import de.ecconia.java.opentung.models.PegModel;
+import de.ecconia.java.opentung.models.SnappingPegModel;
+import de.ecconia.java.opentung.models.ThroughPegModel;
 
 public abstract class CompGeneric
 {
@@ -45,5 +53,19 @@ public abstract class CompGeneric
 	public CompContainer getParent()
 	{
 		return parent;
+	}
+	
+	public abstract GenericModel getModel();
+	
+	public static void initModels()
+	{
+		//TODO: Move improve whatever. This feels hacky, while its not that bad of a "solution/workaround".
+		CompPeg.model = new PegModel();
+		CompBlotter.model = new BlotterModel();
+		CompInverter.model = new InverterModel();
+		CompBoard.model = new DynamicBoardModel();
+		CompWireRaw.model = new DynamicWireModel();
+		CompThroughPeg.model = new ThroughPegModel();
+		CompSnappingPeg.model = new SnappingPegModel();
 	}
 }

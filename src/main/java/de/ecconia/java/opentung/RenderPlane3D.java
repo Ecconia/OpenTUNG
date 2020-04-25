@@ -6,8 +6,6 @@ import de.ecconia.java.opentung.components.CompContainer;
 import de.ecconia.java.opentung.components.CompGeneric;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompPeg;
-import de.ecconia.java.opentung.components.CompSnappingPeg;
-import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.CompWireRaw;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -17,13 +15,6 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.NormalIndicatorModel;
-import de.ecconia.java.opentung.models.BlotterModel;
-import de.ecconia.java.opentung.models.DynamicBoardModel;
-import de.ecconia.java.opentung.models.DynamicWireModel;
-import de.ecconia.java.opentung.models.InverterModel;
-import de.ecconia.java.opentung.models.PegModel;
-import de.ecconia.java.opentung.models.SnappingPegModel;
-import de.ecconia.java.opentung.models.ThroughPegModel;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,20 +26,13 @@ public class RenderPlane3D implements RenderPlane
 	private final Matrix projection = new Matrix();
 	
 	private ShaderProgram program;
-	private InverterModel inverter;
-	private BlotterModel blotter;
-	private ThroughPegModel throughPeg;
-	private PegModel peg;
-	private CoordIndicatorModel coords;
-	private SnappingPegModel snappingPeg;
+	private ShaderProgram lineShader;
+	private ShaderProgram wireShader;
+	private ShaderProgram dynamicBoardShader;
 	
 	private TextureWrapper boardTexture;
-	private ShaderProgram dynamicBoardShader;
-	private DynamicBoardModel dBoard;
-	private ShaderProgram wireShader;
-	private DynamicWireModel dWire;
 	
-	private ShaderProgram lineShader;
+	private CoordIndicatorModel coords;
 	private NormalIndicatorModel normalIndicator;
 	
 	private final Quaternion quaternion = Quaternion.xp90.multiply(Quaternion.yp90);
@@ -58,13 +42,8 @@ public class RenderPlane3D implements RenderPlane
 	private final InputProcessor inputHandler;
 	
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
-	private final List<CompInverter> invertersToRender = new ArrayList<>();
-	private final List<CompPeg> pegsToRender = new ArrayList<>();
-	private final List<CompThroughPeg> throughPegsToRender = new ArrayList<>();
-	private final List<CompBlotter> blottersToRender = new ArrayList<>();
-	private final List<CompSnappingPeg> snappingPegsToRender = new ArrayList<>();
-	
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
+	private final List<CompGeneric> componentsToRender = new ArrayList<>();
 	
 	public RenderPlane3D(InputProcessor inputHandler, CompBoard board)
 	{
@@ -79,29 +58,13 @@ public class RenderPlane3D implements RenderPlane
 		{
 			boardsToRender.add((CompBoard) component);
 		}
-		else if(component instanceof CompInverter)
-		{
-			invertersToRender.add((CompInverter) component);
-		}
-		else if(component instanceof CompPeg)
-		{
-			pegsToRender.add((CompPeg) component);
-		}
-		else if(component instanceof CompThroughPeg)
-		{
-			throughPegsToRender.add((CompThroughPeg) component);
-		}
-		else if(component instanceof CompBlotter)
-		{
-			blottersToRender.add((CompBlotter) component);
-		}
-		else if(component instanceof CompSnappingPeg)
-		{
-			snappingPegsToRender.add((CompSnappingPeg) component);
-		}
 		else if(component instanceof CompWireRaw)
 		{
 			wiresToRender.add((CompWireRaw) component);
+		}
+		else
+		{
+			componentsToRender.add(component);
 		}
 		
 		if(component instanceof CompContainer)
@@ -116,6 +79,8 @@ public class RenderPlane3D implements RenderPlane
 	@Override
 	public void setup()
 	{
+		CompGeneric.initModels();
+		
 		program = new ShaderProgram("basicShader");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		lineShader = new ShaderProgram("lineShader");
@@ -123,22 +88,12 @@ public class RenderPlane3D implements RenderPlane
 		
 		boardTexture = new TextureWrapper();
 		
-		inverter = new InverterModel();
-		blotter = new BlotterModel();
-		peg = new PegModel();
-		dBoard = new DynamicBoardModel();
-		dWire = new DynamicWireModel();
-		coords = new CoordIndicatorModel();
-		throughPeg = new ThroughPegModel();
-		snappingPeg = new SnappingPegModel();
-		
 		normalIndicator = new NormalIndicatorModel();
+		coords = new CoordIndicatorModel();
 		
 		camera = new Camera(inputHandler);
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
-		
-		//TODO: Re-add the importing of a tungboard, but at a higher level.
 	}
 	
 	@Override
@@ -165,7 +120,7 @@ public class RenderPlane3D implements RenderPlane
 		dynamicBoardShader.setUniformV2(3, new float[]{10f, 10f});
 		dynamicBoardShader.setUniformV4(4, new float[]{(float) c.getRed() / 255f, (float) c.getGreen() / 255f, (float) c.getBlue() / 255f, 1f});
 		
-		dBoard.draw();
+		CompBoard.model.draw();
 		
 		for(CompBoard board : boardsToRender)
 		{
@@ -177,7 +132,7 @@ public class RenderPlane3D implements RenderPlane
 			dynamicBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
 			dynamicBoardShader.setUniformV4(4, new float[]{(float) board.getColor().getX(), (float) board.getColor().getY(), (float) board.getColor().getZ(), 1f});
 			
-			dBoard.draw();
+			CompBoard.model.draw();
 		}
 		
 		wireShader.use();
@@ -196,7 +151,7 @@ public class RenderPlane3D implements RenderPlane
 			wireShader.setUniform(3, wire.getLength() / 2f);
 			wireShader.setUniform(4, wire.isPowered() ? 1.0f : 0.0f);
 			
-			this.dWire.draw();
+			CompWireRaw.model.draw();
 		}
 		
 		//Normal indicators:
@@ -219,70 +174,15 @@ public class RenderPlane3D implements RenderPlane
 		program.setUniform(1, view);
 		program.setUniform(3, view);
 		
-		for(CompPeg peg : pegsToRender)
+		for(CompGeneric component : componentsToRender)
 		{
 			model.identity();
-			model.translate((float) peg.getPosition().getX(), (float) peg.getPosition().getY(), (float) peg.getPosition().getZ());
-			Matrix rotMat = new Matrix(peg.getRotation().createMatrix());
+			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
+			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
 			model.multiply(rotMat);
 			program.setUniform(2, model.getMat());
 			
-			this.peg.draw();
-		}
-		
-		for(CompPeg peg : pegsToRender)
-		{
-			model.identity();
-			model.translate((float) peg.getPosition().getX(), (float) peg.getPosition().getY(), (float) peg.getPosition().getZ());
-			Matrix rotMat = new Matrix(peg.getRotation().createMatrix());
-			model.multiply(rotMat);
-			program.setUniform(2, model.getMat());
-			
-			this.peg.draw();
-		}
-		
-		for(CompInverter inverter : invertersToRender)
-		{
-			model.identity();
-			model.translate((float) inverter.getPosition().getX(), (float) inverter.getPosition().getY(), (float) inverter.getPosition().getZ());
-			Matrix rotMat = new Matrix(inverter.getRotation().createMatrix());
-			model.multiply(rotMat);
-			program.setUniform(2, model.getMat());
-			
-			this.inverter.draw();
-		}
-		
-		for(CompBlotter blotter : blottersToRender)
-		{
-			model.identity();
-			model.translate((float) blotter.getPosition().getX(), (float) blotter.getPosition().getY(), (float) blotter.getPosition().getZ());
-			Matrix rotMat = new Matrix(blotter.getRotation().createMatrix());
-			model.multiply(rotMat);
-			program.setUniform(2, model.getMat());
-			
-			this.blotter.draw();
-		}
-		
-		for(CompThroughPeg blotter : throughPegsToRender)
-		{
-			model.identity();
-			model.translate((float) blotter.getPosition().getX(), (float) blotter.getPosition().getY(), (float) blotter.getPosition().getZ());
-			Matrix rotMat = new Matrix(blotter.getRotation().createMatrix());
-			model.multiply(rotMat);
-			program.setUniform(2, model.getMat());
-			
-			this.throughPeg.draw();
-		}
-		
-		for(CompSnappingPeg snappingPeg : snappingPegsToRender)
-		{
-			model.identity();
-			model.translate((float) snappingPeg.getPosition().getX(), (float) snappingPeg.getPosition().getY(), (float) snappingPeg.getPosition().getZ());
-			Matrix rotMat = new Matrix(snappingPeg.getRotation().createMatrix());
-			model.multiply(rotMat);
-			program.setUniform(2, model.getMat());
-			
-			this.snappingPeg.draw();
+			component.getModel().draw();
 		}
 		
 		//Cross indicators:
@@ -302,20 +202,20 @@ public class RenderPlane3D implements RenderPlane
 		model.identity();
 		model.translate(0.6f * (float) -1 + 0.15f, h, 0.15f);
 		program.setUniform(2, model.getMat());
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		model.identity();
 		model.translate(0.6f * (float) 0 + 0.15f, h, 0.15f);
 		program.setUniform(2, model.getMat());
-		blotter.draw();
+		CompBlotter.model.draw();
 		
 		model.identity();
 		model.translate(0.6f * (float) 1 + 0.15f, h, 0.15f);
 		program.setUniform(2, model.getMat());
-		peg.draw();
+		CompPeg.model.draw();
 		
 		program.setUniform(2, quaternion.createMatrix());
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		model.identity();
 		model.translate(1.5f, 0, -1.5f);
@@ -360,7 +260,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		float[] model = converter.eulerToMatrix(0, 0, 0, initialPosition);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		final float d = 0.9f;
 		
@@ -369,38 +269,38 @@ public class RenderPlane3D implements RenderPlane
 		
 		model = converter.eulerToMatrix(90, 0, 0, copyPos);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(0, 90, 0, copyPos);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(0, 0, 90, copyPos);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		initialPosition = initialPosition.add(0, 0, d);
 		copyPos = initialPosition;
 		
 		model = converter.eulerToMatrix(90, 90, 0, copyPos);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(90, 0, 90, copyPos);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(0, 90, 90, copyPos);
 		program.setUniform(2, model);
-		inverter.draw();
+		CompInverter.model.draw();
 	}
 	
 	private interface StuffConverter

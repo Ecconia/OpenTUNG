@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.models.GenericModel;
 
 public class CompDisplay extends CompGeneric
 {
@@ -20,5 +21,11 @@ public class CompDisplay extends CompGeneric
 	public Vector3 getColorRaw()
 	{
 		return colorRaw;
+	}
+	
+	@Override
+	public GenericModel getModel()
+	{
+		throw new RuntimeException("No Model for this component yet.");
 	}
 }

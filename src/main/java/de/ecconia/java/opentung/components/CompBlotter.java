@@ -1,7 +1,12 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.models.BlotterModel;
+import de.ecconia.java.opentung.models.GenericModel;
+
 public class CompBlotter extends CompGeneric
 {
+	public static BlotterModel model;
+	
 	//Logic:
 	boolean isPowered;
 	
@@ -18,5 +23,11 @@ public class CompBlotter extends CompGeneric
 	public boolean isPowered()
 	{
 		return isPowered;
+	}
+	
+	@Override
+	public GenericModel getModel()
+	{
+		return model;
 	}
 }

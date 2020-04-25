@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.models.GenericModel;
+
 public class CompNoisemaker extends CompGeneric
 {
 	private float frequency;
@@ -17,5 +19,11 @@ public class CompNoisemaker extends CompGeneric
 	public float getFrequency()
 	{
 		return frequency;
+	}
+	
+	@Override
+	public GenericModel getModel()
+	{
+		throw new RuntimeException("No Model for this component yet.");
 	}
 }
