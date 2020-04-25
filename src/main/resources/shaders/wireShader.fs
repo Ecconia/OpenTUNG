@@ -21,7 +21,7 @@ void main()
     	vec3 sourceAmbient = vec3(1.0, 1.0, 1.0);
     	vec3 sourceDiffuse = vec3(1.0, 1.0, 1.0);
 
-    	vec3 + = tColor.rgb * 0.6;
+    	vec3 materialAmbient = tColor.rgb * 0.6;
     	vec3 materialDiffuse = tColor.rgb * 0.4;
 
     	//Loop:
