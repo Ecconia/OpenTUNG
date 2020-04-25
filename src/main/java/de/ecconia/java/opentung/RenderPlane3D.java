@@ -2,11 +2,13 @@ package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompContainer;
+import de.ecconia.java.opentung.components.CompGeneric;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompThroughPeg;
-import de.ecconia.java.opentung.components.CompWire;
+import de.ecconia.java.opentung.components.CompWireRaw;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -22,22 +24,8 @@ import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
 import de.ecconia.java.opentung.scomponents.SimplePeg;
 import de.ecconia.java.opentung.scomponents.SimpleSnappingPeg;
 import de.ecconia.java.opentung.scomponents.SimpleThroughPeg;
-import de.ecconia.java.opentung.tungboard.PrimitiveParser;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
-import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
-import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import java.awt.Color;
-import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class RenderPlane3D implements RenderPlane
@@ -76,11 +64,53 @@ public class RenderPlane3D implements RenderPlane
 	private final List<CompBlotter> blottersToRender = new ArrayList<>();
 	private final List<CompSnappingPeg> snappingPegsToRender = new ArrayList<>();
 	
-	private final List<CompWire> wiresToRender = new ArrayList<>();
+	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
 	
-	public RenderPlane3D(InputProcessor inputHandler)
+	public RenderPlane3D(InputProcessor inputHandler, CompBoard board)
 	{
 		this.inputHandler = inputHandler;
+		
+		importComponent(board);
+	}
+	
+	private void importComponent(CompGeneric component)
+	{
+		if(component instanceof CompBoard)
+		{
+			boardsToRender.add((CompBoard) component);
+		}
+		else if(component instanceof CompInverter)
+		{
+			invertersToRender.add((CompInverter) component);
+		}
+		else if(component instanceof CompPeg)
+		{
+			pegsToRender.add((CompPeg) component);
+		}
+		else if(component instanceof CompThroughPeg)
+		{
+			throughPegsToRender.add((CompThroughPeg) component);
+		}
+		else if(component instanceof CompBlotter)
+		{
+			blottersToRender.add((CompBlotter) component);
+		}
+		else if(component instanceof CompSnappingPeg)
+		{
+			snappingPegsToRender.add((CompSnappingPeg) component);
+		}
+		else if(component instanceof CompWireRaw)
+		{
+			wiresToRender.add((CompWireRaw) component);
+		}
+		
+		if(component instanceof CompContainer)
+		{
+			for(CompGeneric child : ((CompContainer) component).getChildren())
+			{
+				importComponent(child);
+			}
+		}
 	}
 	
 	@Override
@@ -108,179 +138,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 		
-		//Load some tungboard:
-		try
-		{
-			TungBoard importedBoard = PrimitiveParser.importTungBoard("boards/16Bit-Paralell-CLA-ALU.tungboard");
-			importedBoard.setPosition(new TungPosition(0, 0, 0));
-			importedBoard.setAngles(new TungAngles(180, 0, 0));
-			importChild(importedBoard, new Vector3(-20, 0, 0), Quaternion.angleAxis(0, Vector3.yp), 0, "└─", true);
-		}
-		catch(RuntimeException e)
-		{
-			if(e.getCause() != null && e.getCause() instanceof NoSuchFileException)
-			{
-				System.out.println("###########################################");
-				System.out.println("Couldn't find tungboard file to display, you can download a nice one here: https://discordapp.com/channels/401255675264761866/588822987331993602/684761768144142337");
-				System.out.println("But for gods sake, rename 'CLE' to 'Paralell-CLA'");
-				System.out.println("Once you inserted a tungboard, or that one. Change the filename in " + getClass().getName() + ".");
-				System.out.println("###########################################");
-			}
-			else
-			{
-				throw e;
-			}
-		}
-	}
-	
-	private void importChild(TungObject object, Vector3 parentPosition, Quaternion parentRotation, int level, String prefix, boolean last)
-	{
-		if(object instanceof TungObject)
-		{
-			TungObject tungObject = (TungObject) object;
-			//TODO: Now that it works, optimize. Make it one non-obsolete calculation method.
-			Quaternion qx = Quaternion.angleAxis((double) tungObject.getAngles().getX(), Vector3.xn); //Has to be negative, cause unity *shrug*
-			Quaternion qy = Quaternion.angleAxis((double) -tungObject.getAngles().getY(), Vector3.yp);
-			Quaternion qz = Quaternion.angleAxis((double) -tungObject.getAngles().getZ(), Vector3.zp);
-			Quaternion localRotation = qz.multiply(qx).multiply(qy);
-			Quaternion globalRotation = localRotation.multiply(parentRotation);
-			
-			if(object instanceof TungBoard)
-			{
-				TungBoard tungBoard = (TungBoard) object;
-				System.out.println(prefix + " " + tungBoard.getX() + " " + tungBoard.getZ());
-				prefix = prefix.substring(0, prefix.length() - 2);
-				prefix += last ? "  " : "│ ";
-				
-				System.out.println(prefix + "Rot: " + tungBoard.getAngles());
-				System.out.println(prefix + "Pos: " + tungBoard.getPosition());
-				System.out.println(prefix + "Abs: " + parentPosition);
-				
-				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.15f * (float) tungBoard.getX(), 0, 0.15f * (float) tungBoard.getZ()));
-				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-				
-				Vector3 localPosition = new Vector3(tungBoard.getPosition().getX(), tungBoard.getPosition().getY(), tungBoard.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				CompBoard board = new CompBoard(tungBoard.getX(), tungBoard.getZ());
-				board.setColor(new Vector3(tungBoard.getColor().getR(), tungBoard.getColor().getG(), tungBoard.getColor().getB()));
-				board.setPosition(globalPosition.add(rotatedFixPoint));
-				board.setRotation(globalRotation);
-				boardsToRender.add(board);
-				
-				List<TungObject> children = tungBoard.getChildren();
-				//For the sake of pretty debugging, get rid of all unrelevant entries.
-				Iterator<TungObject> filterIterator = children.iterator();
-				while(filterIterator.hasNext())
-				{
-					Object obj = filterIterator.next();
-					if(!(obj instanceof TungChildable || obj instanceof TungPeg || obj instanceof TungInverter || obj instanceof TungBlotter || obj instanceof TungThroughPeg || obj instanceof TungSnappingPeg || obj instanceof TungWire))
-					{
-						System.out.println("Implement: " + obj.getClass().getSimpleName());
-						filterIterator.remove();
-					}
-				}
-				
-				for(int i = 0; i < children.size(); i++)
-				{
-					TungObject child = children.get(i);
-					boolean newLast = i == (children.size() - 1);
-					String newPrefix = prefix + (newLast ? "└─" : "├─");
-					importChild(child, globalPosition, globalRotation, level, newPrefix, newLast);
-				}
-			}
-			else if(object instanceof TungPeg)
-			{
-				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
-				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-				
-				CompPeg peg = new CompPeg();
-				peg.setPosition(globalPosition.add(rotatedFixPoint));
-				peg.setRotation(globalRotation);
-				pegsToRender.add(peg);
-			}
-			else if(object instanceof TungInverter)
-			{
-				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
-				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-				
-				CompInverter inverter = new CompInverter();
-				inverter.setPosition(globalPosition.add(rotatedFixPoint));
-				inverter.setRotation(globalRotation);
-				invertersToRender.add(inverter);
-			}
-			else if(object instanceof TungBlotter)
-			{
-				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
-				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-				
-				CompBlotter blotter = new CompBlotter();
-				blotter.setPosition(globalPosition.add(rotatedFixPoint));
-				blotter.setRotation(globalRotation);
-				blottersToRender.add(blotter);
-			}
-			else if(object instanceof TungThroughPeg)
-			{
-				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
-				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-				
-				CompThroughPeg throughPeg = new CompThroughPeg();
-				throughPeg.setPosition(globalPosition.add(rotatedFixPoint));
-				throughPeg.setRotation(globalRotation);
-				throughPegsToRender.add(throughPeg);
-			}
-			else if(object instanceof TungSnappingPeg)
-			{
-				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, -0.06f));
-				Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
-				
-				CompSnappingPeg snappingPeg = new CompSnappingPeg();
-				snappingPeg.setPosition(globalPosition.add(rotatedFixPoint));
-				snappingPeg.setRotation(globalRotation);
-				snappingPegsToRender.add(snappingPeg);
-			}
-			else if(object instanceof TungWire)
-			{
-				Vector3 localPosition = new Vector3(tungObject.getPosition().getX(), tungObject.getPosition().getY(), tungObject.getPosition().getZ());
-				Vector3 rotatedPosition = parentRotation.inverse().multiply(localPosition);
-				Vector3 globalPosition = parentPosition.add(rotatedPosition);
-				
-				TungWire tungWire = (TungWire) tungObject;
-				
-				CompWire wire = new CompWire();
-				wire.setLength(tungWire.getLength());
-				wire.setPosition(globalPosition);
-				wire.setRotation(globalRotation);
-				wire.setPowered(false);
-				wiresToRender.add(wire);
-			}
-		}
-		else
-		{
-			System.out.println("Implement: " + object.getClass().getSimpleName());
-			return;
-		}
+		//TODO: Re-add the importing of a tungboard, but at a higher level.
 	}
 	
 	@Override
@@ -328,7 +186,7 @@ public class RenderPlane3D implements RenderPlane
 		wireShader.setUniform(5, view);
 		wireShader.setUniform(2, model.getMat());
 		
-		for(CompWire wire : wiresToRender)
+		for(CompWireRaw wire : wiresToRender)
 		{
 			model.identity();
 			model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());

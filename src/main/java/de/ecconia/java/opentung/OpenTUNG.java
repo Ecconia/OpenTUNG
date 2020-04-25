@@ -1,8 +1,10 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
+import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Dimension;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
@@ -17,8 +19,13 @@ public class OpenTUNG
 	private static RenderPlane2D interactables;
 	private static RenderPlane3D worldView;
 	
+	private static CompBoard board;
+	
 	public static void main(String[] args)
 	{
+		System.out.println("Loading external board...");
+		board = TungBoardLoader.convert("16Bit-Parallel-CLA-ALU");
+		
 		try
 		{
 			System.out.println("LWJGL version: " + Version.getVersion());
@@ -103,7 +110,7 @@ public class OpenTUNG
 		
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
-		worldView = new RenderPlane3D(inputHandler);
+		worldView = new RenderPlane3D(inputHandler, board);
 		worldView.setup();
 	}
 	

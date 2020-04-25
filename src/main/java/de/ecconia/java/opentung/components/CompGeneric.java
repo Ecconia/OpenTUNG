@@ -3,10 +3,19 @@ package de.ecconia.java.opentung.components;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 
-public class CompGeneric
+public abstract class CompGeneric
 {
+	//Main data:
 	private Quaternion rotation;
 	private Vector3 position;
+	
+	//Custom data:
+	private CompContainer parent;
+	
+	public CompGeneric(CompContainer parent)
+	{
+		this.parent = parent;
+	}
 	
 	public void setPosition(Vector3 position)
 	{
@@ -26,5 +35,15 @@ public class CompGeneric
 	public Quaternion getRotation()
 	{
 		return rotation;
+	}
+	
+	public void setParent(CompContainer parent)
+	{
+		this.parent = parent;
+	}
+	
+	public CompContainer getParent()
+	{
+		return parent;
 	}
 }

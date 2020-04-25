@@ -1,11 +1,11 @@
 package de.ecconia.java.opentung.components;
 
-public class CompWire extends CompGeneric
+public class CompWireRaw extends CompGeneric
 {
 	private float length;
 	private boolean powered;
 	
-	public CompWire(CompContainer parent)
+	public CompWireRaw(CompContainer parent)
 	{
 		super(parent);
 	}
