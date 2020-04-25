@@ -31,7 +31,7 @@ public class ShaderProgram
 		if(GL30.glGetShaderi(vertexShaderID, GL30.GL_COMPILE_STATUS) == GL30.GL_FALSE)
 		{
 			String errorText = GL30.glGetShaderInfoLog(vertexShaderID, GL30.glGetShaderi(vertexShaderID, GL30.GL_INFO_LOG_LENGTH));
-			throw new RuntimeException("Error loading Vertex shader: >" + errorText + "<");
+			throw new RuntimeException("Error loading Vertex shader '" + name + "': >" + errorText + "<");
 		}
 		
 		//Fragment Shader:
@@ -47,7 +47,7 @@ public class ShaderProgram
 		if(GL30.glGetShaderi(fragmentShaderID, GL30.GL_COMPILE_STATUS) == GL30.GL_FALSE)
 		{
 			String errorText = GL30.glGetShaderInfoLog(fragmentShaderID, GL30.glGetShaderi(fragmentShaderID, GL30.GL_INFO_LOG_LENGTH));
-			throw new RuntimeException("Error loading Fragment shader: >" + errorText + "<");
+			throw new RuntimeException("Error loading Fragment shader '" + name + "': >" + errorText + "<");
 		}
 		
 		//Program:
@@ -59,7 +59,7 @@ public class ShaderProgram
 		if(GL30.glGetProgrami(id, GL30.GL_LINK_STATUS) == GL30.GL_FALSE)
 		{
 			String errorText = GL30.glGetProgramInfoLog(id, GL30.glGetProgrami(id, GL30.GL_INFO_LOG_LENGTH));
-			throw new RuntimeException("Error creating Program: >" + errorText + "<");
+			throw new RuntimeException("Error creating Program '" + name + "': >" + errorText + "<");
 		}
 		
 		GL30.glDeleteShader(vertexShaderID);
