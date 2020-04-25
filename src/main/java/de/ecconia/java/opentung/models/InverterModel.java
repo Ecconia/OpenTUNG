@@ -1,9 +1,9 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class SimpleInverterModel extends SComponent
+public class InverterModel extends GenericModel
 {
 	//2496 bytes
-	public SimpleInverterModel()
+	public InverterModel()
 	{
 		//Create:
 		IntHolder offset = new IntHolder(); //Vertices array offset

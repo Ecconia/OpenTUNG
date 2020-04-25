@@ -1,8 +1,8 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class NormalIndicator extends SComponent
+public class NormalIndicatorModel extends GenericModel
 {
-	public NormalIndicator()
+	public NormalIndicatorModel()
 	{
 		vertices = new float[]{
 				0, 0, 0, 1, 0, 0,

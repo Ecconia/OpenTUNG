@@ -1,16 +1,14 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class SimpleSnappingPeg extends SComponent
+public class PegModel extends GenericModel
 {
 	//936 bytes
-	public SimpleSnappingPeg()
+	public PegModel()
 	{
 		//Create:
 		IntHolder offset = new IntHolder(); //Vertices array offset
 		vertices = new float[1 * 6 * 4 * 9];
-		placeCube(0, 0.15f, 0,
-				0.045f, 0.15f, 0.045f,
-				0.0f, 150f / 255f, 141f / 255f, offset, null);
+		placeCube(0, 0.15f, 0, 0.045f, 0.15f, 0.045f, 0.0f, 0.0f, 0.0f, offset, null);
 		
 		offset = new IntHolder(); //Indices array offset
 		indices = new short[1 * 6 * 6];

@@ -1,9 +1,9 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class SimpleDynamicWire extends SComponent
+public class DynamicWireModel extends GenericModel
 {
 	//? bytes, calc it yourself man.
-	public SimpleDynamicWire()
+	public DynamicWireModel()
 	{
 		//Create:
 		IntHolder offset = new IntHolder(); //Vertices array offset

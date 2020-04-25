@@ -1,9 +1,9 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class SimpleDynamicBoard extends SComponent
+public class DynamicBoardModel extends GenericModel
 {
 	//2496 bytes
-	public SimpleDynamicBoard()
+	public DynamicBoardModel()
 	{
 		//Create:
 		IntHolder offset = new IntHolder(); //Vertices array offset

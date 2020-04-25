@@ -15,15 +15,15 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.scomponents.CoordIndicator;
-import de.ecconia.java.opentung.scomponents.NormalIndicator;
-import de.ecconia.java.opentung.scomponents.SimpleBlotterModel;
-import de.ecconia.java.opentung.scomponents.SimpleDynamicBoard;
-import de.ecconia.java.opentung.scomponents.SimpleDynamicWire;
-import de.ecconia.java.opentung.scomponents.SimpleInverterModel;
-import de.ecconia.java.opentung.scomponents.SimplePeg;
-import de.ecconia.java.opentung.scomponents.SimpleSnappingPeg;
-import de.ecconia.java.opentung.scomponents.SimpleThroughPeg;
+import de.ecconia.java.opentung.models.CoordIndicatorModel;
+import de.ecconia.java.opentung.models.NormalIndicatorModel;
+import de.ecconia.java.opentung.models.BlotterModel;
+import de.ecconia.java.opentung.models.DynamicBoardModel;
+import de.ecconia.java.opentung.models.DynamicWireModel;
+import de.ecconia.java.opentung.models.InverterModel;
+import de.ecconia.java.opentung.models.PegModel;
+import de.ecconia.java.opentung.models.SnappingPegModel;
+import de.ecconia.java.opentung.models.ThroughPegModel;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,21 +35,21 @@ public class RenderPlane3D implements RenderPlane
 	private final Matrix projection = new Matrix();
 	
 	private ShaderProgram program;
-	private SimpleInverterModel inverter;
-	private SimpleBlotterModel blotter;
-	private SimpleThroughPeg throughPeg;
-	private SimplePeg peg;
-	private CoordIndicator coords;
-	private SimpleSnappingPeg snappingPeg;
+	private InverterModel inverter;
+	private BlotterModel blotter;
+	private ThroughPegModel throughPeg;
+	private PegModel peg;
+	private CoordIndicatorModel coords;
+	private SnappingPegModel snappingPeg;
 	
 	private TextureWrapper boardTexture;
 	private ShaderProgram dynamicBoardShader;
-	private SimpleDynamicBoard dBoard;
+	private DynamicBoardModel dBoard;
 	private ShaderProgram wireShader;
-	private SimpleDynamicWire dWire;
+	private DynamicWireModel dWire;
 	
 	private ShaderProgram lineShader;
-	private NormalIndicator normalIndicator;
+	private NormalIndicatorModel normalIndicator;
 	
 	private final Quaternion quaternion = Quaternion.xp90.multiply(Quaternion.yp90);
 	
@@ -123,16 +123,16 @@ public class RenderPlane3D implements RenderPlane
 		
 		boardTexture = new TextureWrapper();
 		
-		inverter = new SimpleInverterModel();
-		blotter = new SimpleBlotterModel();
-		peg = new SimplePeg();
-		dBoard = new SimpleDynamicBoard();
-		dWire = new SimpleDynamicWire();
-		coords = new CoordIndicator();
-		throughPeg = new SimpleThroughPeg();
-		snappingPeg = new SimpleSnappingPeg();
+		inverter = new InverterModel();
+		blotter = new BlotterModel();
+		peg = new PegModel();
+		dBoard = new DynamicBoardModel();
+		dWire = new DynamicWireModel();
+		coords = new CoordIndicatorModel();
+		throughPeg = new ThroughPegModel();
+		snappingPeg = new SnappingPegModel();
 		
-		normalIndicator = new NormalIndicator();
+		normalIndicator = new NormalIndicatorModel();
 		
 		camera = new Camera(inputHandler);
 		

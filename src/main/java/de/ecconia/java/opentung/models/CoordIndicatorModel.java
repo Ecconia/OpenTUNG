@@ -1,8 +1,8 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class CoordIndicator extends SComponent
+public class CoordIndicatorModel extends GenericModel
 {
-	public CoordIndicator()
+	public CoordIndicatorModel()
 	{
 		IntHolder offset = new IntHolder(); //Vertices array offset
 		vertices = new float[3 * 6 * 4 * 9];

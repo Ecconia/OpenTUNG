@@ -1,9 +1,9 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class SimpleThroughPeg extends SComponent
+public class ThroughPegModel extends GenericModel
 {
 	//2496 bytes
-	public SimpleThroughPeg()
+	public ThroughPegModel()
 	{
 		//Create:
 		IntHolder offset = new IntHolder(); //Vertices array offset

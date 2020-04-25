@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
 import de.ecconia.java.opentung.libwrap.vaos.CubicColoredVAO;
 import de.ecconia.java.opentung.libwrap.vaos.DynamicBoardVAO;
@@ -6,7 +6,7 @@ import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.WireVAO;
 
-public abstract class SComponent
+public abstract class GenericModel
 {
 	protected float[] vertices;
 	protected short[] indices;

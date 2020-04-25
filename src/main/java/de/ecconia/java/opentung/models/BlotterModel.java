@@ -1,9 +1,9 @@
-package de.ecconia.java.opentung.scomponents;
+package de.ecconia.java.opentung.models;
 
-public class SimpleBlotterModel extends SComponent
+public class BlotterModel extends GenericModel
 {
 	//2496 bytes
-	public SimpleBlotterModel()
+	public BlotterModel()
 	{
 		//Create:
 		IntHolder offset = new IntHolder(); //Vertices array offset
