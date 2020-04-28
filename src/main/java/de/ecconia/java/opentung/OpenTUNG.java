@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
-	private static int fps = 30;
+	private static int fps = 0;
 	private static InputProcessor inputHandler;
 	
 	private static RenderPlane2D interactables;
