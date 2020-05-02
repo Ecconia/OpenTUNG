@@ -9,6 +9,8 @@ import de.ecconia.java.opentung.models.GenericModel;
 import de.ecconia.java.opentung.models.InverterModel;
 import de.ecconia.java.opentung.models.LabelModel;
 import de.ecconia.java.opentung.models.LabelModelTex;
+import de.ecconia.java.opentung.models.PanelLabelModel;
+import de.ecconia.java.opentung.models.PanelLabelModelTex;
 import de.ecconia.java.opentung.models.PegModel;
 import de.ecconia.java.opentung.models.SnappingPegModel;
 import de.ecconia.java.opentung.models.ThroughPegModel;
@@ -65,6 +67,8 @@ public abstract class CompGeneric
 		CompPeg.model = new PegModel();
 		CompLabel.model = new LabelModel();
 		CompLabel.modelTex = new LabelModelTex();
+		CompPanelLabel.model = new PanelLabelModel();
+		CompPanelLabel.modelTex = new PanelLabelModelTex();
 		CompBlotter.model = new BlotterModel();
 		CompInverter.model = new InverterModel();
 		CompBoard.model = new DynamicBoardModel();

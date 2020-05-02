@@ -27,12 +27,12 @@ public class LabelModelTex extends GenericModel
 		upload(ShaderType.LabelShader);
 	}
 	
-	public TextureWrapper generateUploadTexture(String text, float textSize)
+	public static TextureWrapper generateUploadTexture(String text, float textSize)
 	{
 		String[] lines = text.split("\n");
 //		System.out.println("Lines: " + lines.length + " Size: " + textSize);
 		
-		int side = 2000;
+		int side = 300;
 		//Generate image:
 		BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();

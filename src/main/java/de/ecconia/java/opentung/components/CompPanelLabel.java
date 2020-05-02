@@ -2,20 +2,21 @@ package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.models.GenericModel;
-import de.ecconia.java.opentung.models.LabelModel;
 import de.ecconia.java.opentung.models.LabelModelTex;
+import de.ecconia.java.opentung.models.PanelLabelModel;
+import de.ecconia.java.opentung.models.PanelLabelModelTex;
 
-public class CompLabel extends CompGeneric
+public class CompPanelLabel extends CompLabel
 {
-	public static LabelModel model;
-	public static LabelModelTex modelTex;
+	public static PanelLabelModel model;
+	public static PanelLabelModelTex modelTex;
 	
 	private String text;
 	private float fontSize;
 	
 	private TextureWrapper texture;
 	
-	public CompLabel(CompContainer parent)
+	public CompPanelLabel(CompContainer parent)
 	{
 		super(parent);
 	}
