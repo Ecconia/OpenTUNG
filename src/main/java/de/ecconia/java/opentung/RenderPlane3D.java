@@ -25,7 +25,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	private final Matrix projection = new Matrix();
 	
-	private ShaderProgram program;
+	private ShaderProgram faceShader;
 	private ShaderProgram lineShader;
 	private ShaderProgram wireShader;
 	private ShaderProgram dynamicBoardShader;
@@ -81,7 +81,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		CompGeneric.initModels();
 		
-		program = new ShaderProgram("basicShader");
+		faceShader = new ShaderProgram("basicShader");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		lineShader = new ShaderProgram("lineShader");
 		wireShader = new ShaderProgram("wireShader");
@@ -169,10 +169,10 @@ public class RenderPlane3D implements RenderPlane
 //			normalIndicator.draw();
 //		}
 		
-		program.use();
-		program.setUniform(0, projection.getMat());
-		program.setUniform(1, view);
-		program.setUniform(3, view);
+		faceShader.use();
+		faceShader.setUniform(0, projection.getMat());
+		faceShader.setUniform(1, view);
+		faceShader.setUniform(3, view);
 		
 		for(CompGeneric component : componentsToRender)
 		{
@@ -180,7 +180,7 @@ public class RenderPlane3D implements RenderPlane
 			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
 			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
 			model.multiply(rotMat);
-			program.setUniform(2, model.getMat());
+			faceShader.setUniform(2, model.getMat());
 			
 			component.getModel().draw();
 		}
@@ -201,25 +201,25 @@ public class RenderPlane3D implements RenderPlane
 		
 		model.identity();
 		model.translate(0.6f * (float) -1 + 0.15f, h, 0.15f);
-		program.setUniform(2, model.getMat());
+		faceShader.setUniform(2, model.getMat());
 		CompInverter.model.draw();
 		
 		model.identity();
 		model.translate(0.6f * (float) 0 + 0.15f, h, 0.15f);
-		program.setUniform(2, model.getMat());
+		faceShader.setUniform(2, model.getMat());
 		CompBlotter.model.draw();
 		
 		model.identity();
 		model.translate(0.6f * (float) 1 + 0.15f, h, 0.15f);
-		program.setUniform(2, model.getMat());
+		faceShader.setUniform(2, model.getMat());
 		CompPeg.model.draw();
 		
-		program.setUniform(2, quaternion.createMatrix());
+		faceShader.setUniform(2, quaternion.createMatrix());
 		CompInverter.model.draw();
 		
 		model.identity();
 		model.translate(1.5f, 0, -1.5f);
-		program.setUniform(2, model.getMat());
+		faceShader.setUniform(2, model.getMat());
 		coords.draw();
 		
 		placeLayer(0f, view, new StuffConverter()
@@ -259,7 +259,7 @@ public class RenderPlane3D implements RenderPlane
 		Vector3 initialPosition = new Vector3(2, height, -2);
 		
 		float[] model = converter.eulerToMatrix(0, 0, 0, initialPosition);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 		
 		final float d = 0.9f;
@@ -268,38 +268,38 @@ public class RenderPlane3D implements RenderPlane
 		Vector3 copyPos = initialPosition;
 		
 		model = converter.eulerToMatrix(90, 0, 0, copyPos);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(0, 90, 0, copyPos);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(0, 0, 90, copyPos);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 		
 		initialPosition = initialPosition.add(0, 0, d);
 		copyPos = initialPosition;
 		
 		model = converter.eulerToMatrix(90, 90, 0, copyPos);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(90, 0, 90, copyPos);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 		
 		copyPos = copyPos.add(d, 0, 0);
 		
 		model = converter.eulerToMatrix(0, 90, 90, copyPos);
-		program.setUniform(2, model);
+		faceShader.setUniform(2, model);
 		CompInverter.model.draw();
 	}
 	
