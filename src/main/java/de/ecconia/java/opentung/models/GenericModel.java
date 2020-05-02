@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.models;
 import de.ecconia.java.opentung.libwrap.vaos.CubicColoredVAO;
 import de.ecconia.java.opentung.libwrap.vaos.DynamicBoardVAO;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.libwrap.vaos.LabelVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.WireVAO;
 
@@ -35,6 +36,10 @@ public abstract class GenericModel
 		else if(type == ShaderType.WireShader)
 		{
 			vao = new WireVAO(vertices, indices);
+		}
+		else if(type == ShaderType.LabelShader)
+		{
+			vao = new LabelVAO(vertices, indices);
 		}
 	}
 	
@@ -176,5 +181,6 @@ public abstract class GenericModel
 		DynamicBoard,
 		SimpleLines,
 		WireShader,
+		LabelShader,
 	}
 }

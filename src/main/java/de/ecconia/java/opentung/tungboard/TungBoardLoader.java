@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompContainer;
 import de.ecconia.java.opentung.components.CompGeneric;
 import de.ecconia.java.opentung.components.CompInverter;
+import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompThroughPeg;
@@ -14,6 +15,7 @@ import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
@@ -153,6 +155,21 @@ public class TungBoardLoader
 			wire.setPowered(true);
 			
 			return wire;
+		}
+		else if(object instanceof TungLabel)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompLabel label = new CompLabel(parent);
+			label.setPosition(globalPosition.add(rotatedFixPoint));
+			label.setRotation(globalRotation);
+			
+			TungLabel t = (TungLabel) object;
+			label.setFontSize(t.getFontSize());
+			label.setText(t.getText());
+			
+			return label;
 		}
 		else
 		{

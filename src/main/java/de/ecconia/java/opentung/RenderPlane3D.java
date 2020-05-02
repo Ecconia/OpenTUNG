@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompContainer;
 import de.ecconia.java.opentung.components.CompGeneric;
 import de.ecconia.java.opentung.components.CompInverter;
+import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompWireRaw;
 import de.ecconia.java.opentung.inputs.InputProcessor;
@@ -16,6 +17,8 @@ import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.NormalIndicatorModel;
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +31,7 @@ public class RenderPlane3D implements RenderPlane
 	private ShaderProgram faceShader;
 	private ShaderProgram lineShader;
 	private ShaderProgram wireShader;
+	private ShaderProgram labelShader;
 	private ShaderProgram dynamicBoardShader;
 	
 	private TextureWrapper boardTexture;
@@ -44,12 +48,15 @@ public class RenderPlane3D implements RenderPlane
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
 	private final List<CompGeneric> componentsToRender = new ArrayList<>();
+	private final List<CompLabel> labelsToRender = new ArrayList<>();
+	
+	//TODO: Remove this thing again from here. But later when there is more management.
+	private final CompBoard board;
 	
 	public RenderPlane3D(InputProcessor inputHandler, CompBoard board)
 	{
+		this.board = board;
 		this.inputHandler = inputHandler;
-		
-		importComponent(board);
 	}
 	
 	private void importComponent(CompGeneric component)
@@ -67,6 +74,13 @@ public class RenderPlane3D implements RenderPlane
 			componentsToRender.add(component);
 		}
 		
+		if(component instanceof CompLabel)
+		{
+			((CompLabel) component).initialize();
+			labelsToRender.add((CompLabel) component);
+			return;
+		}
+		
 		if(component instanceof CompContainer)
 		{
 			for(CompGeneric child : ((CompContainer) component).getChildren())
@@ -79,14 +93,26 @@ public class RenderPlane3D implements RenderPlane
 	@Override
 	public void setup()
 	{
+		{
+			int side = 16;
+			BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			g.setColor(Color.white);
+			g.fillRect(0, 0, side - 1, side - 1);
+			g.setColor(new Color(0x777777));
+			g.drawRect(0, 0, side - 1, side - 1);
+			g.dispose();
+			boardTexture = new TextureWrapper(image);
+		}
+		
 		CompGeneric.initModels();
+		importComponent(board);
 		
 		faceShader = new ShaderProgram("basicShader");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		lineShader = new ShaderProgram("lineShader");
 		wireShader = new ShaderProgram("wireShader");
-		
-		boardTexture = new TextureWrapper();
+		labelShader = new ShaderProgram("labelShader");
 		
 		normalIndicator = new NormalIndicatorModel();
 		coords = new CoordIndicatorModel();
@@ -101,6 +127,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		float[] view = camera.getMatrix();
 		
+		boardTexture.activate();
 		dynamicBoardShader.use();
 		dynamicBoardShader.setUniform(0, projection.getMat());
 		dynamicBoardShader.setUniform(1, view);
@@ -168,6 +195,21 @@ public class RenderPlane3D implements RenderPlane
 //
 //			normalIndicator.draw();
 //		}
+		
+		labelShader.use();
+		labelShader.setUniform(0, projection.getMat());
+		labelShader.setUniform(1, view);
+		labelShader.setUniform(3, view);
+		for(CompLabel label : labelsToRender)
+		{
+			label.activate();
+			model.identity();
+			model.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
+			Matrix rotMat = new Matrix(label.getRotation().createMatrix());
+			model.multiply(rotMat);
+			labelShader.setUniform(2, model.getMat());
+			label.drawLabel();
+		}
 		
 		faceShader.use();
 		faceShader.setUniform(0, projection.getMat());

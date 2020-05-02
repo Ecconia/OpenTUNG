@@ -7,6 +7,8 @@ import de.ecconia.java.opentung.models.DynamicBoardModel;
 import de.ecconia.java.opentung.models.DynamicWireModel;
 import de.ecconia.java.opentung.models.GenericModel;
 import de.ecconia.java.opentung.models.InverterModel;
+import de.ecconia.java.opentung.models.LabelModel;
+import de.ecconia.java.opentung.models.LabelModelTex;
 import de.ecconia.java.opentung.models.PegModel;
 import de.ecconia.java.opentung.models.SnappingPegModel;
 import de.ecconia.java.opentung.models.ThroughPegModel;
@@ -61,6 +63,8 @@ public abstract class CompGeneric
 	{
 		//TODO: Move improve whatever. This feels hacky, while its not that bad of a "solution/workaround".
 		CompPeg.model = new PegModel();
+		CompLabel.model = new LabelModel();
+		CompLabel.modelTex = new LabelModelTex();
 		CompBlotter.model = new BlotterModel();
 		CompInverter.model = new InverterModel();
 		CompBoard.model = new DynamicBoardModel();

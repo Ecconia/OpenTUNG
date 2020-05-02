@@ -1,28 +1,17 @@
 package de.ecconia.java.opentung.libwrap;
 
+import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-
 public class TextureWrapper
 {
-	private static final int side = 16;
 	private final int id;
 	
-	public TextureWrapper()
+	public TextureWrapper(BufferedImage image)
 	{
-		BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = image.createGraphics();
-		g.setColor(Color.white);
-		g.fillRect(0, 0, side - 1, side - 1);
-		g.setColor(new Color(0x777777));
-		g.drawRect(0, 0, side - 1, side - 1);
-		g.dispose();
-
 		int[] pixels = new int[image.getWidth() * image.getHeight()];
 		image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
 		ByteBuffer buffer = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * 3);
@@ -59,9 +48,10 @@ public class TextureWrapper
 		buffer.put((byte) value);
 	}
 	
-	public void activate(int index, int location)
+	public void activate()
 	{
-		//Not used cause only one texture in total.
+		//int index, int location
+		//Not used cause only one texture in total. (At a time)
 		//GL30.glActiveTexture(GL30.GL_TEXTURE0 + index);
 		GL30.glBindTexture(GL30.GL_TEXTURE_2D, id);
 		//GL30.glUniform1i(location, GL30.GL_TEXTURE0 + index);
