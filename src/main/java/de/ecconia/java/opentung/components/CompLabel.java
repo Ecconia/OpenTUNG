@@ -1,14 +1,22 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.models.GenericModel;
 import de.ecconia.java.opentung.models.LabelModel;
 import de.ecconia.java.opentung.models.LabelModelTex;
 
-public class CompLabel extends CompGeneric
+public class CompLabel extends Component
 {
 	public static LabelModel model;
 	public static LabelModelTex modelTex;
+	
+	public static void initGL()
+	{
+		model = new LabelModel();
+		modelTex = new LabelModelTex();
+	}
 	
 	private String text;
 	private float fontSize;

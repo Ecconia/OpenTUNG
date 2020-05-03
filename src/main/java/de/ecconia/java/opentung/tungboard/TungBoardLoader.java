@@ -2,8 +2,8 @@ package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.components.CompContainer;
-import de.ecconia.java.opentung.components.CompGeneric;
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPanelLabel;
@@ -56,7 +56,7 @@ public class TungBoardLoader
 		}
 	}
 	
-	private static CompGeneric importChild(CompContainer parent, TungObject object, Vector3 parentPosition, Quaternion parentRotation)
+	private static Component importChild(CompContainer parent, TungObject object, Vector3 parentPosition, Quaternion parentRotation)
 	{
 		//TODO: Now that it works, optimize. Make it one non-obsolete calculation method.
 		Quaternion qx = Quaternion.angleAxis(object.getAngles().getX(), Vector3.xn); //Has to be negative, cause unity *shrug*
@@ -85,7 +85,7 @@ public class TungBoardLoader
 			
 			for(TungObject tungChild : tungBoard.getChildren())
 			{
-				CompGeneric child = importChild(board, tungChild, globalPosition, globalRotation);
+				Component child = importChild(board, tungChild, globalPosition, globalRotation);
 				if(child != null)
 				{
 					board.addChild(child);

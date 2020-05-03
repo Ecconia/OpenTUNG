@@ -1,8 +1,10 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.models.GenericModel;
 
-public class CompNoisemaker extends CompGeneric
+public class CompNoisemaker extends Component
 {
 	private float frequency;
 	

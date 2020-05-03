@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.models.GenericModel;
 import de.ecconia.java.opentung.models.LabelModelTex;
@@ -10,6 +11,12 @@ public class CompPanelLabel extends CompLabel
 {
 	public static PanelLabelModel model;
 	public static PanelLabelModelTex modelTex;
+	
+	public static void initGL()
+	{
+		model = new PanelLabelModel();
+		modelTex = new PanelLabelModelTex();
+	}
 	
 	private String text;
 	private float fontSize;

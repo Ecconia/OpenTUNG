@@ -1,8 +1,10 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.models.GenericModel;
 
-public class CompWire extends CompGeneric
+public class CompWire extends Component
 {
 	private float length;
 	private boolean powered;

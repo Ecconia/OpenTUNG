@@ -1,12 +1,19 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.DynamicWireModel;
 import de.ecconia.java.opentung.models.GenericModel;
 
-public class CompWireRaw extends CompGeneric
+public class CompWireRaw extends Component
 {
 	public static DynamicWireModel model;
+	
+	public static void initGL()
+	{
+		model = new DynamicWireModel();
+	}
 	
 	private float length;
 	private boolean powered;
