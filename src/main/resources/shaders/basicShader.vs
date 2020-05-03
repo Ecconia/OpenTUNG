@@ -14,7 +14,7 @@ out vec3 tNormal;
 
 void main()
 {
-	tColor = vec4(inColor.rgb, 0.5);
+	tColor = vec4(inColor.rgb, 1.0);
 
 	mat4 transformMat = view * model;
 	vec4 transformedPos = transformMat * vec4(inPosition, 1.0);

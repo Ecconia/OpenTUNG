@@ -57,7 +57,9 @@ public class OpenTUNG
 					worldView.newSize(newSize.width, newSize.height);
 				}
 				
-				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
+				GL30.glStencilMask(0xFF); //Set stencil mode, to properly clear the buffer.
+				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT);
+				GL30.glStencilMask(0x00); //Unset stencil mode
 				
 				render();
 				
@@ -106,7 +108,16 @@ public class OpenTUNG
 	private static void init()
 	{
 		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
+		
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
+		GL30.glDepthFunc(GL30.GL_LESS);
+		
+		GL30.glEnable(GL30.GL_BLEND);
+		GL30.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
+		
+		GL30.glEnable(GL30.GL_STENCIL_TEST);
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+		GL30.glStencilOp(GL30.GL_KEEP, GL30.GL_KEEP, GL30.GL_REPLACE);
 		
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();

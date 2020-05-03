@@ -12,14 +12,14 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
-import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
+import de.ecconia.java.opentung.models.DebugBlockModel;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import org.lwjgl.opengl.GL30;
 
 public class RenderPlane3D implements RenderPlane
 {
@@ -28,6 +28,7 @@ public class RenderPlane3D implements RenderPlane
 	private final Matrix projection = new Matrix();
 	
 	private ShaderProgram faceShader;
+	private ShaderProgram faceOutlineShader;
 	private ShaderProgram wireShader;
 	private ShaderProgram labelShader;
 	private ShaderProgram dynamicBoardShader;
@@ -35,6 +36,7 @@ public class RenderPlane3D implements RenderPlane
 	private TextureWrapper boardTexture;
 	
 	private CoordIndicatorModel coords;
+	private DebugBlockModel block;
 	
 	private static float color = 0.2f;
 	
@@ -104,11 +106,13 @@ public class RenderPlane3D implements RenderPlane
 		importComponent(board);
 		
 		faceShader = new ShaderProgram("basicShader");
+		faceOutlineShader = new ShaderProgram("basicShaderOutline");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		wireShader = new ShaderProgram("wireShader");
 		labelShader = new ShaderProgram("labelShader");
 		
 		coords = new CoordIndicatorModel();
+		block = new DebugBlockModel();
 		
 		camera = new Camera(inputHandler);
 		
@@ -226,6 +230,31 @@ public class RenderPlane3D implements RenderPlane
 		model.translate(1.5f, 0, -1.5f);
 		faceShader.setUniform(2, model.getMat());
 		coords.draw();
+		
+		//Outline test:
+		GL30.glStencilFunc(GL30.GL_ALWAYS, 1, 0xFF);
+		GL30.glStencilMask(0xFF);
+		
+		model.identity();
+		faceShader.setUniform(2, model.getMat());
+		block.draw();
+		
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+		GL30.glStencilMask(0x00);
+		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		
+		faceOutlineShader.use();
+		faceOutlineShader.setUniform(0, projection.getMat());
+		faceOutlineShader.setUniform(1, view);
+		
+		float scale = 1.2f;
+		Matrix sMat = new Matrix();
+		sMat.scale(scale, scale, scale);
+		model.multiply(sMat);
+		faceOutlineShader.setUniform(2, model.getMat());
+		block.draw();
+		
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
 	@Override
