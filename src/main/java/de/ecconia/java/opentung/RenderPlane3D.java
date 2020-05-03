@@ -36,8 +36,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	private CoordIndicatorModel coords;
 	
-	private final Quaternion quaternion = Quaternion.xp90.multiply(Quaternion.yp90);
-	
 	private static float color = 0.2f;
 	
 	private final InputProcessor inputHandler;
@@ -224,98 +222,10 @@ public class RenderPlane3D implements RenderPlane
 		faceShader.setUniform(2, model.getMat());
 		CompPeg.model.draw();
 		
-		faceShader.setUniform(2, quaternion.createMatrix());
-		CompInverter.model.draw();
-		
 		model.identity();
 		model.translate(1.5f, 0, -1.5f);
 		faceShader.setUniform(2, model.getMat());
 		coords.draw();
-		
-		placeLayer(0f, view, new StuffConverter()
-		{
-			@Override
-			public float[] eulerToMatrix(float x, float y, float z, Vector3 pos)
-			{
-				Matrix matrix = new Matrix();
-				matrix.identity();
-				matrix.translate((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
-				matrix.rotate(y, 0, 1, 0);
-				matrix.rotate(x, 1, 0, 0);
-				matrix.rotate(z, 0, 0, 1);
-				return matrix.getMat();
-			}
-		});
-		
-		//Broken euler to Quaternion function, gonna be fixed somewhen later.
-//		placeLayer(1f, view, new StuffConverter()
-//		{
-//			@Override
-//			public float[] eulerToMatrix(float x, float y, float z, Vector3 pos)
-//			{
-//				Matrix matrix = new Matrix();
-//				matrix.translate((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
-//
-//				Quaternion q = Quaternion.unityEuler(x, y, z);
-//
-//				matrix.multiply(new Matrix(q.createMatrix()));
-//				return matrix.getMat();
-//			}
-//		});
-	}
-	
-	public void placeLayer(float height, float[] matrix, StuffConverter converter)
-	{
-		Vector3 initialPosition = new Vector3(2, height, -2);
-		
-		float[] model = converter.eulerToMatrix(0, 0, 0, initialPosition);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-		
-		final float d = 0.9f;
-		
-		initialPosition = initialPosition.add(d, 0, 0);
-		Vector3 copyPos = initialPosition;
-		
-		model = converter.eulerToMatrix(90, 0, 0, copyPos);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-		
-		copyPos = copyPos.add(d, 0, 0);
-		
-		model = converter.eulerToMatrix(0, 90, 0, copyPos);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-		
-		copyPos = copyPos.add(d, 0, 0);
-		
-		model = converter.eulerToMatrix(0, 0, 90, copyPos);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-		
-		initialPosition = initialPosition.add(0, 0, d);
-		copyPos = initialPosition;
-		
-		model = converter.eulerToMatrix(90, 90, 0, copyPos);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-		
-		copyPos = copyPos.add(d, 0, 0);
-		
-		model = converter.eulerToMatrix(90, 0, 90, copyPos);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-		
-		copyPos = copyPos.add(d, 0, 0);
-		
-		model = converter.eulerToMatrix(0, 90, 90, copyPos);
-		faceShader.setUniform(2, model);
-		CompInverter.model.draw();
-	}
-	
-	private interface StuffConverter
-	{
-		float[] eulerToMatrix(float x, float y, float z, Vector3 pos);
 	}
 	
 	@Override
