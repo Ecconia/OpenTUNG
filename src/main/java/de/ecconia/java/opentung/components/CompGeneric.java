@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.components;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.BlotterModel;
+import de.ecconia.java.opentung.models.CrossyIndicatorModel;
 import de.ecconia.java.opentung.models.DynamicBoardModel;
 import de.ecconia.java.opentung.models.DynamicWireModel;
 import de.ecconia.java.opentung.models.GenericModel;
@@ -63,7 +64,7 @@ public abstract class CompGeneric
 	
 	public static void initModels()
 	{
-		//TODO: Move improve whatever. This feels hacky, while its not that bad of a "solution/workaround".
+		//TODO: Move improve whatever. This feels hacky, while its not that bad of a "solution/workaround". I know a better solution by now, but gonna implement it later.
 		CompPeg.model = new PegModel();
 		CompLabel.model = new LabelModel();
 		CompLabel.modelTex = new LabelModelTex();
@@ -75,5 +76,6 @@ public abstract class CompGeneric
 		CompWireRaw.model = new DynamicWireModel();
 		CompThroughPeg.model = new ThroughPegModel();
 		CompSnappingPeg.model = new SnappingPegModel();
+		CompCrossyIndicator.model = new CrossyIndicatorModel();
 	}
 }

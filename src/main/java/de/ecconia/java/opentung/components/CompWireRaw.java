@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.DynamicWireModel;
 import de.ecconia.java.opentung.models.GenericModel;
 
@@ -39,5 +40,19 @@ public class CompWireRaw extends CompGeneric
 	public GenericModel getModel()
 	{
 		return model;
+	}
+	
+	public Vector3 getEnd1()
+	{
+		Vector3 endPointer = new Vector3(0, 0, length / 2f);
+		endPointer = getRotation().inverse().multiply(endPointer);
+		return endPointer.add(getPosition());
+	}
+	
+	public Vector3 getEnd2()
+	{
+		Vector3 endPointer = new Vector3(0, 0, length / 2f);
+		endPointer = getRotation().inverse().multiply(endPointer).invert();
+		return endPointer.add(getPosition());
 	}
 }

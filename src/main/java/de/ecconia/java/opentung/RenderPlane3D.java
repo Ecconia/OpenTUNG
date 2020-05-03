@@ -3,6 +3,7 @@ package de.ecconia.java.opentung;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompContainer;
+import de.ecconia.java.opentung.components.CompCrossyIndicator;
 import de.ecconia.java.opentung.components.CompGeneric;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
@@ -28,6 +29,7 @@ public class RenderPlane3D implements RenderPlane
 	private final Matrix projection = new Matrix();
 	
 	private ShaderProgram faceShader;
+	private ShaderProgram lineShader;
 	private ShaderProgram faceOutlineShader;
 	private ShaderProgram wireShader;
 	private ShaderProgram labelShader;
@@ -46,6 +48,7 @@ public class RenderPlane3D implements RenderPlane
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
 	private final List<CompGeneric> componentsToRender = new ArrayList<>();
 	private final List<CompLabel> labelsToRender = new ArrayList<>();
+	private final List<CompCrossyIndicator> wireEndsToRender = new ArrayList<>();
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final CompBoard board;
@@ -64,7 +67,11 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else if(component instanceof CompWireRaw)
 		{
-			wiresToRender.add((CompWireRaw) component);
+			CompWireRaw wire = (CompWireRaw) component;
+			wiresToRender.add(wire);
+			
+			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
+			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
 		}
 		else
 		{
@@ -106,6 +113,7 @@ public class RenderPlane3D implements RenderPlane
 		importComponent(board);
 		
 		faceShader = new ShaderProgram("basicShader");
+		lineShader = new ShaderProgram("lineShader");
 		faceOutlineShader = new ShaderProgram("basicShaderOutline");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		wireShader = new ShaderProgram("wireShader");
@@ -155,7 +163,7 @@ public class RenderPlane3D implements RenderPlane
 			dynamicBoardShader.setUniform(2, model.getMat());
 			dynamicBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
 			dynamicBoardShader.setUniformV4(4, new float[]{(float) board.getColor().getX(), (float) board.getColor().getY(), (float) board.getColor().getZ(), 1f});
-			
+
 			CompBoard.model.draw();
 		}
 		
@@ -191,6 +199,21 @@ public class RenderPlane3D implements RenderPlane
 			model.multiply(rotMat);
 			labelShader.setUniform(2, model.getMat());
 			label.drawLabel();
+		}
+		
+		lineShader.use();
+		lineShader.setUniform(0, projection.getMat());
+		lineShader.setUniform(1, view);
+		
+		for(CompGeneric component : wireEndsToRender)
+		{
+			model.identity();
+			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
+			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
+			model.multiply(rotMat);
+			lineShader.setUniform(2, model.getMat());
+			
+			component.getModel().draw();
 		}
 		
 		faceShader.use();
