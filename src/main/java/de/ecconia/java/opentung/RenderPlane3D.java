@@ -25,6 +25,7 @@ import org.lwjgl.opengl.GL30;
 public class RenderPlane3D implements RenderPlane
 {
 	private Camera camera;
+	private long lastCycle;
 	
 	private final Matrix projection = new Matrix();
 	
@@ -125,6 +126,8 @@ public class RenderPlane3D implements RenderPlane
 		camera = new Camera(inputHandler);
 		
 		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
+		
+		lastCycle = System.currentTimeMillis();
 	}
 	
 	@Override
@@ -138,8 +141,11 @@ public class RenderPlane3D implements RenderPlane
 		dynamicBoardShader.setUniform(1, view);
 		dynamicBoardShader.setUniform(5, view);
 		
+		long current = System.currentTimeMillis();
+		long timePast = current - lastCycle;
+		lastCycle = current;
 		Color c = Color.getHSBColor(color, 1.0f, 1.0f); //Color.white;
-		color += 0.01f;
+		color += 0.008f / 60f * (float) timePast;
 		if(color > 1f)
 		{
 			color = 0f;
