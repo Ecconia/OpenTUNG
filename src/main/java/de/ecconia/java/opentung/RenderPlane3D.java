@@ -15,7 +15,6 @@ import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
-import de.ecconia.java.opentung.models.NormalIndicatorModel;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -29,7 +28,6 @@ public class RenderPlane3D implements RenderPlane
 	private final Matrix projection = new Matrix();
 	
 	private ShaderProgram faceShader;
-	private ShaderProgram lineShader;
 	private ShaderProgram wireShader;
 	private ShaderProgram labelShader;
 	private ShaderProgram dynamicBoardShader;
@@ -37,7 +35,6 @@ public class RenderPlane3D implements RenderPlane
 	private TextureWrapper boardTexture;
 	
 	private CoordIndicatorModel coords;
-	private NormalIndicatorModel normalIndicator;
 	
 	private final Quaternion quaternion = Quaternion.xp90.multiply(Quaternion.yp90);
 	
@@ -110,11 +107,9 @@ public class RenderPlane3D implements RenderPlane
 		
 		faceShader = new ShaderProgram("basicShader");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
-		lineShader = new ShaderProgram("lineShader");
 		wireShader = new ShaderProgram("wireShader");
 		labelShader = new ShaderProgram("labelShader");
 		
-		normalIndicator = new NormalIndicatorModel();
 		coords = new CoordIndicatorModel();
 		
 		camera = new Camera(inputHandler);
@@ -181,21 +176,6 @@ public class RenderPlane3D implements RenderPlane
 			CompWireRaw.model.draw();
 		}
 		
-		//Normal indicators:
-//		lineShader.use();
-//		lineShader.setUniform(0, projection.getMat());
-//		lineShader.setUniform(1, view);
-//		for(Board board : boardsToRender)
-//		{
-//			model.identity();
-//			model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
-//			Matrix rotMat = new Matrix(board.getRotation().createMatrix());
-//			model.multiply(rotMat);
-//			lineShader.setUniform(2, model.getMat());
-//
-//			normalIndicator.draw();
-//		}
-		
 		labelShader.use();
 		labelShader.setUniform(0, projection.getMat());
 		labelShader.setUniform(1, view);
@@ -226,18 +206,6 @@ public class RenderPlane3D implements RenderPlane
 			
 			component.getModel().draw();
 		}
-		
-		//Cross indicators:
-//		for(Board board : boardsToRender)
-//		{
-//			model.identity();
-//			model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
-//			Matrix rotMat = new Matrix(board.getRotation().createMatrix());
-//			model.multiply(rotMat);
-//			lineShader.setUniform(2, model.getMat());
-//
-//			coords.draw();
-//		}
 		
 		float h = 0.075f + 0.15f + 0.5f;
 		
