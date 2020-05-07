@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.CompInverter;
@@ -15,6 +16,7 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
@@ -23,6 +25,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import java.nio.file.NoSuchFileException;
@@ -187,6 +190,19 @@ public class TungBoardLoader
 			label.setText(t.getText());
 			
 			return label;
+		}
+		else if(object instanceof TungDisplay)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompDisplay display = new CompDisplay(parent);
+			display.setPosition(globalPosition.add(rotatedFixPoint));
+			display.setRotation(globalRotation);
+			TungColorEnum c = ((TungDisplay) object).getColor();
+			display.setColorRaw(new Vector3(c.getR(), c.getG(), c.getB()));
+			
+			return display;
 		}
 		else
 		{

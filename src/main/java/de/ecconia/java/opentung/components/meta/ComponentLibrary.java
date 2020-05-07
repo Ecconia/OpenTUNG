@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.components.meta;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
+import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPanelLabel;
@@ -29,7 +30,7 @@ public class ComponentLibrary
 			CompSnappingPeg.class, //Solid
 			//- ThroughBlotter //Solid + Wire
 			CompThroughPeg.class, //Solid + Wire
-			//- Display //Wire + Display
+			CompDisplay.class, //Wire + Display
 			//- PanelDisplay //Solid + Wire + Display
 			//- ColorDisplay //Solid + Wire + Display
 			//- PanelColorDisplay //Solid + Wire + Display
