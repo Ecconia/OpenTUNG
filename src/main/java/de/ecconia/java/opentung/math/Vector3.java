@@ -8,6 +8,7 @@ public class Vector3
 	public static final Vector3 yn = new Vector3(0, -1, 0);
 	public static final Vector3 zp = new Vector3(0, 0, 1);
 	public static final Vector3 zn = new Vector3(0, 0, -1);
+	public static final Vector3 zero = new Vector3(0, 0, 0);
 	
 	private final double x;
 	private final double y;

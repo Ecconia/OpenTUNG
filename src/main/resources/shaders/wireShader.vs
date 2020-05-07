@@ -18,9 +18,10 @@ void main()
 {
 	tColor = vec4(color, 0, 0, 1);
 
+	vec3 inPosCopy = vec3(inPosition.x, inPosition.y, inPosition.z);
 	mat4 transformMat = view * model;
-    	vec4 transformedPos = transformMat * vec4(inPosition.xy, inPosition.z * length, 1);
-    	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement
-    	tPosition = transformedPos.xyz; //The position in camera system, to be use for light calculation
-    	tNormal = normalize((inverse(transpose(transformMat)) * vec4(inNormal, 0.0)).xyz);
+	vec4 transformedPos = transformMat * vec4(inPosCopy.xy, inPosCopy.z * length, 1);
+	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement
+	tPosition = transformedPos.xyz; //The position in camera system, to be use for light calculation
+	tNormal = normalize((inverse(transpose(transformMat)) * vec4(inNormal, 0.0)).xyz);
 }

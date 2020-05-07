@@ -1,27 +1,36 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.models.GenericModel;
-import de.ecconia.java.opentung.models.PegModel;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.math.Vector3;
 
 public class CompPeg extends Component
 {
-	public static PegModel model;
+	public static final ModelHolder modelHolder = new ModelHolder();
+	
+	static
+	{
+		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15, 0.0));
+		modelHolder.addConnector(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), null));
+	}
 	
 	public static void initGL()
 	{
-		model = new PegModel();
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple, true, false);
 	}
+	
+	@Override
+	public ModelHolder getModelHolder()
+	{
+		return modelHolder;
+	}
+	
+	//### Non-Static ###
 	
 	public CompPeg(CompContainer parent)
 	{
 		super(parent);
-	}
-	
-	@Override
-	public GenericModel getModel()
-	{
-		return model;
 	}
 }

@@ -2,7 +2,6 @@ package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.models.GenericModel;
 
 public abstract class Component
 {
@@ -48,5 +47,5 @@ public abstract class Component
 		return parent;
 	}
 	
-	public abstract GenericModel getModel();
+	public abstract ModelHolder getModelHolder();
 }

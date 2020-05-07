@@ -41,13 +41,6 @@ public class TextureWrapper
 		GL30.glGenerateMipmap(GL30.GL_TEXTURE_2D);
 	}
 	
-	private void addPixel(int value, ByteBuffer buffer)
-	{
-		buffer.put((byte) value);
-		buffer.put((byte) value);
-		buffer.put((byte) value);
-	}
-	
 	public void activate()
 	{
 		//int index, int location

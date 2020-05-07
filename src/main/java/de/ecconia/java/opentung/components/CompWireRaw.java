@@ -1,19 +1,34 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.fragments.CubeTunnel;
+import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.models.DynamicWireModel;
-import de.ecconia.java.opentung.models.GenericModel;
 
 public class CompWireRaw extends Component
 {
-	public static DynamicWireModel model;
+	public static final ModelHolder modelHolder = new ModelHolder();
+	
+	static
+	{
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
+		modelHolder.addMeta(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos));
+	}
 	
 	public static void initGL()
 	{
-		model = new DynamicWireModel();
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Wire, true);
 	}
+	
+	@Override
+	public ModelHolder getModelHolder()
+	{
+		return modelHolder;
+	}
+	
+	//### Non-Static ###
 	
 	private float length;
 	private boolean powered;
@@ -41,12 +56,6 @@ public class CompWireRaw extends Component
 	public float getLength()
 	{
 		return length;
-	}
-	
-	@Override
-	public GenericModel getModel()
-	{
-		return model;
 	}
 	
 	public Vector3 getEnd1()

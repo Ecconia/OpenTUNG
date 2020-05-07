@@ -159,7 +159,7 @@ public class RenderPlane3D implements RenderPlane
 		dynamicBoardShader.setUniformV2(3, new float[]{10f, 10f});
 		dynamicBoardShader.setUniformV4(4, new float[]{(float) c.getRed() / 255f, (float) c.getGreen() / 255f, (float) c.getBlue() / 255f, 1f});
 		
-		CompBoard.model.draw();
+		CompBoard.modelHolder.draw();
 		
 		for(CompBoard board : boardsToRender)
 		{
@@ -171,7 +171,7 @@ public class RenderPlane3D implements RenderPlane
 			dynamicBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
 			dynamicBoardShader.setUniformV4(4, new float[]{(float) board.getColor().getX(), (float) board.getColor().getY(), (float) board.getColor().getZ(), 1f});
 			
-			CompBoard.model.draw();
+			CompBoard.modelHolder.draw();
 		}
 		
 		wireShader.use();
@@ -190,7 +190,7 @@ public class RenderPlane3D implements RenderPlane
 			wireShader.setUniform(3, wire.getLength() / 2f);
 			wireShader.setUniform(4, wire.isPowered() ? 1.0f : 0.0f);
 			
-			CompWireRaw.model.draw();
+			CompWireRaw.modelHolder.draw();
 		}
 		
 		labelShader.use();
@@ -205,7 +205,7 @@ public class RenderPlane3D implements RenderPlane
 			Matrix rotMat = new Matrix(label.getRotation().createMatrix());
 			model.multiply(rotMat);
 			labelShader.setUniform(2, model.getMat());
-			label.drawLabel();
+			label.getModelHolder().drawTextures();
 		}
 		
 		lineShader.use();
@@ -220,7 +220,7 @@ public class RenderPlane3D implements RenderPlane
 			model.multiply(rotMat);
 			lineShader.setUniform(2, model.getMat());
 			
-			component.getModel().draw();
+			component.getModelHolder().draw();
 		}
 		
 		faceShader.use();
@@ -236,7 +236,7 @@ public class RenderPlane3D implements RenderPlane
 			model.multiply(rotMat);
 			faceShader.setUniform(2, model.getMat());
 			
-			component.getModel().draw();
+			component.getModelHolder().draw();
 		}
 		
 		float h = 0.075f + 0.15f + 0.5f;
@@ -244,17 +244,17 @@ public class RenderPlane3D implements RenderPlane
 		model.identity();
 		model.translate(0.6f * (float) -1 + 0.15f, h, 0.15f);
 		faceShader.setUniform(2, model.getMat());
-		CompInverter.model.draw();
+		CompInverter.modelHolder.draw();
 		
 		model.identity();
 		model.translate(0.6f * (float) 0 + 0.15f, h, 0.15f);
 		faceShader.setUniform(2, model.getMat());
-		CompBlotter.model.draw();
+		CompBlotter.modelHolder.draw();
 		
 		model.identity();
 		model.translate(0.6f * (float) 1 + 0.15f, h, 0.15f);
 		faceShader.setUniform(2, model.getMat());
-		CompPeg.model.draw();
+		CompPeg.modelHolder.draw();
 		
 		model.identity();
 		model.translate(1.5f, 0, -1.5f);

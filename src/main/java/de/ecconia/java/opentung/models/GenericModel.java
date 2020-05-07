@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.models;
 
-import de.ecconia.java.opentung.libwrap.vaos.CubicColoredVAO;
+import de.ecconia.java.opentung.libwrap.vaos.SolidVAO;
 import de.ecconia.java.opentung.libwrap.vaos.DynamicBoardVAO;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LabelVAO;
@@ -23,7 +23,7 @@ public abstract class GenericModel
 	{
 		if(type == ShaderType.CubicColored)
 		{
-			vao = new CubicColoredVAO(vertices, indices);
+			vao = new SolidVAO(vertices, indices);
 		}
 		else if(type == ShaderType.DynamicBoard)
 		{
@@ -145,12 +145,12 @@ public abstract class GenericModel
 		vertices[o++] = x; //X
 		vertices[o++] = y; //Y
 		vertices[o++] = z; //Z
-		vertices[o++] = r; //R
-		vertices[o++] = g; //G
-		vertices[o++] = b; //B
 		vertices[o++] = nx; //NormalX
 		vertices[o++] = ny; //NormalY
-		vertices[o] = nz; //NormalZ
+		vertices[o++] = nz; //NormalZ
+		vertices[o++] = r; //R
+		vertices[o++] = g; //G
+		vertices[o] = b; //B
 	}
 	
 	protected static class IntHolder

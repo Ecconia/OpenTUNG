@@ -1,22 +1,37 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.fragments.Color;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.Direction;
+import de.ecconia.java.opentung.components.fragments.TexturedFace;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
-import de.ecconia.java.opentung.models.GenericModel;
-import de.ecconia.java.opentung.models.LabelModelTex;
-import de.ecconia.java.opentung.models.PanelLabelModel;
-import de.ecconia.java.opentung.models.PanelLabelModelTex;
+import de.ecconia.java.opentung.math.Vector3;
 
 public class CompPanelLabel extends CompLabel
 {
-	public static PanelLabelModel model;
-	public static PanelLabelModelTex modelTex;
+	private static final ModelHolder modelHolder = new ModelHolder();
+	
+	static
+	{
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.05 + 0.075, 0.0));
+		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.1, 0.3), Color.material));
+		modelHolder.addTexture(new TexturedFace(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.1, 0.3), Direction.YPos));
+	}
 	
 	public static void initGL()
 	{
-		model = new PanelLabelModel();
-		modelTex = new PanelLabelModelTex();
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
 	}
+	
+	@Override
+	public ModelHolder getModelHolder()
+	{
+		return modelHolder;
+	}
+	
+	//### Non-Static ###
 	
 	private String text;
 	private float fontSize;
@@ -50,22 +65,11 @@ public class CompPanelLabel extends CompLabel
 	
 	public void initialize()
 	{
-		texture = LabelModelTex.generateUploadTexture(text, fontSize);
+		texture = CompLabel.generateUploadTexture(text, fontSize);
 	}
 	
 	public void activate()
 	{
 		texture.activate();
-	}
-	
-	@Override
-	public GenericModel getModel()
-	{
-		return model;
-	}
-	
-	public void drawLabel()
-	{
-		modelTex.draw();
 	}
 }

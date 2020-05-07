@@ -2,9 +2,9 @@ package de.ecconia.java.opentung.libwrap.vaos;
 
 import org.lwjgl.opengl.GL30;
 
-public class CubicColoredVAO extends GenericVAO
+public class SolidVAO extends GenericVAO
 {
-	public CubicColoredVAO(float[] vertices, short[] indices)
+	public SolidVAO(float[] vertices, short[] indices)
 	{
 		super(vertices, indices);
 	}
@@ -15,10 +15,10 @@ public class CubicColoredVAO extends GenericVAO
 		//Position:
 		GL30.glVertexAttribPointer(0, 3, GL30.GL_FLOAT, false, 9 * Float.BYTES, 0);
 		GL30.glEnableVertexAttribArray(0);
-		//Color:
+		//Normal:
 		GL30.glVertexAttribPointer(1, 3, GL30.GL_FLOAT, false, 9 * Float.BYTES, 3 * Float.BYTES);
 		GL30.glEnableVertexAttribArray(1);
-		//Normal:
+		//Color:
 		GL30.glVertexAttribPointer(2, 3, GL30.GL_FLOAT, false, 9 * Float.BYTES, 6 * Float.BYTES);
 		GL30.glEnableVertexAttribArray(2);
 	}

@@ -1,18 +1,32 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.fragments.CubeBoard;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.models.DynamicBoardModel;
-import de.ecconia.java.opentung.models.GenericModel;
 
 public class CompBoard extends CompContainer
 {
-	public static DynamicBoardModel model;
+	public static final ModelHolder modelHolder = new ModelHolder();
+	
+	static
+	{
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
+		modelHolder.addSolid(new CubeBoard(new Vector3(0.0, 0.0, 0.0), new Vector3(2.0, 0.15, 2.0))); //1 gets replaced in shader. no color cause texture.
+	}
 	
 	public static void initGL()
 	{
-		model = new DynamicBoardModel();
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Board, false);
 	}
+	
+	@Override
+	public ModelHolder getModelHolder()
+	{
+		return modelHolder;
+	}
+	
+	//### Non-Static ###
 	
 	private Vector3 color = new Vector3(195f / 255f, 195f / 255f, 195f / 255f);
 	private int x, z;
@@ -43,11 +57,5 @@ public class CompBoard extends CompContainer
 	public int getZ()
 	{
 		return z;
-	}
-	
-	@Override
-	public GenericModel getModel()
-	{
-		return model;
 	}
 }

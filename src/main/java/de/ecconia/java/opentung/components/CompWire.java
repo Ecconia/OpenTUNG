@@ -2,7 +2,7 @@ package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.models.GenericModel;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 
 public class CompWire extends Component
 {
@@ -35,7 +35,7 @@ public class CompWire extends Component
 	}
 	
 	@Override
-	public GenericModel getModel()
+	public ModelHolder getModelHolder()
 	{
 		throw new RuntimeException("No Model for this component yet.");
 	}

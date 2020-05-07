@@ -7,7 +7,7 @@ public abstract class GenericVAO
 	private final int vaoID;
 	protected final int amount;
 	
-	protected GenericVAO(float[] vertices, short indices[])
+	protected GenericVAO(float[] vertices, short[] indices)
 	{
 		vaoID = GL30.glGenVertexArrays();
 		int vboID = GL30.glGenBuffers();

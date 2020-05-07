@@ -16,29 +16,29 @@ public class ComponentLibrary
 {
 	private static final Class<? extends Component>[] componentClasses = new Class[] {
 			//Official:
-			CompPeg.class,
-			CompInverter.class,
-			CompBlotter.class,
-			//- Delayer
-			//- Switch
-			//- Button
-			//- PanelSwitch
-			//- PanelButton
-			//- NoiseMaker
-			//- Mount
-			CompSnappingPeg.class,
-			//- ThroughBlotter
-			CompThroughPeg.class,
-			//- Display
-			//- PanelDisplay
-			//- ColorDisplay
-			//- PanelColorDisplay
-			CompLabel.class,
-			CompPanelLabel.class,
+			CompPeg.class, //Wire
+			CompInverter.class, //Solid + Wire
+			CompBlotter.class, //Solid + Wire
+			//- Delayer //Solid + Wire
+			//- Switch //Solid + Wire + Toggle
+			//- Button //Solid + Wire + Toggle
+			//- PanelSwitch //Solid + Wire + Toggle
+			//- PanelButton //Solid + Wire + Toggle
+			//- NoiseMaker //Wire + Display
+			//- Mount //Solid (+ Board)
+			CompSnappingPeg.class, //Solid
+			//- ThroughBlotter //Solid + Wire
+			CompThroughPeg.class, //Solid + Wire
+			//- Display //Wire + Display
+			//- PanelDisplay //Solid + Wire + Display
+			//- ColorDisplay //Solid + Wire + Display
+			//- PanelColorDisplay //Solid + Wire + Display
+			CompLabel.class, //Solid + S:Label M:Texture
+			CompPanelLabel.class, //Solid + S:Label M:Texture
 			//Extra:
-//			CompWire.class,
-			CompWireRaw.class,
-			CompBoard.class,
+//			CompWire.class, //Wire
+			CompWireRaw.class, //Wire
+			CompBoard.class, //S:Board M:Texture
 			//Custom:
 			CompCrossyIndicator.class,
 	};

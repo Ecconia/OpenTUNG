@@ -2,8 +2,8 @@ package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.models.GenericModel;
 
 public class CompDisplay extends Component
 {
@@ -26,7 +26,7 @@ public class CompDisplay extends Component
 	}
 	
 	@Override
-	public GenericModel getModel()
+	public ModelHolder getModelHolder()
 	{
 		throw new RuntimeException("No Model for this component yet.");
 	}
