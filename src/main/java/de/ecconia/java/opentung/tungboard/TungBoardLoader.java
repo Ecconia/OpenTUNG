@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -20,6 +21,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
@@ -98,6 +100,28 @@ public class TungBoardLoader
 			}
 			
 			return board;
+		}
+		else if(object instanceof TungMount)
+		{
+			TungMount tungMount = (TungMount) object;
+			
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0, 0.325, -0.15));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompMount mount = new CompMount(parent);
+			mount.setPosition(globalPosition.add(rotatedFixPoint));
+			mount.setRotation(globalRotation);
+			
+			for(TungObject tungChild : tungMount.getChildren())
+			{
+				Component child = importChild(mount, tungChild, globalPosition, globalRotation);
+				if(child != null)
+				{
+					mount.addChild(child);
+				}
+			}
+			
+			return mount;
 		}
 		else if(object instanceof TungPeg)
 		{

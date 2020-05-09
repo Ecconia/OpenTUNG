@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.CompCrossyIndicator;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -27,7 +28,7 @@ public class ComponentLibrary
 			//- PanelSwitch //Solid + Wire + Toggle
 			//- PanelButton //Solid + Wire + Toggle
 			//- NoiseMaker //Wire + Display
-			//- Mount //Solid (+ Board)
+			CompMount.class, //Solid (+ Board)
 			CompSnappingPeg.class, //Solid
 			//- ThroughBlotter //Solid + Wire
 			CompThroughPeg.class, //Solid + Wire
