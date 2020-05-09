@@ -3,15 +3,16 @@ package de.ecconia.java.opentung.tungboard;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompDisplay;
-import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
+import de.ecconia.java.opentung.components.CompSwitch;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.CompWireRaw;
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
@@ -22,6 +23,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
@@ -203,6 +205,18 @@ public class TungBoardLoader
 			display.setColorRaw(new Vector3(c.getR(), c.getG(), c.getB()));
 			
 			return display;
+		}
+		else if(object instanceof TungSwitch)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompSwitch toggle = new CompSwitch(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			//TODO: Set state
+			
+			return toggle;
 		}
 		else
 		{
