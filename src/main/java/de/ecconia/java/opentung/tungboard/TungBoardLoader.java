@@ -242,6 +242,17 @@ public class TungBoardLoader
 			
 			return toggle;
 		}
+		else if(object instanceof TungButton)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompButton toggle = new CompButton(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			
+			return toggle;
+		}
 		else
 		{
 			System.out.println("Implement: " + object.getClass().getSimpleName());

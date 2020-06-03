@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
@@ -24,7 +25,7 @@ public class ComponentLibrary
 			CompBlotter.class, //Solid + Wire
 			//- Delayer //Solid + Wire
 			CompSwitch.class, //Solid + Wire + Toggle
-			//- Button //Solid + Wire + Toggle
+			CompButton.class, //Solid + Wire + Toggle
 			//- PanelSwitch //Solid + Wire + Toggle
 			//- PanelButton //Solid + Wire + Toggle
 			//- NoiseMaker //Wire + Display
