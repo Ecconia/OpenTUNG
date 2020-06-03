@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 
@@ -83,8 +84,11 @@ public class PrimitiveParser
 	{
 		for(TungObject to : holder.getChildren())
 		{
-			to.getPosition().fix();
-			to.getAngles().fix();
+			if(!(to instanceof TungWire))
+			{
+				to.getPosition().fix();
+				to.getAngles().fix();
+			}
 			
 			if(to instanceof TungChildable)
 			{
