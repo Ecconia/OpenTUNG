@@ -73,7 +73,7 @@ public class ModelHolder
 	/**
 	 * Generates a full object ready to be drawn with input->output peg/blob states as given as parameters.
 	 */
-	public void generateTestModel(TestModelType type, boolean ... b)
+	public void generateTestModel(TestModelType type, boolean... b)
 	{
 		int vCount = 0;
 		int iCount = 0;
@@ -81,6 +81,7 @@ public class ModelHolder
 		{
 			vCount += m.getVCount();
 			iCount += m.getICount();
+			
 		}
 		for(Meshable m : conductors)
 		{
@@ -192,5 +193,22 @@ public class ModelHolder
 			value += i;
 			return ret;
 		}
+	}
+	
+	// Getters:
+	
+	public List<Meshable> getConnectors()
+	{
+		return connector;
+	}
+	
+	public List<Meshable> getSolid()
+	{
+		return solid;
+	}
+	
+	public Vector3 getPlacementOffset()
+	{
+		return offset;
 	}
 }

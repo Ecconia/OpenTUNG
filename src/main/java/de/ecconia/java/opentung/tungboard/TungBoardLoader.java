@@ -1,7 +1,11 @@
 package de.ecconia.java.opentung.tungboard;
 
+import de.ecconia.Ansi;
+import de.ecconia.java.opentung.OpenTUNG;
+import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
@@ -18,6 +22,7 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
@@ -33,10 +38,12 @@ import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TungBoardLoader
 {
-	public static CompBoard convert(String filename)
+	private static CompBoard convertTungBoard(String filename)
 	{
 		try
 		{
@@ -52,13 +59,62 @@ public class TungBoardLoader
 				System.out.println("###########################################");
 				System.out.println("Couldn't find tungboard file to display, you can download a nice one here: https://discordapp.com/channels/401255675264761866/588822987331993602/684761768144142337");
 				System.out.println("But for gods sake, rename 'CLE' to 'Parallel-CLA'");
-				System.out.println("Once you inserted a tungboard, or that one. Change the filename in " + TungBoardLoader.class.getName() + ".");
+				System.out.println("Once you inserted a tungboard, or that one. Change the filename in " + OpenTUNG.class.getName() + ".");
 				System.out.println("###########################################");
 				return null;
 			}
 			else
 			{
 				throw e;
+			}
+		}
+	}
+	
+	public static CompBoard importTungBoard(String filename)
+	{
+		CompBoard board = convertTungBoard(filename);
+		if(board == null)
+		{
+			return null;
+		}
+		
+		board.createConnectorBounds();
+		
+		try
+		{
+			linkWires(board, board);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			System.out.println(Ansi.red + "Couldn't find wire ports... " + Ansi.r);
+		}
+		
+		return board;
+	}
+	
+	//TODO: remove.
+	public static List<CompWireRaw> brokenWires = new ArrayList<>();
+	
+	private static void linkWires(CompContainer container, CompContainer scannable)
+	{
+		for(Component component : container.getChildren())
+		{
+			if(component instanceof CompWireRaw)
+			{
+				CompWireRaw wire = (CompWireRaw) component;
+				
+				Port portA = scannable.getPortAt("", wire.getEnd1());
+				Port portB = scannable.getPortAt("", wire.getEnd2());
+				if(portA == null || portB == null)
+				{
+					brokenWires.add(wire);
+					throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
+				}
+			}
+			else if(component instanceof  CompContainer)
+			{
+				linkWires((CompContainer) component, scannable);
 			}
 		}
 	}

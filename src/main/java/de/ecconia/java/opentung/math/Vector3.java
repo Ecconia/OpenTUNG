@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.math;
 
+import de.ecconia.Ansi;
+
 public class Vector3
 {
 	public static final Vector3 xp = new Vector3(1, 0, 0);
@@ -110,7 +112,7 @@ public class Vector3
 	@Override
 	public String toString()
 	{
-		return "[X: " + fix(x) + " Y: " + fix(y) + " Z: " + fix(z) + ']';
+		return "[X: " + Ansi.yellow + fix(x) + Ansi.r + " Y: " + Ansi.yellow + fix(y) + Ansi.r + " Z: " + Ansi.yellow + fix(z) + Ansi.r + "]";
 	}
 	
 	private String fix(double value)

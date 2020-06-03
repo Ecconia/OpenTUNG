@@ -39,4 +39,9 @@ public abstract class GenericVAO
 	{
 		GL30.glDrawElements(GL30.GL_TRIANGLES, amount, GL30.GL_UNSIGNED_SHORT, 0);
 	}
+	
+	public void unload()
+	{
+		GL30.glDeleteVertexArrays(vaoID);
+	}
 }

@@ -1,9 +1,43 @@
 package de.ecconia.java.opentung.libwrap.vaos;
 
+import de.ecconia.java.opentung.MinMaxBox;
 import org.lwjgl.opengl.GL30;
 
 public class LineVAO extends GenericVAO
 {
+	public static LineVAO fromAbsoluteBoundingBox(MinMaxBox box)
+	{
+		float[] vertices = {
+				(float) box.getMin().getX(), (float) box.getMin().getY(), (float) box.getMin().getZ(), 1, 0, 1,
+				(float) box.getMax().getX(), (float) box.getMin().getY(), (float) box.getMin().getZ(), 1, 0, 1,
+				(float) box.getMin().getX(), (float) box.getMax().getY(), (float) box.getMin().getZ(), 1, 0, 1,
+				(float) box.getMax().getX(), (float) box.getMax().getY(), (float) box.getMin().getZ(), 1, 0, 1,
+				(float) box.getMin().getX(), (float) box.getMin().getY(), (float) box.getMax().getZ(), 1, 0, 1,
+				(float) box.getMax().getX(), (float) box.getMin().getY(), (float) box.getMax().getZ(), 1, 0, 1,
+				(float) box.getMin().getX(), (float) box.getMax().getY(), (float) box.getMax().getZ(), 1, 0, 1,
+				(float) box.getMax().getX(), (float) box.getMax().getY(), (float) box.getMax().getZ(), 1, 0, 1,
+		};
+		
+		short[] indices = {
+				0, 1,
+				0, 2,
+				3, 1,
+				3, 2,
+				
+				4, 5,
+				4, 6,
+				7, 5,
+				7, 6,
+				
+				0, 4,
+				1, 5,
+				2, 6,
+				3, 7,
+		};
+		
+		return new LineVAO(vertices, indices);
+	}
+	
 	public LineVAO(float[] vertices, short[] indices)
 	{
 		super(vertices, indices);

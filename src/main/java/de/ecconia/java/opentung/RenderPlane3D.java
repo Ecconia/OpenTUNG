@@ -2,13 +2,13 @@ package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
-import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompWireRaw;
+import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ComponentLibrary;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -16,6 +16,7 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
+import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -71,9 +72,9 @@ public class RenderPlane3D implements RenderPlane
 		{
 			CompWireRaw wire = (CompWireRaw) component;
 			wiresToRender.add(wire);
-			
-			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
-			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
+
+//			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
+//			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
 		}
 		else
 		{
@@ -113,6 +114,17 @@ public class RenderPlane3D implements RenderPlane
 		
 		ComponentLibrary.initGL();
 		importComponent(board);
+		
+		System.out.println("Broken wires rendered: " + TungBoardLoader.brokenWires.size());
+		if(!TungBoardLoader.brokenWires.isEmpty())
+		{
+			wiresToRender.clear();
+			wiresToRender.addAll(TungBoardLoader.brokenWires); //Debuggy
+			for(CompWireRaw wire : TungBoardLoader.brokenWires)
+			{
+				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
+			}
+		}
 		
 		faceShader = new ShaderProgram("basicShader");
 		lineShader = new ShaderProgram("lineShader");

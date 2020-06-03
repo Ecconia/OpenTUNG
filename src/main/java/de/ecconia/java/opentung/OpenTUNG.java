@@ -24,7 +24,7 @@ public class OpenTUNG
 	public static void main(String[] args)
 	{
 		System.out.println("Loading external board...");
-		board = TungBoardLoader.convert("16Bit-Parallel-CLA-ALU");
+		board = TungBoardLoader.importTungBoard("16Bit-Parallel-CLA-ALU");
 		
 		try
 		{

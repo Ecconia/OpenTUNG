@@ -16,9 +16,8 @@ public class CubeFull extends Meshable
 		this.color = color;
 	}
 	
-	public boolean contains(Vector3 offset, Vector3 probe)
+	public boolean contains(Vector3 probe)
 	{
-		Vector3 position = this.position.add(offset);
 		return !(probe.getX() < position.getX() - size.getX()
 				|| probe.getX() > position.getX() + size.getX()
 				|| probe.getY() < position.getY() - size.getY()
@@ -120,5 +119,15 @@ public class CubeFull extends Meshable
 	public void setColor(Color color)
 	{
 		this.color = color;
+	}
+	
+	public Vector3 getPosition()
+	{
+		return position;
+	}
+	
+	public Vector3 getSize()
+	{
+		return size;
 	}
 }
