@@ -57,10 +57,7 @@ public class OpenTUNG
 					worldView.newSize(newSize.width, newSize.height);
 				}
 				
-				GL30.glStencilMask(0xFF); //Set stencil mode, to properly clear the buffer.
-				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT);
-				GL30.glStencilMask(0x00); //Unset stencil mode
-				
+				//TODO: Facy policy for clearing the scene...
 				render();
 				
 				window.update();
@@ -107,7 +104,7 @@ public class OpenTUNG
 	
 	private static void init()
 	{
-		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f);
+		setBackgroundColor();
 		
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 		GL30.glDepthFunc(GL30.GL_LESS);
@@ -122,6 +119,7 @@ public class OpenTUNG
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
 		worldView = new RenderPlane3D(inputHandler, board);
+		worldView.newSize(500, 500);
 		worldView.setup();
 	}
 	
@@ -129,5 +127,18 @@ public class OpenTUNG
 	{
 		worldView.render();
 		interactables.render();
+	}
+	
+	public static void setBackgroundColor()
+	{
+		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f); //Discord
+//		GL11.glClearColor(1f / 255f * 150f, 1f / 255f * 150f, 1f / 255f * 150f, 0.0f); //Bright
+	}
+	
+	public static void clear()
+	{
+		GL30.glStencilMask(0xFF); //Set stencil mode, to properly clear the buffer.
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT);
+		GL30.glStencilMask(0x00); //Unset stencil mode
 	}
 }

@@ -133,6 +133,11 @@ public class ShaderProgram
 		GL30.glUniform2fv(uniformIDs[id], vec);
 	}
 	
+	public void setUniformV3(int id, float[] vec)
+	{
+		GL30.glUniform3fv(uniformIDs[id], vec);
+	}
+	
 	public void setUniformV4(int id, float[] vec)
 	{
 		GL30.glUniform4fv(uniformIDs[id], vec);

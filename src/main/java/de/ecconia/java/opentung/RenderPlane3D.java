@@ -1,11 +1,8 @@
 package de.ecconia.java.opentung;
 
-import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
-import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
-import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompWireRaw;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
@@ -33,17 +30,20 @@ public class RenderPlane3D implements RenderPlane
 	
 	private ShaderProgram faceShader;
 	private ShaderProgram lineShader;
-	private ShaderProgram faceOutlineShader;
+	private ShaderProgram outlineComponentShader;
 	private ShaderProgram wireShader;
 	private ShaderProgram labelShader;
 	private ShaderProgram dynamicBoardShader;
+	private ShaderProgram raycastComponentShader;
+	private ShaderProgram raycastBoardShader;
+	private ShaderProgram raycastWireShader;
+	private ShaderProgram outlineWireShader;
+	private ShaderProgram outlineBoardShader;
 	
 	private TextureWrapper boardTexture;
 	
 	private CoordIndicatorModel coords;
 	private DebugBlockModel block;
-	
-	private static float color = 0.2f;
 	
 	private final InputProcessor inputHandler;
 	
@@ -55,6 +55,11 @@ public class RenderPlane3D implements RenderPlane
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final CompBoard board;
+	
+	private Component[] idLookup;
+	private int currentlySelectedIndex = 0;
+	private int width = 0;
+	private int height = 0;
 	
 	public RenderPlane3D(InputProcessor inputHandler, CompBoard board)
 	{
@@ -122,23 +127,60 @@ public class RenderPlane3D implements RenderPlane
 			wiresToRender.addAll(TungBoardLoader.brokenWires); //Debuggy
 			for(CompWireRaw wire : TungBoardLoader.brokenWires)
 			{
+				//TODO: Highlight which exactly failed (Or just remove this whole section, rip)
 				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
+				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
+			}
+		}
+		
+		{
+			int amount = boardsToRender.size() + wiresToRender.size() + componentsToRender.size() + 1;
+			System.out.println("Raycast ID amount: " + amount);
+			if((amount) > 0xFFFFFF)
+			{
+				throw new RuntimeException("Out of raycast IDs. Tell the dev to do fancy programming, so that this never happens again.");
+			}
+			idLookup = new Component[amount];
+			
+			int id = 1;
+			for(Component comp : boardsToRender)
+			{
+				comp.setRayCastID(id);
+				idLookup[id] = comp;
+				id++;
+			}
+			for(Component comp : wiresToRender)
+			{
+				comp.setRayCastID(id);
+				idLookup[id] = comp;
+				id++;
+			}
+			for(Component comp : componentsToRender)
+			{
+				comp.setRayCastID(id);
+				idLookup[id] = comp;
+				id++;
 			}
 		}
 		
 		faceShader = new ShaderProgram("basicShader");
 		lineShader = new ShaderProgram("lineShader");
-		faceOutlineShader = new ShaderProgram("basicShaderOutline");
 		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
 		wireShader = new ShaderProgram("wireShader");
 		labelShader = new ShaderProgram("labelShader");
+		
+		raycastComponentShader = new ShaderProgram("raycast/raycastComponent");
+		raycastBoardShader = new ShaderProgram("raycast/raycastBoard");
+		raycastWireShader = new ShaderProgram("raycast/raycastWire");
+		
+		outlineComponentShader = new ShaderProgram("outline/outlineComponent");
+		outlineWireShader = new ShaderProgram("outline/outlineWire");
+		outlineBoardShader = new ShaderProgram("outline/outlineBoard");
 		
 		coords = new CoordIndicatorModel();
 		block = new DebugBlockModel();
 		
 		camera = new Camera(inputHandler);
-		
-		projection.perspective(45f, (float) 500 / (float) 500, 0.1f, 100000f);
 		
 		lastCycle = System.currentTimeMillis();
 	}
@@ -147,6 +189,14 @@ public class RenderPlane3D implements RenderPlane
 	public void render()
 	{
 		float[] view = camera.getMatrix();
+		raycast(view);
+		drawDynamic(view);
+	}
+	
+	private void drawDynamic(float[] view)
+	{
+		OpenTUNG.setBackgroundColor();
+		OpenTUNG.clear();
 		
 		boardTexture.activate();
 		dynamicBoardShader.use();
@@ -154,24 +204,7 @@ public class RenderPlane3D implements RenderPlane
 		dynamicBoardShader.setUniform(1, view);
 		dynamicBoardShader.setUniform(5, view);
 		
-		long current = System.currentTimeMillis();
-		long timePast = current - lastCycle;
-		lastCycle = current;
-		Color c = Color.getHSBColor(color, 1.0f, 1.0f); //Color.white;
-		color += 0.008f / 60f * (float) timePast;
-		if(color > 1f)
-		{
-			color = 0f;
-		}
-		
 		Matrix model = new Matrix();
-		model.identity();
-		model.translate(0, -0.5f, 0);
-		dynamicBoardShader.setUniform(2, model.getMat());
-		dynamicBoardShader.setUniformV2(3, new float[]{10f, 10f});
-		dynamicBoardShader.setUniformV4(4, new float[]{(float) c.getRed() / 255f, (float) c.getGreen() / 255f, (float) c.getBlue() / 255f, 1f});
-		
-		CompBoard.modelHolder.draw();
 		
 		for(CompBoard board : boardsToRender)
 		{
@@ -251,57 +284,200 @@ public class RenderPlane3D implements RenderPlane
 			component.getModelHolder().draw();
 		}
 		
-		float h = 0.075f + 0.15f + 0.5f;
+		//Draw selected component:
 		
-		model.identity();
-		model.translate(0.6f * (float) -1 + 0.15f, h, 0.15f);
-		faceShader.setUniform(2, model.getMat());
-		CompInverter.modelHolder.draw();
+		if(currentlySelectedIndex != 0)
+		{
+			Component component = idLookup[currentlySelectedIndex];
+			
+			GL30.glStencilFunc(GL30.GL_ALWAYS, 1, 0xFF);
+			GL30.glStencilMask(0xFF);
+			
+			if(component instanceof CompBoard)
+			{
+				boardTexture.activate();
+				dynamicBoardShader.use();
+				
+				CompBoard board = (CompBoard) component;
+				
+				model.identity();
+				model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
+				Matrix rotMat = new Matrix(board.getRotation().createMatrix());
+				model.multiply(rotMat);
+				dynamicBoardShader.setUniform(2, model.getMat());
+				dynamicBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
+				dynamicBoardShader.setUniformV4(4, new float[]{(float) board.getColor().getX(), (float) board.getColor().getY(), (float) board.getColor().getZ(), 1f});
+				
+				CompBoard.modelHolder.draw();
+			}
+			else if(component instanceof CompWireRaw)
+			{
+				wireShader.use();
+				CompWireRaw wire = (CompWireRaw) component;
+				
+				model.identity();
+				model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
+				Matrix rotMat = new Matrix(wire.getRotation().createMatrix());
+				model.multiply(rotMat);
+				wireShader.setUniform(2, model.getMat());
+				wireShader.setUniform(3, wire.getLength() / 2f);
+				wireShader.setUniform(4, wire.isPowered() ? 1.0f : 0.0f);
+				
+				CompWireRaw.modelHolder.draw();
+			}
+			else
+			{
+				faceShader.use();
+				model.identity();
+				model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
+				Matrix rotMat = new Matrix(component.getRotation().createMatrix());
+				model.multiply(rotMat);
+				faceShader.setUniform(2, model.getMat());
+				component.getModelHolder().draw();
+			}
+			
+			GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+			GL30.glStencilMask(0x00);
+			GL30.glDisable(GL30.GL_DEPTH_TEST);
+			
+			float scale = 1.1f;
+			Matrix sMat = new Matrix();
+			sMat.scale(scale, scale, scale);
+			model.multiply(sMat);
+			
+			if(component instanceof CompBoard)
+			{
+				outlineBoardShader.use();
+				outlineBoardShader.setUniform(0, projection.getMat());
+				outlineBoardShader.setUniform(1, view);
+				
+				CompBoard board = (CompBoard) component;
+				
+				outlineBoardShader.setUniform(2, model.getMat());
+				outlineBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
+				
+				CompBoard.modelHolder.draw();
+			}
+			else if(component instanceof CompWireRaw)
+			{
+				outlineWireShader.use();
+				outlineWireShader.setUniform(0, projection.getMat());
+				outlineWireShader.setUniform(1, view);
+				CompWireRaw wire = (CompWireRaw) component;
+				
+				outlineWireShader.setUniform(2, model.getMat());
+				outlineWireShader.setUniform(3, wire.getLength() / 2f);
+				
+				CompWireRaw.modelHolder.draw();
+			}
+			else
+			{
+				outlineComponentShader.use();
+				outlineComponentShader.setUniform(0, projection.getMat());
+				outlineComponentShader.setUniform(1, view);
+				
+				outlineComponentShader.setUniform(2, model.getMat());
+				component.getModelHolder().draw();
+			}
+			
+			GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+			GL30.glEnable(GL30.GL_DEPTH_TEST);
+		}
+	}
+	
+	private void raycast(float[] view)
+	{
+		Matrix model = new Matrix();
 		
-		model.identity();
-		model.translate(0.6f * (float) 0 + 0.15f, h, 0.15f);
-		faceShader.setUniform(2, model.getMat());
-		CompBlotter.modelHolder.draw();
+		GL30.glClearColor(0, 0, 0, 1);
+		OpenTUNG.clear();
 		
-		model.identity();
-		model.translate(0.6f * (float) 1 + 0.15f, h, 0.15f);
-		faceShader.setUniform(2, model.getMat());
-		CompPeg.modelHolder.draw();
+		raycastBoardShader.use();
+		raycastBoardShader.setUniform(0, projection.getMat());
+		raycastBoardShader.setUniform(1, view);
+		for(CompBoard comp : boardsToRender)
+		{
+			model.identity();
+			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+			Matrix rotMat = new Matrix(comp.getRotation().createMatrix());
+			model.multiply(rotMat);
+			raycastBoardShader.setUniform(2, model.getMat());
+			raycastBoardShader.setUniformV2(3, new float[]{comp.getX(), comp.getZ()});
+			
+			int id = comp.getRayID();
+			int r = id & 0xFF;
+			int g = (id & 0xFF00) >> 8;
+			int b = (id & 0xFF0000) >> 16;
+			raycastBoardShader.setUniformV3(4, new float[]{(float) r / 255f, (float) g / 255f, (float) b / 255f});
+			
+			CompBoard.modelHolder.draw();
+		}
 		
-		model.identity();
-		model.translate(1.5f, 0, -1.5f);
-		faceShader.setUniform(2, model.getMat());
-		coords.draw();
+		raycastWireShader.use();
+		raycastWireShader.setUniform(0, projection.getMat());
+		raycastWireShader.setUniform(1, view);
+		for(CompWireRaw comp : wiresToRender)
+		{
+			model.identity();
+			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+			Matrix rotMat = new Matrix(comp.getRotation().createMatrix());
+			model.multiply(rotMat);
+			raycastWireShader.setUniform(2, model.getMat());
+			raycastWireShader.setUniform(3, comp.getLength() / 2f);
+			
+			int id = comp.getRayID();
+			int r = id & 0xFF;
+			int g = (id & 0xFF00) >> 8;
+			int b = (id & 0xFF0000) >> 16;
+			raycastWireShader.setUniformV3(4, new float[]{(float) r / 255f, (float) g / 255f, (float) b / 255f});
+			
+			CompWireRaw.modelHolder.draw();
+		}
 		
-		//Outline test:
-		GL30.glStencilFunc(GL30.GL_ALWAYS, 1, 0xFF);
-		GL30.glStencilMask(0xFF);
+		raycastComponentShader.use();
+		raycastComponentShader.setUniform(0, projection.getMat());
+		raycastComponentShader.setUniform(1, view);
+		for(Component comp : componentsToRender)
+		{
+			model.identity();
+			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+			Matrix rotMat = new Matrix(comp.getRotation().createMatrix());
+			model.multiply(rotMat);
+			raycastComponentShader.setUniform(2, model.getMat());
+			
+			int id = comp.getRayID();
+			int r = id & 0xFF;
+			int g = (id & 0xFF00) >> 8;
+			int b = (id & 0xFF0000) >> 16;
+			raycastComponentShader.setUniformV3(3, new float[]{(float) r / 255f, (float) g / 255f, (float) b / 255f});
+			
+			comp.getModelHolder().draw();
+		}
 		
-		model.identity();
-		faceShader.setUniform(2, model.getMat());
-		block.draw();
+		GL30.glFlush();
+		GL30.glFinish();
+		GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);
 		
-		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
-		GL30.glStencilMask(0x00);
-		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		float[] values = new float[3];
+		GL30.glReadPixels(width / 2, height / 2, 1, 1, GL30.GL_RGB, GL30.GL_FLOAT, values);
+//		float[] distance = new float[1];
+//		GL30.glReadPixels(width / 2, height / 2, 1, 1, GL30.GL_DEPTH_COMPONENT, GL30.GL_FLOAT, distance);
 		
-		faceOutlineShader.use();
-		faceOutlineShader.setUniform(0, projection.getMat());
-		faceOutlineShader.setUniform(1, view);
+		int id = (int) (values[0] * 255f) + (int) (values[1] * 255f) * 256 + (int) (values[2] * 255f) * 256 * 256;
+		if(id > idLookup.length - 1)
+		{
+			System.out.println("Looking at ???? (" + id + ")");
+			id = 0;
+		}
 		
-		float scale = 1.2f;
-		Matrix sMat = new Matrix();
-		sMat.scale(scale, scale, scale);
-		model.multiply(sMat);
-		faceOutlineShader.setUniform(2, model.getMat());
-		block.draw();
-		
-		GL30.glEnable(GL30.GL_DEPTH_TEST);
+		currentlySelectedIndex = id;
 	}
 	
 	@Override
 	public void newSize(int width, int height)
 	{
+		this.width = width;
+		this.height = height;
 		projection.perspective(45f, (float) width / (float) height, 0.1f, 100000f);
 	}
 }

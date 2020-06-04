@@ -18,6 +18,7 @@ public abstract class Component
 	
 	//Custom data:
 	private CompContainer parent;
+	private int rayID;
 	
 	public Component(CompContainer parent)
 	{
@@ -124,5 +125,15 @@ public abstract class Component
 			}
 		}
 		return null;
+	}
+	
+	public void setRayCastID(int id)
+	{
+		this.rayID = id;
+	}
+	
+	public int getRayID()
+	{
+		return rayID;
 	}
 }
