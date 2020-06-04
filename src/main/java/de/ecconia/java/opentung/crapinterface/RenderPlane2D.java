@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.inputs.InputConsumer;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import org.lwjgl.opengl.GL30;
 
 public class RenderPlane2D implements RenderPlane, InputConsumer
 {
@@ -17,6 +18,8 @@ public class RenderPlane2D implements RenderPlane, InputConsumer
 
 //	private Slider activeSlider = null;
 //	private int activeSliderIndex = 0;
+	
+	private Point indicator;
 
 	public RenderPlane2D(InputProcessor inputHandler)
 	{
@@ -39,8 +42,6 @@ public class RenderPlane2D implements RenderPlane, InputConsumer
 //		sliders[1].setValue(q.getY() / 2f + 0.5f);
 //		sliders[2].setValue(q.getZ() / 2f + 0.5f);
 //		sliders[3].setValue(q.getW() / 2f + 0.5f);
-
-		newSize(500, 500);
 	}
 
 	@Override
@@ -100,16 +101,18 @@ public class RenderPlane2D implements RenderPlane, InputConsumer
 	@Override
 	public void render()
 	{
-		if(inputHandler.isCaptured())
-		{
-			return;
-		}
-
 		interfaceShader.use();
 		interfaceShader.setUniform(0, projectionMatrix.getMat());
 		Matrix mat = new Matrix();
 		mat.identity();
 		interfaceShader.setUniform(1, mat.getMat());
+		
+		indicator.draw();
+		
+		if(inputHandler.isCaptured())
+		{
+			return;
+		}
 
 //		for(Slider slider : sliders)
 //		{
@@ -126,5 +129,48 @@ public class RenderPlane2D implements RenderPlane, InputConsumer
 	public void newSize(int width, int height)
 	{
 		projectionMatrix.interfaceMatrix(width, height);
+		if(indicator != null)
+		{
+			indicator.unload();
+		}
+		indicator = new Point(width / 2, height / 2);
+	}
+	
+	private static class Point
+	{
+		private final int vaoID;
+		
+		public Point(int centerX, int centerY)
+		{
+			vaoID = GL30.glGenVertexArrays();
+			int vboID = GL30.glGenBuffers();
+			
+			GL30.glBindVertexArray(vaoID);
+			
+			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
+			GL30.glBufferData(GL30.GL_ARRAY_BUFFER, new float[] {centerX, centerY, 1, 1, 1}, GL30.GL_STATIC_DRAW);
+			
+			//Position:
+			GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 5 * Float.BYTES, 0);
+			GL30.glEnableVertexAttribArray(0);
+			//Color
+			GL30.glVertexAttribPointer(1, 3, GL30.GL_FLOAT, false, 5 * Float.BYTES, 2 * Float.BYTES);
+			GL30.glEnableVertexAttribArray(1);
+			
+			//Cleanup:
+			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, 0);
+		}
+		
+		public void draw()
+		{
+			GL30.glBindVertexArray(vaoID);
+			GL30.glPointSize(3f);
+			GL30.glDrawArrays(GL30.GL_POINTS, 0, 1);
+		}
+		
+		public void unload()
+		{
+			GL30.glDeleteVertexArrays(vaoID);
+		}
 	}
 }

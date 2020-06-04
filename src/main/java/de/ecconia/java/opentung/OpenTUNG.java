@@ -118,9 +118,10 @@ public class OpenTUNG
 		
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
+		interactables.newSize(500, 500);
 		worldView = new RenderPlane3D(inputHandler, board);
-		worldView.newSize(500, 500);
 		worldView.setup();
+		worldView.newSize(500, 500);
 	}
 	
 	private static void render()
