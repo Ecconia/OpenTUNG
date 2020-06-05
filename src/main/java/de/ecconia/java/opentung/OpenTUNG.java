@@ -57,7 +57,7 @@ public class OpenTUNG
 					worldView.newSize(newSize.width, newSize.height);
 				}
 				
-				//TODO: Facy policy for clearing the scene...
+				//TODO: Fancy policy for clearing the scene...
 				render();
 				
 				window.update();

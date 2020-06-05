@@ -102,7 +102,6 @@ public class RenderPlane2D implements RenderPlane, InputConsumer
 	public void render()
 	{
 		interfaceShader.use();
-		interfaceShader.setUniform(0, projectionMatrix.getMat());
 		Matrix mat = new Matrix();
 		mat.identity();
 		interfaceShader.setUniform(1, mat.getMat());
@@ -129,6 +128,8 @@ public class RenderPlane2D implements RenderPlane, InputConsumer
 	public void newSize(int width, int height)
 	{
 		projectionMatrix.interfaceMatrix(width, height);
+		interfaceShader.use();
+		interfaceShader.setUniform(0, projectionMatrix.getMat());
 		if(indicator != null)
 		{
 			indicator.unload();

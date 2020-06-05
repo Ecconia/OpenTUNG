@@ -26,8 +26,6 @@ public class RenderPlane3D implements RenderPlane
 	private Camera camera;
 	private long lastCycle;
 	
-	private final Matrix projection = new Matrix();
-	
 	private ShaderProgram faceShader;
 	private ShaderProgram lineShader;
 	private ShaderProgram outlineComponentShader;
@@ -200,7 +198,6 @@ public class RenderPlane3D implements RenderPlane
 		
 		boardTexture.activate();
 		dynamicBoardShader.use();
-		dynamicBoardShader.setUniform(0, projection.getMat());
 		dynamicBoardShader.setUniform(1, view);
 		dynamicBoardShader.setUniform(5, view);
 		
@@ -220,7 +217,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		wireShader.use();
-		wireShader.setUniform(0, projection.getMat());
 		wireShader.setUniform(1, view);
 		wireShader.setUniform(5, view);
 		wireShader.setUniform(2, model.getMat());
@@ -239,7 +235,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		labelShader.use();
-		labelShader.setUniform(0, projection.getMat());
 		labelShader.setUniform(1, view);
 		labelShader.setUniform(3, view);
 		for(CompLabel label : labelsToRender)
@@ -254,7 +249,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		lineShader.use();
-		lineShader.setUniform(0, projection.getMat());
 		lineShader.setUniform(1, view);
 		
 		for(Component component : wireEndsToRender)
@@ -269,7 +263,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		faceShader.use();
-		faceShader.setUniform(0, projection.getMat());
 		faceShader.setUniform(1, view);
 		faceShader.setUniform(3, view);
 		
@@ -348,7 +341,6 @@ public class RenderPlane3D implements RenderPlane
 			if(component instanceof CompBoard)
 			{
 				outlineBoardShader.use();
-				outlineBoardShader.setUniform(0, projection.getMat());
 				outlineBoardShader.setUniform(1, view);
 				
 				CompBoard board = (CompBoard) component;
@@ -361,7 +353,6 @@ public class RenderPlane3D implements RenderPlane
 			else if(component instanceof CompWireRaw)
 			{
 				outlineWireShader.use();
-				outlineWireShader.setUniform(0, projection.getMat());
 				outlineWireShader.setUniform(1, view);
 				CompWireRaw wire = (CompWireRaw) component;
 				
@@ -373,7 +364,6 @@ public class RenderPlane3D implements RenderPlane
 			else
 			{
 				outlineComponentShader.use();
-				outlineComponentShader.setUniform(0, projection.getMat());
 				outlineComponentShader.setUniform(1, view);
 				
 				outlineComponentShader.setUniform(2, model.getMat());
@@ -393,7 +383,6 @@ public class RenderPlane3D implements RenderPlane
 		OpenTUNG.clear();
 		
 		raycastBoardShader.use();
-		raycastBoardShader.setUniform(0, projection.getMat());
 		raycastBoardShader.setUniform(1, view);
 		for(CompBoard comp : boardsToRender)
 		{
@@ -414,7 +403,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		raycastWireShader.use();
-		raycastWireShader.setUniform(0, projection.getMat());
 		raycastWireShader.setUniform(1, view);
 		for(CompWireRaw comp : wiresToRender)
 		{
@@ -435,7 +423,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		raycastComponentShader.use();
-		raycastComponentShader.setUniform(0, projection.getMat());
 		raycastComponentShader.setUniform(1, view);
 		for(Component comp : componentsToRender)
 		{
@@ -478,6 +465,31 @@ public class RenderPlane3D implements RenderPlane
 	{
 		this.width = width;
 		this.height = height;
-		projection.perspective(45f, (float) width / (float) height, 0.1f, 100000f);
+		Matrix p = new Matrix();
+		p.perspective(45f, (float) width / (float) height, 0.1f, 100000f);
+		float[] projection = p.getMat();
+		
+		faceShader.use();
+		faceShader.setUniform(0, projection);
+		lineShader.use();
+		lineShader.setUniform(0, projection);
+		outlineComponentShader.use();
+		outlineComponentShader.setUniform(0, projection);
+		wireShader.use();
+		wireShader.setUniform(0, projection);
+		labelShader.use();
+		labelShader.setUniform(0, projection);
+		dynamicBoardShader.use();
+		dynamicBoardShader.setUniform(0, projection);
+		raycastComponentShader.use();
+		raycastComponentShader.setUniform(0, projection);
+		raycastBoardShader.use();
+		raycastBoardShader.setUniform(0, projection);
+		raycastWireShader.use();
+		raycastWireShader.setUniform(0, projection);
+		outlineWireShader.use();
+		outlineWireShader.setUniform(0, projection);
+		outlineBoardShader.use();
+		outlineBoardShader.setUniform(0, projection);
 	}
 }
