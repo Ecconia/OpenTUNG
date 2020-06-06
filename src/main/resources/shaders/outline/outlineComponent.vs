@@ -1,8 +1,8 @@
 #version 330 core
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor; //Ignored
-layout(location = 2) in vec3 inNormal; //Ignored
+layout(location = 1) in vec3 inColor;//Ignored
+layout(location = 2) in vec3 inNormal;//Ignored
 
 uniform mat4 projection;
 uniform mat4 view;

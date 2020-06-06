@@ -13,13 +13,13 @@ out vec2 tTextureCoords;
 
 void main()
 {
-	vec3 inNormal = vec3(0,1,0); //No need to inject this, always the same.
-
+	vec3 inNormal = vec3(0, 1, 0);//No need to inject this, always the same.
+	
 	mat4 transformMat = view * model;
 	vec4 transformedPos = transformMat * vec4(inPosition, 1.0);
-	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement
-	tPosition = transformedPos.xyz; //The position in camera system, to be use for light calculation
+	gl_Position = projection * transformedPos;//The position in projection system, to be use for placement
+	tPosition = transformedPos.xyz;//The position in camera system, to be use for light calculation
 	tNormal = normalize((inverse(transpose(transformMat)) * vec4(inNormal, 0.0)).xyz);
-
+	
 	tTextureCoords = inTex;
 }
