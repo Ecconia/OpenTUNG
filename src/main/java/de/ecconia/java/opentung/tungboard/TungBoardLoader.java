@@ -50,7 +50,7 @@ public class TungBoardLoader
 			TungBoard importedBoard = PrimitiveParser.importTungBoard("boards/" + filename + ".tungboard");
 			importedBoard.setPosition(new TungPosition(0, 0, 0));
 			importedBoard.setAngles(new TungAngles(180, 0, 0)); //Adjust this depending on how you want to import the board.
-			return (CompBoard) importChild(null, importedBoard, new Vector3(-20, 0, 0), Quaternion.angleAxis(0, Vector3.yp));
+			return (CompBoard) importChild(null, importedBoard, new Vector3(0, 0, 15), Quaternion.angleAxis(-90, Vector3.yp));
 		}
 		catch(RuntimeException e)
 		{
