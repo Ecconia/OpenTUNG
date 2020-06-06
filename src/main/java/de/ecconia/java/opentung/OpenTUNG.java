@@ -35,64 +35,84 @@ public class OpenTUNG
 			window.place();
 			window.setVsync(fps == 0);
 			
-			//OpenGL:
-			GL.createCapabilities();
-			System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
-			
-			init();
-			
-			long past = System.currentTimeMillis();
-			int finishedRenderings = 0;
-			
-			long frameDuration = fps != 0 ? 1000L / (long) fps : 1;
-			long lastFinishedRender = System.currentTimeMillis();
-			
-			while(!window.shouldClose())
-			{
-				Dimension newSize = window.getNewDimension();
-				if(newSize != null)
+			Thread graphicsThread = new Thread(() -> {
+				try
 				{
-					GL30.glViewport(0, 0, newSize.width, newSize.height);
-					interactables.newSize(newSize.width, newSize.height);
-					worldView.newSize(newSize.width, newSize.height);
-				}
-				
-				//TODO: Fancy policy for clearing the scene...
-				render();
-				
-				window.update();
-				
-				//FPS counting:
-				finishedRenderings++;
-				long now = System.currentTimeMillis();
-				if(now - past > 1000)
-				{
-					past = now;
-					window.setTitle("OpenTUNG FPS: " + finishedRenderings);
-					finishedRenderings = 0;
-				}
-				
-				//FPS limiting:
-				if(fps != 0)
-				{
-					long currentTime = System.currentTimeMillis();
-					long timeToWait = frameDuration - (currentTime - lastFinishedRender);
-					if(timeToWait > 0)
+					//Grab the graphic context for OpenGL on this thread.
+					window.grabContext();
+					
+					//OpenGL:
+					GL.createCapabilities();
+					System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
+					
+					init();
+					
+					long past = System.currentTimeMillis();
+					int finishedRenderings = 0;
+					
+					long frameDuration = fps != 0 ? 1000L / (long) fps : 1;
+					long lastFinishedRender = System.currentTimeMillis();
+					
+					while(!window.shouldClose())
 					{
-						try
+						Dimension newSize = window.getNewDimension();
+						if(newSize != null)
 						{
-							Thread.sleep(timeToWait);
+							GL30.glViewport(0, 0, newSize.width, newSize.height);
+							interactables.newSize(newSize.width, newSize.height);
+							worldView.newSize(newSize.width, newSize.height);
 						}
-						catch(InterruptedException e)
+						
+						//TODO: Fancy policy for clearing the scene...
+						render();
+						
+						window.update();
+						
+						//FPS counting:
+						finishedRenderings++;
+						long now = System.currentTimeMillis();
+						if(now - past > 1000)
 						{
-							e.printStackTrace(); //Should never happen though.
+							past = now;
+							window.setTitle("OpenTUNG FPS: " + finishedRenderings);
+							finishedRenderings = 0;
+						}
+						
+						//FPS limiting:
+						if(fps != 0)
+						{
+							long currentTime = System.currentTimeMillis();
+							long timeToWait = frameDuration - (currentTime - lastFinishedRender);
+							if(timeToWait > 0)
+							{
+								try
+								{
+									Thread.sleep(timeToWait);
+								}
+								catch(InterruptedException e)
+								{
+									e.printStackTrace(); //Should never happen though.
+								}
+							}
+							lastFinishedRender = System.currentTimeMillis();
 						}
 					}
-					lastFinishedRender = System.currentTimeMillis();
+					
+					inputHandler.stop();
+					System.out.println("Graphic thread has turned off.");
 				}
-			}
+				catch(Exception e)
+				{
+					e.printStackTrace();
+					inputHandler.stop();
+					System.exit(1); //Throw 1;
+				}
+			}, "GraphicThread");
+			graphicsThread.start();
 			
-			inputHandler.stop();
+			//Let main-thread execute the input handler:
+			inputHandler.eventPollEntry();
+			System.out.println("Main thread has turned off.");
 		}
 		catch(Exception e)
 		{

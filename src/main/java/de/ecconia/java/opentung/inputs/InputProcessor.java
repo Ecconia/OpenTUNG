@@ -32,6 +32,11 @@ public class InputProcessor
 		receiver = new InputReceiver(this, windowID);
 	}
 	
+	public void eventPollEntry()
+	{
+		receiver.eventPollEntry();
+	}
+	
 	//#########################
 	// Receiver methods:
 	//#########################

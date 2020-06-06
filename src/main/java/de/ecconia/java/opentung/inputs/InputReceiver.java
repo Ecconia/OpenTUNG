@@ -4,36 +4,12 @@ import org.lwjgl.glfw.GLFW;
 
 public class InputReceiver
 {
+	private final InputProcessor processor;
 	private final Thread inputThread;
 	
 	public InputReceiver(InputProcessor processor, long windowID)
 	{
-		inputThread = new Thread(() -> {
-			long time = System.currentTimeMillis();
-			while(!Thread.currentThread().isInterrupted())
-			{
-				GLFW.glfwPollEvents();
-				
-				processor.postEvents();
-				
-				try
-				{
-					long cTime = System.currentTimeMillis();
-					long wTime = cTime - time;
-					time = cTime;
-					if(wTime > 0)
-					{
-						Thread.sleep(10);
-					}
-				}
-				catch(InterruptedException e)
-				{
-					break;
-				}
-			}
-			
-			System.out.println("InputEventThread shutted down.");
-		}, "InputEventThread");
+		this.processor = processor;
 		
 		GLFW.glfwSetCursorPosCallback(windowID, (windowIDC, x, y) -> {
 			processor.updateCursorPosition((int) x, (int) y);
@@ -65,11 +41,37 @@ public class InputReceiver
 			processor.focusChanged(state);
 		});
 		
-		inputThread.start();
+		inputThread = Thread.currentThread();
 	}
 	
 	public void stop()
 	{
 		inputThread.interrupt();
+	}
+	
+	public void eventPollEntry()
+	{
+		long time = System.currentTimeMillis();
+		while(!Thread.currentThread().isInterrupted())
+		{
+			GLFW.glfwPollEvents();
+			
+			processor.postEvents();
+			
+			try
+			{
+				long cTime = System.currentTimeMillis();
+				long wTime = cTime - time;
+				time = cTime;
+				if(wTime > 0)
+				{
+					Thread.sleep(10);
+				}
+			}
+			catch(InterruptedException e)
+			{
+				break;
+			}
+		}
 	}
 }

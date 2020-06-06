@@ -63,9 +63,14 @@ public class SWindowWrapper
 		);
 //		}
 		
-		GLFW.glfwMakeContextCurrent(windowID);
+		grabContext();
 		setVsync(true);
 		GLFW.glfwShowWindow(windowID);
+	}
+	
+	public void grabContext()
+	{
+		GLFW.glfwMakeContextCurrent(windowID);
 	}
 	
 	public long getID()
