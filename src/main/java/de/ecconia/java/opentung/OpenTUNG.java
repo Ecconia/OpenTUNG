@@ -32,14 +32,14 @@ public class OpenTUNG
 			
 			SWindowWrapper window = new SWindowWrapper(500, 500, "OpenTUNG FPS: ?");
 			inputHandler = new InputProcessor(window.getID());
-			window.place();
-			window.setVsync(fps == 0);
 			
 			Thread graphicsThread = new Thread(() -> {
 				try
 				{
 					//Grab the graphic context for OpenGL on this thread.
 					window.grabContext();
+					window.setVsync(fps == 0);
+					window.place();
 					
 					//OpenGL:
 					GL.createCapabilities();

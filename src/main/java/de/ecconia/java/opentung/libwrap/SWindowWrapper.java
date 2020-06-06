@@ -63,8 +63,6 @@ public class SWindowWrapper
 		);
 //		}
 		
-		grabContext();
-		setVsync(true);
 		GLFW.glfwShowWindow(windowID);
 	}
 	
