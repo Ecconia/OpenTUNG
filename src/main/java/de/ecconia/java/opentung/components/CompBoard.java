@@ -58,4 +58,13 @@ public class CompBoard extends CompContainer
 	{
 		return z;
 	}
+	
+	//### GL-Stuff ###
+	
+	public void insertMeshData(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter)
+	{
+		//TODO: This is super ungeneric, beware.
+		CubeBoard shape = (CubeBoard) getModelHolder().getSolid().get(0);
+		shape.generateBoardMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, x, z, color, getPosition(), getRotation());
+	}
 }

@@ -182,6 +182,15 @@ public class ModelHolder
 	{
 		int value;
 		
+		public IntHolder()
+		{
+		}
+		
+		public IntHolder(int value)
+		{
+			this.value = value;
+		}
+		
 		public int getAndInc()
 		{
 			return value++;

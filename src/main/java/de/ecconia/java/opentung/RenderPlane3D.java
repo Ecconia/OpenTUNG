@@ -11,6 +11,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
@@ -44,6 +45,8 @@ public class RenderPlane3D implements RenderPlane
 	private DebugBlockModel block;
 	
 	private final InputProcessor inputHandler;
+	
+	private TextureMesh textureMesh;
 	
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
@@ -180,6 +183,9 @@ public class RenderPlane3D implements RenderPlane
 		
 		camera = new Camera(inputHandler);
 		
+		//Create meshes:
+		textureMesh = new TextureMesh(boardTexture, boardsToRender);
+		
 		lastCycle = System.currentTimeMillis();
 	}
 	
@@ -196,25 +202,9 @@ public class RenderPlane3D implements RenderPlane
 		OpenTUNG.setBackgroundColor();
 		OpenTUNG.clear();
 		
-		boardTexture.activate();
-		dynamicBoardShader.use();
-		dynamicBoardShader.setUniform(1, view);
-		dynamicBoardShader.setUniform(5, view);
-		
 		Matrix model = new Matrix();
 		
-		for(CompBoard board : boardsToRender)
-		{
-			model.identity();
-			model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
-			Matrix rotMat = new Matrix(board.getRotation().createMatrix());
-			model.multiply(rotMat);
-			dynamicBoardShader.setUniform(2, model.getMat());
-			dynamicBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
-			dynamicBoardShader.setUniformV4(4, new float[]{(float) board.getColor().getX(), (float) board.getColor().getY(), (float) board.getColor().getZ(), 1f});
-			
-			CompBoard.modelHolder.draw();
-		}
+		textureMesh.draw(view);
 		
 		wireShader.use();
 		wireShader.setUniform(1, view);
@@ -469,6 +459,7 @@ public class RenderPlane3D implements RenderPlane
 		p.perspective(45f, (float) width / (float) height, 0.1f, 100000f);
 		float[] projection = p.getMat();
 		
+		textureMesh.updateProjection(projection);
 		faceShader.use();
 		faceShader.setUniform(0, projection);
 		lineShader.use();
