@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 
 public class CompWireRaw extends Component
@@ -70,5 +71,22 @@ public class CompWireRaw extends Component
 		Vector3 endPointer = new Vector3(0, 0, length / 2f);
 		endPointer = getRotation().inverse().multiply(endPointer).invert();
 		return endPointer.add(getPosition());
+	}
+	
+	public void insertMeshData(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
+	{
+		//TODO: This is super ungeneric, beware.
+		CubeTunnel shape = (CubeTunnel) getModelHolder().getConductors().get(0);
+		
+		Vector3 color = new Vector3(1, 0, 0);
+		if(type.colorISID())
+		{
+			int id = getRayID();
+			int r = id & 0xFF;
+			int g = (id & 0xFF00) >> 8;
+			int b = (id & 0xFF0000) >> 16;
+			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+		}
+		shape.generateWireMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, length, color, getPosition(), getRotation(), type);
 	}
 }

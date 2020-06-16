@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.components;
 import de.ecconia.java.opentung.components.fragments.CubeBoard;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 
 public class CompBoard extends CompContainer
@@ -61,10 +62,20 @@ public class CompBoard extends CompContainer
 	
 	//### GL-Stuff ###
 	
-	public void insertMeshData(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter)
+	public void insertMeshData(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
 		//TODO: This is super ungeneric, beware.
 		CubeBoard shape = (CubeBoard) getModelHolder().getSolid().get(0);
-		shape.generateBoardMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, x, z, color, getPosition(), getRotation());
+		
+		Vector3 color = this.color;
+		if(type.colorISID())
+		{
+			int id = getRayID();
+			int r = id & 0xFF;
+			int g = (id & 0xFF00) >> 8;
+			int b = (id & 0xFF0000) >> 16;
+			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+		}
+		shape.generateBoardMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, x, z, color, getPosition(), getRotation(), type);
 	}
 }

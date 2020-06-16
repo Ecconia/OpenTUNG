@@ -216,6 +216,11 @@ public class ModelHolder
 		return solid;
 	}
 	
+	public List<Meshable> getConductors()
+	{
+		return conductors;
+	}
+	
 	public Vector3 getPlacementOffset()
 	{
 		return offset;

@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.components.fragments;
 
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 
@@ -84,7 +85,7 @@ public class CubeBoard extends CubeFull
 		vertices[offsetV.getAndInc()] = side;
 	}
 	
-	public void generateBoardMeshEntry(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter, int x, int z, Vector3 color, Vector3 position, Quaternion rotation)
+	public void generateBoardMeshEntry(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter, int x, int z, Vector3 color, Vector3 position, Quaternion rotation, MeshTypeThing type)
 	{
 		final float t = 0.01f;
 
@@ -97,67 +98,76 @@ public class CubeBoard extends CubeFull
 		//Position Normal Coord Color
 		//Up:
 		normal = rotation.inverse().multiply(new Vector3(0, 1, 0));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, x, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, 0, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), max.getZ()), normal, 0, z, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, x, z, color);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, x, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, 0, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), max.getZ()), normal, 0, z, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, x, z, color, type);
 		genIndex(indices, indicesIndex + 6 * 0, vertexCounter.getAndInc(4));
 		//Down
 		normal = rotation.inverse().multiply(new Vector3(0, -1, 0));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, x, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, 0, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, 0, z, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, x, z, color);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, x, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, 0, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, 0, z, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, x, z, color, type);
 		genIndex(indices, indicesIndex + 6 * 1, vertexCounter.getAndInc(4));
 		//Right:
 		normal = rotation.inverse().multiply(new Vector3(1, 0, 0));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, t, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, 0, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), max.getZ()), normal, 0, t, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, t, t, color);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, t, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, 0, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), max.getZ()), normal, 0, t, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, t, t, color, type);
 		genIndex(indices, indicesIndex + 6 * 2, vertexCounter.getAndInc(4));
 		//Left:
 		normal = rotation.inverse().multiply(new Vector3(-1, 0, 0));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, t, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, 0, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, 0, t, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, t, t, color);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, t, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, 0, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, 0, t, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, t, t, color, type);
 		genIndex(indices, indicesIndex + 6 * 3, vertexCounter.getAndInc(4));
 		//Forward:
 		normal = rotation.inverse().multiply(new Vector3(0, 0, 1));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, t, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, 0, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, 0, t, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, t, t, color);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, t, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, 0, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, 0, t, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, t, t, color, type);
 		genIndex(indices, indicesIndex + 6 * 4, vertexCounter.getAndInc(4));
 		//Back:
 		normal = rotation.inverse().multiply(new Vector3(0, 0, -1));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, t, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, 0, 0, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, 0, t, color);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), max.getZ()), normal, t, t, color);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, t, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, 0, 0, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, 0, t, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), max.getZ()), normal, t, t, color, type);
 		genIndex(indices, indicesIndex + 6 * 5, vertexCounter.getAndInc(4));
 	}
 	
 	protected void genVertex(float[] vertices, ModelHolder.IntHolder offsetV,
-	                         Vector3 gPos, Quaternion rot, Vector3 oPos, Vector3 normal, float tx, float ty, Vector3 color)
+	                         Vector3 gPos, Quaternion rot, Vector3 oPos, Vector3 normal, float tx, float ty, Vector3 color, MeshTypeThing type)
 	{
 		Vector3 position = rot.inverse().multiply(oPos).add(gPos);
 		//Position
 		vertices[offsetV.getAndInc()] = (float) position.getX();
 		vertices[offsetV.getAndInc()] = (float) position.getY();
 		vertices[offsetV.getAndInc()] = (float) position.getZ();
-		//Normal
-		vertices[offsetV.getAndInc()] = (float) normal.getX();
-		vertices[offsetV.getAndInc()] = (float) normal.getY();
-		vertices[offsetV.getAndInc()] = (float) normal.getZ();
-		//Coord
-		vertices[offsetV.getAndInc()] = tx;
-		vertices[offsetV.getAndInc()] = ty;
-		//Color
-		vertices[offsetV.getAndInc()] = (float) color.getX();
-		vertices[offsetV.getAndInc()] = (float) color.getY();
-		vertices[offsetV.getAndInc()] = (float) color.getZ();
+		if(type.usesNormals())
+		{
+			//Normal
+			vertices[offsetV.getAndInc()] = (float) normal.getX();
+			vertices[offsetV.getAndInc()] = (float) normal.getY();
+			vertices[offsetV.getAndInc()] = (float) normal.getZ();
+		}
+		if(type.usesTextures())
+		{
+			//Coord
+			vertices[offsetV.getAndInc()] = tx;
+			vertices[offsetV.getAndInc()] = ty;
+		}
+		if(type.usesColor())
+		{
+			//Color
+			vertices[offsetV.getAndInc()] = (float) color.getX();
+			vertices[offsetV.getAndInc()] = (float) color.getY();
+			vertices[offsetV.getAndInc()] = (float) color.getZ();
+		}
 	}
 	
 	protected void genIndex(short[] indices, int offsetI, int index)

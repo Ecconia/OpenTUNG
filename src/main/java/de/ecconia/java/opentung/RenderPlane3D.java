@@ -11,6 +11,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
@@ -47,6 +48,7 @@ public class RenderPlane3D implements RenderPlane
 	private final InputProcessor inputHandler;
 	
 	private TextureMesh textureMesh;
+	private RayCastMesh rayCastMesh;
 	
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
@@ -185,6 +187,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		//Create meshes:
 		textureMesh = new TextureMesh(boardTexture, boardsToRender);
+		rayCastMesh = new RayCastMesh(boardsToRender, wiresToRender, componentsToRender);
 		
 		lastCycle = System.currentTimeMillis();
 	}
@@ -372,45 +375,7 @@ public class RenderPlane3D implements RenderPlane
 		GL30.glClearColor(0, 0, 0, 1);
 		OpenTUNG.clear();
 		
-		raycastBoardShader.use();
-		raycastBoardShader.setUniform(1, view);
-		for(CompBoard comp : boardsToRender)
-		{
-			model.identity();
-			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-			Matrix rotMat = new Matrix(comp.getRotation().createMatrix());
-			model.multiply(rotMat);
-			raycastBoardShader.setUniform(2, model.getMat());
-			raycastBoardShader.setUniformV2(3, new float[]{comp.getX(), comp.getZ()});
-			
-			int id = comp.getRayID();
-			int r = id & 0xFF;
-			int g = (id & 0xFF00) >> 8;
-			int b = (id & 0xFF0000) >> 16;
-			raycastBoardShader.setUniformV3(4, new float[]{(float) r / 255f, (float) g / 255f, (float) b / 255f});
-			
-			CompBoard.modelHolder.draw();
-		}
-		
-		raycastWireShader.use();
-		raycastWireShader.setUniform(1, view);
-		for(CompWireRaw comp : wiresToRender)
-		{
-			model.identity();
-			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-			Matrix rotMat = new Matrix(comp.getRotation().createMatrix());
-			model.multiply(rotMat);
-			raycastWireShader.setUniform(2, model.getMat());
-			raycastWireShader.setUniform(3, comp.getLength() / 2f);
-			
-			int id = comp.getRayID();
-			int r = id & 0xFF;
-			int g = (id & 0xFF00) >> 8;
-			int b = (id & 0xFF0000) >> 16;
-			raycastWireShader.setUniformV3(4, new float[]{(float) r / 255f, (float) g / 255f, (float) b / 255f});
-			
-			CompWireRaw.modelHolder.draw();
-		}
+		rayCastMesh.draw(view);
 		
 		raycastComponentShader.use();
 		raycastComponentShader.setUniform(1, view);
@@ -458,6 +423,8 @@ public class RenderPlane3D implements RenderPlane
 		Matrix p = new Matrix();
 		p.perspective(45f, (float) width / (float) height, 0.1f, 100000f);
 		float[] projection = p.getMat();
+		
+		rayCastMesh.updateProjection(projection);
 		
 		textureMesh.updateProjection(projection);
 		faceShader.use();

@@ -30,7 +30,7 @@ public class TextureMesh
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
 		for(CompBoard board : boards)
 		{
-			board.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter);
+			board.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Board);
 			verticesOffset += 6 * 4 * (3 + 3 + 2 + 3);
 			indicesOffset += 6 * 2 * 3;
 		}
