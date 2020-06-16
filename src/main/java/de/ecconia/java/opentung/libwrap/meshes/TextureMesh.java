@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import java.util.List;
 import org.lwjgl.opengl.GL30;
 
@@ -23,16 +24,14 @@ public class TextureMesh
 		int indicesAmount = boards.size() * 6 * 2 * 3;
 		
 		float[] vertices = new float[verticesAmount];
-		short[] indices = new short[indicesAmount];
+		int[] indices = new int[indicesAmount];
 		
-		int verticesOffset = 0;
-		int indicesOffset = 0;
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
 		for(CompBoard board : boards)
 		{
 			board.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Board);
-			verticesOffset += 6 * 4 * (3 + 3 + 2 + 3);
-			indicesOffset += 6 * 2 * 3;
 		}
 		
 		vao = new TexMeshVAO(vertices, indices);
@@ -54,9 +53,9 @@ public class TextureMesh
 		textureShader.setUniform(0, projection);
 	}
 	
-	private static class TexMeshVAO extends GenericVAO
+	private static class TexMeshVAO extends LargeGenericVAO
 	{
-		protected TexMeshVAO(float[] vertices, short[] indices)
+		protected TexMeshVAO(float[] vertices, int[] indices)
 		{
 			super(vertices, indices);
 		}

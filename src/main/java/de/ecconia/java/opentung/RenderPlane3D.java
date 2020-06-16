@@ -377,25 +377,6 @@ public class RenderPlane3D implements RenderPlane
 		
 		rayCastMesh.draw(view);
 		
-		raycastComponentShader.use();
-		raycastComponentShader.setUniform(1, view);
-		for(Component comp : componentsToRender)
-		{
-			model.identity();
-			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-			Matrix rotMat = new Matrix(comp.getRotation().createMatrix());
-			model.multiply(rotMat);
-			raycastComponentShader.setUniform(2, model.getMat());
-			
-			int id = comp.getRayID();
-			int r = id & 0xFF;
-			int g = (id & 0xFF00) >> 8;
-			int b = (id & 0xFF0000) >> 16;
-			raycastComponentShader.setUniformV3(3, new float[]{(float) r / 255f, (float) g / 255f, (float) b / 255f});
-			
-			comp.getModelHolder().draw();
-		}
-		
 		GL30.glFlush();
 		GL30.glFinish();
 		GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);

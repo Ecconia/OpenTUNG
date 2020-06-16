@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import java.util.List;
 import org.lwjgl.opengl.GL30;
 
@@ -22,29 +23,29 @@ public class RayCastMesh
 		int indicesAmount = boards.size() * 6 * 2 * 3;
 		verticesAmount += wires.size() * 4 * 4 * (3 + 3);
 		indicesAmount += wires.size() * 4 * 2 * 3;
-//		for(Component component : components)
-//		{
-//			verticesAmount += 0;
-//			indicesAmount += 0;
-//		}
+		for(Component component : components)
+		{
+			verticesAmount += component.getWholeMeshEntryVCount(MeshTypeThing.Raycast);
+			indicesAmount += component.getWholeMeshEntryICount(MeshTypeThing.Raycast);
+		}
 		
 		float[] vertices = new float[verticesAmount];
-		short[] indices = new short[indicesAmount];
+		int[] indices = new int[indicesAmount];
 		
-		int verticesOffset = 0;
-		int indicesOffset = 0;
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
 		for(CompBoard board : boards)
 		{
 			board.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Raycast);
-			verticesOffset += 6 * 4 * (3 + 3);
-			indicesOffset += 6 * 2 * 3;
 		}
 		for(CompWireRaw wire : wires)
 		{
 			wire.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Raycast);
-			verticesOffset += 4 * 4 * (3 + 3);
-			indicesOffset += 4 * 2 * 3;
+		}
+		for(Component comp : components)
+		{
+			comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Raycast);
 		}
 		
 		vao = new RayCastMeshVAO(vertices, indices);
@@ -64,9 +65,9 @@ public class RayCastMesh
 		raycastShader.setUniform(0, projection);
 	}
 	
-	private static class RayCastMeshVAO extends GenericVAO
+	private static class RayCastMeshVAO extends LargeGenericVAO
 	{
-		protected RayCastMeshVAO(float[] vertices, short[] indices)
+		protected RayCastMeshVAO(float[] vertices, int[] indices)
 		{
 			super(vertices, indices);
 		}

@@ -73,7 +73,7 @@ public class CompWireRaw extends Component
 		return endPointer.add(getPosition());
 	}
 	
-	public void insertMeshData(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
+	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
 		//TODO: This is super ungeneric, beware.
 		CubeTunnel shape = (CubeTunnel) getModelHolder().getConductors().get(0);

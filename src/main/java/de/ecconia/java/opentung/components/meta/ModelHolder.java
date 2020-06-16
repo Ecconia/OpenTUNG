@@ -202,6 +202,12 @@ public class ModelHolder
 			value += i;
 			return ret;
 		}
+		
+		@Override
+		public String toString()
+		{
+			return "Val: " + value;
+		}
 	}
 	
 	// Getters:

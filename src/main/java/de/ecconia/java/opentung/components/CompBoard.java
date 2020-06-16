@@ -62,7 +62,7 @@ public class CompBoard extends CompContainer
 	
 	//### GL-Stuff ###
 	
-	public void insertMeshData(float[] vertices, int verticesIndex, short[] indices, int indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
+	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
 		//TODO: This is super ungeneric, beware.
 		CubeBoard shape = (CubeBoard) getModelHolder().getSolid().get(0);
