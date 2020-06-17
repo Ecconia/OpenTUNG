@@ -94,7 +94,7 @@ public class CubeOpen extends CubeFull
 	
 	public void generateMeshEntry(float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
-		if(color == null)
+		if(color == null && this.color != null)
 		{
 			color = this.color.asVector();
 		}

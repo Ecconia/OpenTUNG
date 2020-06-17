@@ -11,6 +11,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
@@ -51,6 +52,7 @@ public class RenderPlane3D implements RenderPlane
 	private TextureMesh textureMesh;
 	private RayCastMesh rayCastMesh;
 	private SolidMesh solidMesh;
+	private ConductorMesh conductorMesh;
 	
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
@@ -192,6 +194,7 @@ public class RenderPlane3D implements RenderPlane
 		textureMesh = new TextureMesh(boardTexture, boardsToRender);
 		rayCastMesh = new RayCastMesh(boardsToRender, wiresToRender, componentsToRender);
 		solidMesh = new SolidMesh(componentsToRender);
+		conductorMesh = new ConductorMesh(componentsToRender, wiresToRender);
 		System.out.println("Done.");
 		
 		lastCycle = System.currentTimeMillis();
@@ -213,24 +216,8 @@ public class RenderPlane3D implements RenderPlane
 		Matrix model = new Matrix();
 		
 		textureMesh.draw(view);
-		
-		wireShader.use();
-		wireShader.setUniform(1, view);
-		wireShader.setUniform(5, view);
-		wireShader.setUniform(2, model.getMat());
-		
-		for(CompWireRaw wire : wiresToRender)
-		{
-			model.identity();
-			model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
-			Matrix rotMat = new Matrix(wire.getRotation().createMatrix());
-			model.multiply(rotMat);
-			wireShader.setUniform(2, model.getMat());
-			wireShader.setUniform(3, wire.getLength() / 2f);
-			wireShader.setUniform(4, wire.isPowered() ? 1.0f : 0.0f);
-			
-			CompWireRaw.modelHolder.draw();
-		}
+		conductorMesh.draw(view);
+		solidMesh.draw(view);
 		
 		labelShader.use();
 		labelShader.setUniform(1, view);
@@ -259,23 +246,6 @@ public class RenderPlane3D implements RenderPlane
 			
 			component.getModelHolder().draw();
 		}
-		
-		faceShader.use();
-		faceShader.setUniform(1, view);
-		faceShader.setUniform(3, view);
-		
-		for(Component component : componentsToRender)
-		{
-			model.identity();
-			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
-			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
-			model.multiply(rotMat);
-			faceShader.setUniform(2, model.getMat());
-			
-			component.getModelHolder().draw();
-		}
-		
-		solidMesh.draw(view);
 		
 		//Draw selected component:
 		
@@ -414,6 +384,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		rayCastMesh.updateProjection(projection);
 		solidMesh.updateProjection(projection);
+		conductorMesh.updateProjection(projection);
 		
 		textureMesh.updateProjection(projection);
 		faceShader.use();
