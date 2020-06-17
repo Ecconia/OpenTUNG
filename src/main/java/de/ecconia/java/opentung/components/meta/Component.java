@@ -164,6 +164,15 @@ public abstract class Component
 		int amount = 0;
 		if(type == MeshTypeThing.Conductor)
 		{
+			if(getModelHolder().getConductors().size() == 1)
+			{
+				Meshable m = getModelHolder().getConductors().get(0);
+				if(m instanceof CubeFull && ((CubeFull) m).getColor() != null)
+				{
+					return 0;
+				}
+			}
+			
 			for(Meshable a : getModelHolder().getConnectors())
 			{
 				if(a instanceof CubeOpen)
@@ -180,6 +189,23 @@ public abstract class Component
 		{
 			//TODO: GENERALIZE, ASSUMES 6 SIDES
 			amount += getModelHolder().getSolid().size() * 6 * 4 * attributeAmount;
+			if(type != MeshTypeThing.Raycast)
+			{
+				for(Meshable conductor : getModelHolder().getConductors())
+				{
+					if(conductor instanceof CubeFull && ((CubeFull) conductor).getColor() != null)
+					{
+						if(conductor instanceof CubeOpen)
+						{
+							amount += 5 * 4 * attributeAmount; //5 Sides!
+						}
+						else //CubeFull
+						{
+							amount += 6 * 4 * attributeAmount; //6 Sides!
+						}
+					}
+				}
+			}
 			if(type != MeshTypeThing.Solid)
 			{
 				for(Meshable a : getModelHolder().getConnectors())
@@ -209,6 +235,15 @@ public abstract class Component
 		int amount = 0;
 		if(type == MeshTypeThing.Conductor)
 		{
+			if(getModelHolder().getConductors().size() == 1)
+			{
+				Meshable m = getModelHolder().getConductors().get(0);
+				if(m instanceof CubeFull && ((CubeFull) m).getColor() != null)
+				{
+					return 0;
+				}
+			}
+			
 			for(Meshable a : getModelHolder().getConnectors())
 			{
 				if(a instanceof CubeOpen)
@@ -225,6 +260,23 @@ public abstract class Component
 		{
 			//TODO: GENERALIZE, ASSUMES 6 SIDES
 			amount += getModelHolder().getSolid().size() * 6 * 4 * (3 * 2);
+			if(type != MeshTypeThing.Raycast)
+			{
+				for(Meshable conductor : getModelHolder().getConductors())
+				{
+					if(conductor instanceof CubeFull && ((CubeFull) conductor).getColor() != null)
+					{
+						if(conductor instanceof CubeOpen)
+						{
+							amount += 5 * 4 * (3 * 2);
+						}
+						else //CubeFull
+						{
+							amount += 6 * 4 * (3 * 2);
+						}
+					}
+				}
+			}
 			if(type != MeshTypeThing.Solid)
 			{
 				for(Meshable a : getModelHolder().getConnectors())
@@ -248,6 +300,15 @@ public abstract class Component
 	{
 		if(type == MeshTypeThing.Conductor)
 		{
+			if(getModelHolder().getConductors().size() == 1)
+			{
+				Meshable m = getModelHolder().getConductors().get(0);
+				if(m instanceof CubeFull && ((CubeFull) m).getColor() != null)
+				{
+					return;
+				}
+			}
+			
 			for(Meshable a : getModelHolder().getConnectors())
 			{
 				if(a instanceof CubeOpen)
@@ -276,6 +337,17 @@ public abstract class Component
 			{
 				CubeFull cube = (CubeFull) solid; //Expecting cube full for solid.
 				cube.generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+			}
+			
+			if(type != MeshTypeThing.Raycast)
+			{
+				for(Meshable conductor : getModelHolder().getConductors())
+				{
+					if(conductor instanceof CubeFull && ((CubeFull) conductor).getColor() != null)
+					{
+						((CubeFull) conductor).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					}
+				}
 			}
 			
 			if(type != MeshTypeThing.Solid)
