@@ -54,59 +54,20 @@ public class RenderPlane3D implements RenderPlane
 	private SolidMesh solidMesh;
 	private ConductorMesh conductorMesh;
 	
-	private final List<CompBoard> boardsToRender = new ArrayList<>();
-	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
-	private final List<Component> componentsToRender = new ArrayList<>();
-	private final List<CompLabel> labelsToRender = new ArrayList<>();
 	private final List<CompCrossyIndicator> wireEndsToRender = new ArrayList<>();
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
-	private final CompBoard board;
+	private final BoardUniverse board;
 	
 	private Component[] idLookup;
 	private int currentlySelectedIndex = 0;
 	private int width = 0;
 	private int height = 0;
 	
-	public RenderPlane3D(InputProcessor inputHandler, CompBoard board)
+	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board)
 	{
 		this.board = board;
 		this.inputHandler = inputHandler;
-	}
-	
-	private void importComponent(Component component)
-	{
-		if(component instanceof CompBoard)
-		{
-			boardsToRender.add((CompBoard) component);
-		}
-		else if(component instanceof CompWireRaw)
-		{
-			CompWireRaw wire = (CompWireRaw) component;
-			wiresToRender.add(wire);
-
-//			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
-//			wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
-		}
-		else
-		{
-			componentsToRender.add(component);
-		}
-		
-		if(component instanceof CompLabel)
-		{
-			((CompLabel) component).initialize();
-			labelsToRender.add((CompLabel) component);
-			return;
-		}
-		
-		if(component instanceof CompContainer)
-		{
-			for(Component child : ((CompContainer) component).getChildren())
-			{
-				importComponent(child);
-			}
-		}
 	}
 	
 	@Override
@@ -125,13 +86,24 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		ComponentLibrary.initGL();
-		importComponent(board);
+		{
+			//Import section:
+			for(CompLabel label : board.getLabelsToRender())
+			{
+				label.initialize();
+			}
+//			for(CompWireRaw wire : board.getWiresToRender())
+//			{
+//				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
+//				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
+//			}
+		}
 		
 		System.out.println("Broken wires rendered: " + TungBoardLoader.brokenWires.size());
 		if(!TungBoardLoader.brokenWires.isEmpty())
 		{
-			wiresToRender.clear();
-			wiresToRender.addAll(TungBoardLoader.brokenWires); //Debuggy
+			board.getWiresToRender().clear();
+			board.getWiresToRender().addAll(TungBoardLoader.brokenWires); //Debuggy
 			for(CompWireRaw wire : TungBoardLoader.brokenWires)
 			{
 				//TODO: Highlight which exactly failed (Or just remove this whole section, rip)
@@ -141,7 +113,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		{
-			int amount = boardsToRender.size() + wiresToRender.size() + componentsToRender.size() + 1;
+			int amount = board.getBoardsToRender().size() + board.getWiresToRender().size() + board.getComponentsToRender().size() + 1;
 			System.out.println("Raycast ID amount: " + amount);
 			if((amount) > 0xFFFFFF)
 			{
@@ -150,19 +122,19 @@ public class RenderPlane3D implements RenderPlane
 			idLookup = new Component[amount];
 			
 			int id = 1;
-			for(Component comp : boardsToRender)
+			for(Component comp : board.getBoardsToRender())
 			{
 				comp.setRayCastID(id);
 				idLookup[id] = comp;
 				id++;
 			}
-			for(Component comp : wiresToRender)
+			for(Component comp : board.getWiresToRender())
 			{
 				comp.setRayCastID(id);
 				idLookup[id] = comp;
 				id++;
 			}
-			for(Component comp : componentsToRender)
+			for(Component comp : board.getComponentsToRender())
 			{
 				comp.setRayCastID(id);
 				idLookup[id] = comp;
@@ -191,10 +163,10 @@ public class RenderPlane3D implements RenderPlane
 		
 		//Create meshes:
 		System.out.println("Starting mesh generation...");
-		textureMesh = new TextureMesh(boardTexture, boardsToRender);
-		rayCastMesh = new RayCastMesh(boardsToRender, wiresToRender, componentsToRender);
-		solidMesh = new SolidMesh(componentsToRender);
-		conductorMesh = new ConductorMesh(componentsToRender, wiresToRender);
+		textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
+		rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
+		solidMesh = new SolidMesh(board.getComponentsToRender());
+		conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender());
 		System.out.println("Done.");
 		
 		lastCycle = System.currentTimeMillis();
@@ -222,7 +194,7 @@ public class RenderPlane3D implements RenderPlane
 		labelShader.use();
 		labelShader.setUniform(1, view);
 		labelShader.setUniform(3, view);
-		for(CompLabel label : labelsToRender)
+		for(CompLabel label : board.getLabelsToRender())
 		{
 			label.activate();
 			model.identity();
