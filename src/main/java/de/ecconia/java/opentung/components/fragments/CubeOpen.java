@@ -94,6 +94,11 @@ public class CubeOpen extends CubeFull
 	
 	public void generateMeshEntry(float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
+		if(color == null)
+		{
+			color = this.color.asVector();
+		}
+		
 		Vector3 size = new Vector3(this.size.getX(), this.size.getY(), this.size.getZ());
 		Vector3 min = this.position.add(placementOffset).subtract(size);
 		Vector3 max = this.position.add(placementOffset).add(size);

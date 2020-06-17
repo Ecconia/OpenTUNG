@@ -12,6 +12,7 @@ import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
+import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
@@ -49,6 +50,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	private TextureMesh textureMesh;
 	private RayCastMesh rayCastMesh;
+	private SolidMesh solidMesh;
 	
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
@@ -186,8 +188,11 @@ public class RenderPlane3D implements RenderPlane
 		camera = new Camera(inputHandler);
 		
 		//Create meshes:
+		System.out.println("Starting mesh generation...");
 		textureMesh = new TextureMesh(boardTexture, boardsToRender);
 		rayCastMesh = new RayCastMesh(boardsToRender, wiresToRender, componentsToRender);
+		solidMesh = new SolidMesh(componentsToRender);
+		System.out.println("Done.");
 		
 		lastCycle = System.currentTimeMillis();
 	}
@@ -269,6 +274,8 @@ public class RenderPlane3D implements RenderPlane
 			
 			component.getModelHolder().draw();
 		}
+		
+		solidMesh.draw(view);
 		
 		//Draw selected component:
 		
@@ -406,6 +413,7 @@ public class RenderPlane3D implements RenderPlane
 		float[] projection = p.getMat();
 		
 		rayCastMesh.updateProjection(projection);
+		solidMesh.updateProjection(projection);
 		
 		textureMesh.updateProjection(projection);
 		faceShader.use();

@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.components.fragments;
 
+import de.ecconia.java.opentung.math.Vector3;
+
 public class Color
 {
 	public static final Color material = new Color(1, 1, 1);
@@ -51,5 +53,11 @@ public class Color
 				(double) g / 255D,
 				(double) b / 255D
 		);
+	}
+	
+	//TODO: Fix code containing this method. (Deprecated)
+	public Vector3 asVector()
+	{
+		return new Vector3(r, g, b);
 	}
 }

@@ -139,23 +139,38 @@ public abstract class Component
 		return rayID;
 	}
 	
+	//Meshable section:
+	
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		if(type != MeshTypeThing.Raycast)
+		int attributeAmount = 0;
+		if(type == MeshTypeThing.Raycast)
+		{
+			attributeAmount = 3 + 3; //Position + Color
+		}
+		else if(type == MeshTypeThing.Solid)
+		{
+			attributeAmount = 3 + 3 + 3; //Position + Normal + Color
+		}
+		else
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
 		
-		int amount = getModelHolder().getSolid().size() * 6 * 4 * (3 + 3); //Position + Color! 6 Sides! //Expecting cube full for solid.
-		for(Meshable a : getModelHolder().getConnectors())
+		//TODO: GENERALIZE, ASSUMES 6 SIDES
+		int amount = getModelHolder().getSolid().size() * 6 * 4 * attributeAmount;
+		if(type != MeshTypeThing.Solid)
 		{
-			if(a instanceof CubeOpen)
+			for(Meshable a : getModelHolder().getConnectors())
 			{
-				amount += 5 * 4 * (3 + 3); //Position + Color! 5 Sides!
-			}
-			else if(a instanceof CubeFull)
-			{
-				amount += 6 * 4 * (3 + 3); //Position + Color! 6 Sides!
+				if(a instanceof CubeOpen)
+				{
+					amount += 5 * 4 * attributeAmount; //Position + Color! 5 Sides!
+				}
+				else if(a instanceof CubeFull)
+				{
+					amount += 6 * 4 * attributeAmount; //Position + Color! 6 Sides!
+				}
 			}
 		}
 		
@@ -164,21 +179,25 @@ public abstract class Component
 	
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		if(type != MeshTypeThing.Raycast)
+		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid))
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
 		
-		int amount = getModelHolder().getSolid().size() * 6 * 4 * (3 * 2); //6 sides! //Expecting cube full for solid.
-		for(Meshable a : getModelHolder().getConnectors())
+		//TODO: GENERALIZE, ASSUMES 6 SIDES
+		int amount = getModelHolder().getSolid().size() * 6 * 4 * (3 * 2);
+		if(type != MeshTypeThing.Solid)
 		{
-			if(a instanceof CubeOpen)
+			for(Meshable a : getModelHolder().getConnectors())
 			{
-				amount += 5 * 4 * (3 * 2);
-			}
-			else if(a instanceof CubeFull)
-			{
-				amount += 6 * 4 * (3 * 2);
+				if(a instanceof CubeOpen)
+				{
+					amount += 5 * 4 * (3 * 2);
+				}
+				else if(a instanceof CubeFull)
+				{
+					amount += 6 * 4 * (3 * 2);
+				}
 			}
 		}
 		
@@ -187,16 +206,20 @@ public abstract class Component
 	
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesOffset, int[] indices, ModelHolder.IntHolder indicesOffset, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
-		if(type != MeshTypeThing.Raycast)
+		if(type != MeshTypeThing.Raycast && type != MeshTypeThing.Solid)
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
 		
-		int id = getRayID();
-		int r = id & 0xFF;
-		int g = (id & 0xFF00) >> 8;
-		int b = (id & 0xFF0000) >> 16;
-		Vector3 color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+		Vector3 color = null;
+		if(type.colorISID())
+		{
+			int id = getRayID();
+			int r = id & 0xFF;
+			int g = (id & 0xFF00) >> 8;
+			int b = (id & 0xFF0000) >> 16;
+			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+		}
 		
 		for(Meshable solid : getModelHolder().getSolid())
 		{
@@ -204,15 +227,18 @@ public abstract class Component
 			cube.generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 		}
 		
-		for(Meshable a : getModelHolder().getConnectors())
+		if(type != MeshTypeThing.Solid)
 		{
-			if(a instanceof CubeOpen)
+			for(Meshable a : getModelHolder().getConnectors())
 			{
-				((CubeOpen) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-			else if(a instanceof CubeFull)
-			{
-				((CubeFull) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				if(a instanceof CubeOpen)
+				{
+					((CubeOpen) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				}
+				else if(a instanceof CubeFull)
+				{
+					((CubeFull) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				}
 			}
 		}
 	}
