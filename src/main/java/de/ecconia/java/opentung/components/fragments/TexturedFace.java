@@ -41,10 +41,10 @@ public class TexturedFace extends CubeOpen
 		if(direction == Direction.YNeg)
 		{
 			//Down
-			genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0, 1, 0);
 			genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, -1, 0, 0, 0);
-			genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0, 0, 1);
+			genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0, 1, 0);
 			genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, -1, 0, 1, 1);
+			genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0, 0, 1);
 			genIndex(indices, offsetI, indexOffset.getAndInc(6));
 		}
 		if(direction == Direction.XPos)

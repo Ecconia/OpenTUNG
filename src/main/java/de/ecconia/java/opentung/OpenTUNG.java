@@ -126,6 +126,10 @@ public class OpenTUNG
 	{
 		setBackgroundColor();
 		
+		GL30.glEnable(GL30.GL_CULL_FACE);
+		GL30.glFrontFace(GL30.GL_CCW);
+		GL30.glCullFace(GL30.GL_BACK);
+		
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 		GL30.glDepthFunc(GL30.GL_LESS);
 		

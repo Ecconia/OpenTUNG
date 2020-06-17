@@ -45,10 +45,10 @@ public class CubeTunnel extends CubeFull
 			genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), 0, 1, 0);
 			genIndex(indices, offsetI, indexOffset.getAndInc(4));
 			//Down
-			genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
 			genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, -1, 0);
-			genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
+			genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
 			genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, -1, 0);
+			genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
 			genIndex(indices, offsetI, indexOffset.getAndInc(4));
 		}
 		if(openDirection != Direction.XPos && openDirection != Direction.XNeg)
@@ -102,10 +102,10 @@ public class CubeTunnel extends CubeFull
 			genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 			//Down
 			normal = rotation.inverse().multiply(new Vector3(0, -1, 0));
-			genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, color, type);
-			genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
+			genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, color, type);
+			genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
 			genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 		}
 		if(openDirection != Direction.XPos && openDirection != Direction.XNeg)
@@ -180,7 +180,7 @@ public class CubeTunnel extends CubeFull
 		indices[offsetI + 1] = (index + 1);
 		indices[offsetI + 2] = (index + 2);
 		indices[offsetI + 3] = (index + 0);
-		indices[offsetI + 4] = (index + 3);
-		indices[offsetI + 5] = (index + 2);
+		indices[offsetI + 4] = (index + 2);
+		indices[offsetI + 5] = (index + 3);
 	}
 }

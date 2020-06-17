@@ -55,10 +55,10 @@ public class CubeFull extends Meshable
 		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), 0, 1, 0);
 		genIndex(indices, offsetI, indexOffset.getAndInc(4));
 		//Down
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
 		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, -1, 0);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
+		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
 		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, -1, 0);
+		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
 		genIndex(indices, offsetI, indexOffset.getAndInc(4));
 		//Right:
 		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 1, 0, 0);
@@ -92,8 +92,8 @@ public class CubeFull extends Meshable
 		indices[offsetI.getAndInc()] = (short) (index + 1);
 		indices[offsetI.getAndInc()] = (short) (index + 2);
 		indices[offsetI.getAndInc()] = (short) (index + 0);
-		indices[offsetI.getAndInc()] = (short) (index + 3);
 		indices[offsetI.getAndInc()] = (short) (index + 2);
+		indices[offsetI.getAndInc()] = (short) (index + 3);
 	}
 	
 	protected void genVertex(float[] vertices, ModelHolder.IntHolder offsetV,
@@ -155,10 +155,10 @@ public class CubeFull extends Meshable
 		genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 		//Down
 		normal = rotation.inverse().multiply(new Vector3(0, -1, 0));
-		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, color, type);
-		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, color, type);
+		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
 		genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 		//Right:
 		normal = rotation.inverse().multiply(new Vector3(1, 0, 0));
@@ -226,7 +226,7 @@ public class CubeFull extends Meshable
 		indices[offsetI + 1] = (index + 1);
 		indices[offsetI + 2] = (index + 2);
 		indices[offsetI + 3] = (index + 0);
-		indices[offsetI + 4] = (index + 3);
-		indices[offsetI + 5] = (index + 2);
+		indices[offsetI + 4] = (index + 2);
+		indices[offsetI + 5] = (index + 3);
 	}
 }

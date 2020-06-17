@@ -48,10 +48,10 @@ public class CubeOpen extends CubeFull
 		if(direction != Direction.YNeg)
 		{
 			//Down
-			genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
 			genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, -1, 0);
-			genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
+			genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
 			genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, -1, 0);
+			genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
 			genIndex(indices, offsetI, indexOffset.getAndInc(4));
 		}
 		if(direction != Direction.XPos)
@@ -119,10 +119,10 @@ public class CubeOpen extends CubeFull
 		{
 			//Down
 			normal = rotation.inverse().multiply(new Vector3(0, -1, 0));
-			genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, color, type);
-			genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
+			genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, color, type);
+			genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
 			genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 		}
 		if(direction != Direction.XPos)
