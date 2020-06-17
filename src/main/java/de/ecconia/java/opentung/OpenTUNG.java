@@ -44,6 +44,7 @@ public class OpenTUNG
 					//OpenGL:
 					GL.createCapabilities();
 					System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
+					System.out.println("Amount of connection-groups per mesh: " + GL30.glGetInteger(GL30.GL_MAX_VERTEX_UNIFORM_COMPONENTS));
 					
 					init();
 					
@@ -143,7 +144,7 @@ public class OpenTUNG
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
 		interactables.newSize(500, 500);
-		worldView = new RenderPlane3D(inputHandler, board);
+		worldView = new RenderPlane3D(inputHandler, new BoardUniverse(board));
 		worldView.setup();
 		worldView.newSize(500, 500);
 	}
