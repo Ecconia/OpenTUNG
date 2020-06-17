@@ -11,13 +11,38 @@ out vec4 tColor;
 out vec3 tPosition;
 out vec3 tNormal;
 
-uniform uint states[16352];
+uniform uvec4 states[1016]; //4064 16352
 
 void main()
 {
-	uint actualIndex = inIndex >> 5;
+	//*** SS BBBBB
+	//* - Actual index in array
+	//S - xyzw selector of each vector in array
+	//B - bitmask for selecting the bit of each value
+	uint actualIndex = inIndex >> 7;
+	uint partSelector = (inIndex >> 5) & 3u;
 	uint bitmask = 1u << (inIndex & 31u);
-	uint state = states[inIndex] & bitmask;
+	
+	uvec4 vector = states[actualIndex];
+	uint value;
+	if(partSelector == 0u)
+	{
+		value = vector.x;
+	}
+	else if(partSelector == 1u)
+	{
+		value = vector.y;
+	}
+	else if(partSelector == 2u)
+	{
+		value = vector.z;
+	}
+	else
+	{
+		value = vector.w;
+	}
+	
+	uint state = value & bitmask;
 	if(state == 0u)
 	{
 		tColor = vec4(0.2, 0.2, 0.2, 1.0);
