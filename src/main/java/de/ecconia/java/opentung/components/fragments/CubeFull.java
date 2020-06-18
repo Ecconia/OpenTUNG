@@ -18,6 +18,11 @@ public class CubeFull extends Meshable
 		this.color = color;
 	}
 	
+	public int getFacesCount()
+	{
+		return 6;
+	}
+	
 	public boolean contains(Vector3 probe)
 	{
 		return !(probe.getX() < position.getX() - size.getX()

@@ -3,7 +3,6 @@ package de.ecconia.java.opentung.components.meta;
 import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
@@ -143,7 +142,7 @@ public abstract class Component
 	
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		int attributeAmount = 0;
+		int attributeAmount;
 		if(type == MeshTypeThing.Conductor)
 		{
 			attributeAmount = 3 + 3; //Position + Normal
@@ -164,60 +163,23 @@ public abstract class Component
 		int amount = 0;
 		if(type == MeshTypeThing.Conductor)
 		{
-			if(getModelHolder().getConductors().size() == 1)
+			for(Meshable m : getModelHolder().getConnectors())
 			{
-				Meshable m = getModelHolder().getConductors().get(0);
-				if(m instanceof CubeFull && ((CubeFull) m).getColor() != null)
-				{
-					return 0;
-				}
-			}
-			
-			for(Meshable a : getModelHolder().getConnectors())
-			{
-				if(a instanceof CubeOpen)
-				{
-					amount += 5 * 4 * attributeAmount; //5 Sides !
-				}
-				else if(a instanceof CubeFull)
-				{
-					amount += 6 * 4 * attributeAmount; //6 Sides!
-				}
+				amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
 			}
 		}
 		else
 		{
-			//TODO: GENERALIZE, ASSUMES 6 SIDES
-			amount += getModelHolder().getSolid().size() * 6 * 4 * attributeAmount;
-			if(type != MeshTypeThing.Raycast)
+			for(Meshable m : getModelHolder().getSolid())
 			{
-				for(Meshable conductor : getModelHolder().getConductors())
-				{
-					if(conductor instanceof CubeFull && ((CubeFull) conductor).getColor() != null)
-					{
-						if(conductor instanceof CubeOpen)
-						{
-							amount += 5 * 4 * attributeAmount; //5 Sides!
-						}
-						else //CubeFull
-						{
-							amount += 6 * 4 * attributeAmount; //6 Sides!
-						}
-					}
-				}
+				amount += getModelHolder().getSolid().size() * ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
 			}
-			if(type != MeshTypeThing.Solid)
+			
+			if(type == MeshTypeThing.Raycast)
 			{
-				for(Meshable a : getModelHolder().getConnectors())
+				for(Meshable m : getModelHolder().getConnectors())
 				{
-					if(a instanceof CubeOpen)
-					{
-						amount += 5 * 4 * attributeAmount; //5 Sides!
-					}
-					else if(a instanceof CubeFull)
-					{
-						amount += 6 * 4 * attributeAmount; //6 Sides!
-					}
+					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
 				}
 			}
 		}
@@ -235,60 +197,23 @@ public abstract class Component
 		int amount = 0;
 		if(type == MeshTypeThing.Conductor)
 		{
-			if(getModelHolder().getConductors().size() == 1)
+			for(Meshable m : getModelHolder().getConnectors())
 			{
-				Meshable m = getModelHolder().getConductors().get(0);
-				if(m instanceof CubeFull && ((CubeFull) m).getColor() != null)
-				{
-					return 0;
-				}
-			}
-			
-			for(Meshable a : getModelHolder().getConnectors())
-			{
-				if(a instanceof CubeOpen)
-				{
-					amount += 5 * 4 * (3 * 2);
-				}
-				else if(a instanceof CubeFull)
-				{
-					amount += 6 * 4 * (3 * 2);
-				}
+				amount += ((CubeFull) m).getFacesCount() * 4 * (3 * 2);
 			}
 		}
 		else
 		{
-			//TODO: GENERALIZE, ASSUMES 6 SIDES
-			amount += getModelHolder().getSolid().size() * 6 * 4 * (3 * 2);
-			if(type != MeshTypeThing.Raycast)
+			for(Meshable m : getModelHolder().getSolid())
 			{
-				for(Meshable conductor : getModelHolder().getConductors())
-				{
-					if(conductor instanceof CubeFull && ((CubeFull) conductor).getColor() != null)
-					{
-						if(conductor instanceof CubeOpen)
-						{
-							amount += 5 * 4 * (3 * 2);
-						}
-						else //CubeFull
-						{
-							amount += 6 * 4 * (3 * 2);
-						}
-					}
-				}
+				amount += ((CubeFull) m).getFacesCount() * 4 * (3 * 2);
 			}
-			if(type != MeshTypeThing.Solid)
+			
+			if(type == MeshTypeThing.Raycast)
 			{
-				for(Meshable a : getModelHolder().getConnectors())
+				for(Meshable m : getModelHolder().getConnectors())
 				{
-					if(a instanceof CubeOpen)
-					{
-						amount += 5 * 4 * (3 * 2);
-					}
-					else if(a instanceof CubeFull)
-					{
-						amount += 6 * 4 * (3 * 2);
-					}
+					amount += ((CubeFull) m).getFacesCount() * 4 * (3 * 2);
 				}
 			}
 		}
@@ -300,25 +225,9 @@ public abstract class Component
 	{
 		if(type == MeshTypeThing.Conductor)
 		{
-			if(getModelHolder().getConductors().size() == 1)
+			for(Meshable m : getModelHolder().getConnectors())
 			{
-				Meshable m = getModelHolder().getConductors().get(0);
-				if(m instanceof CubeFull && ((CubeFull) m).getColor() != null)
-				{
-					return;
-				}
-			}
-			
-			for(Meshable a : getModelHolder().getConnectors())
-			{
-				if(a instanceof CubeOpen)
-				{
-					((CubeOpen) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
-				else if(a instanceof CubeFull)
-				{
-					((CubeFull) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
+				((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
@@ -333,35 +242,16 @@ public abstract class Component
 				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
 			}
 			
-			for(Meshable solid : getModelHolder().getSolid())
+			for(Meshable m : getModelHolder().getSolid())
 			{
-				CubeFull cube = (CubeFull) solid; //Expecting cube full for solid.
-				cube.generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 			
-			if(type != MeshTypeThing.Raycast)
+			if(type == MeshTypeThing.Raycast)
 			{
-				for(Meshable conductor : getModelHolder().getConductors())
+				for(Meshable m : getModelHolder().getConnectors())
 				{
-					if(conductor instanceof CubeFull && ((CubeFull) conductor).getColor() != null)
-					{
-						((CubeFull) conductor).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-					}
-				}
-			}
-			
-			if(type != MeshTypeThing.Solid)
-			{
-				for(Meshable a : getModelHolder().getConnectors())
-				{
-					if(a instanceof CubeOpen)
-					{
-						((CubeOpen) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-					}
-					else if(a instanceof CubeFull)
-					{
-						((CubeFull) a).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-					}
+					((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 			}
 		}

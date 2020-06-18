@@ -22,6 +22,12 @@ public class CubeTunnel extends CubeFull
 	}
 	
 	@Override
+	public int getFacesCount()
+	{
+		return 4;
+	}
+	
+	@Override
 	public int getVCount()
 	{
 		//Faces * Vertices * Data

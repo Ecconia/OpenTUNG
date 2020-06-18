@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 import java.util.List;
 
@@ -35,6 +36,39 @@ public class CompSnappingPeg extends Component
 	public CompSnappingPeg(CompContainer parent)
 	{
 		super(parent);
+	}
+	
+	@Override
+	public int getWholeMeshEntryICount(MeshTypeThing type)
+	{
+		if(type == MeshTypeThing.Solid)
+		{
+			return 6 * 6 * (3 + 3 + 3);
+		}
+		else if(type == MeshTypeThing.Raycast)
+		{
+			return 6 * 6 * (3 + 3);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	
+	@Override
+	public int getWholeMeshEntryVCount(MeshTypeThing type)
+	{
+		return type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast ? 6 * 6 * (3 * 2) : 0;
+	}
+	
+	@Override
+	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
+	{
+		if(type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast)
+		{
+			//TODO: This is super ungeneric, beware.
+			((CubeFull) getModelHolder().getConnectors().get(0)).generateMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
+		}
 	}
 	
 	//Bounding:

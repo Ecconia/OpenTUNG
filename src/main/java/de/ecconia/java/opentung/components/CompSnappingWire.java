@@ -39,13 +39,13 @@ public class CompSnappingWire extends CompWireRaw
 	@Override
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		return type == MeshTypeThing.Solid ? 4 * 6 * (3 + 3 + 3): 0;
+		return type == MeshTypeThing.Solid ? 4 * 6 * (3 + 3 + 3) : 0;
 	}
 	
 	@Override
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		return type == MeshTypeThing.Solid ? 4 * 6 * (3 * 2): 0;
+		return type == MeshTypeThing.Solid ? 4 * 6 * (3 * 2) : 0;
 	}
 	
 	@Override
@@ -54,9 +54,7 @@ public class CompSnappingWire extends CompWireRaw
 		if(type == MeshTypeThing.Solid)
 		{
 			//TODO: This is super ungeneric, beware.
-			CubeTunnel shape = (CubeTunnel) getModelHolder().getSolid().get(0);
-			
-			shape.generateWireMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, getLength(), null, getPosition(), getRotation(), type);
+			((CubeTunnel) getModelHolder().getSolid().get(0)).generateWireMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, getLength(), null, getPosition(), getRotation(), type);
 		}
 	}
 }
