@@ -11,7 +11,12 @@ public class CubeTunnel extends CubeFull
 	
 	public CubeTunnel(Vector3 position, Vector3 size, Direction openDirection)
 	{
-		super(position, size, null);
+		this(position, size, openDirection, null);
+	}
+	
+	public CubeTunnel(Vector3 position, Vector3 size, Direction openDirection, Color color)
+	{
+		super(position, size, color);
 		
 		this.openDirection = openDirection;
 	}
@@ -85,6 +90,11 @@ public class CubeTunnel extends CubeFull
 	
 	public void generateWireMeshEntry(float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, float length, Vector3 color, Vector3 position, Quaternion rotation, MeshTypeThing type)
 	{
+		if(color == null && this.color != null)
+		{
+			color = this.color.asVector();
+		}
+		
 		Vector3 size = new Vector3(this.size.getX(), this.size.getY(), this.size.getZ() * length * 0.5f);
 		Vector3 min = this.position.subtract(size);
 		Vector3 max = this.position.add(size);

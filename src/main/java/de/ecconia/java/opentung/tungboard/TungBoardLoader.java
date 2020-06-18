@@ -79,6 +79,7 @@ public class TungBoardLoader
 		}
 		
 		board.createConnectorBounds();
+		board.createSnappingPegBounds();
 		
 		try
 		{

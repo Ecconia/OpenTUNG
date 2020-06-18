@@ -1,11 +1,13 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
+import java.util.List;
 
 public class CompSnappingPeg extends Component
 {
@@ -13,8 +15,8 @@ public class CompSnappingPeg extends Component
 	
 	static
 	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15, 0.0));
-		modelHolder.addConnector(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg));
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
+		modelHolder.addConnector(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg));
 	}
 	
 	public static void initGL()
@@ -33,5 +35,59 @@ public class CompSnappingPeg extends Component
 	public CompSnappingPeg(CompContainer parent)
 	{
 		super(parent);
+	}
+	
+	//Bounding:
+	protected MinMaxBox snappingPegBounds;
+	
+	public void getSnappingPegsAt(Vector3 absolutePoint, List<CompSnappingPeg> collector)
+	{
+		if(snappingPegBounds.contains(absolutePoint))
+		{
+			collector.add(this);
+		}
+	}
+	
+	public Vector3 getConnectionPoint()
+	{
+		Vector3 connectionPos = modelHolder.getPlacementOffset().add(new Vector3(0, 0.3 * 0.9, 0)); //Connection point in model
+		connectionPos = getRotation().inverse().multiply(connectionPos); //Rotate connection point to absolute grid
+		connectionPos = connectionPos.add(getPosition()); //Move connection point to absolute grid
+		return connectionPos;
+	}
+	
+	public void createSnappingPegBounds()
+	{
+		Vector3 connectionPos = getConnectionPoint();
+		double bounds = 0.21; //Ensures 0.205
+		Vector3 boundsVec = new Vector3(bounds, bounds, bounds);
+		Vector3 min = connectionPos.subtract(boundsVec);
+		Vector3 max = connectionPos.add(boundsVec);
+		
+		snappingPegBounds = new MinMaxBox(min, max);
+	}
+	
+	public MinMaxBox getSnappingPegBounds()
+	{
+		return snappingPegBounds;
+	}
+	
+	//Simulation:
+	
+	private CompSnappingPeg partner;
+	
+	public void setPartner(CompSnappingPeg partner)
+	{
+		this.partner = partner;
+	}
+	
+	public CompSnappingPeg getPartner()
+	{
+		return partner;
+	}
+	
+	public boolean hasParner()
+	{
+		return partner != null;
 	}
 }
