@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;

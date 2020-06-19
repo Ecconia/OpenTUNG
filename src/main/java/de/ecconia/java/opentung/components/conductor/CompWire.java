@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.components;
+package de.ecconia.java.opentung.components.conductor;
 
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;

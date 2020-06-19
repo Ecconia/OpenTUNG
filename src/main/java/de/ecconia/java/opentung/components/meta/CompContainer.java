@@ -3,7 +3,7 @@ package de.ecconia.java.opentung.components.meta;
 import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
-import de.ecconia.java.opentung.components.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;

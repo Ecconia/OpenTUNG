@@ -1,5 +1,6 @@
-package de.ecconia.java.opentung.components;
+package de.ecconia.java.opentung.components.conductor;
 
+import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -88,5 +89,33 @@ public class CompWireRaw extends Component
 			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
 		}
 		shape.generateWireMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, length, color, getPosition(), getRotation(), type);
+	}
+	
+	// ### SIMULATION ###
+	
+	//Ports are the components and their connector indices which the wire is connected to.
+	private Port portA, portB;
+	
+	public void setPortA(Port portA)
+	{
+		this.portA = portA;
+	}
+	
+	public void setPortB(Port portB)
+	{
+		this.portB = portB;
+	}
+	
+	//Is set, when wire is connected to a Blob with one or two ends.
+	private boolean isBlobby;
+	
+	private void setBlobby()
+	{
+		isBlobby = true;
+	}
+	
+	public boolean isBlobby()
+	{
+		return isBlobby;
 	}
 }

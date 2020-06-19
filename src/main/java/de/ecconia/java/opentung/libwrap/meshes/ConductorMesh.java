@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.libwrap.meshes;
 
 import de.ecconia.java.opentung.components.CompSnappingPeg;
-import de.ecconia.java.opentung.components.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;

@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.libwrap.meshes;
 
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.components.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
