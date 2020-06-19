@@ -7,17 +7,18 @@ public abstract class GenericVAO
 	private final int vaoID;
 	protected final int amount;
 	
-	protected GenericVAO(float[] vertices, int[] indices)
+	protected GenericVAO(float[] vertices, int[] indices, Object... extra)
 	{
 		vaoID = GL30.glGenVertexArrays();
-		int vboID = GL30.glGenBuffers();
-		int eabID = GL30.glGenBuffers();
-		
 		GL30.glBindVertexArray(vaoID);
 		
+		uploadMoreData(extra);
+		
+		int vboID = GL30.glGenBuffers();
 		GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
 		GL30.glBufferData(GL30.GL_ARRAY_BUFFER, vertices, GL30.GL_STATIC_DRAW);
 		
+		int eabID = GL30.glGenBuffers();
 		GL30.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, eabID);
 		amount = indices.length;
 		GL30.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, indices, GL30.GL_STATIC_DRAW);
@@ -26,6 +27,10 @@ public abstract class GenericVAO
 		
 		//Cleanup:
 		GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, 0);
+	}
+	
+	protected void uploadMoreData(Object... extra)
+	{
 	}
 	
 	protected GenericVAO(float[] vertices, short[] indices)

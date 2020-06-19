@@ -4,9 +4,9 @@ import org.lwjgl.opengl.GL30;
 
 public abstract class LargeGenericVAO extends GenericVAO
 {
-	protected LargeGenericVAO(float[] vertices, int[] indices)
+	protected LargeGenericVAO(float[] vertices, int[] indices, Object... objects)
 	{
-		super(vertices, indices);
+		super(vertices, indices, objects);
 	}
 	
 	protected abstract void init();
