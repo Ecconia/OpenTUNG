@@ -43,6 +43,7 @@ public class SolidMesh
 	{
 		solidMeshShader.use();
 		solidMeshShader.setUniform(1, view);
+		solidMeshShader.setUniform(2, view);
 		vao.use();
 		vao.draw();
 	}

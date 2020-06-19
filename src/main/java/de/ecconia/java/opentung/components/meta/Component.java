@@ -199,21 +199,21 @@ public abstract class Component
 		{
 			for(Meshable m : getModelHolder().getConnectors())
 			{
-				amount += ((CubeFull) m).getFacesCount() * 4 * (3 * 2);
+				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
 			}
 		}
 		else
 		{
 			for(Meshable m : getModelHolder().getSolid())
 			{
-				amount += ((CubeFull) m).getFacesCount() * 4 * (3 * 2);
+				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
 			}
 			
 			if(type == MeshTypeThing.Raycast)
 			{
 				for(Meshable m : getModelHolder().getConnectors())
 				{
-					amount += ((CubeFull) m).getFacesCount() * 4 * (3 * 2);
+					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
 				}
 			}
 		}

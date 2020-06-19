@@ -69,14 +69,17 @@ public class ShaderProgram
 		List<String> uniformsVertex = scanForUniforms(name, vShaderCode);
 		List<String> uniformsFragment = scanForUniforms(name, fShaderCode);
 		
+//		System.out.println(name + ":");
 		uniformIDs = new int[uniformsVertex.size() + uniformsFragment.size()];
 		for(int i = 0; i < uniformsVertex.size(); i++)
 		{
 			uniformIDs[i] = GL30.glGetUniformLocation(id, uniformsVertex.get(i));
+//			System.out.println(uniformsVertex.get(i) + ": " + uniformIDs[i]);
 		}
 		for(int i = 0; i < uniformsFragment.size(); i++)
 		{
 			uniformIDs[i + uniformsVertex.size()] = GL30.glGetUniformLocation(id, uniformsFragment.get(i));
+//			System.out.println(uniformsFragment.get(i) + ": " + uniformIDs[i + uniformsVertex.size()]);
 		}
 	}
 	
@@ -95,6 +98,11 @@ public class ShaderProgram
 				
 				String variable = parts[2];
 				variable = variable.substring(0, variable.indexOf(';'));
+				int arrayI = variable.indexOf('[');
+				if(arrayI >= 0)
+				{
+					variable = variable.substring(0, arrayI);
+				}
 				
 //				System.out.println("Shader " + name + " has uniform variable: " + variable);
 				uniforms.add(variable);
@@ -178,5 +186,10 @@ public class ShaderProgram
 			e.printStackTrace();
 			throw new RuntimeException("Could not load shader code: " + path);
 		}
+	}
+	
+	public void setUniformArray(int id, int[] array)
+	{
+		GL30.glUniform4uiv(uniformIDs[id], array);
 	}
 }

@@ -39,15 +39,15 @@ public class CompSnappingPeg extends Component
 	}
 	
 	@Override
-	public int getWholeMeshEntryICount(MeshTypeThing type)
+	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
 		if(type == MeshTypeThing.Solid)
 		{
-			return 6 * 6 * (3 + 3 + 3);
+			return 6 * 4 * (3 + 3 + 3);
 		}
 		else if(type == MeshTypeThing.Raycast)
 		{
-			return 6 * 6 * (3 + 3);
+			return 6 * 4 * (3 + 3);
 		}
 		else
 		{
@@ -56,9 +56,9 @@ public class CompSnappingPeg extends Component
 	}
 	
 	@Override
-	public int getWholeMeshEntryVCount(MeshTypeThing type)
+	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		return type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast ? 6 * 6 * (3 * 2) : 0;
+		return type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast ? 6 * (3 * 2) : 0;
 	}
 	
 	@Override

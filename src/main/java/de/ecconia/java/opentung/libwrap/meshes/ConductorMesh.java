@@ -48,6 +48,7 @@ public class ConductorMesh
 	{
 		solidMeshShader.use();
 		solidMeshShader.setUniform(1, view);
+		solidMeshShader.setUniform(3, view);
 		vao.use();
 		vao.draw();
 	}

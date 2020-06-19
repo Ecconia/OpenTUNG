@@ -37,15 +37,15 @@ public class CompSnappingWire extends CompWireRaw
 	}
 	
 	@Override
-	public int getWholeMeshEntryICount(MeshTypeThing type)
+	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		return type == MeshTypeThing.Solid ? 4 * 6 * (3 + 3 + 3) : 0;
+		return type == MeshTypeThing.Solid ? 4 * 4 * (3 + 3 + 3) : 0;
 	}
 	
 	@Override
-	public int getWholeMeshEntryVCount(MeshTypeThing type)
+	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		return type == MeshTypeThing.Solid ? 4 * 6 * (3 * 2) : 0;
+		return type == MeshTypeThing.Solid ? 4 * (3 * 2) : 0;
 	}
 	
 	@Override
