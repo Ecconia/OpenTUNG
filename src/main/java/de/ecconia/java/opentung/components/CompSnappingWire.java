@@ -19,11 +19,6 @@ public class CompSnappingWire extends CompWireRaw
 		modelHolder.addSolid(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, Color.snappingPeg));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Wire, true);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

@@ -23,7 +23,7 @@ public class CompInverter extends Component
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple, true, false);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
 	}
 	
 	@Override

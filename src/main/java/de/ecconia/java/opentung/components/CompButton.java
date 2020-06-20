@@ -24,7 +24,7 @@ public class CompButton extends Component
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple, true, true);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
 	}
 	
 	@Override

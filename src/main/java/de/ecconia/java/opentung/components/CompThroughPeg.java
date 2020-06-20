@@ -23,7 +23,7 @@ public class CompThroughPeg extends Component
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple, false, false);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
 	}
 	
 	@Override

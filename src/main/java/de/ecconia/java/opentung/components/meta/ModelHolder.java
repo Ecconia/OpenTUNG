@@ -73,7 +73,7 @@ public class ModelHolder
 	/**
 	 * Generates a full object ready to be drawn with input->output peg/blob states as given as parameters.
 	 */
-	public void generateTestModel(TestModelType type, boolean... b)
+	public void generateTestModel(TestModelType type)
 	{
 		int vCount = 0;
 		int iCount = 0;
@@ -94,7 +94,6 @@ public class ModelHolder
 		IntHolder offsetV = new IntHolder();
 		IntHolder offsetI = new IntHolder();
 		IntHolder indexOffset = new IntHolder();
-		int argCount = 0;
 		for(Meshable m : solid)
 		{
 			m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
@@ -104,7 +103,7 @@ public class ModelHolder
 			boolean extColor = m instanceof CubeFull && !(m instanceof CubeTunnel) && ((CubeFull) m).getColor() == null;
 			if(extColor)
 			{
-				((CubeFull) m).setColor(b[argCount++] ? Color.circuitON : Color.circuitOFF);
+				((CubeFull) m).setColor(Color.circuitOFF); //Not that the color matters, but this the color is nothing fixed. This model is only used for raycasting by now.
 			}
 			m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
 			if(extColor)

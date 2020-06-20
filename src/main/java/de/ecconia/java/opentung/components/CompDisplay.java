@@ -24,7 +24,7 @@ public class CompDisplay extends Component
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple, true);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
 	}
 	
 	@Override

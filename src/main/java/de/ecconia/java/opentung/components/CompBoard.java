@@ -18,7 +18,7 @@ public class CompBoard extends CompContainer
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Board, false);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Board);
 	}
 	
 	@Override

@@ -21,7 +21,7 @@ public class CompWireRaw extends Component
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Wire, true);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.Wire);
 	}
 	
 	@Override
