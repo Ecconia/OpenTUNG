@@ -26,6 +26,18 @@ public class BoardUniverse
 		importComponent(board);
 		
 		//Connect snapping pegs:
+		linkSnappingPegs(board);
+		
+		//Create clusters:
+		for(CompWireRaw wire : wiresToRender)
+		{
+			wire.getConnectorA().addWire(wire);
+			wire.getConnectorB().addWire(wire);
+		}
+	}
+	
+	private void linkSnappingPegs(CompBoard board)
+	{
 		List<CompSnappingPeg> snappingPegs = new ArrayList<>();
 		for(Component comp : componentsToRender)
 		{
@@ -74,8 +86,8 @@ public class BoardUniverse
 						other.setPartner(peg);
 						peg.setPartner(other);
 						CompSnappingWire wire = new CompSnappingWire(peg.getParent());
-						wire.setPortA(new Port(peg, 0));
-						wire.setPortB(new Port(other, 0));
+						wire.setConnectorA(peg.getPegs().get(0));
+						wire.setConnectorB(other.getPegs().get(0));
 						wire.setLength((float) maxDist);
 						Vector3 direction = other.getConnectionPoint().subtract(connectionPoint).divide(2); //Get half of it.
 						wire.setPosition(connectionPoint.add(direction));

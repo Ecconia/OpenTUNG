@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components.conductor;
 
-import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -94,16 +93,26 @@ public class CompWireRaw extends Component
 	// ### SIMULATION ###
 	
 	//Ports are the components and their connector indices which the wire is connected to.
-	private Port portA, portB;
+	private Connector connectorA, connectorB;
 	
-	public void setPortA(Port portA)
+	public void setConnectorA(Connector connectorA)
 	{
-		this.portA = portA;
+		this.connectorA = connectorA;
 	}
 	
-	public void setPortB(Port portB)
+	public Connector getConnectorA()
 	{
-		this.portB = portB;
+		return connectorA;
+	}
+	
+	public void setConnectorB(Connector connectorB)
+	{
+		this.connectorB = connectorB;
+	}
+	
+	public Connector getConnectorB()
+	{
+		return connectorB;
 	}
 	
 	//Is set, when wire is connected to a Blob with one or two ends.

@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.MinMaxBox;
-import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,33 +117,33 @@ public abstract class CompContainer extends Component
 		}
 	}
 	
-	public Port getPortAt(String debug, Vector3 absolutePoint)
+	public Connector getConnectorAt(String debug, Vector3 absolutePoint)
 	{
 		if(connectorBounds == null || !connectorBounds.contains(absolutePoint))
 		{
 			return null;
 		}
 		
-		Port foundPort = null;
+		Connector foundConnector = null;
 		for(Component child : children)
 		{
 			if(!(child instanceof CompWireRaw))
 			{
-				Port curPort = child.getPortAt(debug + "  ", absolutePoint);
-				if(curPort != null)
+				Connector curConnector = child.getConnectorAt(debug + "  ", absolutePoint);
+				if(curConnector != null)
 				{
-					if(foundPort != null)
+					if(foundConnector != null)
 					{
 						throw new RuntimeException("Could not import TungBoard, two child components claim to have a port for wire end.");
 					}
 					else
 					{
-						foundPort = curPort;
+						foundConnector = curConnector;
 					}
 				}
 			}
 		}
 		
-		return foundPort;
+		return foundConnector;
 	}
 }

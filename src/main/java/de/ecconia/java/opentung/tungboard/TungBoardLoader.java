@@ -2,7 +2,6 @@ package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.Ansi;
 import de.ecconia.java.opentung.OpenTUNG;
-import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -16,6 +15,7 @@ import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSwitch;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
@@ -105,15 +105,17 @@ public class TungBoardLoader
 			{
 				CompWireRaw wire = (CompWireRaw) component;
 				
-				Port portA = scannable.getPortAt("", wire.getEnd1());
-				Port portB = scannable.getPortAt("", wire.getEnd2());
-				if(portA == null || portB == null)
+				Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
+				Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
+				if(connectorA == null || connectorB == null)
 				{
 					brokenWires.add(wire);
 					throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
 				}
+				wire.setConnectorA(connectorA);
+				wire.setConnectorA(connectorB);
 			}
-			else if(component instanceof  CompContainer)
+			else if(component instanceof CompContainer)
 			{
 				linkWires((CompContainer) component, scannable);
 			}

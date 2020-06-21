@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.MinMaxBox;
-import de.ecconia.java.opentung.Port;
 import de.ecconia.java.opentung.components.conductor.Blot;
+import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
@@ -117,7 +117,7 @@ public abstract class Component
 		connectorBounds.expand(h);
 	}
 	
-	public Port getPortAt(String debug, Vector3 absolutePoint)
+	public Connector getConnectorAt(String debug, Vector3 absolutePoint)
 	{
 		if(connectorBounds == null || !connectorBounds.contains(absolutePoint))
 		{
@@ -125,19 +125,18 @@ public abstract class Component
 		}
 		
 		Vector3 localPoint = rotation.multiply(absolutePoint.subtract(position)).subtract(getModelHolder().getPlacementOffset());
-		int index = 0;
 		for(Peg peg : pegs)
 		{
 			if(peg.contains(localPoint))
 			{
-				return new Port(this, index++);
+				return peg;
 			}
 		}
 		for(Blot blot : blots)
 		{
 			if(blot.contains(localPoint))
 			{
-				return new Port(this, index++);
+				return blot;
 			}
 		}
 		return null;
