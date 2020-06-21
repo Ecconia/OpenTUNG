@@ -2,11 +2,15 @@ package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.Port;
+import de.ecconia.java.opentung.components.conductor.Blot;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Component
 {
@@ -60,9 +64,13 @@ public abstract class Component
 	
 	public void createConnectorBounds()
 	{
-		for(Meshable m : getModelHolder().getConnectors())
+		for(Peg peg : pegs)
 		{
-			addConnectorBox((CubeFull) m);
+			addConnectorBox(peg.getModel());
+		}
+		for(Blot blot : blots)
+		{
+			addConnectorBox(blot.getModel());
 		}
 	}
 	
@@ -117,12 +125,19 @@ public abstract class Component
 		}
 		
 		Vector3 localPoint = rotation.multiply(absolutePoint.subtract(position)).subtract(getModelHolder().getPlacementOffset());
-		for(int i = 0; i < getModelHolder().getConnectors().size(); i++)
+		int index = 0;
+		for(Peg peg : pegs)
 		{
-			CubeFull cube = (CubeFull) getModelHolder().getConnectors().get(i);
-			if(cube.contains(localPoint))
+			if(peg.contains(localPoint))
 			{
-				return new Port(this, i);
+				return new Port(this, index++);
+			}
+		}
+		for(Blot blot : blots)
+		{
+			if(blot.contains(localPoint))
+			{
+				return new Port(this, index++);
 			}
 		}
 		return null;
@@ -163,9 +178,13 @@ public abstract class Component
 		int amount = 0;
 		if(type == MeshTypeThing.Conductor)
 		{
-			for(Meshable m : getModelHolder().getConnectors())
+			for(Peg peg : pegs)
 			{
-				amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+				amount += peg.getModel().getFacesCount() * 4 * attributeAmount;
+			}
+			for(Blot blot : blots)
+			{
+				amount += blot.getModel().getFacesCount() * 4 * attributeAmount;
 			}
 		}
 		else
@@ -177,9 +196,13 @@ public abstract class Component
 			
 			if(type == MeshTypeThing.Raycast)
 			{
-				for(Meshable m : getModelHolder().getConnectors())
+				for(Peg peg : pegs)
 				{
-					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+					amount += peg.getModel().getFacesCount() * 4 * attributeAmount;
+				}
+				for(Blot blot : blots)
+				{
+					amount += blot.getModel().getFacesCount() * 4 * attributeAmount;
 				}
 			}
 		}
@@ -197,9 +220,13 @@ public abstract class Component
 		int amount = 0;
 		if(type == MeshTypeThing.Conductor)
 		{
-			for(Meshable m : getModelHolder().getConnectors())
+			for(Peg peg : pegs)
 			{
-				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
+				amount += peg.getModel().getFacesCount() * (2 * 3);
+			}
+			for(Blot blot : blots)
+			{
+				amount += blot.getModel().getFacesCount() * (2 * 3);
 			}
 		}
 		else
@@ -211,9 +238,13 @@ public abstract class Component
 			
 			if(type == MeshTypeThing.Raycast)
 			{
-				for(Meshable m : getModelHolder().getConnectors())
+				for(Peg peg : pegs)
 				{
-					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
+					amount += peg.getModel().getFacesCount() * (2 * 3);
+				}
+				for(Blot blot : blots)
+				{
+					amount += blot.getModel().getFacesCount() * (2 * 3);
 				}
 			}
 		}
@@ -225,9 +256,13 @@ public abstract class Component
 	{
 		if(type == MeshTypeThing.Conductor)
 		{
-			for(Meshable m : getModelHolder().getConnectors())
+			for(Peg peg : pegs)
 			{
-				((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+				peg.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+			}
+			for(Blot blot : blots)
+			{
+				blot.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
@@ -249,9 +284,13 @@ public abstract class Component
 			
 			if(type == MeshTypeThing.Raycast)
 			{
-				for(Meshable m : getModelHolder().getConnectors())
+				for(Peg peg : pegs)
 				{
-					((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					peg.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				}
+				for(Blot blot : blots)
+				{
+					blot.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 			}
 		}
@@ -259,5 +298,20 @@ public abstract class Component
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
+	}
+	
+	//Conductors:
+	
+	protected final List<Peg> pegs = new ArrayList<>();
+	protected final List<Blot> blots = new ArrayList<>();
+	
+	public List<Peg> getPegs()
+	{
+		return pegs;
+	}
+	
+	public List<Blot> getBlots()
+	{
+		return blots;
 	}
 }

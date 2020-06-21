@@ -3,7 +3,6 @@ package de.ecconia.java.opentung.libwrap.meshes;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -61,11 +60,20 @@ public class ConductorMesh
 			{
 				continue;
 			}
-			for(Meshable m : comp.getModelHolder().getConnectors())
+			for(CubeFull cube : comp.getModelHolder().getPegModels())
 			{
 				//TODO: Ungeneric:
 				int clusterID = clusterIDCounter.getAndInc();
-				for(int i = 0; i < ((CubeFull) m).getFacesCount() * 4; i++)
+				for(int i = 0; i < cube.getFacesCount() * 4; i++)
+				{
+					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+				}
+			}
+			for(CubeFull cube : comp.getModelHolder().getBlotModels())
+			{
+				//TODO: Ungeneric:
+				int clusterID = clusterIDCounter.getAndInc();
+				for(int i = 0; i < cube.getFacesCount() * 4; i++)
 				{
 					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 				}

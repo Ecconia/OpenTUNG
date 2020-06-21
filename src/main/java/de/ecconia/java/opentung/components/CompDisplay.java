@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -19,7 +20,7 @@ public class CompDisplay extends Component
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.48, 0.0), new Vector3(0.3, 0.3, 0.3), offColor));
-		modelHolder.addConnector(new CubeOpen(new Vector3(0.0, 0.24, 0.0), new Vector3(0.09, 0.48, 0.09), Direction.YPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.24, 0.0), new Vector3(0.09, 0.48, 0.09), Direction.YPos));
 	}
 	
 	public static void initGL()
@@ -40,6 +41,10 @@ public class CompDisplay extends Component
 	public CompDisplay(CompContainer parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getPegModels())
+		{
+			pegs.add(new Peg(this, cube));
+		}
 	}
 	
 	public void setColorRaw(Vector3 colorRaw)

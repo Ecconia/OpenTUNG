@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.MinMaxBox;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -17,7 +18,7 @@ public class CompSnappingPeg extends Component
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addConnector(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg));
+		modelHolder.addPeg(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg));
 	}
 	
 	public static void initGL()
@@ -36,6 +37,10 @@ public class CompSnappingPeg extends Component
 	public CompSnappingPeg(CompContainer parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getPegModels())
+		{
+			pegs.add(new Peg(this, cube));
+		}
 	}
 	
 	@Override
@@ -76,7 +81,7 @@ public class CompSnappingPeg extends Component
 				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
 			}
 			//TODO: This is super ungeneric, beware.
-			((CubeFull) getModelHolder().getConnectors().get(0)).generateMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
+			getModelHolder().getPegModels().get(0).generateMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
 		}
 	}
 	

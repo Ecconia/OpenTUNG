@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
@@ -13,7 +14,7 @@ public class CompPeg extends Component
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15, 0.0));
-		modelHolder.addConnector(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), null));
+		modelHolder.addPeg(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), null));
 	}
 	
 	public static void initGL()
@@ -32,5 +33,9 @@ public class CompPeg extends Component
 	public CompPeg(CompContainer parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getPegModels())
+		{
+			pegs.add(new Peg(this, cube));
+		}
 	}
 }

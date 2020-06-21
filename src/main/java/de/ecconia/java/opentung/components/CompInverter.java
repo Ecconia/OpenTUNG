@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Blot;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -17,8 +19,8 @@ public class CompInverter extends Component
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15 +0.075, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addConnector(new CubeOpen(new Vector3(0.0, +0.15 +0.12, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg));
-		modelHolder.addConnector(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, +0.15 +0.12, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
 	}
 	
 	public static void initGL()
@@ -37,5 +39,13 @@ public class CompInverter extends Component
 	public CompInverter(CompContainer parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getPegModels())
+		{
+			pegs.add(new Peg(this, cube));
+		}
+		for(CubeFull cube : getModelHolder().getBlotModels())
+		{
+			blots.add(new Blot(this, cube));
+		}
 	}
 }

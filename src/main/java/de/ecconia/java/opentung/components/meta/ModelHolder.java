@@ -19,7 +19,29 @@ public class ModelHolder
 {
 	private Vector3 offset = Vector3.zero;
 	
-	private final List<Meshable> connector = new ArrayList<>(); //Separate for checking locations.
+	private final List<CubeFull> pegModels = new ArrayList<>();
+	
+	public void addPeg(CubeFull pegModel)
+	{
+		pegModels.add(pegModel);
+	}
+	
+	public List<CubeFull> getPegModels()
+	{
+		return pegModels;
+	}
+	
+	private final List<CubeFull> blotModels = new ArrayList<>();
+	
+	public void addBlot(CubeFull blotModel)
+	{
+		blotModels.add(blotModel);
+	}
+	
+	public List<CubeFull> getBlotModels()
+	{
+		return blotModels;
+	}
 	
 	private final List<Meshable> solid = new ArrayList<>();
 	private final List<Meshable> conductors = new ArrayList<>();
@@ -39,13 +61,6 @@ public class ModelHolder
 	{
 		//Bounds and outline
 		solid.add(meshable); //Solid to be drawn.
-	}
-	
-	public void addConnector(Meshable meshable)
-	{
-		//Bounds and outline - connector
-		connector.add(meshable); //Check bounds for this.
-		conductors.add(meshable); //Draw as wire.
 	}
 	
 	public void addTexture(TexturedFace meshable)
@@ -88,6 +103,16 @@ public class ModelHolder
 			vCount += m.getVCount();
 			iCount += m.getICount();
 		}
+		for(CubeFull pegModel : pegModels)
+		{
+			vCount += pegModel.getVCount();
+			iCount += pegModel.getICount();
+		}
+		for(CubeFull blotModel : blotModels)
+		{
+			vCount += blotModel.getVCount();
+			iCount += blotModel.getICount();
+		}
 		
 		float[] vertices = new float[vCount];
 		short[] indices = new short[iCount];
@@ -109,6 +134,34 @@ public class ModelHolder
 			if(extColor)
 			{
 				((CubeFull) m).setColor(null);
+			}
+		}
+		for(CubeFull pegModel : pegModels)
+		{
+			//Pegs don't have a color - Oh but snapping pegs.
+			boolean placeboColor = pegModel.getColor() == null;
+			if(placeboColor)
+			{
+				pegModel.setColor(Color.circuitOFF); //TODO: Get rid of this color stuff.
+			}
+			pegModel.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
+			if(placeboColor)
+			{
+				pegModel.setColor(null);
+			}
+		}
+		for(CubeFull blotModel : blotModels)
+		{
+			//Pegs don't have a color - Oh but snapping pegs.
+			boolean placeboColor = blotModel.getColor() == null;
+			if(placeboColor)
+			{
+				blotModel.setColor(Color.circuitOFF); //TODO: Get rid of this color stuff.
+			}
+			blotModel.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
+			if(placeboColor)
+			{
+				blotModel.setColor(null);
 			}
 		}
 		
@@ -210,11 +263,6 @@ public class ModelHolder
 	}
 	
 	// Getters:
-	
-	public List<Meshable> getConnectors()
-	{
-		return connector;
-	}
 	
 	public List<Meshable> getSolid()
 	{

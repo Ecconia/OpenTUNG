@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -17,7 +18,7 @@ public class CompButton extends Component
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addConnector(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
 		//TODO: Open bottom
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.15 + 0.03, 0.0), new Vector3(0.18, 0.06, 0.18), Color.interactable));
 	}
@@ -38,5 +39,9 @@ public class CompButton extends Component
 	public CompButton(CompContainer parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getBlotModels())
+		{
+			blots.add(new Blot(this, cube));
+		}
 	}
 }

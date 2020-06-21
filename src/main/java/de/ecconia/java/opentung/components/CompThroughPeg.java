@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -17,8 +18,8 @@ public class CompThroughPeg extends Component
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.2, +0.15 +0.175, 0.2), Color.material));
-		modelHolder.addConnector(new CubeOpen(new Vector3(0.0, +0.075 +0.0875 +0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YNeg));
-		modelHolder.addConnector(new CubeOpen(new Vector3(0.0, -0.075 -0.0875 -0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, +0.075 +0.0875 +0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YNeg));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.075 -0.0875 -0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
 	}
 	
 	public static void initGL()
@@ -37,5 +38,9 @@ public class CompThroughPeg extends Component
 	public CompThroughPeg(CompContainer parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getPegModels())
+		{
+			pegs.add(new Peg(this, cube));
+		}
 	}
 }
