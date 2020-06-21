@@ -113,7 +113,7 @@ public class TungBoardLoader
 					throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
 				}
 				wire.setConnectorA(connectorA);
-				wire.setConnectorA(connectorB);
+				wire.setConnectorB(connectorB);
 			}
 			else if(component instanceof CompContainer)
 			{
