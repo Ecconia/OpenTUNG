@@ -1,8 +1,9 @@
 package de.ecconia.java.opentung.libwrap.meshes;
 
 import de.ecconia.java.opentung.components.CompSnappingPeg;
+import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
-import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -21,7 +22,7 @@ public class ConductorMesh
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
 	private final int[] falseDataArray = new int[1016 * 4];
 	
-	public ConductorMesh(List<Component> components, List<CompWireRaw> wires)
+	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, int clusterIDOffset)
 	{
 		this.solidMeshShader = new ShaderProgram("meshConductor");
 		
@@ -38,7 +39,7 @@ public class ConductorMesh
 		int[] clusterIDs = new int[indicesAmount / 6 * 4];
 		
 		ModelHolder.IntHolder clusterIDIndex = new ModelHolder.IntHolder();
-		ModelHolder.IntHolder clusterIDCounter = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder clusterIDCounter = new ModelHolder.IntHolder(clusterIDOffset);
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
@@ -46,7 +47,7 @@ public class ConductorMesh
 		{
 			wire.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 			//TODO: Ungeneric:
-			int clusterID = clusterIDCounter.getAndInc();
+			int clusterID = wire.hasCluster() ? wire.getCluster().getId() : clusterIDCounter.getAndInc();
 			//Wire has 4 Sides, each 4 vertices: 16
 			for(int i = 0; i < 4 * 4; i++)
 			{
@@ -60,26 +61,25 @@ public class ConductorMesh
 			{
 				continue;
 			}
-			for(CubeFull cube : comp.getModelHolder().getPegModels())
+			//TODO: Ungeneric:
+			for(Peg peg : comp.getPegs())
 			{
-				//TODO: Ungeneric:
-				int clusterID = clusterIDCounter.getAndInc();
-				for(int i = 0; i < cube.getFacesCount() * 4; i++)
+				int clusterID = peg.hasCluster() ? peg.getCluster().getId() : clusterIDCounter.getAndInc();
+				for(int i = 0; i < peg.getModel().getFacesCount() * 4; i++)
 				{
 					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 				}
 			}
-			for(CubeFull cube : comp.getModelHolder().getBlotModels())
+			for(Blot blot : comp.getBlots())
 			{
-				//TODO: Ungeneric:
-				int clusterID = clusterIDCounter.getAndInc();
-				for(int i = 0; i < cube.getFacesCount() * 4; i++)
+				int clusterID = blot.hasCluster() ? blot.getCluster().getId() : clusterIDCounter.getAndInc();
+				for(int i = 0; i < blot.getModel().getFacesCount() * 4; i++)
 				{
 					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 				}
 			}
 		}
-		System.out.println(clusterIDCounter);
+		System.out.println("Clusters in use: " + clusterIDCounter);
 		
 		vao = new SolidMeshVAO(vertices, indices, clusterIDs);
 		
@@ -116,7 +116,7 @@ public class ConductorMesh
 			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
 			GL30.glBufferData(GL30.GL_ARRAY_BUFFER, (int[]) extra[0], GL30.GL_STATIC_DRAW);
 			//ClusterID:
-			GL30.glVertexAttribIPointer(2, 1, GL30.GL_UNSIGNED_INT,	Integer.BYTES, 0);
+			GL30.glVertexAttribIPointer(2, 1, GL30.GL_UNSIGNED_INT, Integer.BYTES, 0);
 			GL30.glEnableVertexAttribArray(2);
 		}
 		

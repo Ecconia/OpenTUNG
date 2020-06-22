@@ -4,11 +4,15 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
+import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.SourceCluster;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +23,8 @@ public class BoardUniverse
 	private final List<Component> componentsToRender = new ArrayList<>();
 	private final List<CompLabel> labelsToRender = new ArrayList<>();
 	private final List<CompSnappingWire> snappingWires = new ArrayList<>();
+	
+	private int nextClusterID = 0;
 	
 	public BoardUniverse(CompBoard board)
 	{
@@ -33,6 +39,40 @@ public class BoardUniverse
 		{
 			wire.getConnectorA().addWire(wire);
 			wire.getConnectorB().addWire(wire);
+		}
+		
+		//Create blot clusters:
+		for(Component comp : componentsToRender)
+		{
+			for(Blot blot : comp.getBlots())
+			{
+				createBlottyCluster(blot);
+			}
+		}
+		
+		System.out.println("Assigned cluster IDs: " + nextClusterID);
+	}
+	
+	private void createBlottyCluster(Blot blot)
+	{
+		//Precondition: No blob can have a cluster at this point.
+		Cluster cluster = new SourceCluster(nextClusterID++);
+		cluster.addConnector(blot);
+		blot.setCluster(cluster);
+		if(blot.getWires().isEmpty())
+		{
+			return;
+		}
+		for(CompWireRaw wire : blot.getWires())
+		{
+			Connector otherSide = wire.getOtherSide(blot);
+			if(otherSide instanceof Blot)
+			{
+				System.out.println("WARNING: Circuit contains Blot-Blot connection which is not allowed.");
+				continue;
+			}
+			wire.setCluster(cluster);
+			
 		}
 	}
 	
@@ -150,5 +190,10 @@ public class BoardUniverse
 	public List<CompBoard> getBoardsToRender()
 	{
 		return boardsToRender;
+	}
+	
+	public int getNextClusterID()
+	{
+		return nextClusterID;
 	}
 }

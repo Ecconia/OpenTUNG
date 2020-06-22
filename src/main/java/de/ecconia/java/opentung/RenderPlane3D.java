@@ -161,12 +161,14 @@ public class RenderPlane3D implements RenderPlane
 		camera = new Camera(inputHandler);
 		
 		//Create meshes:
-		System.out.println("Starting mesh generation...");
-		textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
-		rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
-		solidMesh = new SolidMesh(board.getComponentsToRender());
-		conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender());
-		System.out.println("Done.");
+		{
+			System.out.println("Starting mesh generation...");
+			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
+			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
+			solidMesh = new SolidMesh(board.getComponentsToRender());
+			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getNextClusterID());
+			System.out.println("Done.");
+		}
 		
 		lastCycle = System.currentTimeMillis();
 	}

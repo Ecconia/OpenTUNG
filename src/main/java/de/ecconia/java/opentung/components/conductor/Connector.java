@@ -26,9 +26,24 @@ public abstract class Connector
 		this.cluster = cluster;
 	}
 	
+	public boolean hasCluster()
+	{
+		return cluster != null;
+	}
+	
+	public Cluster getCluster()
+	{
+		return cluster;
+	}
+	
 	public void addWire(CompWireRaw wire)
 	{
 		wires.add(wire);
+	}
+	
+	public List<CompWireRaw> getWires()
+	{
+		return wires;
 	}
 	
 	public CubeFull getModel()
