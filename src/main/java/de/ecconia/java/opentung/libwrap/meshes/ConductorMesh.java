@@ -22,7 +22,7 @@ public class ConductorMesh
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
 	private final int[] falseDataArray = new int[1016 * 4];
 	
-	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, int clusterIDOffset)
+	public ConductorMesh(List<Component> components, List<CompWireRaw> wires)
 	{
 		this.solidMeshShader = new ShaderProgram("meshConductor");
 		
@@ -39,7 +39,6 @@ public class ConductorMesh
 		int[] clusterIDs = new int[indicesAmount / 6 * 4];
 		
 		ModelHolder.IntHolder clusterIDIndex = new ModelHolder.IntHolder();
-		ModelHolder.IntHolder clusterIDCounter = new ModelHolder.IntHolder(clusterIDOffset);
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
@@ -47,11 +46,18 @@ public class ConductorMesh
 		{
 			wire.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 			//TODO: Ungeneric:
-			int clusterID = wire.hasCluster() ? wire.getCluster().getId() : clusterIDCounter.getAndInc();
-			//Wire has 4 Sides, each 4 vertices: 16
-			for(int i = 0; i < 4 * 4; i++)
+			if(wire.hasCluster())
 			{
-				clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+				int clusterID = wire.getCluster().getId();
+				//Wire has 4 Sides, each 4 vertices: 16
+				for(int i = 0; i < 4 * 4; i++)
+				{
+					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+				}
+			}
+			else
+			{
+				throw new RuntimeException("Found wire without a cluster :/");
 			}
 		}
 		for(Component comp : components)
@@ -64,42 +70,40 @@ public class ConductorMesh
 			//TODO: Ungeneric:
 			for(Peg peg : comp.getPegs())
 			{
-				int clusterID = peg.hasCluster() ? peg.getCluster().getId() : clusterIDCounter.getAndInc();
-				for(int i = 0; i < peg.getModel().getFacesCount() * 4; i++)
+				if(peg.hasCluster())
 				{
-					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+					int clusterID = peg.getCluster().getId();
+					for(int i = 0; i < peg.getModel().getFacesCount() * 4; i++)
+					{
+						clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+					}
+				}
+				else
+				{
+					throw new RuntimeException("Found peg without a cluster :/");
 				}
 			}
 			for(Blot blot : comp.getBlots())
 			{
-				int clusterID = blot.hasCluster() ? blot.getCluster().getId() : clusterIDCounter.getAndInc();
-				for(int i = 0; i < blot.getModel().getFacesCount() * 4; i++)
+				if(blot.hasCluster())
 				{
-					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+					int clusterID = blot.getCluster().getId();
+					for(int i = 0; i < blot.getModel().getFacesCount() * 4; i++)
+					{
+						clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+					}
+				}
+				else
+				{
+					throw new RuntimeException("Found blot without a cluster :/");
 				}
 			}
 		}
-		System.out.println("Clusters in use: " + clusterIDCounter);
 		
 		vao = new SolidMeshVAO(vertices, indices, clusterIDs);
 		
 		//"Random":
-		//Arrays.fill(falseDataArray, 0xF0F0F0F0);
-		//Clusterized or not:
-		Arrays.fill(falseDataArray, 0); //Set to all off.
-		int certainlyOn = clusterIDOffset / 32;
-		int particiallyOn = clusterIDOffset % 32;
-		for(int i = 0; i < certainlyOn; i++)
-		{
-			falseDataArray[i] = 0xFFFFFFFF;
-		}
-		int lastOne = 0;
-		for(int i = 0; i < particiallyOn; i++)
-		{
-			lastOne <<= 1;
-			lastOne |= 1;
-		}
-		falseDataArray[certainlyOn] = lastOne;
+		Arrays.fill(falseDataArray, 0xF0F0F0F0);
 	}
 	
 	public void draw(float[] view)

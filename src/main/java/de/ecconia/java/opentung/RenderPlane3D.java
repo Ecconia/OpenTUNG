@@ -166,7 +166,7 @@ public class RenderPlane3D implements RenderPlane
 			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
 			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
-			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getNextClusterID());
+			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender());
 			System.out.println("Done.");
 		}
 		

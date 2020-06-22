@@ -356,9 +356,4 @@ public class BoardUniverse
 	{
 		return boardsToRender;
 	}
-	
-	public int getNextClusterID()
-	{
-		return nextClusterID;
-	}
 }
