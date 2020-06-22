@@ -8,8 +8,9 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.Wire;
 
-public class CompWireRaw extends Component
+public class CompWireRaw extends Component implements Wire
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -96,26 +97,31 @@ public class CompWireRaw extends Component
 	//Connectors which the wire is connected to.
 	private Connector connectorA, connectorB;
 	
+	@Override
 	public void setConnectorA(Connector connectorA)
 	{
 		this.connectorA = connectorA;
 	}
 	
+	@Override
 	public Connector getConnectorA()
 	{
 		return connectorA;
 	}
 	
+	@Override
 	public void setConnectorB(Connector connectorB)
 	{
 		this.connectorB = connectorB;
 	}
 	
+	@Override
 	public Connector getConnectorB()
 	{
 		return connectorB;
 	}
 	
+	@Override
 	public Connector getOtherSide(Connector connector)
 	{
 		return connector == connectorA ? connectorB : connectorA;
@@ -124,31 +130,21 @@ public class CompWireRaw extends Component
 	//Cluster, stores the cluster which this wire is part of.
 	private Cluster cluster;
 	
+	@Override
 	public void setCluster(Cluster cluster)
 	{
 		this.cluster = cluster;
 	}
 	
+	@Override
 	public Cluster getCluster()
 	{
 		return cluster;
 	}
 	
+	@Override
 	public boolean hasCluster()
 	{
 		return cluster != null;
-	}
-	
-	//Is set, when wire is connected to a Blob with one or two ends.
-	private boolean isBlobby;
-	
-	private void setBlobby()
-	{
-		isBlobby = true;
-	}
-	
-	public boolean isBlobby()
-	{
-		return isBlobby;
 	}
 }

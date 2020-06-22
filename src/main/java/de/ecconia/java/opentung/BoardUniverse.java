@@ -13,6 +13,7 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
+import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +64,8 @@ public class BoardUniverse
 		{
 			return;
 		}
-		for(CompWireRaw wire : blot.getWires())
+		
+		for(Wire wire : blot.getWires())
 		{
 			Connector otherSide = wire.getOtherSide(blot);
 			if(otherSide instanceof Blot)
@@ -71,8 +73,8 @@ public class BoardUniverse
 				System.out.println("WARNING: Circuit contains Blot-Blot connection which is not allowed.");
 				continue;
 			}
+			cluster.addWire(wire);
 			wire.setCluster(cluster);
-			
 		}
 	}
 	

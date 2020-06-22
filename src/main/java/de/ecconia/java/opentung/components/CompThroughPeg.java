@@ -9,6 +9,8 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.HiddenWire;
+import de.ecconia.java.opentung.simulation.Wire;
 
 public class CompThroughPeg extends Component
 {
@@ -38,9 +40,17 @@ public class CompThroughPeg extends Component
 	public CompThroughPeg(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
+		Wire internalWire = new HiddenWire();
+		Peg peg;
+		
+		peg = new Peg(this, getModelHolder().getPegModels().get(0));
+		pegs.add(peg);
+		internalWire.setConnectorA(peg);
+		peg.addWire(internalWire);
+		
+		peg = new Peg(this, getModelHolder().getPegModels().get(1));
+		pegs.add(peg);
+		internalWire.setConnectorB(peg);
+		peg.addWire(internalWire);
 	}
 }

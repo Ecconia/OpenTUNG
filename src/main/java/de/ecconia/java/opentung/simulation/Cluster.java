@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +7,7 @@ import java.util.List;
 public abstract class Cluster
 {
 	private final List<Connector> connectors = new ArrayList<>();
-	private final List<CompWireRaw> wires = new ArrayList<>();
+	private final List<Wire> wires = new ArrayList<>();
 	private final int id;
 	
 	private int activeSources = 0;
@@ -28,9 +27,14 @@ public abstract class Cluster
 		connectors.add(connector);
 	}
 	
-	public void addWire(CompWireRaw wire)
+	public void addWire(Wire wire)
 	{
 		wires.add(wire);
+	}
+	
+	public List<Wire> getWires()
+	{
+		return wires;
 	}
 	
 	public boolean isActive()
