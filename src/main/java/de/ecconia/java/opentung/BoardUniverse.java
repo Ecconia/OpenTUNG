@@ -7,11 +7,13 @@ import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
@@ -57,8 +59,68 @@ public class BoardUniverse
 				createBlottyCluster(blot);
 			}
 		}
+		for(Component comp : componentsToRender)
+		{
+			for(Peg peg : comp.getPegs())
+			{
+				if(!peg.hasCluster())
+				{
+					createPeggyCluster(peg);
+				}
+			}
+		}
 		
 		System.out.println("Assigned cluster IDs: " + nextClusterID);
+	}
+	
+	private void createPeggyCluster(Peg peg)
+	{
+		InheritingCluster cluster = new InheritingCluster(nextClusterID++);
+		
+		List<Connector> connectorsToProbe = new ArrayList<>();
+		connectorsToProbe.add(peg);
+		
+		while(!connectorsToProbe.isEmpty())
+		{
+			Connector connector = connectorsToProbe.remove(0);
+			//The component made it into this queue, thus it must be unconnected yet.
+			cluster.addConnector(connector);
+			connector.setCluster(cluster);
+			
+			for(Wire wire : connector.getWires())
+			{
+				//Check if its a source-cluster, cause only these don't vore everything.
+				if(wire.hasCluster())
+				{
+					if(wire.getCluster() != cluster)
+					{
+						//Assume this is a source-cluster, it has to be one.
+						SourceCluster sourceCluster = (SourceCluster) wire.getCluster();
+						cluster.addSource(sourceCluster);
+						sourceCluster.addDrain(cluster);
+					}
+					continue;
+				}
+				
+				wire.setCluster(cluster);
+				cluster.addWire(wire);
+				
+				Connector otherSide = wire.getOtherSide(connector);
+				if(otherSide.hasCluster())
+				{
+					if(otherSide.getCluster() == cluster)
+					{
+						continue;
+					}
+					else
+					{
+						throw new RuntimeException("Encountered other connector-cluster while expanding a peggy cluster.");
+					}
+				}
+				//Assume that the otherSide has no cluster
+				connectorsToProbe.add(otherSide);
+			}
+		}
 	}
 	
 	private void createBlottyCluster(Blot blot)
@@ -67,6 +129,7 @@ public class BoardUniverse
 		Cluster cluster = new SourceCluster(nextClusterID++);
 		cluster.addConnector(blot);
 		blot.setCluster(cluster);
+		
 		if(blot.getWires().isEmpty())
 		{
 			return;
@@ -95,10 +158,8 @@ public class BoardUniverse
 			connectorsToProbe.add(otherSide);
 		}
 		
-		int iter = 0;
 		while(!connectorsToProbe.isEmpty())
 		{
-			iter++;
 			Connector connector = connectorsToProbe.remove(0);
 			//If we did check this wire already, may happen on loop.
 			if(additionalConnectors.contains(connector))
