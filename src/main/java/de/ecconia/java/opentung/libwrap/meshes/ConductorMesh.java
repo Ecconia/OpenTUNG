@@ -9,6 +9,7 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
+import de.ecconia.java.opentung.simulation.Cluster;
 import java.util.Arrays;
 import java.util.List;
 import org.lwjgl.opengl.GL30;
@@ -22,7 +23,7 @@ public class ConductorMesh
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
 	private final int[] falseDataArray = new int[1016 * 4];
 	
-	public ConductorMesh(List<Component> components, List<CompWireRaw> wires)
+	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters)
 	{
 		this.solidMeshShader = new ShaderProgram("meshConductor");
 		
@@ -102,8 +103,27 @@ public class ConductorMesh
 		
 		vao = new SolidMeshVAO(vertices, indices, clusterIDs);
 		
-		//"Random":
-		Arrays.fill(falseDataArray, 0xF0F0F0F0);
+		//By clusters:
+		Arrays.fill(falseDataArray, 0);
+		for(Cluster cluster : clusters)
+		{
+			setStateByID(cluster.getId(), cluster.isActive());
+		}
+	}
+	
+	private void setStateByID(int i, boolean active)
+	{
+		int index = i / 32;
+		int offset = i % 32;
+		int mask = (1 << offset);
+		
+		int value = falseDataArray[index];
+		value = value & ~mask;
+		if(active)
+		{
+			value |= mask;
+		}
+		falseDataArray[index] = value;
 	}
 	
 	public void draw(float[] view)

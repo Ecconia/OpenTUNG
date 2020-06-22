@@ -14,6 +14,7 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
+import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
@@ -28,6 +29,9 @@ public class BoardUniverse
 	private final List<Component> componentsToRender = new ArrayList<>();
 	private final List<CompLabel> labelsToRender = new ArrayList<>();
 	private final List<CompSnappingWire> snappingWires = new ArrayList<>();
+	
+	//TODO: Switch to indexed data structure.
+	private final List<Cluster> clusters = new ArrayList<>();
 	
 	private int nextClusterID = 0;
 	
@@ -71,11 +75,21 @@ public class BoardUniverse
 		}
 		
 		System.out.println("Assigned cluster IDs: " + nextClusterID);
+		
+		//Update clusters:
+		for(Component component : componentsToRender)
+		{
+			if(component instanceof Powerable)
+			{
+				((Powerable) component).forceUpdateOutput();
+			}
+		}
 	}
 	
 	private void createPeggyCluster(Peg peg)
 	{
 		InheritingCluster cluster = new InheritingCluster(nextClusterID++);
+		clusters.add(cluster);
 		
 		List<Connector> connectorsToProbe = new ArrayList<>();
 		connectorsToProbe.add(peg);
@@ -127,6 +141,7 @@ public class BoardUniverse
 	{
 		//Precondition: No blob can have a cluster at this point.
 		Cluster cluster = new SourceCluster(nextClusterID++);
+		clusters.add(cluster);
 		cluster.addConnector(blot);
 		blot.setCluster(cluster);
 		
@@ -355,5 +370,10 @@ public class BoardUniverse
 	public List<CompBoard> getBoardsToRender()
 	{
 		return boardsToRender;
+	}
+	
+	public List<Cluster> getClusters()
+	{
+		return clusters;
 	}
 }

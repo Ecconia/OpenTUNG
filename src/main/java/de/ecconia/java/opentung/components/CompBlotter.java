@@ -63,4 +63,15 @@ public class CompBlotter extends Component implements Powerable
 	{
 		return powered;
 	}
+	
+	@Override
+	public void forceUpdateOutput()
+	{
+		//Default state is off. Only update on ON.
+		if(powered)
+		{
+			Blot blot = blots.get(0);
+			blot.forceUpdateON();
+		}
+	}
 }

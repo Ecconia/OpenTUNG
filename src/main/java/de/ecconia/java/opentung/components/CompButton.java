@@ -59,4 +59,10 @@ public class CompButton extends Component implements Powerable
 	{
 		return powered;
 	}
+	
+	@Override
+	public void forceUpdateOutput()
+	{
+		//The button may not be ON at the time this method gets called.
+	}
 }

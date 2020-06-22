@@ -10,8 +10,6 @@ public abstract class Cluster
 	private final List<Wire> wires = new ArrayList<>();
 	private final int id;
 	
-	private int activeSources = 0;
-	
 	public Cluster(int id)
 	{
 		this.id = id;
@@ -37,8 +35,5 @@ public abstract class Cluster
 		return wires;
 	}
 	
-	public boolean isActive()
-	{
-		return activeSources != 0;
-	}
+	public abstract boolean isActive();
 }
