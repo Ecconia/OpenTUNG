@@ -83,7 +83,23 @@ public class ConductorMesh
 		
 		vao = new SolidMeshVAO(vertices, indices, clusterIDs);
 		
-		Arrays.fill(falseDataArray, 0xF0F0F0F0);
+		//"Random":
+		//Arrays.fill(falseDataArray, 0xF0F0F0F0);
+		//Clusterized or not:
+		Arrays.fill(falseDataArray, 0); //Set to all off.
+		int certainlyOn = clusterIDOffset / 32;
+		int particiallyOn = clusterIDOffset % 32;
+		for(int i = 0; i < certainlyOn; i++)
+		{
+			falseDataArray[i] = 0xFFFFFFFF;
+		}
+		int lastOne = 0;
+		for(int i = 0; i < particiallyOn; i++)
+		{
+			lastOne <<= 1;
+			lastOne |= 1;
+		}
+		falseDataArray[certainlyOn] = lastOne;
 	}
 	
 	public void draw(float[] view)
