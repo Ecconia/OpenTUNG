@@ -15,7 +15,9 @@ import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BoardUniverse
 {
@@ -36,10 +38,15 @@ public class BoardUniverse
 		linkSnappingPegs(board);
 		
 		//Create clusters:
-		for(CompWireRaw wire : wiresToRender)
+		for(Wire wire : wiresToRender)
 		{
 			wire.getConnectorA().addWire(wire);
 			wire.getConnectorB().addWire(wire);
+		}
+		for(Wire snappingWire : snappingWires)
+		{
+			snappingWire.getConnectorA().addWire(snappingWire);
+			snappingWire.getConnectorB().addWire(snappingWire);
 		}
 		
 		//Create blot clusters:
@@ -75,6 +82,101 @@ public class BoardUniverse
 			}
 			cluster.addWire(wire);
 			wire.setCluster(cluster);
+		}
+		
+		Set<Wire> additionalWires = new HashSet<>();
+		Set<Connector> additionalConnectors = new HashSet<>();
+		boolean abort = false;
+		
+		List<Connector> connectorsToProbe = new ArrayList<>();
+		for(Wire wire : cluster.getWires())
+		{
+			Connector otherSide = wire.getOtherSide(blot);
+			connectorsToProbe.add(otherSide);
+		}
+		
+		int iter = 0;
+		while(!connectorsToProbe.isEmpty())
+		{
+			iter++;
+			Connector connector = connectorsToProbe.remove(0);
+			//If we did check this wire already, may happen on loop.
+			if(additionalConnectors.contains(connector))
+			{
+				continue;
+			}
+			if(connector instanceof Blot)
+			{
+				//Another source has been found, abort.
+				abort = true;
+				break;
+			}
+			//If the other component has a cluster already we need to know which
+			if(connector.getCluster() != null)
+			{
+				if(connector.getCluster() != cluster)
+				{
+					//That cluster was not our cluster, we have a clash - abort.
+					abort = true;
+					break;
+				}
+				else
+				{
+					//It was our cluster - loop detected, ignore this component.
+					//Dough should never happen, but rather check it than not check it.
+					continue;
+				}
+			}
+			
+			//Connector was never handled at this point, cool add it to the set.
+			additionalConnectors.add(connector);
+			
+			//Check each wire connected to that connector...
+			for(Wire wireAtConnector : connector.getWires())
+			{
+				//If we did check this wire already, may happen on loop.
+				if(additionalWires.contains(wireAtConnector))
+				{
+					continue;
+				}
+				//If the other component has a cluster already we need to know which
+				if(wireAtConnector.getCluster() != null)
+				{
+					if(wireAtConnector.getCluster() != cluster)
+					{
+						//That cluster was not our cluster, we have a clash - abort.
+						abort = true;
+						break;
+					}
+					else
+					{
+						//It was our cluster - loop detected, ignore this wire.
+						//Only relevant for the wires directly connected to the blot, other wires are in the set.
+						continue;
+					}
+				}
+				
+				//Wire was never handled at this point, cool add it to the set.
+				additionalWires.add(wireAtConnector);
+				//Get the other side's connector and enqueue it.
+				Connector otherSide = wireAtConnector.getOtherSide(connector);
+				connectorsToProbe.add(otherSide);
+			}
+		}
+		
+		//No other input source has been found, add all found components to this cluster.
+		if(!abort)
+		{
+			for(Wire wire : additionalWires)
+			{
+				wire.setCluster(cluster);
+				cluster.addWire(wire);
+			}
+			for(Connector connector : additionalConnectors)
+			{
+				connector.setCluster(cluster);
+				cluster.addConnector(connector);
+			}
 		}
 	}
 	
