@@ -198,6 +198,7 @@ public class TungBoardLoader
 			CompInverter inverter = new CompInverter(parent);
 			inverter.setPosition(globalPosition.add(rotatedFixPoint));
 			inverter.setRotation(globalRotation);
+			inverter.setPowered(((TungInverter) object).isOutputOn());
 			
 			return inverter;
 		}
@@ -209,6 +210,7 @@ public class TungBoardLoader
 			CompBlotter blotter = new CompBlotter(parent);
 			blotter.setPosition(globalPosition.add(rotatedFixPoint));
 			blotter.setRotation(globalRotation);
+			blotter.setPowered(((TungBlotter) object).isOutputOn());
 			
 			return blotter;
 		}
@@ -297,7 +299,7 @@ public class TungBoardLoader
 			CompSwitch toggle = new CompSwitch(parent);
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
-			//TODO: Set state
+			toggle.setPowered(((TungSwitch) object).isOn());
 			
 			return toggle;
 		}

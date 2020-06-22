@@ -10,8 +10,9 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.Powerable;
 
-public class CompInverter extends Component
+public class CompInverter extends Component implements Powerable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -47,5 +48,19 @@ public class CompInverter extends Component
 		{
 			blots.add(new Blot(this, cube));
 		}
+	}
+	
+	private boolean powered;
+	
+	@Override
+	public void setPowered(boolean powered)
+	{
+		this.powered = powered;
+	}
+	
+	@Override
+	public boolean isPowered()
+	{
+		return powered;
 	}
 }

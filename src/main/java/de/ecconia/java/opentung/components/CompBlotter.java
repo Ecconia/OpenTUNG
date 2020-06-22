@@ -10,8 +10,9 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.Powerable;
 
-public class CompBlotter extends Component
+public class CompBlotter extends Component implements Powerable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -36,9 +37,6 @@ public class CompBlotter extends Component
 	
 	//### Non-Static ###
 	
-	//Logic:
-	boolean isPowered;
-	
 	public CompBlotter(CompContainer parent)
 	{
 		super(parent);
@@ -52,13 +50,17 @@ public class CompBlotter extends Component
 		}
 	}
 	
+	private boolean powered;
+	
+	@Override
 	public void setPowered(boolean powered)
 	{
-		isPowered = powered;
+		this.powered = powered;
 	}
 	
+	@Override
 	public boolean isPowered()
 	{
-		return isPowered;
+		return powered;
 	}
 }
