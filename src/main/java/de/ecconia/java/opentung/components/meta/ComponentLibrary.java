@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompMount;
+import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPanelSwitch;
 import de.ecconia.java.opentung.components.CompPeg;
@@ -35,7 +36,7 @@ public class ComponentLibrary
 			//- ThroughBlotter //Solid + Wire
 			CompThroughPeg.class, //Solid + Wire
 			CompDisplay.class, //Wire + Display
-			//- PanelDisplay //Solid + Wire + Display
+			CompPanelDisplay.class, //Solid + Wire + Display
 			//- ColorDisplay //Solid + Wire + Display
 			//- PanelColorDisplay //Solid + Wire + Display
 			CompLabel.class, //Solid + S:Label M:Texture

@@ -9,6 +9,7 @@ import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompMount;
+import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPanelSwitch;
 import de.ecconia.java.opentung.components.CompPeg;
@@ -29,6 +30,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
@@ -50,7 +52,7 @@ public class TungBoardLoader
 	{
 		TungBoard importedBoard = PrimitiveParser.importTungBoard(file);
 		importedBoard.setPosition(new TungPosition(0, 0, 0));
-		importedBoard.setAngles(new TungAngles(180, 0, 0)); //Adjust this depending on how you want to import the board.
+		importedBoard.setAngles(new TungAngles(-90, 0, 0)); //Adjust this depending on how you want to import the board.
 		return (CompBoard) importChild(null, importedBoard, new Vector3(0, 0, 15), Quaternion.angleAxis(-90, Vector3.yp));
 	}
 	
@@ -346,6 +348,19 @@ public class TungBoardLoader
 			toggle.setPowered(((TungPanelSwitch) object).isOn());
 			
 			return toggle;
+		}
+		else if(object instanceof TungPanelDisplay)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.075f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompPanelDisplay display = new CompPanelDisplay(parent);
+			display.setPosition(globalPosition.add(rotatedFixPoint));
+			display.setRotation(globalRotation);
+			TungColorEnum c = ((TungPanelDisplay) object).getColor();
+			display.setColorRaw(new Vector3(c.getR(), c.getG(), c.getB()));
+			
+			return display;
 		}
 		else
 		{
