@@ -263,7 +263,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungSnappingPeg)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.06f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, -0.06f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompSnappingPeg snappingPeg = new CompSnappingPeg(parent);
