@@ -5,11 +5,13 @@ import de.ecconia.java.opentung.ClusterManagement;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
+import de.ecconia.java.opentung.components.CompColorDisplay;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompPanelButton;
+import de.ecconia.java.opentung.components.CompPanelColorDisplay;
 import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPanelSwitch;
@@ -28,11 +30,13 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungColorDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelButton;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelColorDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
@@ -384,6 +388,28 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelButton toggle = new CompPanelButton(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			
+			return toggle;
+		}
+		else if(object instanceof TungColorDisplay)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompColorDisplay toggle = new CompColorDisplay(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			
+			return toggle;
+		}
+		else if(object instanceof TungPanelColorDisplay)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -(0.075f), 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompPanelColorDisplay toggle = new CompPanelColorDisplay(parent);
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
 			
