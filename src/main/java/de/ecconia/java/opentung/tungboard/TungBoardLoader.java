@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.Ansi;
-import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -37,42 +36,23 @@ import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
-import java.nio.file.NoSuchFileException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TungBoardLoader
 {
-	private static CompBoard convertTungBoard(String filename)
+	private static CompBoard convertTungBoard(File file)
 	{
-		try
-		{
-			TungBoard importedBoard = PrimitiveParser.importTungBoard("boards/" + filename + ".tungboard");
-			importedBoard.setPosition(new TungPosition(0, 0, 0));
-			importedBoard.setAngles(new TungAngles(180, 0, 0)); //Adjust this depending on how you want to import the board.
-			return (CompBoard) importChild(null, importedBoard, new Vector3(0, 0, 15), Quaternion.angleAxis(-90, Vector3.yp));
-		}
-		catch(RuntimeException e)
-		{
-			if(e.getCause() != null && e.getCause() instanceof NoSuchFileException)
-			{
-				System.out.println("###########################################");
-				System.out.println("Couldn't find tungboard file to display, you can download a nice one here: https://discordapp.com/channels/401255675264761866/588822987331993602/684761768144142337");
-				System.out.println("But for gods sake, rename 'CLE' to 'Parallel-CLA'");
-				System.out.println("Once you inserted a tungboard, or that one. Change the filename in " + OpenTUNG.class.getName() + ".");
-				System.out.println("###########################################");
-				return null;
-			}
-			else
-			{
-				throw e;
-			}
-		}
+		TungBoard importedBoard = PrimitiveParser.importTungBoard(file);
+		importedBoard.setPosition(new TungPosition(0, 0, 0));
+		importedBoard.setAngles(new TungAngles(180, 0, 0)); //Adjust this depending on how you want to import the board.
+		return (CompBoard) importChild(null, importedBoard, new Vector3(0, 0, 15), Quaternion.angleAxis(-90, Vector3.yp));
 	}
 	
-	public static CompBoard importTungBoard(String filename)
+	public static CompBoard importTungBoard(File file)
 	{
-		CompBoard board = convertTungBoard(filename);
+		CompBoard board = convertTungBoard(file);
 		if(board == null)
 		{
 			return null;

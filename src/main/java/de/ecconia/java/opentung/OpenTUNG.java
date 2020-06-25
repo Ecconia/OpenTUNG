@@ -6,6 +6,10 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Dimension;
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -19,12 +23,15 @@ public class OpenTUNG
 	private static RenderPlane2D interactables;
 	private static RenderPlane3D worldView;
 	
+	private static File boardFile;
 	private static CompBoard board;
 	
 	public static void main(String[] args)
 	{
+		parseArguments(args);
+		
 		System.out.println("Loading external board...");
-		board = TungBoardLoader.importTungBoard("16Bit-Parallel-CLA-ALU");
+		board = TungBoardLoader.importTungBoard(boardFile);
 		
 		try
 		{
@@ -120,6 +127,79 @@ public class OpenTUNG
 			e.printStackTrace();
 			inputHandler.stop();
 			System.exit(1); //Throw 1;
+		}
+	}
+	
+	private static void parseArguments(String[] args)
+	{
+		String downloadLink = "https://cdn.discordapp.com/attachments/428658408510455810/725623552161611786/16Bit-Parallel-CLA-ALU-6-ticks.tungboard";
+		String messageLink = "https://discordapp.com/channels/401255675264761866/428658408510455810/725623552358875208";
+		
+		File boardFolder = new File("boards");
+		if(!boardFolder.exists() || !boardFolder.isDirectory())
+		{
+			System.out.println("Please create folder " + boardFolder.getAbsolutePath() + " and insert a .tungboard file.");
+			System.out.println();
+			System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
+			System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
+			System.exit(1);
+		}
+		
+		String defaultBoardName = null;
+		out:
+		if(args.length != 0)
+		{
+			if(args.length == 1)
+			{
+				String argument = args[0];
+				if(argument.endsWith(".tungboard"))
+				{
+					defaultBoardName = argument;
+					break out;
+				}
+			}
+			System.out.println("If you have multiple tungboard files in your 'boards' folder, only supply the filename of one.");
+			System.out.println(" It mustn't contain spaces and must end on '.tungboard'. You may not provide relative/absolute paths."); //Cause I am too lazy to add a command parsing framework or write one myself - rn.
+			System.out.println();
+			System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
+			System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
+			System.exit(1);
+		}
+		
+		if(defaultBoardName != null)
+		{
+			File tungboardFile = new File(boardFolder, defaultBoardName);
+			if(!tungboardFile.exists())
+			{
+				System.out.println("TungBoard file " + tungboardFile.getAbsolutePath() + " cannot be found.");
+				System.exit(1);
+			}
+			boardFile = tungboardFile;
+		}
+		else
+		{
+			List<File> tungboardFiles = Arrays.stream(boardFolder.listFiles()).filter((File file) -> {
+				return file.getName().endsWith(".tungboard");
+			}).collect(Collectors.toList());
+			
+			if(tungboardFiles.isEmpty())
+			{
+				System.out.println("No '.tungboard' file in the 'boards' folder, please insert one.");
+				System.out.println();
+				System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
+				System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
+				System.exit(1);
+			}
+			else if(tungboardFiles.size() == 1)
+			{
+				boardFile = tungboardFiles.get(0);
+			}
+			else
+			{
+				System.out.println("Found more than one tungboard file in the 'boards' folder.");
+				System.out.println("Rename others or supply the filename of the desired '.tungboard' file as argument.");
+				System.exit(1);
+			}
 		}
 	}
 	

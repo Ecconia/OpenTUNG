@@ -22,9 +22,9 @@ public class PrimitiveParser
 		highlightNormals("boards/Highlighted.tungboard", "boards/16Bit-Paralell-CLA-ALU.tungboard");
 	}
 	
-	public static TungBoard importTungBoard(String filepath)
+	public static TungBoard importTungBoard(File file)
 	{
-		NRFile pf = NRParser.parse(new File(filepath));
+		NRFile pf = NRParser.parse(file);
 		
 		NRObject object = pf.getRootElements().get(0);
 		NRClass firstClass;
@@ -54,7 +54,7 @@ public class PrimitiveParser
 	
 	private static void highlightNormals(String out, String in)
 	{
-		TungBoard board = importTungBoard(in);
+		TungBoard board = importTungBoard(new File(in));
 		highlightNormals(board);
 		new Exporter(new File(out), board);
 	}
