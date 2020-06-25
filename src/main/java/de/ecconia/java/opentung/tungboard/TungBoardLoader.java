@@ -9,12 +9,14 @@ import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompMount;
+import de.ecconia.java.opentung.components.CompPanelButton;
 import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPanelSwitch;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSwitch;
+import de.ecconia.java.opentung.components.CompThroughBlotter;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
@@ -30,12 +32,14 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelButton;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSwitch;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
@@ -351,7 +355,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungPanelDisplay)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.075f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.2f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelDisplay display = new CompPanelDisplay(parent);
@@ -361,6 +365,29 @@ public class TungBoardLoader
 			display.setColorRaw(new Vector3(c.getR(), c.getG(), c.getB()));
 			
 			return display;
+		}
+		else if(object instanceof TungThroughBlotter)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompThroughBlotter blotter = new CompThroughBlotter(parent);
+			blotter.setPosition(globalPosition.add(rotatedFixPoint));
+			blotter.setRotation(globalRotation);
+			blotter.setPowered(((TungThroughBlotter) object).isOutputOn());
+			
+			return blotter;
+		}
+		else if(object instanceof TungPanelButton)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -(0.075f + 0.1f), 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompPanelButton toggle = new CompPanelButton(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			
+			return toggle;
 		}
 		else
 		{
