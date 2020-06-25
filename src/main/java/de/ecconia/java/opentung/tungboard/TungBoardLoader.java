@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompPanelLabel;
+import de.ecconia.java.opentung.components.CompPanelSwitch;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSwitch;
@@ -29,6 +30,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSwitch;
@@ -330,6 +332,18 @@ public class TungBoardLoader
 			CompButton toggle = new CompButton(parent);
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
+			
+			return toggle;
+		}
+		else if(object instanceof TungPanelSwitch)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompPanelSwitch toggle = new CompPanelSwitch(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			toggle.setPowered(((TungPanelSwitch) object).isOn());
 			
 			return toggle;
 		}

@@ -11,7 +11,12 @@ public class CubeOpen extends CubeFull
 	
 	public CubeOpen(Vector3 position, Vector3 size, Direction openDirection)
 	{
-		super(position, size, null);
+		this(position, size, openDirection, null);
+	}
+	
+	public CubeOpen(Vector3 position, Vector3 size, Direction openDirection, Color color)
+	{
+		super(position, size, color);
 		
 		this.direction = openDirection;
 	}
