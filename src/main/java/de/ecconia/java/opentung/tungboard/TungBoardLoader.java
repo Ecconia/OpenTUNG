@@ -415,6 +415,18 @@ public class TungBoardLoader
 			
 			return toggle;
 		}
+		else if(object instanceof TungNoisemaker)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompNoisemaker toggle = new CompNoisemaker(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			toggle.setFrequency(((TungNoisemaker) object).getFrequency());
+			
+			return toggle;
+		}
 		else
 		{
 			System.out.println("Implement: " + object.getClass().getSimpleName());

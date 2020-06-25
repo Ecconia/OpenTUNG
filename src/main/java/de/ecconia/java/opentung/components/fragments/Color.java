@@ -9,7 +9,7 @@ public class Color
 	public static final Color circuitOFF = new Color(0, 0, 0);
 	
 	public static final Color interactable = Color.rgb(109, 53, 6);
-	public static final Color noisemakerOFF = Color.rgb(109, 53, 6);
+	public static final Color noisemakerOFF = Color.rgb(56, 22, 120);
 	public static final Color noisemakerON = Color.rgb(168, 127, 223);
 	public static final Color snappingPeg = Color.rgb(0, 150, 141);
 	
