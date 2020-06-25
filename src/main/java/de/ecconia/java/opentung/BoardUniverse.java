@@ -33,7 +33,7 @@ public class BoardUniverse
 	//TODO: Switch to indexed data structure.
 	private final List<Cluster> clusters = new ArrayList<>();
 	
-	private int nextClusterID = 0;
+	private int nextClusterID = ClusterManagement.ids++;
 	
 	public BoardUniverse(CompBoard board)
 	{
@@ -156,6 +156,7 @@ public class BoardUniverse
 			if(otherSide instanceof Blot)
 			{
 				System.out.println("WARNING: Circuit contains Blot-Blot connection which is not allowed.");
+				wire.setCluster(new InheritingCluster(nextClusterID++)); //Required for maintenance mode. Every conductor needs a cluster.
 				continue;
 			}
 			cluster.addWire(wire);

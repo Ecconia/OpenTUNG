@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.Ansi;
+import de.ecconia.java.opentung.ClusterManagement;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -19,6 +20,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
@@ -79,6 +81,15 @@ public class TungBoardLoader
 	
 	private static void linkWires(CompContainer container, CompContainer scannable)
 	{
+		boolean maintance = true;
+		Connector placebo = null;
+		if(maintance)
+		{
+			placebo = new Connector(null, null)
+			{
+			};
+		}
+		
 		for(Component component : container.getChildren())
 		{
 			if(component instanceof CompWireRaw)
@@ -87,13 +98,41 @@ public class TungBoardLoader
 				
 				Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
 				Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
-				if(connectorA == null || connectorB == null)
+				if(!maintance)
 				{
-					brokenWires.add(wire);
-					throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
+					if(connectorA == null || connectorB == null)
+					{
+						brokenWires.add(wire);
+						throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
+					}
+					wire.setConnectorA(connectorA);
+					wire.setConnectorB(connectorB);
 				}
-				wire.setConnectorA(connectorA);
-				wire.setConnectorB(connectorB);
+				else
+				{
+					if(connectorA == null && connectorB == null)
+					{
+						//Ignore this wire, it will never be accessed.
+						wire.setConnectorA(placebo);
+						wire.setConnectorB(placebo);
+						wire.setCluster(new InheritingCluster(ClusterManagement.ids++)); //Assign empty cluster, just for the ID.
+					}
+					else if(connectorA == null)
+					{
+						wire.setConnectorA(connectorB);
+						wire.setConnectorB(connectorB);
+					}
+					else if(connectorB == null)
+					{
+						wire.setConnectorA(connectorA);
+						wire.setConnectorB(connectorA);
+					}
+					else
+					{
+						wire.setConnectorA(connectorA);
+						wire.setConnectorB(connectorB);
+					}
+				}
 			}
 			else if(component instanceof CompContainer)
 			{
