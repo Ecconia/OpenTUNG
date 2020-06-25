@@ -322,6 +322,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		Matrix model = new Matrix();
 		
+		GL30.glViewport(0, 0, 1, 1);
 		GL30.glClearColor(0, 0, 0, 1);
 		OpenTUNG.clear();
 		
@@ -332,7 +333,7 @@ public class RenderPlane3D implements RenderPlane
 		GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);
 		
 		float[] values = new float[3];
-		GL30.glReadPixels(width / 2, height / 2, 1, 1, GL30.GL_RGB, GL30.GL_FLOAT, values);
+		GL30.glReadPixels(0, 0, 1, 1, GL30.GL_RGB, GL30.GL_FLOAT, values);
 //		float[] distance = new float[1];
 //		GL30.glReadPixels(width / 2, height / 2, 1, 1, GL30.GL_DEPTH_COMPONENT, GL30.GL_FLOAT, distance);
 		
@@ -342,6 +343,8 @@ public class RenderPlane3D implements RenderPlane
 			System.out.println("Looking at ???? (" + id + ")");
 			id = 0;
 		}
+		
+		GL30.glViewport(0, 0, this.width, this.height);
 		
 		currentlySelectedIndex = id;
 	}
