@@ -13,7 +13,7 @@ public class CompPeg extends Component
 	
 	static
 	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15, 0.0));
+		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15 + 0.075, 0.0));
 		modelHolder.addPeg(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), null));
 	}
 	

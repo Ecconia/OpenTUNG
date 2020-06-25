@@ -17,11 +17,11 @@ public class CompPanelButton extends Component implements Powerable
 	
 	static
 	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.05, 0.0));
-		modelHolder.addSolid(new CubeOpen(new Vector3(0.0, 0.125 + 0.03 + 0.1, 0.0), new Vector3(0.18, 0.06, 0.18), Direction.YNeg, Color.interactable));
-		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.125 + 0.05, 0.0), new Vector3(0.3, 0.1, 0.3), Color.material));
-		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.2, 0.25, 0.2), Color.material));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, -0.125 - 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YPos));
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
+		modelHolder.addSolid(new CubeOpen(new Vector3(0.0, 0.075 + 0.1 + 0.03, 0.0), new Vector3(0.18, 0.06, 0.18), Direction.YNeg, Color.interactable));
+		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.075 + 0.05, 0.0), new Vector3(0.3, 0.1, 0.3), Color.material));
+		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.075 - 0.125, 0.0), new Vector3(0.2, 0.25, 0.2), Color.material));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YPos));
 	}
 	
 	public static void initGL()

@@ -179,6 +179,17 @@ public class RenderPlane3D implements RenderPlane
 		float[] view = camera.getMatrix();
 		raycast(view);
 		drawDynamic(view);
+		
+//		lineShader.use();
+//		lineShader.setUniform(1, view);
+//		Matrix model = new Matrix();
+//		for(Component comp : board.getComponentsToRender())
+//		{
+//			model.identity();
+//			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+//			labelShader.setUniform(2, model.getMat());
+//			CompCrossyIndicator.modelHolder.draw();
+//		}
 	}
 	
 	private void drawDynamic(float[] view)

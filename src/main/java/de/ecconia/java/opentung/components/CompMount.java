@@ -12,7 +12,7 @@ public class CompMount extends CompContainer
 	
 	static
 	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.075 + 0.325, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.15, 0.65, 0.1), Color.material));
 	}
 	

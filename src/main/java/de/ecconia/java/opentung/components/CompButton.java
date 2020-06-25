@@ -17,7 +17,7 @@ public class CompButton extends Component implements Powerable
 	
 	static
 	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15, 0.0));
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15f + 0.075f, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
 		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
 		//TODO: Open bottom

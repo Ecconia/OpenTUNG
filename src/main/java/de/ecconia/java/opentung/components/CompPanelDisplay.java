@@ -18,10 +18,10 @@ public class CompPanelDisplay extends Component
 	
 	static
 	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.075, 0.0));
-		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.125 + 0.05, 0.0), new Vector3(0.3, 0.1, 0.3), offColor));
-		modelHolder.addSolid(new CubeOpen(new Vector3(0.0, 0.0, 0.0), new Vector3(0.2, 0.3, 0.2), Direction.YPos, Color.material));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -(0.125 + 0.15), 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
+		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
+		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.075 + 0.05, 0.0), new Vector3(0.3, 0.1, 0.3), offColor));
+		modelHolder.addSolid(new CubeOpen(new Vector3(0.0, 0.075 - 0.125, 0.0), new Vector3(0.2, 0.1 + 0.15, 0.2), Direction.YPos, Color.material));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
 	}
 	
 	public static void initGL()

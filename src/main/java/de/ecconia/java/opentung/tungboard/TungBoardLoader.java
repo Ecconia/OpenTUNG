@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompMount;
+import de.ecconia.java.opentung.components.CompNoisemaker;
 import de.ecconia.java.opentung.components.CompPanelButton;
 import de.ecconia.java.opentung.components.CompPanelColorDisplay;
 import de.ecconia.java.opentung.components.CompPanelDisplay;
@@ -35,6 +36,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungNoisemaker;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelButton;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelColorDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
@@ -195,7 +197,7 @@ public class TungBoardLoader
 		{
 			TungMount tungMount = (TungMount) object;
 			
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0, 0.325, -0.15));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0, -0.075, -0.15));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompMount mount = new CompMount(parent);
@@ -215,8 +217,11 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungPeg)
 		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
 			CompPeg peg = new CompPeg(parent);
-			peg.setPosition(globalPosition);
+			peg.setPosition(globalPosition.add(rotatedFixPoint));
 			peg.setRotation(globalRotation);
 			
 			return peg;
@@ -235,7 +240,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungBlotter)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.15f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompBlotter blotter = new CompBlotter(parent);
@@ -258,7 +263,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungSnappingPeg)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, -0.06f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.06f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompSnappingPeg snappingPeg = new CompSnappingPeg(parent);
@@ -311,7 +316,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungDisplay)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompDisplay display = new CompDisplay(parent);
@@ -324,7 +329,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungSwitch)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompSwitch toggle = new CompSwitch(parent);
@@ -336,7 +341,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungButton)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompButton toggle = new CompButton(parent);
@@ -359,7 +364,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungPanelDisplay)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.2f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelDisplay display = new CompPanelDisplay(parent);
@@ -384,7 +389,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungPanelButton)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -(0.075f + 0.1f), 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelButton toggle = new CompPanelButton(parent);
@@ -395,7 +400,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungColorDisplay)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompColorDisplay toggle = new CompColorDisplay(parent);
@@ -406,7 +411,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungPanelColorDisplay)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -(0.075f), 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelColorDisplay toggle = new CompPanelColorDisplay(parent);
@@ -417,7 +422,7 @@ public class TungBoardLoader
 		}
 		else if(object instanceof TungNoisemaker)
 		{
-			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, 0.0f, 0.0f));
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0.0f, -0.075f, 0.0f));
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompNoisemaker toggle = new CompNoisemaker(parent);

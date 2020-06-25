@@ -9,15 +9,15 @@ import de.ecconia.java.opentung.math.Vector3;
 
 public class CompCrossyIndicator extends Component
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
 		Color c = new Color(0.2, 0.2, 1.0);
-		modelHolder.addSolid(new Line(new Vector3(-0.1, +0.0, +0.0), new Vector3(+0.1, +0.0, +0.0), c));
-		modelHolder.addSolid(new Line(new Vector3(+0.0, -0.1, +0.0), new Vector3(+0.0, +0.1, +0.0), c));
-		modelHolder.addSolid(new Line(new Vector3(+0.0, +0.0, -0.1), new Vector3(+0.0, +0.0, +0.1), c));
+		modelHolder.addSolid(new Line(new Vector3(-0.3, +0.0, +0.0), new Vector3(+0.3, +0.0, +0.0), c));
+		modelHolder.addSolid(new Line(new Vector3(+0.0, -0.3, +0.0), new Vector3(+0.0, +0.3, +0.0), c));
+		modelHolder.addSolid(new Line(new Vector3(+0.0, +0.0, -0.3), new Vector3(+0.0, +0.0, +0.3), c));
 	}
 	
 	public static void initGL()
