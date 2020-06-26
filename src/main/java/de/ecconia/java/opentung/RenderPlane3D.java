@@ -287,11 +287,6 @@ public class RenderPlane3D implements RenderPlane
 			GL30.glStencilMask(0x00);
 			GL30.glDisable(GL30.GL_DEPTH_TEST);
 			
-			float scale = 1.1f;
-			Matrix sMat = new Matrix();
-			sMat.scale(scale, scale, scale);
-			model.multiply(sMat);
-			
 			if(component instanceof CompBoard)
 			{
 				outlineBoardShader.use();
