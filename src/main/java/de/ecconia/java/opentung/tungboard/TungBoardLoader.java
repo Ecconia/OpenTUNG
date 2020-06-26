@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.Ansi;
-import de.ecconia.java.opentung.ClusterManagement;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -92,6 +91,7 @@ public class TungBoardLoader
 	
 	//TODO: remove.
 	public static List<CompWireRaw> brokenWires = new ArrayList<>();
+	public static int ids = 0;
 	
 	private static void linkWires(CompContainer container, CompContainer scannable)
 	{
@@ -129,7 +129,7 @@ public class TungBoardLoader
 						//Ignore this wire, it will never be accessed.
 						wire.setConnectorA(placebo);
 						wire.setConnectorB(placebo);
-						wire.setCluster(new InheritingCluster(ClusterManagement.ids++)); //Assign empty cluster, just for the ID.
+						wire.setCluster(new InheritingCluster(ids++)); //Assign empty cluster, just for the ID.
 					}
 					else if(connectorA == null)
 					{

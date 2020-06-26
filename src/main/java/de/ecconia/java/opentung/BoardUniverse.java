@@ -17,6 +17,7 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
+import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,7 @@ public class BoardUniverse
 	//TODO: Switch to indexed data structure.
 	private final List<Cluster> clusters = new ArrayList<>();
 	
-	private int nextClusterID = ClusterManagement.ids++;
+	private int nextClusterID = TungBoardLoader.ids++;
 	
 	public BoardUniverse(CompBoard board)
 	{
