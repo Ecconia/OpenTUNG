@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.lwjgl.opengl.GL30;
 
-public class RenderPlane3D implements RenderPlane
+public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 {
 	private Camera camera;
 	private long lastCycle;
@@ -67,6 +67,18 @@ public class RenderPlane3D implements RenderPlane
 	{
 		this.board = board;
 		this.inputHandler = inputHandler;
+	}
+	
+	@Override
+	public void rightUp()
+	{
+		System.out.println("Right up.");
+	}
+	
+	@Override
+	public void rightDown()
+	{
+		System.out.println("Right down.");
 	}
 	
 	@Override
@@ -158,7 +170,7 @@ public class RenderPlane3D implements RenderPlane
 		coords = new CoordIndicatorModel();
 		block = new DebugBlockModel();
 		
-		camera = new Camera(inputHandler);
+		camera = new Camera(inputHandler, this);
 		
 		//Create meshes:
 		{

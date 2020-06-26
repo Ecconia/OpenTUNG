@@ -12,15 +12,19 @@ public class Camera implements InputConsumer
 	private float rotation;
 	private float neck;
 	
+	private boolean mousedown;
+	
 	//Thread-safe cause only one accessor and one consumer:
 	private Location currentPosition;
 	
 	private final Matrix view = new Matrix();
 	private final InputProcessor handler;
+	private final RightClickReceiver rightClickReceiver;
 	
-	public Camera(InputProcessor handler)
+	public Camera(InputProcessor handler, RightClickReceiver rightClickReceiver)
 	{
 		this.handler = handler;
+		this.rightClickReceiver = rightClickReceiver;
 		
 		handler.registerClickConsumer(this);
 		
@@ -35,9 +39,35 @@ public class Camera implements InputConsumer
 	{
 		if(type == GLFW.GLFW_MOUSE_BUTTON_1)
 		{
-			//Canvas got clicked, capture mode.
-			handler.captureMode(this);
-			return true;
+			if(!handler.isCaptured(this))
+			{
+				//Canvas got clicked, capture mode.
+				handler.captureMode(this);
+				return true;
+			}
+		}
+		else if(type == GLFW.GLFW_MOUSE_BUTTON_2)
+		{
+			if(handler.isCaptured(this))
+			{
+				checkMouse(false);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public boolean down(int type, int x, int y)
+	{
+		if(type == GLFW.GLFW_MOUSE_BUTTON_2)
+		{
+			if(handler.isCaptured(this))
+			{
+				checkMouse(true);
+				return true;
+			}
 		}
 		
 		return false;
@@ -49,6 +79,7 @@ public class Camera implements InputConsumer
 		if(handler.isCaptured(this))
 		{
 			handler.captureMode(null);
+			checkMouse(false);
 			return true;
 		}
 		return false;
@@ -74,6 +105,31 @@ public class Camera implements InputConsumer
 		if(handler.isCaptured(this))
 		{
 			handler.captureMode(null);
+			checkMouse(false);
+		}
+	}
+	
+	private void checkMouse(boolean target)
+	{
+		if(!target)
+		{
+			if(mousedown)
+			{
+				mousedown = false;
+				rightClickReceiver.rightUp();
+			}
+		}
+		else
+		{
+			if(mousedown)
+			{
+				System.out.println("Right click already marked down 3D-Pane, but got downed again.");
+			}
+			else
+			{
+				mousedown = true;
+				rightClickReceiver.rightDown();
+			}
 		}
 	}
 	
@@ -186,5 +242,12 @@ public class Camera implements InputConsumer
 		float dir = (float) ((this.rotation + direction) * Math.PI / 180D);
 		this.x += distance * Math.sin(dir);
 		this.z -= distance * Math.cos(dir);
+	}
+	
+	public interface RightClickReceiver
+	{
+		void rightUp();
+		
+		void rightDown();
 	}
 }
