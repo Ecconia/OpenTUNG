@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ComponentLibrary;
+import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -69,16 +70,48 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		this.inputHandler = inputHandler;
 	}
 	
+	//Mouse handling:
+	
+	private Component downer;
+	private long downTime;
+	private boolean down;
+	private Holdable tempDowner;
+	
 	@Override
 	public void rightUp()
 	{
-		System.out.println("Right up.");
+		if(currentlySelectedIndex != 0)
+		{
+			Component downer = idLookup[currentlySelectedIndex];
+			long time = (System.currentTimeMillis() - downTime) / 1000;
+			//If the click was longer than a second, validate that its the intended component...
+			if(time > 0)
+			{
+				if(this.downer == downer)
+				{
+					downer.rightClicked(board.getSimulation());
+				}
+			}
+			else
+			{
+				downer.rightClicked(board.getSimulation());
+			}
+		}
+		downTime = 0;
 	}
 	
 	@Override
 	public void rightDown()
 	{
-		System.out.println("Right down.");
+		downTime = System.currentTimeMillis();
+		if(currentlySelectedIndex != 0)
+		{
+			downer = idLookup[currentlySelectedIndex];
+		}
+		else
+		{
+			downer = null;
+		}
 	}
 	
 	@Override
@@ -188,6 +221,54 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	@Override
 	public void render()
 	{
+		//Mouse handling:
+		if(downTime != 0)
+		{
+			if(currentlySelectedIndex != 0)
+			{
+				Component comp = idLookup[currentlySelectedIndex];
+				if(comp instanceof Holdable)
+				{
+					Holdable currentlyHold = (Holdable) comp;
+					if(currentlyHold != tempDowner)
+					{
+						if(tempDowner != null)
+						{
+							//If mouse over something else.
+							tempDowner.setHold(false, board.getSimulation());
+						}
+						//If something new is hold:
+						tempDowner = currentlyHold;
+						tempDowner.setHold(true, board.getSimulation());
+					}
+				}
+				else
+				{
+					if(tempDowner != null)
+					{
+						//If mouse over something non-holdable.
+						tempDowner.setHold(false, board.getSimulation());
+						tempDowner = null;
+					}
+				}
+			}
+			else
+			{
+				if(tempDowner != null)
+				{
+					//If mouse no longer over a component.
+					tempDowner.setHold(false, board.getSimulation());
+					tempDowner = null;
+				}
+			}
+		}
+		else if(tempDowner != null)
+		{
+			//If mouse has been lifted.
+			tempDowner.setHold(false, board.getSimulation());
+			tempDowner = null;
+		}
+		
 		float[] view = camera.getMatrix();
 		raycast(view);
 		drawDynamic(view);

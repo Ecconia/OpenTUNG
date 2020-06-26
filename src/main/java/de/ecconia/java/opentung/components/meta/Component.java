@@ -9,6 +9,7 @@ import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.SimulationManager;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -312,5 +313,15 @@ public abstract class Component
 	public List<Blot> getBlots()
 	{
 		return blots;
+	}
+	
+	//Interaction:
+	
+	/**
+	 * Warning, executed from InputThread (only call simulation).
+	 */
+	public void rightClicked(SimulationManager simulation)
+	{
+		System.out.println("Clicked: " + getClass().getSimpleName());
 	}
 }

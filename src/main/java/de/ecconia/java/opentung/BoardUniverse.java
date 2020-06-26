@@ -15,6 +15,7 @@ import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.Powerable;
+import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
@@ -33,6 +34,8 @@ public class BoardUniverse
 	
 	//TODO: Switch to indexed data structure.
 	private final List<Cluster> clusters = new ArrayList<>();
+	
+	private final SimulationManager simulation = new SimulationManager();
 	
 	private int nextClusterID = TungBoardLoader.ids++;
 	
@@ -256,6 +259,11 @@ public class BoardUniverse
 				cluster.addConnector(connector);
 			}
 		}
+	}
+	
+	public SimulationManager getSimulation()
+	{
+		return simulation;
 	}
 	
 	private void linkSnappingPegs(CompBoard board)

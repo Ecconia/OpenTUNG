@@ -7,11 +7,13 @@ import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Powerable;
+import de.ecconia.java.opentung.simulation.SimulationManager;
 
-public class CompPanelButton extends Component implements Powerable
+public class CompPanelButton extends Component implements Powerable, Holdable
 {
 	private static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -66,5 +68,11 @@ public class CompPanelButton extends Component implements Powerable
 			Blot blot = blots.get(0);
 			blot.forceUpdateON();
 		}
+	}
+	
+	@Override
+	public void setHold(boolean hold, SimulationManager simulation)
+	{
+		System.out.println("Button state: " + hold);
 	}
 }
