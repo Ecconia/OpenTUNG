@@ -52,6 +52,5 @@ public class CompNoisemaker extends Component implements Updateable
 	@Override
 	public void update(SimulationManager simulation)
 	{
-	
 	}
 }

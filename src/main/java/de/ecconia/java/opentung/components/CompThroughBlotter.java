@@ -74,6 +74,11 @@ public class CompThroughBlotter extends Component implements Powerable, Updateab
 	@Override
 	public void update(SimulationManager simulation)
 	{
-	
+		boolean input = pegs.get(0).getCluster().isActive();
+		if(powered != input)
+		{
+			powered = input;
+			blots.get(0).getCluster().update(simulation);
+		}
 	}
 }

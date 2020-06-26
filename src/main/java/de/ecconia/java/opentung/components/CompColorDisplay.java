@@ -52,6 +52,5 @@ public class CompColorDisplay extends Component implements Updateable
 	@Override
 	public void update(SimulationManager simulation)
 	{
-	
 	}
 }

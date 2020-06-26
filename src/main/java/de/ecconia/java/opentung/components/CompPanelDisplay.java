@@ -63,6 +63,5 @@ public class CompPanelDisplay extends Component implements Updateable
 	@Override
 	public void update(SimulationManager simulation)
 	{
-	
 	}
 }

@@ -74,12 +74,13 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 	@Override
 	public void update(SimulationManager simulation)
 	{
-	
+		blots.get(0).getCluster().update(simulation);
 	}
 	
 	@Override
 	public void setHold(boolean hold, SimulationManager simulation)
 	{
-		System.out.println("Button state: " + hold);
+		powered = hold;
+		simulation.updateNextTick(this);
 	}
 }

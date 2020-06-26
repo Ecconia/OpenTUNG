@@ -76,6 +76,13 @@ public class CompPanelSwitch extends Component implements Powerable, Updateable
 	@Override
 	public void update(SimulationManager simulation)
 	{
+		blots.get(0).getCluster().update(simulation);
+	}
 	
+	@Override
+	public void rightClicked(SimulationManager simulation)
+	{
+		powered = !powered;
+		simulation.updateNextTick(this);
 	}
 }
