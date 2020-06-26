@@ -211,7 +211,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
 			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
-			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters());
+			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation());
 			System.out.println("Done.");
 		}
 		

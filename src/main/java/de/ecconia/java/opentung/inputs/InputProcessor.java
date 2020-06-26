@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
+import de.ecconia.java.opentung.simulation.SimulationManager;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -107,6 +108,11 @@ public class InputProcessor
 			}
 			
 			return;
+		}
+		else if(key == GLFW.GLFW_KEY_T)
+		{
+			//TODO: Remove this uglyness of a call:
+			SimulationManager.instance.doTick();
 		}
 		
 		//TODO: Forward to consumer.

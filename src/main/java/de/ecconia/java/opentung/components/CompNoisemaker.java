@@ -9,8 +9,10 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.simulation.SimulationManager;
+import de.ecconia.java.opentung.simulation.Updateable;
 
-public class CompNoisemaker extends Component
+public class CompNoisemaker extends Component implements Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -45,5 +47,11 @@ public class CompNoisemaker extends Component
 	
 	public void setFrequency(float frequency)
 	{
+	}
+	
+	@Override
+	public void update(SimulationManager simulation)
+	{
+	
 	}
 }

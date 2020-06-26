@@ -12,8 +12,9 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
+import de.ecconia.java.opentung.simulation.Updateable;
 
-public class CompButton extends Component implements Powerable, Holdable
+public class CompButton extends Component implements Powerable, Updateable, Holdable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -66,6 +67,12 @@ public class CompButton extends Component implements Powerable, Holdable
 	public void forceUpdateOutput()
 	{
 		//The button may not be ON at the time this method gets called.
+	}
+	
+	@Override
+	public void update(SimulationManager simulation)
+	{
+	
 	}
 	
 	@Override

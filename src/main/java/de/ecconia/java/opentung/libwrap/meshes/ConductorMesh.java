@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.SimulationManager;
 import java.util.Arrays;
 import java.util.List;
 import org.lwjgl.opengl.GL30;
@@ -23,9 +24,10 @@ public class ConductorMesh
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
 	private final int[] falseDataArray = new int[1016 * 4];
 	
-	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters)
+	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters, SimulationManager simulation)
 	{
 		this.solidMeshShader = new ShaderProgram("meshConductor");
+		simulation.setConnectorMeshStates(falseDataArray);
 		
 		int verticesAmount = wires.size() * 4 * 4 * (3 + 3);
 		int indicesAmount = wires.size() * 4 * (2 * 3);

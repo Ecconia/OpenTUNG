@@ -8,6 +8,7 @@ public class InheritingCluster extends Cluster
 	private List<SourceCluster> sources = new ArrayList<>();
 	
 	private int activeSources = 0;
+	private boolean lastState;
 	
 	public InheritingCluster(int id)
 	{
@@ -28,5 +29,36 @@ public class InheritingCluster extends Cluster
 	public void forceUpdateON()
 	{
 		activeSources++;
+		lastState = true;
+	}
+	
+	@Override
+	public void update(SimulationManager simulation)
+	{
+		if(isActive() != lastState)
+		{
+			//Yep time to update.
+			updateContent(simulation);
+			lastState = isActive();
+			simulation.changeState(getId(), lastState);
+		}
+	}
+	
+	public void oneIn(SimulationManager simulation)
+	{
+		activeSources++;
+		simulation.mightHaveChanged(this);
+	}
+	
+	public void oneOut(SimulationManager simulation)
+	{
+		activeSources--;
+		simulation.mightHaveChanged(this);
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "ci" + getId();
 	}
 }

@@ -17,6 +17,7 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.SourceCluster;
+import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.util.ArrayList;
@@ -88,6 +89,15 @@ public class BoardUniverse
 				((Powerable) component).forceUpdateOutput();
 			}
 		}
+		
+		//Send every updateable into the simulation, to let each component have the chance to resume a clock.
+		for(Component comp : componentsToRender)
+		{
+			if(comp instanceof Updateable)
+			{
+				simulation.updateNextTick((Updateable) comp);
+			}
+		}
 	}
 	
 	private void createPeggyCluster(Peg peg)
@@ -144,7 +154,7 @@ public class BoardUniverse
 	private void createBlottyCluster(Blot blot)
 	{
 		//Precondition: No blob can have a cluster at this point.
-		Cluster cluster = new SourceCluster(nextClusterID++);
+		Cluster cluster = new SourceCluster(nextClusterID++, blot);
 		clusters.add(cluster);
 		cluster.addConnector(blot);
 		blot.setCluster(cluster);

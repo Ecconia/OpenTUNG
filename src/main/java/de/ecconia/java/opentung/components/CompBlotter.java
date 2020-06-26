@@ -11,8 +11,10 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Powerable;
+import de.ecconia.java.opentung.simulation.SimulationManager;
+import de.ecconia.java.opentung.simulation.Updateable;
 
-public class CompBlotter extends Component implements Powerable
+public class CompBlotter extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
 	
@@ -72,6 +74,17 @@ public class CompBlotter extends Component implements Powerable
 		{
 			Blot blot = blots.get(0);
 			blot.forceUpdateON();
+		}
+	}
+	
+	@Override
+	public void update(SimulationManager simulation)
+	{
+		boolean input = pegs.get(0).getCluster().isActive();
+		if(powered != input)
+		{
+			powered = input;
+			blots.get(0).getCluster().update(simulation);
 		}
 	}
 }
