@@ -57,9 +57,11 @@ Everyone is free to use this, if he/she doesn't hate Java :P
 
 - Install OpenJDK
   - But you may just use any other JDK installed via terminal, your favorite search engine helps.
+  - Try `java -version` in your favorite terminal, if it doesn't work consult your favorite search engine.
 - Install Maven, you may use provided `maven` package.
   - If the version is older, you might have no colors in terminal while compiling it.
   - You can easily get an up to date version. Just use your favorite search engine.
+  - Try `mvn -version` in your favorite terminal, if it doesn't work consult your favorite search engine.
 
 #### Build process:
 
