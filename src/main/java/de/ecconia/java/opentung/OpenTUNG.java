@@ -25,6 +25,7 @@ public class OpenTUNG
 	
 	private static File boardFile;
 	private static CompBoard board;
+	private static BoardUniverse boardUniverse;
 	
 	public static void main(String[] args)
 	{
@@ -32,7 +33,10 @@ public class OpenTUNG
 		
 		System.out.println("Loading external board...");
 		board = TungBoardLoader.importTungBoard(boardFile);
+		System.out.println("Setting up board...");
+		boardUniverse = new BoardUniverse(board);
 		
+		System.out.println("Starting GUI...");
 		try
 		{
 			System.out.println("LWJGL version: " + Version.getVersion());
@@ -106,6 +110,7 @@ public class OpenTUNG
 						}
 					}
 					
+					boardUniverse.getSimulation().interrupt();
 					inputHandler.stop();
 					System.out.println("Graphic thread has turned off.");
 				}
@@ -119,8 +124,9 @@ public class OpenTUNG
 			graphicsThread.start();
 			
 			//Let main-thread execute the input handler:
+			Thread.currentThread().setName("Main/Input");
 			inputHandler.eventPollEntry();
-			System.out.println("Main thread has turned off.");
+			System.out.println("Main/Input thread has turned off.");
 		}
 		catch(Exception e)
 		{
@@ -224,7 +230,7 @@ public class OpenTUNG
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
 		interactables.newSize(500, 500);
-		worldView = new RenderPlane3D(inputHandler, new BoardUniverse(board));
+		worldView = new RenderPlane3D(inputHandler, boardUniverse);
 		worldView.setup();
 		worldView.newSize(500, 500);
 	}

@@ -215,6 +215,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			System.out.println("Done.");
 		}
 		
+		board.getSimulation().start();
 		lastCycle = System.currentTimeMillis();
 	}
 	

@@ -29,9 +29,21 @@ public class SimulationManager extends Thread
 	@Override
 	public void run()
 	{
+		while(!Thread.currentThread().isInterrupted())
+		{
+			doTick();
+			
+			try
+			{
+				Thread.sleep(1);
+			}
+			catch(InterruptedException e)
+			{
+				break;
+			}
+		}
 		
-		
-		System.out.println("Shutted off " + getName());
+		System.out.println("Simulation thread has turned off.");
 	}
 	
 	public void updateNextTick(Updateable updateable)
