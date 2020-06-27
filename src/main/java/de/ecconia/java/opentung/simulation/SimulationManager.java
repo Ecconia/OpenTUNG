@@ -14,6 +14,7 @@ public class SimulationManager extends Thread
 	public static SimulationManager instance;
 	
 	private int[] connectorMeshStates;
+	private int tps;
 	
 	public SimulationManager()
 	{
@@ -29,9 +30,21 @@ public class SimulationManager extends Thread
 	@Override
 	public void run()
 	{
+		long past = System.currentTimeMillis();
+		int finishedTicks = 0;
+		
 		while(!Thread.currentThread().isInterrupted())
 		{
 			doTick();
+			
+			finishedTicks++;
+			long now = System.currentTimeMillis();
+			if(now - past > 1000)
+			{
+				past = now;
+				tps = finishedTicks;
+				finishedTicks = 0;
+			}
 			
 			try
 			{
@@ -94,5 +107,10 @@ public class SimulationManager extends Thread
 			value |= mask;
 		}
 		connectorMeshStates[index] = value;
+	}
+	
+	public int getTPS()
+	{
+		return tps;
 	}
 }
