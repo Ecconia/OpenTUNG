@@ -7,7 +7,7 @@ layout(location = 2) in uint inIndex;
 uniform mat4 projection;
 uniform mat4 view;
 
-uniform vec3 states[1365]; //4064 / 3
+uniform vec3 states[1354]; //(4064 - 32)/ 3 // (16384 - 32) / 3
 
 out vec4 tColor;
 out vec3 tPosition;
