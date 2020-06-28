@@ -79,6 +79,6 @@ public class CompButton extends Component implements Powerable, Updateable, Hold
 	public void setHold(boolean hold, SimulationManager simulation)
 	{
 		powered = hold;
-		simulation.updateNextTick(this);
+		simulation.updateNextTickThreadSafe(this);
 	}
 }

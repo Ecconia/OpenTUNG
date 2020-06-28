@@ -83,6 +83,6 @@ public class CompPanelSwitch extends Component implements Powerable, Updateable
 	public void rightClicked(SimulationManager simulation)
 	{
 		powered = !powered;
-		simulation.updateNextTick(this);
+		simulation.updateNextTickThreadSafe(this);
 	}
 }

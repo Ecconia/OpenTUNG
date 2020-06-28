@@ -84,6 +84,6 @@ public class CompSwitch extends Component implements Powerable, Updateable
 		//Flip the internal state.
 		powered = !powered; //This can be changed, since the essential check is happening in the cluster.
 		//Also tell the simulation unit, that it has to do its job:
-		simulation.updateNextTick(this);
+		simulation.updateNextTickThreadSafe(this);
 	}
 }

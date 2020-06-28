@@ -5,10 +5,10 @@ import java.util.List;
 
 public class SimulationManager extends Thread
 {
+	private List<Updateable> updateNextTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateNextTick = new ArrayList<>();
-	//These two are for internal usage.
-	private List<Cluster> clustersToUpdate = new ArrayList<>();
-	private List<Updateable> updateTick = new ArrayList<>();
+	
+	private final List<Cluster> clustersToUpdate = new ArrayList<>();
 	
 	//TODO: Remove this shame of programming (after debugging stage):
 	public static SimulationManager instance;
@@ -59,6 +59,14 @@ public class SimulationManager extends Thread
 		System.out.println("Simulation thread has turned off.");
 	}
 	
+	public void updateNextTickThreadSafe(Updateable updateable)
+	{
+		synchronized(this)
+		{
+			updateNextTickThreadSafe.add(updateable);
+		}
+	}
+	
 	public void updateNextTick(Updateable updateable)
 	{
 		updateNextTick.add(updateable);
@@ -71,19 +79,23 @@ public class SimulationManager extends Thread
 	
 	public void doTick()
 	{
-		updateTick.clear();
-		clustersToUpdate.clear();
+		List<Updateable> updateThisTick = updateNextTick;
+		updateNextTick = new ArrayList<>();
 		
+		if(!updateNextTickThreadSafe.isEmpty())
 		{
-			List<Updateable> swappy = updateTick;
-			updateTick = updateNextTick;
-			//Thread-safe swapping: Either a component from another thread is in this or the next tick. Who cares - bad timing.
-			updateNextTick = swappy;
+			List<Updateable> reference;
+			synchronized(this)
+			{
+				reference = updateNextTickThreadSafe;
+				updateNextTickThreadSafe = new ArrayList<>();
+			}
+			updateThisTick.addAll(reference);
 		}
 		
 		//Actual tick processing:
 		
-		for(Updateable updateable : updateTick)
+		for(Updateable updateable : updateThisTick)
 		{
 			updateable.update(this);
 		}
@@ -91,6 +103,10 @@ public class SimulationManager extends Thread
 		for(Cluster cluster : clustersToUpdate)
 		{
 			cluster.update(this);
+		}
+		if(!clustersToUpdate.isEmpty())
+		{
+			clustersToUpdate.clear();
 		}
 	}
 	

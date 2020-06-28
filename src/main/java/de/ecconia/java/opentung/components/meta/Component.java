@@ -322,6 +322,5 @@ public abstract class Component
 	 */
 	public void rightClicked(SimulationManager simulation)
 	{
-		System.out.println("Clicked: " + getClass().getSimpleName());
 	}
 }

@@ -31,6 +31,12 @@ public class OpenTUNG
 	{
 		parseArguments(args);
 		
+		//Catch if any thread shuts down unexpectedly. Print on output stream to get the exact time.
+		Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> {
+			System.out.println("Thread " + t.getName() + " crashed.");
+			e.printStackTrace(System.out);
+		});
+		
 		System.out.println("Loading external board...");
 		board = TungBoardLoader.importTungBoard(boardFile);
 		System.out.println("Setting up board...");
