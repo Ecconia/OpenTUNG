@@ -59,7 +59,9 @@ public class TungBoardLoader
 {
 	private static CompBoard convertTungBoard(File file)
 	{
+		System.out.println("[BoardImport] Started reading file.");
 		TungBoard importedBoard = PrimitiveParser.importTungBoard(file);
+		System.out.println("[BoardImport] Started converting board.");
 		importedBoard.setPosition(new TungPosition(0, 0, 0));
 		importedBoard.setAngles(new TungAngles(-90, 0, 0)); //Adjust this depending on how you want to import the board.
 		return (CompBoard) importChild(null, importedBoard, new Vector3(0, 0, 15), Quaternion.angleAxis(-90, Vector3.yp));
@@ -73,9 +75,12 @@ public class TungBoardLoader
 			return null;
 		}
 		
+		System.out.println("[BoardImport] Creating connector bounds.");
 		board.createConnectorBounds();
+		System.out.println("[BoardImport] Creating SnappingPeg bounds.");
 		board.createSnappingPegBounds();
 		
+		System.out.println("[BoardImport] Linking wires.");
 		try
 		{
 			linkWires(board, board);

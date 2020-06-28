@@ -42,12 +42,15 @@ public class BoardUniverse
 	
 	public BoardUniverse(CompBoard board)
 	{
+		System.out.println("[BoardImport] Sorting components.");
 		//Sort Elements into Lists, for the 3D section to use:
 		importComponent(board);
 		
+		System.out.println("[BoardImport] Linking SnappingPegs.");
 		//Connect snapping pegs:
 		linkSnappingPegs(board);
 		
+		System.out.println("[BoardImport] Creating connection-clusters.");
 		//Create clusters:
 		for(Wire wire : wiresToRender)
 		{
@@ -79,8 +82,9 @@ public class BoardUniverse
 			}
 		}
 		
-		System.out.println("Assigned cluster IDs: " + nextClusterID);
+		System.out.println("[Debug] Cluster amount: " + nextClusterID);
 		
+		System.out.println("[BoardImport] Initializing simulation.");
 		//Update clusters:
 		for(Component component : componentsToRender)
 		{
@@ -286,7 +290,6 @@ public class BoardUniverse
 				snappingPegs.add((CompSnappingPeg) comp);
 			}
 		}
-		System.out.println("There are " + snappingPegs.size() + " SnappingPegs");
 		List<CompSnappingPeg> collector = new ArrayList<>();
 		for(CompSnappingPeg peg : snappingPegs)
 		{

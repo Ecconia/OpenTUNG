@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
@@ -37,9 +36,7 @@ public class OpenTUNG
 			e.printStackTrace(System.out);
 		});
 		
-		System.out.println("Loading external board...");
 		board = TungBoardLoader.importTungBoard(boardFile);
-		System.out.println("Setting up board...");
 		boardUniverse = new BoardUniverse(board);
 		
 		System.out.println("Starting GUI...");
@@ -60,7 +57,7 @@ public class OpenTUNG
 					
 					//OpenGL:
 					GL.createCapabilities();
-					System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
+					System.out.println("OpenGL version: " + GL30.glGetString(GL30.GL_VERSION));
 					System.out.println("Amount of connection-groups per mesh: " + GL30.glGetInteger(GL30.GL_MAX_VERTEX_UNIFORM_COMPONENTS));
 					
 					init();
@@ -250,14 +247,14 @@ public class OpenTUNG
 	
 	public static void setBackgroundColor()
 	{
-		GL11.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f); //Discord
-//		GL11.glClearColor(1f / 255f * 150f, 1f / 255f * 150f, 1f / 255f * 150f, 0.0f); //Bright
+		GL30.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f); //Discord
+//		GL30.glClearColor(1f / 255f * 150f, 1f / 255f * 150f, 1f / 255f * 150f, 0.0f); //Bright
 	}
 	
 	public static void clear()
 	{
 		GL30.glStencilMask(0xFF); //Set stencil mode, to properly clear the buffer.
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT);
+		GL30.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT);
 		GL30.glStencilMask(0x00); //Unset stencil mode
 	}
 }
