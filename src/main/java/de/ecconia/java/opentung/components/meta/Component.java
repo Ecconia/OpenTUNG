@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
@@ -77,7 +78,7 @@ public abstract class Component
 	
 	protected void addConnectorBox(CubeFull box)
 	{
-		Vector3 mPosition = box.getPosition().add(getModelHolder().getPlacementOffset());
+		Vector3 mPosition = box.getPosition();
 		Vector3 mSize = box.getSize();
 		Vector3 min = mPosition.subtract(mSize);
 		Vector3 max = mPosition.add(mSize);
@@ -90,6 +91,29 @@ public abstract class Component
 		Vector3 f = new Vector3(max.getX(), min.getY(), max.getZ());
 		Vector3 g = new Vector3(max.getX(), max.getY(), min.getZ());
 		Vector3 h = max;
+		
+		if(box instanceof CubeOpenRotated)
+		{
+			Quaternion rotation = ((CubeOpenRotated) box).getRotation();
+			
+			a = rotation.multiply(a);
+			b = rotation.multiply(b);
+			c = rotation.multiply(c);
+			d = rotation.multiply(d);
+			e = rotation.multiply(e);
+			f = rotation.multiply(f);
+			g = rotation.multiply(g);
+			h = rotation.multiply(h);
+		}
+		
+		a = a.add(getModelHolder().getPlacementOffset());
+		b = b.add(getModelHolder().getPlacementOffset());
+		c = c.add(getModelHolder().getPlacementOffset());
+		d = d.add(getModelHolder().getPlacementOffset());
+		e = e.add(getModelHolder().getPlacementOffset());
+		f = f.add(getModelHolder().getPlacementOffset());
+		g = g.add(getModelHolder().getPlacementOffset());
+		h = h.add(getModelHolder().getPlacementOffset());
 		
 		Vector3 position = this.position;
 		a = rotation.inverse().multiply(a).add(position);

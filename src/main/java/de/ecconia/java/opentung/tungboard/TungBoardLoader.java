@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompColorDisplay;
+import de.ecconia.java.opentung.components.CompDelayer;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
@@ -31,6 +32,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungColorDisplay;
+import de.ecconia.java.opentung.tungboard.tungobjects.TungDelayer;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
@@ -100,7 +102,7 @@ public class TungBoardLoader
 	
 	private static void linkWires(CompContainer container, CompContainer scannable)
 	{
-		boolean maintance = true;
+		boolean maintance = false;
 		Connector placebo = null;
 		if(maintance)
 		{
@@ -434,6 +436,19 @@ public class TungBoardLoader
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
 			toggle.setFrequency(((TungNoisemaker) object).getFrequency());
+			
+			return toggle;
+		}
+		else if(object instanceof TungDelayer)
+		{
+			Vector3 fixPoint = localRotation.inverse().multiply(new Vector3(0, -0.075, 0));
+			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
+			
+			CompDelayer toggle = new CompDelayer(parent);
+			toggle.setPosition(globalPosition.add(rotatedFixPoint));
+			toggle.setRotation(globalRotation);
+			toggle.setPowered(((TungDelayer) object).isOutputOn());
+			toggle.setDelayCount(((TungDelayer) object).getDelayCount());
 			
 			return toggle;
 		}

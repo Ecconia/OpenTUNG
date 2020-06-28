@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompColorDisplay;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
+import de.ecconia.java.opentung.components.CompDelayer;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
@@ -30,7 +31,7 @@ public class ComponentLibrary
 			CompPeg.class, //Wire
 			CompInverter.class, //Solid + Wire
 			CompBlotter.class, //Solid + Wire
-			//- Delayer //Solid + Wire
+			CompDelayer.class, //Solid + Wire
 			CompSwitch.class, //Solid + Wire + Toggle
 			CompButton.class, //Solid + Wire + Toggle
 			CompPanelSwitch.class, //Solid + Wire + Toggle
