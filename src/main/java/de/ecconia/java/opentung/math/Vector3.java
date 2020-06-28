@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.math;
 
 import de.ecconia.Ansi;
+import de.ecconia.java.opentung.components.fragments.Color;
 
 public class Vector3
 {
@@ -145,5 +146,10 @@ public class Vector3
 				return s;
 			}
 		}
+	}
+	
+	public Color asColor()
+	{
+		return Color.rgb(x, y, z);
 	}
 }

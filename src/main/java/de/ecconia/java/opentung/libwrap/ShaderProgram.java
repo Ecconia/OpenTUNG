@@ -192,4 +192,9 @@ public class ShaderProgram
 	{
 		GL30.glUniform4uiv(uniformIDs[id], array);
 	}
+	
+	public void setUniformArray(int id, float[] array)
+	{
+		GL30.glUniform3fv(uniformIDs[id], array);
+	}
 }

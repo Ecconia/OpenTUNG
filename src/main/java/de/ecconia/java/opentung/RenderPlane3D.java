@@ -11,6 +11,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.libwrap.meshes.ColorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
@@ -53,6 +54,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private RayCastMesh rayCastMesh;
 	private SolidMesh solidMesh;
 	private ConductorMesh conductorMesh;
+	private ColorMesh colorMesh;
 	
 	private final List<CompCrossyIndicator> wireEndsToRender = new ArrayList<>();
 	
@@ -212,6 +214,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
 			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation());
+			colorMesh = new ColorMesh(board.getComponentsToRender(), board.getSimulation());
 			System.out.println("Done.");
 		}
 		
@@ -296,6 +299,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		textureMesh.draw(view);
 		conductorMesh.draw(view);
 		solidMesh.draw(view);
+		colorMesh.draw(view);
 		
 		labelShader.use();
 		labelShader.setUniform(1, view);
@@ -461,6 +465,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		rayCastMesh.updateProjection(projection);
 		solidMesh.updateProjection(projection);
 		conductorMesh.updateProjection(projection);
+		colorMesh.updateProjection(projection);
 		
 		textureMesh.updateProjection(projection);
 		faceShader.use();

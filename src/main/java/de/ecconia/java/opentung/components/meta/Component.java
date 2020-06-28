@@ -158,7 +158,7 @@ public abstract class Component
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
 		int attributeAmount;
-		if(type == MeshTypeThing.Conductor)
+		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Display)
 		{
 			attributeAmount = 3 + 3; //Position + Normal
 		}
@@ -187,6 +187,13 @@ public abstract class Component
 				amount += blot.getModel().getFacesCount() * 4 * attributeAmount;
 			}
 		}
+		else if(type == MeshTypeThing.Display)
+		{
+			for(Meshable m : getModelHolder().getColorables())
+			{
+				amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+			}
+		}
 		else
 		{
 			for(Meshable m : getModelHolder().getSolid())
@@ -204,6 +211,10 @@ public abstract class Component
 				{
 					amount += blot.getModel().getFacesCount() * 4 * attributeAmount;
 				}
+				for(Meshable m : getModelHolder().getColorables())
+				{
+					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+				}
 			}
 		}
 		
@@ -212,7 +223,7 @@ public abstract class Component
 	
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Conductor))
+		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Conductor || type == MeshTypeThing.Display))
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
@@ -227,6 +238,13 @@ public abstract class Component
 			for(Blot blot : blots)
 			{
 				amount += blot.getModel().getFacesCount() * (2 * 3);
+			}
+		}
+		else if(type == MeshTypeThing.Display)
+		{
+			for(Meshable m : getModelHolder().getColorables())
+			{
+				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
 			}
 		}
 		else
@@ -246,6 +264,10 @@ public abstract class Component
 				{
 					amount += blot.getModel().getFacesCount() * (2 * 3);
 				}
+				for(Meshable m : getModelHolder().getColorables())
+				{
+					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
+				}
 			}
 		}
 		
@@ -263,6 +285,13 @@ public abstract class Component
 			for(Blot blot : blots)
 			{
 				blot.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+			}
+		}
+		else if(type == MeshTypeThing.Display)
+		{
+			for(Meshable m : getModelHolder().getColorables())
+			{
+				((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
@@ -291,6 +320,10 @@ public abstract class Component
 				for(Blot blot : blots)
 				{
 					blot.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				}
+				for(Meshable m : getModelHolder().getColorables())
+				{
+					((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 			}
 		}

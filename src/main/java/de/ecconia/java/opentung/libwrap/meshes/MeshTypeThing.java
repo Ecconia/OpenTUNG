@@ -6,6 +6,7 @@ public enum MeshTypeThing
 	Board(true, true, true, false),
 	Solid(true, false, true, false),
 	Conductor(true, false, false, false),
+	Display(true, false, false, false),
 	;
 	
 	private final boolean usesNormals;

@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.simulation;
 
+import de.ecconia.java.opentung.components.fragments.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class SimulationManager extends Thread
 	public static SimulationManager instance;
 	
 	private int[] connectorMeshStates;
+	private float[] colorMeshStates;
 	private int tps;
 	
 	public SimulationManager()
@@ -25,6 +27,11 @@ public class SimulationManager extends Thread
 	public void setConnectorMeshStates(int[] connectorMeshStates)
 	{
 		this.connectorMeshStates = connectorMeshStates;
+	}
+	
+	public void setColorMeshStates(float[] colorMeshStates)
+	{
+		this.colorMeshStates = colorMeshStates;
 	}
 	
 	@Override
@@ -128,5 +135,13 @@ public class SimulationManager extends Thread
 	public int getTPS()
 	{
 		return tps;
+	}
+	
+	public void setColor(int colorID, Color color)
+	{
+		int indexOffset = colorID * 3;
+		colorMeshStates[indexOffset++] = (float) color.getR();
+		colorMeshStates[indexOffset++] = (float) color.getG();
+		colorMeshStates[indexOffset] = (float) color.getB();
 	}
 }

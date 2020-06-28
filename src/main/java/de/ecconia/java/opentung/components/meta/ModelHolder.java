@@ -38,11 +38,17 @@ public class ModelHolder
 		blotModels.add(blotModel);
 	}
 	
+	public void addColorable(Meshable colorable)
+	{
+		colorables.add(colorable);
+	}
+	
 	public List<CubeFull> getBlotModels()
 	{
 		return blotModels;
 	}
 	
+	private final List<Meshable> colorables = new ArrayList<>();
 	private final List<Meshable> solid = new ArrayList<>();
 	private final List<Meshable> conductors = new ArrayList<>();
 	private final List<Meshable> textures = new ArrayList<>();
@@ -113,6 +119,11 @@ public class ModelHolder
 			vCount += blotModel.getVCount();
 			iCount += blotModel.getICount();
 		}
+		for(Meshable m : colorables)
+		{
+			vCount += m.getVCount();
+			iCount += m.getICount();
+		}
 		
 		float[] vertices = new float[vCount];
 		short[] indices = new short[iCount];
@@ -163,6 +174,10 @@ public class ModelHolder
 			{
 				blotModel.setColor(null);
 			}
+		}
+		for(Meshable m : colorables)
+		{
+			m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
 		}
 		
 		if(type == TestModelType.Board)
@@ -277,5 +292,15 @@ public class ModelHolder
 	public Vector3 getPlacementOffset()
 	{
 		return offset;
+	}
+	
+	public boolean hasColorables()
+	{
+		return !colorables.isEmpty();
+	}
+	
+	public List<Meshable> getColorables()
+	{
+		return colorables;
 	}
 }

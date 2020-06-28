@@ -14,10 +14,10 @@ public class Color
 	public static final Color snappingPeg = Color.rgb(0, 150, 141);
 	
 	public static final Color displayOff = Color.rgb(32, 32, 32);
-	public static final Color displayRed = Color.rgb(186, 0, 0);
-	public static final Color displayGreen = Color.rgb(20, 150, 0);
-	public static final Color displayBlue = Color.rgb(0, 50, 200);
 	public static final Color displayYellow = Color.rgb(255, 227, 2);
+	public static final Color displayBlue = Color.rgb(0, 50, 200);
+	public static final Color displayGreen = Color.rgb(20, 150, 0);
+	public static final Color displayRed = Color.rgb(186, 0, 0);
 	public static final Color displayOrange = Color.rgb(225, 95, 0);
 	public static final Color displayPurple = Color.rgb(142, 18, 255);
 	public static final Color displayWhite = Color.rgb(200, 200, 210);
@@ -29,6 +29,31 @@ public class Color
 		this.r = r;
 		this.b = b;
 		this.g = g;
+	}
+	
+	public static Color byColorDisplayIndex(int index)
+	{
+		switch(index)
+		{
+			case 0:
+				return displayOff;
+			case 1:
+				return displayYellow;
+			case 2:
+				return displayBlue;
+			case 3:
+				return displayGreen;
+			case 4:
+				return displayRed;
+			case 5:
+				return displayOrange;
+			case 6:
+				return displayPurple;
+			case 7:
+				return displayWhite;
+			default:
+				throw new RuntimeException("Attempted to resolve ColorDisplay index: " + index);
+		}
 	}
 	
 	public double getR()
@@ -52,6 +77,15 @@ public class Color
 				(double) r / 255D,
 				(double) g / 255D,
 				(double) b / 255D
+		);
+	}
+	
+	public static Color rgb(double r, double g, double b)
+	{
+		return new Color(
+				r / 255D,
+				g / 255D,
+				b / 255D
 		);
 	}
 	
