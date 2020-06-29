@@ -11,9 +11,6 @@ public class SimulationManager extends Thread
 	
 	private final List<Cluster> clustersToUpdate = new ArrayList<>();
 	
-	//TODO: Remove this shame of programming (after debugging stage):
-	public static SimulationManager instance;
-	
 	private int[] connectorMeshStates;
 	private float[] colorMeshStates;
 	private int tps;
@@ -21,7 +18,6 @@ public class SimulationManager extends Thread
 	public SimulationManager()
 	{
 		super("Simulation-Thread");
-		instance = this;
 	}
 	
 	public void setConnectorMeshStates(int[] connectorMeshStates)
@@ -84,7 +80,7 @@ public class SimulationManager extends Thread
 		clustersToUpdate.add(cluster);
 	}
 	
-	public void doTick()
+	private void doTick()
 	{
 		List<Updateable> updateThisTick = updateNextTick;
 		updateNextTick = new ArrayList<>();
