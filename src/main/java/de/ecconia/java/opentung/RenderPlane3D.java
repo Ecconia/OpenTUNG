@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPeg;
+import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
@@ -129,7 +130,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		{
 			cluster = ((CompWireRaw) component).getCluster();
 		}
-		else if(component instanceof CompThroughPeg || component instanceof CompPeg)
+		else if(component instanceof CompThroughPeg || component instanceof CompPeg || component instanceof CompSnappingPeg)
 		{
 			cluster = component.getPegs().get(0).getCluster();
 		}
