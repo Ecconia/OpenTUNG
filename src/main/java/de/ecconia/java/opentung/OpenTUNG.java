@@ -227,8 +227,12 @@ public class OpenTUNG
 		GL30.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 		
 		GL30.glEnable(GL30.GL_STENCIL_TEST);
-		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
-		GL30.glStencilOp(GL30.GL_KEEP, GL30.GL_KEEP, GL30.GL_REPLACE);
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF); //Set this default, just for the case its different.
+		GL30.glStencilOp(GL30.GL_REPLACE, GL30.GL_REPLACE, GL30.GL_REPLACE); //Only used once - currently. So it can be global.
+		//First time initialization of buffer, it might be wrong on startup:
+		GL30.glStencilMask(0x11);
+		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
+		GL30.glStencilMask(0x00);
 		
 		interactables = new RenderPlane2D(inputHandler);
 		interactables.setup();
@@ -251,8 +255,6 @@ public class OpenTUNG
 	
 	public static void clear()
 	{
-		GL30.glStencilMask(0xFF); //Set stencil mode, to properly clear the buffer.
-		GL30.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT);
-		GL30.glStencilMask(0x00); //Unset stencil mode
+		GL30.glClear(GL30.GL_COLOR_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 	}
 }

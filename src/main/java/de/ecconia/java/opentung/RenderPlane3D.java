@@ -16,6 +16,7 @@ import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
+import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
@@ -42,7 +43,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private ShaderProgram raycastWireShader;
 	private ShaderProgram outlineWireShader;
 	private ShaderProgram outlineBoardShader;
-	
+	private ShaderProgram inYaFace;
+	private InYaFaceVAO inYaFaceVAO;
 	private TextureWrapper boardTexture;
 	
 	private CoordIndicatorModel coords;
@@ -201,6 +203,16 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		outlineComponentShader = new ShaderProgram("outline/outlineComponent");
 		outlineWireShader = new ShaderProgram("outline/outlineWire");
 		outlineBoardShader = new ShaderProgram("outline/outlineBoard");
+		inYaFace = new ShaderProgram("outline/inYaFacePlane");
+		inYaFaceVAO = new InYaFaceVAO(new float[]{
+				-1, -1,
+				+1, -1,
+				+1, +1,
+				-1, +1
+		}, new short[]{
+				0, 1, 2,
+				0, 2, 3
+		});
 		
 		coords = new CoordIndicatorModel();
 		block = new DebugBlockModel();
@@ -363,17 +375,12 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		
 		Component component = idLookup[currentlySelectedIndex];
 		
-		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		//Enable drawing to stencil buffer
+		GL30.glStencilMask(0xFF);
+		
+		float[] color = new float[]{0, 0, 0, 0};
 		
 		Matrix model = new Matrix();
-		
-		float[] color = new float[]{
-				Settings.highlightColorR,
-				Settings.highlightColorG,
-				Settings.highlightColorB,
-				Settings.highlightColorA
-		};
-		
 		if(component instanceof CompBoard)
 		{
 			if(Settings.highlightBoards)
@@ -432,7 +439,30 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			}
 		}
 		
+		//Draw on top
+		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		//Only draw if stencil bit is set.
+		GL30.glStencilFunc(GL30.GL_EQUAL, 1, 0xFF);
+		
+		color = new float[]{
+				Settings.highlightColorR,
+				Settings.highlightColorG,
+				Settings.highlightColorB,
+				Settings.highlightColorA
+		};
+		
+		inYaFace.use();
+		inYaFace.setUniformV4(0, color);
+		inYaFaceVAO.use();
+		inYaFaceVAO.draw();
+		
+		//Restore settings:
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
+		//Clear stencil buffer:
+		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
+		//After clearing, disable usage/writing of/to stencil buffer again.
+		GL30.glStencilMask(0x00);
 	}
 	
 	private void raycast(float[] view)
