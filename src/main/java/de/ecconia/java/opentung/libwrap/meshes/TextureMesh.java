@@ -18,7 +18,7 @@ public class TextureMesh
 	public TextureMesh(TextureWrapper texture, List<CompBoard> boards)
 	{
 		this.texture = texture;
-		this.textureShader = new ShaderProgram("meshTexture");
+		this.textureShader = new ShaderProgram("mesh/meshTexture");
 		
 		int verticesAmount = boards.size() * 6 * 4 * (3 + 3 + 2 + 3);
 		int indicesAmount = boards.size() * 6 * 2 * 3;

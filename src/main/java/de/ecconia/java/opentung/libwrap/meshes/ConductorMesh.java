@@ -26,7 +26,7 @@ public class ConductorMesh
 	
 	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters, SimulationManager simulation)
 	{
-		this.solidMeshShader = new ShaderProgram("meshConductor");
+		this.solidMeshShader = new ShaderProgram("mesh/meshConductor");
 		simulation.setConnectorMeshStates(falseDataArray);
 		
 		int verticesAmount = wires.size() * 4 * 4 * (3 + 3);

@@ -23,7 +23,7 @@ public class ColorMesh
 	
 	public ColorMesh(List<Component> components, SimulationManager simulation)
 	{
-		this.colorMeshShader = new ShaderProgram("meshColor");
+		this.colorMeshShader = new ShaderProgram("mesh/meshColor");
 		simulation.setColorMeshStates(falseDataArray);
 		
 		int nextColorID = 0;

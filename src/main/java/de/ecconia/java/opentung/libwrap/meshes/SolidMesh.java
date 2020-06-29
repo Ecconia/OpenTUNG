@@ -15,7 +15,7 @@ public class SolidMesh
 	
 	public SolidMesh(List<Component> components)
 	{
-		this.solidMeshShader = new ShaderProgram("meshSolid");
+		this.solidMeshShader = new ShaderProgram("mesh/meshSolid");
 		
 		int verticesAmount = 0;
 		int indicesAmount = 0;
