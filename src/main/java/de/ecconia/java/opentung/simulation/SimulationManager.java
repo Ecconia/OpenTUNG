@@ -140,9 +140,9 @@ public class SimulationManager extends Thread
 		return tps;
 	}
 	
-	public int getUps()
+	public float getLoad()
 	{
-		return ups;
+		return (float) Math.round(((float) ups / (float) tps) * 100f) / 100f;
 	}
 	
 	public void setColor(int colorID, Color color)
