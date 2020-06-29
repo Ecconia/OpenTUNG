@@ -138,12 +138,12 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			if(clusterToHighlight == cluster)
 			{
 				clusterToHighlight = null;
-				connectorsToHighlight.clear();
+				connectorsToHighlight = new HashSet<>();
 			}
 			else
 			{
 				clusterToHighlight = cluster;
-				connectorsToHighlight.clear();
+				connectorsToHighlight = new HashSet<>();
 				for(Wire wire : cluster.getWires())
 				{
 					connectorsToHighlight.add(wire.getConnectorA());
@@ -537,7 +537,6 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		justShape.setUniform(1, view);
 		justShape.setUniformV4(3, new float[] {0,0,0,0});
 		Matrix matrix = new Matrix();
-		System.out.println(connectorsToHighlight.size());
 		for(Connector connector : connectorsToHighlight)
 		{
 			CubeFull cube = connector.getModel();
