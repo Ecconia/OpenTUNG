@@ -13,7 +13,10 @@ public class SimulationManager extends Thread
 	
 	private int[] connectorMeshStates;
 	private float[] colorMeshStates;
+	
 	private int tps;
+	private int ups;
+	private int upsCounter;
 	
 	public SimulationManager()
 	{
@@ -47,6 +50,8 @@ public class SimulationManager extends Thread
 				past = now;
 				tps = finishedTicks;
 				finishedTicks = 0;
+				ups = upsCounter;
+				upsCounter = 0;
 			}
 			
 			try
@@ -96,6 +101,8 @@ public class SimulationManager extends Thread
 			updateThisTick.addAll(reference);
 		}
 		
+		upsCounter += updateThisTick.size();
+		
 		//Actual tick processing:
 		
 		for(Updateable updateable : updateThisTick)
@@ -131,6 +138,11 @@ public class SimulationManager extends Thread
 	public int getTPS()
 	{
 		return tps;
+	}
+	
+	public int getUps()
+	{
+		return ups;
 	}
 	
 	public void setColor(int colorID, Color color)
