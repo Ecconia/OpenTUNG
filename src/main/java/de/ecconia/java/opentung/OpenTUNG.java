@@ -16,7 +16,6 @@ import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
-	private static int fps = 0;
 	private static InputProcessor inputHandler;
 	
 	private static RenderPlane2D interactables;
@@ -52,7 +51,7 @@ public class OpenTUNG
 				{
 					//Grab the graphic context for OpenGL on this thread.
 					window.grabContext();
-					window.setVsync(fps == 0);
+					window.setVsync(Settings.targetFPS == 0);
 					window.place();
 					
 					//OpenGL:
@@ -65,7 +64,7 @@ public class OpenTUNG
 					long past = System.currentTimeMillis();
 					int finishedRenderings = 0;
 					
-					long frameDuration = fps != 0 ? 1000L / (long) fps : 1;
+					long frameDuration = Settings.targetFPS != 0 ? 1000L / (long) Settings.targetFPS : 1;
 					long lastFinishedRender = System.currentTimeMillis();
 					
 					while(!window.shouldClose())
@@ -94,7 +93,7 @@ public class OpenTUNG
 						}
 						
 						//FPS limiting:
-						if(fps != 0)
+						if(Settings.targetFPS != 0)
 						{
 							long currentTime = System.currentTimeMillis();
 							long timeToWait = frameDuration - (currentTime - lastFinishedRender);
@@ -247,8 +246,7 @@ public class OpenTUNG
 	
 	public static void setBackgroundColor()
 	{
-		GL30.glClearColor(1f / 255f * 54f, 1f / 255f * 57f, 1f / 255f * 63f, 0.0f); //Discord
-//		GL30.glClearColor(1f / 255f * 150f, 1f / 255f * 150f, 1f / 255f * 150f, 0.0f); //Bright
+		GL30.glClearColor(Settings.backgroundColorR, Settings.backgroundColorG, Settings.backgroundColorB, 0.0f);
 	}
 	
 	public static void clear()

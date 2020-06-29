@@ -85,9 +85,9 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		if(currentlySelectedIndex != 0)
 		{
 			Component downer = idLookup[currentlySelectedIndex];
-			long time = (System.currentTimeMillis() - downTime) / 1000;
+			long time = (System.currentTimeMillis() - downTime);
 			//If the click was longer than a second, validate that its the intended component...
-			if(time > 0)
+			if(time > Settings.longMousePressDuration)
 			{
 				if(this.downer == downer)
 				{
@@ -222,10 +222,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		lastCycle = System.currentTimeMillis();
 	}
 	
-	@Override
-	public void render()
+	private void checkMouseInteraction()
 	{
-		//Mouse handling:
 		if(downTime != 0)
 		{
 			if(currentlySelectedIndex != 0)
@@ -272,21 +270,36 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			tempDowner.setHold(false, board.getSimulation());
 			tempDowner = null;
 		}
+	}
+	
+	@Override
+	public void render()
+	{
+		checkMouseInteraction();
 		
 		float[] view = camera.getMatrix();
-		raycast(view);
-		drawDynamic(view);
+		if(Settings.doRaycasting)
+		{
+			raycast(view);
+		}
+		if(Settings.drawWorld)
+		{
+			drawDynamic(view);
+		}
 		
-//		lineShader.use();
-//		lineShader.setUniform(1, view);
-//		Matrix model = new Matrix();
-//		for(Component comp : board.getComponentsToRender())
-//		{
-//			model.identity();
-//			model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-//			labelShader.setUniform(2, model.getMat());
-//			CompCrossyIndicator.modelHolder.draw();
-//		}
+		if(Settings.drawComponentPositionIndicator)
+		{
+			lineShader.use();
+			lineShader.setUniform(1, view);
+			Matrix model = new Matrix();
+			for(Component comp : board.getComponentsToRender())
+			{
+				model.identity();
+				model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+				labelShader.setUniform(2, model.getMat());
+				CompCrossyIndicator.modelHolder.draw();
+			}
+		}
 	}
 	
 	private void drawDynamic(float[] view)
@@ -296,9 +309,15 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		
 		Matrix model = new Matrix();
 		
-		textureMesh.draw(view);
+		if(Settings.drawBoards)
+		{
+			textureMesh.draw(view);
+		}
 		conductorMesh.draw(view);
-		solidMesh.draw(view);
+		if(Settings.drawMaterial)
+		{
+			solidMesh.draw(view);
+		}
 		colorMesh.draw(view);
 		
 		labelShader.use();
@@ -315,30 +334,42 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			label.getModelHolder().drawTextures();
 		}
 		
-		lineShader.use();
-		lineShader.setUniform(1, view);
-		
-		for(Component component : wireEndsToRender)
+		if(!wireEndsToRender.isEmpty())
 		{
-			model.identity();
-			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
-			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
-			model.multiply(rotMat);
-			lineShader.setUniform(2, model.getMat());
+			lineShader.use();
+			lineShader.setUniform(1, view);
 			
-			component.getModelHolder().draw();
+			for(Component component : wireEndsToRender)
+			{
+				model.identity();
+				model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
+				Matrix rotMat = new Matrix(component.getRotation().createMatrix());
+				model.multiply(rotMat);
+				lineShader.setUniform(2, model.getMat());
+				
+				component.getModelHolder().draw();
+			}
 		}
 		
-		//Draw selected component:
-		
-		if(currentlySelectedIndex != 0)
+		drawHighlight(view);
+	}
+	
+	private void drawHighlight(float[] view)
+	{
+		if(currentlySelectedIndex == 0)
 		{
-			Component component = idLookup[currentlySelectedIndex];
-			
-			GL30.glStencilFunc(GL30.GL_ALWAYS, 1, 0xFF);
-			GL30.glStencilMask(0xFF);
-			
-			if(component instanceof CompBoard)
+			return;
+		}
+		
+		Component component = idLookup[currentlySelectedIndex];
+		
+		GL30.glStencilFunc(GL30.GL_ALWAYS, 1, 0xFF);
+		GL30.glStencilMask(0xFF);
+		
+		Matrix model = new Matrix();
+		if(component instanceof CompBoard)
+		{
+			if(Settings.highlightBoards)
 			{
 				boardTexture.activate();
 				dynamicBoardShader.use();
@@ -355,7 +386,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				
 				CompBoard.modelHolder.draw();
 			}
-			else if(component instanceof CompWireRaw)
+		}
+		else if(component instanceof CompWireRaw)
+		{
+			if(Settings.highlightWires)
 			{
 				wireShader.use();
 				CompWireRaw wire = (CompWireRaw) component;
@@ -370,7 +404,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				
 				CompWireRaw.modelHolder.draw();
 			}
-			else
+		}
+		else
+		{
+			if(Settings.highlightComponents)
 			{
 				faceShader.use();
 				model.identity();
@@ -380,12 +417,15 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				faceShader.setUniform(2, model.getMat());
 				component.getModelHolder().draw();
 			}
-			
-			GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
-			GL30.glStencilMask(0x00);
-			GL30.glDisable(GL30.GL_DEPTH_TEST);
-			
-			if(component instanceof CompBoard)
+		}
+		
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+		GL30.glStencilMask(0x00);
+		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		
+		if(component instanceof CompBoard)
+		{
+			if(Settings.highlightBoards)
 			{
 				outlineBoardShader.use();
 				outlineBoardShader.setUniform(1, view);
@@ -397,7 +437,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				
 				CompBoard.modelHolder.draw();
 			}
-			else if(component instanceof CompWireRaw)
+		}
+		else if(component instanceof CompWireRaw)
+		{
+			if(Settings.highlightWires)
 			{
 				outlineWireShader.use();
 				outlineWireShader.setUniform(1, view);
@@ -408,7 +451,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				
 				CompWireRaw.modelHolder.draw();
 			}
-			else
+		}
+		else
+		{
+			if(Settings.highlightComponents)
 			{
 				outlineComponentShader.use();
 				outlineComponentShader.setUniform(1, view);
@@ -416,17 +462,20 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				outlineComponentShader.setUniform(2, model.getMat());
 				component.getModelHolder().draw();
 			}
-			
-			GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
-			GL30.glEnable(GL30.GL_DEPTH_TEST);
 		}
+		
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
 	private void raycast(float[] view)
 	{
 		Matrix model = new Matrix();
 		
-		GL30.glViewport(0, 0, 1, 1);
+		if(Settings.drawWorld)
+		{
+			GL30.glViewport(0, 0, 1, 1);
+		}
 		GL30.glClearColor(0, 0, 0, 1);
 		OpenTUNG.clear();
 		
@@ -448,7 +497,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			id = 0;
 		}
 		
-		GL30.glViewport(0, 0, this.width, this.height);
+		if(Settings.drawWorld)
+		{
+			GL30.glViewport(0, 0, this.width, this.height);
+		}
 		
 		currentlySelectedIndex = id;
 	}
@@ -459,7 +511,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		this.width = width;
 		this.height = height;
 		Matrix p = new Matrix();
-		p.perspective(45f, (float) width / (float) height, 0.1f, 100000f);
+		p.perspective(Settings.fov, (float) width / (float) height, 0.1f, 100000f);
 		float[] projection = p.getMat();
 		
 		rayCastMesh.updateProjection(projection);

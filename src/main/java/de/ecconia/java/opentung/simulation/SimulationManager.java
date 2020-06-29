@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.simulation;
 
+import de.ecconia.java.opentung.Settings;
 import de.ecconia.java.opentung.components.fragments.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,13 +55,16 @@ public class SimulationManager extends Thread
 				upsCounter = 0;
 			}
 			
-			try
+			if(Settings.delayBetweenTicks > 0)
 			{
-				Thread.sleep(1);
-			}
-			catch(InterruptedException e)
-			{
-				break;
+				try
+				{
+					Thread.sleep(Settings.delayBetweenTicks);
+				}
+				catch(InterruptedException e)
+				{
+					break;
+				}
 			}
 		}
 		

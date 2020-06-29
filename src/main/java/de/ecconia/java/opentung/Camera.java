@@ -28,8 +28,9 @@ public class Camera implements InputConsumer
 		
 		handler.registerClickConsumer(this);
 		
-		z -= 4;
-		y += 1;
+		x += Settings.playerSpawnX;
+		y += Settings.playerSpawnY;
+		z += Settings.playerSpawnZ;
 		
 		currentPosition = new Location(x, y, z, rotation, neck);
 	}
@@ -136,12 +137,12 @@ public class Camera implements InputConsumer
 	@Override
 	public void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d, boolean control)
 	{
-		float rotationSpeed = 0.333f;
-		float flySpeed = 0.05f;
+		float rotationSpeed = Settings.playerRotationSpeed;
+		float flySpeed = Settings.playerFlySpeed;
 		if(control)
 		{
-			flySpeed = 0.15f;
-			rotationSpeed = 0.4f;
+			flySpeed = Settings.playerFastFlySpeed;
+			rotationSpeed = Settings.playerFastRotationSpeed;
 		}
 		
 		//Mouse:

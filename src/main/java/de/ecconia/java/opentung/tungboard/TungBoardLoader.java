@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.tungboard;
 
 import de.ecconia.Ansi;
+import de.ecconia.java.opentung.Settings;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -65,8 +66,8 @@ public class TungBoardLoader
 		TungBoard importedBoard = PrimitiveParser.importTungBoard(file);
 		System.out.println("[BoardImport] Started converting board.");
 		importedBoard.setPosition(new TungPosition(0, 0, 0));
-		importedBoard.setAngles(new TungAngles(180, 0, 0)); //Adjust this depending on how you want to import the board.
-		return (CompBoard) importChild(null, importedBoard, new Vector3(0, 0, 20), Quaternion.angleAxis(0, Vector3.yp));
+		importedBoard.setAngles(new TungAngles(Settings.rootBoardAngleX, Settings.rootBoardAngleY, Settings.rootBoardAngleZ));
+		return (CompBoard) importChild(null, importedBoard, new Vector3(Settings.rootBoardOffsetX, Settings.rootBoardOffsetY, Settings.rootBoardOffsetZ), Quaternion.angleAxis(0, Vector3.yp));
 	}
 	
 	public static CompBoard importTungBoard(File file)
@@ -102,9 +103,9 @@ public class TungBoardLoader
 	
 	private static void linkWires(CompContainer container, CompContainer scannable)
 	{
-		boolean maintance = false;
+		boolean maintenance = Settings.importMaintenanceMode;
 		Connector placebo = null;
-		if(maintance)
+		if(maintenance)
 		{
 			placebo = new Connector(null, null)
 			{
@@ -119,7 +120,7 @@ public class TungBoardLoader
 				
 				Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
 				Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
-				if(!maintance)
+				if(!maintenance)
 				{
 					if(connectorA == null || connectorB == null)
 					{
