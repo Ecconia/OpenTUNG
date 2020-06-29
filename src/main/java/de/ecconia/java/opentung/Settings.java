@@ -45,6 +45,11 @@ public class Settings
 	public static boolean highlightWires = true;
 	public static boolean highlightComponents = true;
 	
+	public static float highlightColorR = 0;
+	public static float highlightColorG = 0;
+	public static float highlightColorB = 1.0f;
+	public static float highlightColorA = 0.3f;
+	
 	//Skip drawing the world:
 	public static boolean drawWorld = true;
 	//Gives a nice see-thru to turn them off.
