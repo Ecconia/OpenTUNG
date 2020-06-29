@@ -50,6 +50,11 @@ public class Settings
 	public static float highlightColorB = 1.0f;
 	public static float highlightColorA = 0.3f;
 	
+	public static float highlightClusterColorR = 0f;
+	public static float highlightClusterColorG = 1.0f;
+	public static float highlightClusterColorB = 0f;
+	public static float highlightClusterColorA = 0.6f;
+	
 	//Skip drawing the world:
 	public static boolean drawWorld = true;
 	//Gives a nice see-thru to turn them off.

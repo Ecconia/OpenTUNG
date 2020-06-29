@@ -3,7 +3,11 @@ package de.ecconia.java.opentung;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompCrossyIndicator;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompPeg;
+import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ComponentLibrary;
 import de.ecconia.java.opentung.components.meta.Holdable;
@@ -17,14 +21,21 @@ import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
+import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
+import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
+import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.HiddenWire;
+import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.lwjgl.opengl.GL30;
 
 public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
@@ -45,6 +56,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private ShaderProgram outlineBoardShader;
 	private ShaderProgram inYaFace;
 	private InYaFaceVAO inYaFaceVAO;
+	private ShaderProgram justShape;
+	private SimpleCubeVAO cubeVAO;
 	private TextureWrapper boardTexture;
 	
 	private CoordIndicatorModel coords;
@@ -65,6 +78,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	
 	private Component[] idLookup;
 	private int currentlySelectedIndex = 0;
+	private Cluster clusterToHighlight;
+	private Set<Connector> connectorsToHighlight = new HashSet<>();
 	private int width = 0;
 	private int height = 0;
 	
@@ -94,14 +109,48 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				if(this.downer == downer)
 				{
 					downer.rightClicked(board.getSimulation());
+					componentClicked(downer);
 				}
 			}
 			else
 			{
 				downer.rightClicked(board.getSimulation());
+				componentClicked(downer);
 			}
 		}
 		downTime = 0;
+	}
+	
+	private void componentClicked(Component component)
+	{
+		//TODO: Move this somewhere more generic.
+		Cluster cluster = null;
+		if(component instanceof CompWireRaw)
+		{
+			cluster = ((CompWireRaw) component).getCluster();
+		}
+		else if(component instanceof CompThroughPeg || component instanceof CompPeg)
+		{
+			cluster = component.getPegs().get(0).getCluster();
+		}
+		if(cluster != null)
+		{
+			if(clusterToHighlight == cluster)
+			{
+				clusterToHighlight = null;
+				connectorsToHighlight.clear();
+			}
+			else
+			{
+				clusterToHighlight = cluster;
+				connectorsToHighlight.clear();
+				for(Wire wire : cluster.getWires())
+				{
+					connectorsToHighlight.add(wire.getConnectorA());
+					connectorsToHighlight.add(wire.getConnectorB());
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -204,15 +253,9 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		outlineWireShader = new ShaderProgram("outline/outlineWire");
 		outlineBoardShader = new ShaderProgram("outline/outlineBoard");
 		inYaFace = new ShaderProgram("outline/inYaFacePlane");
-		inYaFaceVAO = new InYaFaceVAO(new float[]{
-				-1, -1,
-				+1, -1,
-				+1, +1,
-				-1, +1
-		}, new short[]{
-				0, 1, 2,
-				0, 2, 3
-		});
+		inYaFaceVAO = InYaFaceVAO.generateInYaFacePlane();
+		justShape = new ShaderProgram("justShape");
+		cubeVAO = SimpleCubeVAO.generateCube();
 		
 		coords = new CoordIndicatorModel();
 		block = new DebugBlockModel();
@@ -298,6 +341,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		{
 			drawDynamic(view);
 		}
+		highlightCluster(view);
 		drawHighlight(view);
 		
 		if(Settings.drawComponentPositionIndicator)
@@ -471,6 +515,74 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		}
 	}
 	
+	private void highlightCluster(float[] view)
+	{
+		if(clusterToHighlight == null)
+		{
+			return;
+		}
+		
+		//Enable drawing to stencil buffer
+		GL30.glStencilMask(0xFF);
+		
+		for(Wire wire : clusterToHighlight.getWires())
+		{
+			if(wire instanceof HiddenWire)
+			{
+				continue;
+			}
+			drawStencilComponent((CompWireRaw) wire, view);
+		}
+		justShape.use();
+		justShape.setUniform(1, view);
+		justShape.setUniformV4(3, new float[] {0,0,0,0});
+		Matrix matrix = new Matrix();
+		System.out.println(connectorsToHighlight.size());
+		for(Connector connector : connectorsToHighlight)
+		{
+			CubeFull cube = connector.getModel();
+			
+			matrix.identity();
+			Vector3 position = connector.getBase().getPosition();
+			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			Matrix rotMat = new Matrix(connector.getBase().getRotation().createMatrix());
+			matrix.multiply(rotMat);
+			Vector3 size = cube.getSize();
+			position = cube.getPosition().add(connector.getBase().getModelHolder().getPlacementOffset());
+			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+			justShape.setUniform(2, matrix.getMat());
+			
+			cubeVAO.use();
+			cubeVAO.draw();
+		}
+		
+		//Draw on top
+		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		//Only draw if stencil bit is set.
+		GL30.glStencilFunc(GL30.GL_EQUAL, 1, 0xFF);
+		
+		float[] color = new float[]{
+				Settings.highlightClusterColorR,
+				Settings.highlightClusterColorG,
+				Settings.highlightClusterColorB,
+				Settings.highlightClusterColorA
+		};
+		
+		inYaFace.use();
+		inYaFace.setUniformV4(0, color);
+		inYaFaceVAO.use();
+		inYaFaceVAO.draw();
+		
+		//Restore settings:
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
+		//Clear stencil buffer:
+		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
+		//After clearing, disable usage/writing of/to stencil buffer again.
+		GL30.glStencilMask(0x00);
+	}
+	
 	private void raycast(float[] view)
 	{
 		Matrix model = new Matrix();
@@ -545,5 +657,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		outlineWireShader.setUniform(0, projection);
 		outlineBoardShader.use();
 		outlineBoardShader.setUniform(0, projection);
+		justShape.use();
+		justShape.setUniform(0, projection);
 	}
 }
