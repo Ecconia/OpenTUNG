@@ -334,7 +334,7 @@ public class BoardUniverse
 						wire.setLength((float) maxDist);
 						Vector3 direction = other.getConnectionPoint().subtract(connectionPoint).divide(2); //Get half of it.
 						wire.setPosition(connectionPoint.add(direction));
-						wire.setRotation(Quaternion.angleAxis(0, direction));
+						wire.setRotation(Quaternion.angleAxis(Math.toDegrees(Math.asin(direction.getX() / direction.length())), Vector3.yp));
 						snappingWires.add(wire);
 						componentsToRender.add(wire);
 					}
