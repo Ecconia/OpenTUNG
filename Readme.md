@@ -72,6 +72,11 @@ Everyone is free to use this, if he/she doesn't hate Java :P
   - You mave move/copy/rename that file. It should work.
   - Double clicking it might also work, but you may miss information/instructions on terminal.
 
+## Settings:
+
+Although there are no proper settings yet, you can still change a lot of handy things in `src/main/java/de/ecconia/java/opentung/Settings.java`. Its just many values in one class. Edit to your hearts content.
+Don't forget to compile again, once you changed something.
+
 ## Collaborate/Contact
 
 Everyone who used TUNG before may collaborate. Personally I also require such a person to be a part of the TUNG/LW community, see their [Discord](https://discord.gg/C5Qkk53). You may always contact me there, if you wish to improve something or just to talk/discuss about this project.
