@@ -298,6 +298,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		{
 			drawDynamic(view);
 		}
+		drawHighlight(view);
 		
 		if(Settings.drawComponentPositionIndicator)
 		{
@@ -362,8 +363,6 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				component.getModelHolder().draw();
 			}
 		}
-		
-		drawHighlight(view);
 	}
 	
 	private void drawHighlight(float[] view)
@@ -375,76 +374,28 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		
 		Component component = idLookup[currentlySelectedIndex];
 		
+		boolean isBoard = component instanceof CompBoard;
+		boolean isWire = component instanceof CompWireRaw;
+		if(
+				isBoard && !Settings.highlightBoards
+						|| isWire && !Settings.highlightWires
+						|| !(isBoard || isWire) && !Settings.highlightComponents
+		)
+		{
+			return;
+		}
+		
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
 		
-		float[] color = new float[]{0, 0, 0, 0};
-		
-		Matrix model = new Matrix();
-		if(component instanceof CompBoard)
-		{
-			if(Settings.highlightBoards)
-			{
-				outlineBoardShader.use();
-				outlineBoardShader.setUniform(1, view);
-				
-				CompBoard board = (CompBoard) component;
-				
-				model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
-				Matrix rotMat = new Matrix(board.getRotation().createMatrix());
-				model.multiply(rotMat);
-				
-				outlineBoardShader.setUniform(2, model.getMat());
-				outlineBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
-				outlineBoardShader.setUniformV4(4, color);
-				
-				CompBoard.modelHolder.draw();
-			}
-		}
-		else if(component instanceof CompWireRaw)
-		{
-			if(Settings.highlightWires)
-			{
-				outlineWireShader.use();
-				outlineWireShader.setUniform(1, view);
-				CompWireRaw wire = (CompWireRaw) component;
-				
-				model.identity();
-				model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
-				Matrix rotMat = new Matrix(wire.getRotation().createMatrix());
-				model.multiply(rotMat);
-				
-				outlineWireShader.setUniform(2, model.getMat());
-				outlineWireShader.setUniform(3, wire.getLength() / 2f);
-				outlineBoardShader.setUniformV4(4, color);
-				
-				CompWireRaw.modelHolder.draw();
-			}
-		}
-		else
-		{
-			if(Settings.highlightComponents)
-			{
-				outlineComponentShader.use();
-				outlineComponentShader.setUniform(1, view);
-				
-				model.identity();
-				model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
-				Matrix rotMat = new Matrix(component.getRotation().createMatrix());
-				model.multiply(rotMat);
-				
-				outlineComponentShader.setUniform(2, model.getMat());
-				outlineBoardShader.setUniformV4(3, color);
-				component.getModelHolder().draw();
-			}
-		}
+		drawStencilComponent(component, view);
 		
 		//Draw on top
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
 		//Only draw if stencil bit is set.
 		GL30.glStencilFunc(GL30.GL_EQUAL, 1, 0xFF);
 		
-		color = new float[]{
+		float[] color = new float[]{
 				Settings.highlightColorR,
 				Settings.highlightColorG,
 				Settings.highlightColorB,
@@ -463,6 +414,61 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
 		//After clearing, disable usage/writing of/to stencil buffer again.
 		GL30.glStencilMask(0x00);
+	}
+	
+	private void drawStencilComponent(Component component, float[] view)
+	{
+		float[] color = new float[]{0, 0, 0, 0};
+		
+		Matrix model = new Matrix();
+		if(component instanceof CompBoard)
+		{
+			outlineBoardShader.use();
+			outlineBoardShader.setUniform(1, view);
+			
+			CompBoard board = (CompBoard) component;
+			
+			model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
+			Matrix rotMat = new Matrix(board.getRotation().createMatrix());
+			model.multiply(rotMat);
+			
+			outlineBoardShader.setUniform(2, model.getMat());
+			outlineBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
+			outlineBoardShader.setUniformV4(4, color);
+			
+			CompBoard.modelHolder.draw();
+		}
+		else if(component instanceof CompWireRaw)
+		{
+			outlineWireShader.use();
+			outlineWireShader.setUniform(1, view);
+			CompWireRaw wire = (CompWireRaw) component;
+			
+			model.identity();
+			model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
+			Matrix rotMat = new Matrix(wire.getRotation().createMatrix());
+			model.multiply(rotMat);
+			
+			outlineWireShader.setUniform(2, model.getMat());
+			outlineWireShader.setUniform(3, wire.getLength() / 2f);
+			outlineBoardShader.setUniformV4(4, color);
+			
+			CompWireRaw.modelHolder.draw();
+		}
+		else
+		{
+			outlineComponentShader.use();
+			outlineComponentShader.setUniform(1, view);
+			
+			model.identity();
+			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
+			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
+			model.multiply(rotMat);
+			
+			outlineComponentShader.setUniform(2, model.getMat());
+			outlineBoardShader.setUniformV4(3, color);
+			component.getModelHolder().draw();
+		}
 	}
 	
 	private void raycast(float[] view)
