@@ -79,4 +79,10 @@ Don't forget to compile again, once you changed something.
 
 ## Collaborate/Contact
 
-Everyone who used TUNG before may collaborate. Personally I also require such a person to be a part of the TUNG/LW community, see their [Discord](https://discord.gg/C5Qkk53). You may always contact me there, if you wish to improve something or just to talk/discuss about this project.
+This project has a [Discord-Server-OpenTUNG](https://discord.gg/C5Qkk53).
+
+You may always contact developers and users there, if you wish to improve something, seek help or just to talk/discuss about this project.
+
+If you want to collaborate, you should check out that discord.
+
+TUNG/LogicWorld also have a [Discord-Server](https://discord.gg/C5Qkk53), if you don't know what this game is about, check out these first.
