@@ -1,7 +1,9 @@
 package de.ecconia.java.opentung.components.conductor;
 
+import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
+import de.ecconia.java.opentung.components.fragments.ModelMapper;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
@@ -17,7 +19,14 @@ public class CompWireRaw extends Component implements Wire
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addMeta(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos));
+		modelHolder.addMeta(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, new ModelMapper()
+		{
+			@Override
+			public Vector3 getMappedSize(Vector3 size, Component component)
+			{
+				return new Vector3(size.getX(), size.getY(), size.getZ() * ((CompWireRaw) component).getLength() * 0.5f);
+			}
+		}));
 	}
 	
 	public static void initGL()
@@ -78,7 +87,7 @@ public class CompWireRaw extends Component implements Wire
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
 		//TODO: This is super ungeneric, beware.
-		CubeTunnel shape = (CubeTunnel) getModelHolder().getConductors().get(0);
+		CubeFull shape = (CubeFull) getModelHolder().getConductors().get(0);
 		
 		Vector3 color = new Vector3(1, 0, 0);
 		if(type.colorISID())
@@ -89,7 +98,7 @@ public class CompWireRaw extends Component implements Wire
 			int b = (id & 0xFF0000) >> 16;
 			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
 		}
-		shape.generateWireMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, length, color, getPosition(), getRotation(), type);
+		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 	}
 	
 	// ### SIMULATION ###

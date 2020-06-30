@@ -2,9 +2,12 @@ package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.Color;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
+import de.ecconia.java.opentung.components.fragments.ModelMapper;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
@@ -16,7 +19,14 @@ public class CompSnappingWire extends CompWireRaw
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addSolid(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, Color.snappingPeg));
+		modelHolder.addSolid(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, Color.snappingPeg, new ModelMapper()
+		{
+			@Override
+			public Vector3 getMappedSize(Vector3 size, Component component)
+			{
+				return new Vector3(size.getX(), size.getY(), size.getZ() * ((CompSnappingWire) component).getLength() * 0.5f);
+			}
+		}));
 	}
 	
 	@Override
@@ -49,8 +59,8 @@ public class CompSnappingWire extends CompWireRaw
 	{
 		if(type == MeshTypeThing.Solid)
 		{
-			//TODO: This is super ungeneric, beware.
-			((CubeTunnel) getModelHolder().getSolid().get(0)).generateWireMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, getLength(), null, getPosition(), getRotation(), type);
+			//TODO: This is still ungeneric.
+			((CubeFull) getModelHolder().getSolid().get(0)).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 		}
 	}
 }

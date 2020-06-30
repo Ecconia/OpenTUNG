@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components.fragments;
 
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
@@ -9,13 +10,21 @@ public class CubeFull extends Meshable
 {
 	protected final Vector3 position;
 	protected final Vector3 size;
+	
+	protected ModelMapper mapper;
 	protected Color color;
 	
-	public CubeFull(Vector3 position, Vector3 size, Color color)
+	public CubeFull(Vector3 position, Vector3 size, Color color, ModelMapper mapper)
 	{
 		this.position = position;
 		this.size = size.divide(2); //Collision as well as shader only use half the value.
+		this.mapper = mapper;
 		this.color = color;
+	}
+	
+	public CubeFull(Vector3 position, Vector3 size, Color color)
+	{
+		this(position, size, color, null);
 	}
 	
 	public int getFacesCount()
@@ -138,7 +147,7 @@ public class CubeFull extends Meshable
 		return size;
 	}
 	
-	public void generateMeshEntry(float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
+	public void generateMeshEntry(Component instance, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
 		if(color == null && this.color != null)
 		{

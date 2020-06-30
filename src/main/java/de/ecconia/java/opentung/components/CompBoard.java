@@ -1,7 +1,10 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.fragments.CubeBoard;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.ModelMapper;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
@@ -13,7 +16,15 @@ public class CompBoard extends CompContainer
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addSolid(new CubeBoard(new Vector3(0.0, 0.0, 0.0), new Vector3(2.0, 0.15, 2.0))); //1 gets replaced in shader. no color cause texture.
+		modelHolder.addSolid(new CubeBoard(new Vector3(0.0, 0.0, 0.0), new Vector3(2.0, 0.15, 2.0), new ModelMapper()
+		{
+			@Override
+			public Vector3 getMappedSize(Vector3 size, Component component)
+			{
+				CompBoard board = (CompBoard) component;
+				return new Vector3(size.getX() * board.getX() * 0.15, size.getY(), size.getZ() * board.getZ() * 0.15);
+			}
+		})); //1 gets replaced in shader. no color cause texture.
 	}
 	
 	public static void initGL()
@@ -64,8 +75,8 @@ public class CompBoard extends CompContainer
 	
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
-		//TODO: This is super ungeneric, beware.
-		CubeBoard shape = (CubeBoard) getModelHolder().getSolid().get(0);
+		//TODO: This is still ungeneric.
+		CubeFull shape = (CubeFull) getModelHolder().getSolid().get(0);
 		
 		Vector3 color = this.color;
 		if(type.colorISID())
@@ -76,6 +87,6 @@ public class CompBoard extends CompContainer
 			int b = (id & 0xFF0000) >> 16;
 			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
 		}
-		shape.generateBoardMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, x, z, color, getPosition(), getRotation(), type);
+		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 	}
 }

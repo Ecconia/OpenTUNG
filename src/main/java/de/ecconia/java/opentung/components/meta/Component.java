@@ -304,18 +304,18 @@ public abstract class Component
 		{
 			for(Peg peg : pegs)
 			{
-				peg.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+				peg.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 			for(Blot blot : blots)
 			{
-				blot.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+				blot.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else if(type == MeshTypeThing.Display)
 		{
 			for(Meshable m : getModelHolder().getColorables())
 			{
-				((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
@@ -332,22 +332,22 @@ public abstract class Component
 			
 			for(Meshable m : getModelHolder().getSolid())
 			{
-				((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 			
 			if(type == MeshTypeThing.Raycast)
 			{
 				for(Peg peg : pegs)
 				{
-					peg.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					peg.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 				for(Blot blot : blots)
 				{
-					blot.getModel().generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					blot.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 				for(Meshable m : getModelHolder().getColorables())
 				{
-					((CubeFull) m).generateMeshEntry(vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 			}
 		}

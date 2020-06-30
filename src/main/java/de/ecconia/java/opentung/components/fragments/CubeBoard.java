@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.components.fragments;
 
+import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
@@ -9,7 +11,12 @@ public class CubeBoard extends CubeFull
 {
 	public CubeBoard(Vector3 position, Vector3 size)
 	{
-		super(position, size, null);
+		this(position, size, null);
+	}
+	
+	public CubeBoard(Vector3 position, Vector3 size, ModelMapper mapper)
+	{
+		super(position, size, null, mapper);
 	}
 	
 	@Override
@@ -85,16 +92,18 @@ public class CubeBoard extends CubeFull
 		vertices[offsetV.getAndInc()] = side;
 	}
 	
-	public void generateBoardMeshEntry(float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, int x, int z, Vector3 color, Vector3 position, Quaternion rotation, MeshTypeThing type)
+	@Override
+	public void generateMeshEntry(Component component, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
-		final float t = 0.01f;
-
-		Vector3 size = new Vector3(this.size.getX() * x * 0.15, this.size.getY(), this.size.getZ() * z * 0.15);
+		Vector3 size = mapper == null ? this.size : mapper.getMappedSize(this.getSize(), component);
 		Vector3 min = this.position.subtract(size);
 		Vector3 max = this.position.add(size);
-
+		
+		float t = 0.01f;
+		int x = ((CompBoard) component).getX();
+		int z = ((CompBoard) component).getZ();
+		
 		Vector3 normal;
-		//Position Normal Coord Color
 		//Up:
 		normal = rotation.inverse().multiply(new Vector3(0, 1, 0));
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, x, 0, color, type);

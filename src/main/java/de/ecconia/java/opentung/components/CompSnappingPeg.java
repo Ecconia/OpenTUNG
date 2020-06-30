@@ -80,8 +80,8 @@ public class CompSnappingPeg extends Component
 				int b = (id & 0xFF0000) >> 16;
 				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
 			}
-			//TODO: This is super ungeneric, beware.
-			getModelHolder().getPegModels().get(0).generateMeshEntry(vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
+			//TODO: This is still ungeneric.
+			getModelHolder().getPegModels().get(0).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
 		}
 	}
 	
