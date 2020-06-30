@@ -56,6 +56,11 @@ public class CubeFull extends Meshable
 		return 6 * 2 * 3;
 	}
 	
+	public ModelMapper getMapper()
+	{
+		return mapper;
+	}
+	
 	@Override
 	public void generateModel(float[] vertices, ModelHolder.IntHolder offsetV, short[] indices, ModelHolder.IntHolder offsetI, ModelHolder.IntHolder indexOffset, ModelHolder.TestModelType type, Vector3 offset)
 	{

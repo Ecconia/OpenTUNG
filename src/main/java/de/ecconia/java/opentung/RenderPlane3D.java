@@ -9,6 +9,7 @@ import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ComponentLibrary;
 import de.ecconia.java.opentung.components.meta.Holdable;
@@ -463,57 +464,52 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	
 	private void drawStencilComponent(Component component, float[] view)
 	{
-		float[] color = new float[]{0, 0, 0, 0};
+		justShape.use();
+		justShape.setUniform(1, view);
+		justShape.setUniformV4(3, new float[] {0,0,0,0});
+		Matrix matrix = new Matrix();
+		for(Meshable meshable : component.getModelHolder().getPegModels())
+		{
+			drawCubeFull((CubeFull) meshable, component, matrix);
+		}
+		for(Meshable meshable : component.getModelHolder().getBlotModels())
+		{
+			drawCubeFull((CubeFull) meshable, component, matrix);
+		}
+		for(Meshable meshable : component.getModelHolder().getColorables())
+		{
+			drawCubeFull((CubeFull) meshable, component, matrix);
+		}
+		for(Meshable meshable : component.getModelHolder().getSolid())
+		{
+			drawCubeFull((CubeFull) meshable, component, matrix);
+		}
+		for(Meshable meshable : component.getModelHolder().getConductors())
+		{
+			drawCubeFull((CubeFull) meshable, component, matrix);
+		}
+	}
+	
+	private void drawCubeFull(CubeFull cube, Component component, Matrix matrix)
+	{
+		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
+		matrix.identity();
+		Vector3 position = component.getPosition();
+		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+		Matrix rotMat = new Matrix(component.getRotation().createMatrix());
+		matrix.multiply(rotMat);
+		Vector3 size = cube.getSize();
+		if(cube.getMapper() != null)
+		{
+			size = cube.getMapper().getMappedSize(size, component);
+		}
+		position = cube.getPosition().add(component.getModelHolder().getPlacementOffset());
+		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+		justShape.setUniform(2, matrix.getMat());
 		
-		Matrix model = new Matrix();
-		if(component instanceof CompBoard)
-		{
-			outlineBoardShader.use();
-			outlineBoardShader.setUniform(1, view);
-			
-			CompBoard board = (CompBoard) component;
-			
-			model.translate((float) board.getPosition().getX(), (float) board.getPosition().getY(), (float) board.getPosition().getZ());
-			Matrix rotMat = new Matrix(board.getRotation().createMatrix());
-			model.multiply(rotMat);
-			
-			outlineBoardShader.setUniform(2, model.getMat());
-			outlineBoardShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
-			outlineBoardShader.setUniformV4(4, color);
-			
-			CompBoard.modelHolder.draw();
-		}
-		else if(component instanceof CompWireRaw)
-		{
-			outlineWireShader.use();
-			outlineWireShader.setUniform(1, view);
-			CompWireRaw wire = (CompWireRaw) component;
-			
-			model.identity();
-			model.translate((float) wire.getPosition().getX(), (float) wire.getPosition().getY(), (float) wire.getPosition().getZ());
-			Matrix rotMat = new Matrix(wire.getRotation().createMatrix());
-			model.multiply(rotMat);
-			
-			outlineWireShader.setUniform(2, model.getMat());
-			outlineWireShader.setUniform(3, wire.getLength() / 2f);
-			outlineBoardShader.setUniformV4(4, color);
-			
-			CompWireRaw.modelHolder.draw();
-		}
-		else
-		{
-			outlineComponentShader.use();
-			outlineComponentShader.setUniform(1, view);
-			
-			model.identity();
-			model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
-			Matrix rotMat = new Matrix(component.getRotation().createMatrix());
-			model.multiply(rotMat);
-			
-			outlineComponentShader.setUniform(2, model.getMat());
-			outlineBoardShader.setUniformV4(3, color);
-			component.getModelHolder().draw();
-		}
+		cubeVAO.use();
+		cubeVAO.draw();
 	}
 	
 	private void highlightCluster(float[] view)
@@ -540,21 +536,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		Matrix matrix = new Matrix();
 		for(Connector connector : connectorsToHighlight)
 		{
-			CubeFull cube = connector.getModel();
-			
-			matrix.identity();
-			Vector3 position = connector.getBase().getPosition();
-			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-			Matrix rotMat = new Matrix(connector.getBase().getRotation().createMatrix());
-			matrix.multiply(rotMat);
-			Vector3 size = cube.getSize();
-			position = cube.getPosition().add(connector.getBase().getModelHolder().getPlacementOffset());
-			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-			matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-			justShape.setUniform(2, matrix.getMat());
-			
-			cubeVAO.use();
-			cubeVAO.draw();
+			drawCubeFull(connector.getModel(), connector.getBase(), matrix);
 		}
 		
 		//Draw on top
