@@ -22,7 +22,7 @@ public class CompPanelLabel extends CompLabel
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.JustTexture);
+		modelHolder.generateTextureVAO();
 	}
 	
 	@Override

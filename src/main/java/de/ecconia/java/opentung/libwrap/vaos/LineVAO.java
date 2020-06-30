@@ -43,6 +43,22 @@ public class LineVAO extends GenericVAO
 		super(vertices, indices);
 	}
 	
+	public static LineVAO generateCrossyIndicator()
+	{
+		return new LineVAO(new float[]{
+				-0.3f, +0.0f, +0.0f, 0.2f, 0.2f, 1.0f,
+				+0.3f, +0.0f, +0.0f, 0.2f, 0.2f, 1.0f,
+				+0.0f, -0.3f, +0.0f, 0.2f, 0.2f, 1.0f,
+				+0.0f, +0.3f, +0.0f, 0.2f, 0.2f, 1.0f,
+				+0.0f, +0.0f, -0.3f, 0.2f, 0.2f, 1.0f,
+				+0.0f, +0.0f, +0.3f, 0.2f, 0.2f, 1.0f,
+		}, new short[]{
+				0, 1,
+				2, 3,
+				4, 5,
+		});
+	}
+	
 	@Override
 	protected void init()
 	{

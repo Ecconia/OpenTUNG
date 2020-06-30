@@ -1,17 +1,14 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.components.CompCrossyIndicator;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.components.meta.ComponentLibrary;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -23,6 +20,7 @@ import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
+import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
@@ -61,6 +59,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private ShaderProgram justShape;
 	private SimpleCubeVAO cubeVAO;
 	private TextureWrapper boardTexture;
+	private LineVAO crossyIndicator;
 	
 	private CoordIndicatorModel coords;
 	private DebugBlockModel block;
@@ -73,7 +72,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private ConductorMesh conductorMesh;
 	private ColorMesh colorMesh;
 	
-	private final List<CompCrossyIndicator> wireEndsToRender = new ArrayList<>();
+	private final List<Vector3> wireEndsToRender = new ArrayList<>();
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
@@ -184,7 +183,9 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			boardTexture = new TextureWrapper(image);
 		}
 		
-		ComponentLibrary.initGL();
+		//TODO: Currently manually triggered, but to be optimized away.
+		CompLabel.initGL();
+		CompPanelLabel.initGL();
 		{
 			//Import section:
 			for(CompLabel label : board.getLabelsToRender())
@@ -206,8 +207,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			for(CompWireRaw wire : TungBoardLoader.brokenWires)
 			{
 				//TODO: Highlight which exactly failed (Or just remove this whole section, rip)
-				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
-				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
+				wireEndsToRender.add(wire.getEnd1());
+				wireEndsToRender.add(wire.getEnd2());
 			}
 		}
 		
@@ -258,6 +259,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		inYaFaceVAO = InYaFaceVAO.generateInYaFacePlane();
 		justShape = new ShaderProgram("justShape");
 		cubeVAO = SimpleCubeVAO.generateCube();
+		crossyIndicator = LineVAO.generateCrossyIndicator();
 		
 		coords = new CoordIndicatorModel();
 		block = new DebugBlockModel();
@@ -356,7 +358,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				model.identity();
 				model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
 				labelShader.setUniform(2, model.getMat());
-				CompCrossyIndicator.modelHolder.draw();
+				crossyIndicator.use();
+				crossyIndicator.draw();
 			}
 		}
 	}
@@ -398,15 +401,13 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			lineShader.use();
 			lineShader.setUniform(1, view);
 			
-			for(Component component : wireEndsToRender)
+			for(Vector3 position : wireEndsToRender)
 			{
 				model.identity();
-				model.translate((float) component.getPosition().getX(), (float) component.getPosition().getY(), (float) component.getPosition().getZ());
-				Matrix rotMat = new Matrix(component.getRotation().createMatrix());
-				model.multiply(rotMat);
+				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 				lineShader.setUniform(2, model.getMat());
-				
-				component.getModelHolder().draw();
+				crossyIndicator.use();
+				crossyIndicator.draw();
 			}
 		}
 	}

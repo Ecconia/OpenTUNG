@@ -1,12 +1,10 @@
 package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.Line;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.fragments.TexturedFace;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LabelVAO;
-import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +47,6 @@ public class ModelHolder
 	private final List<Meshable> conductors = new ArrayList<>();
 	private final List<Meshable> textures = new ArrayList<>();
 	
-	private GenericVAO vao;
 	private GenericVAO textureVAO;
 	
 	public void setPlacementOffset(Vector3 offset)
@@ -90,71 +87,32 @@ public class ModelHolder
 	/**
 	 * Generates a full object ready to be drawn with input->output peg/blob states as given as parameters.
 	 */
-	public void generateTestModel(TestModelType type)
+	public void generateTextureVAO()
 	{
-		if(type == TestModelType.Line)
-		{
-			int vCount = 0;
-			int iCount = 0;
-			for(Meshable m : solid)
-			{
-				vCount += m.getVCount();
-				iCount += m.getICount();
-			}
-			
-			float[] vertices = new float[vCount];
-			short[] indices = new short[iCount];
-			IntHolder offsetV = new IntHolder();
-			IntHolder offsetI = new IntHolder();
-			IntHolder indexOffset = new IntHolder();
-			for(Meshable m : solid)
-			{
-				((Line) m).generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-			}
-			
-			//Shader has no normals
-			vao = new LineVAO(vertices, indices);
-		}
-		
 		//Shader only has position and texture, TODO: add normals cause it defaults to Y+
-		if(!textures.isEmpty())
+		int vCount = 0;
+		int iCount = 0;
+		for(Meshable m : textures)
 		{
-			int vCount = 0;
-			int iCount = 0;
-			for(Meshable m : textures)
-			{
-				vCount += m.getVCount();
-				iCount += m.getICount();
-			}
-			float[] vertices = new float[vCount];
-			short[] indices = new short[iCount];
-			IntHolder offsetV = new IntHolder();
-			IntHolder offsetI = new IntHolder();
-			IntHolder indexOffset = new IntHolder();
-			for(Meshable m : textures)
-			{
-				((TexturedFace) m).generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-			}
-			textureVAO = new LabelVAO(vertices, indices);
+			vCount += m.getVCount();
+			iCount += m.getICount();
 		}
-	}
-	
-	public void draw()
-	{
-		vao.use();
-		vao.draw();
+		float[] vertices = new float[vCount];
+		short[] indices = new short[iCount];
+		IntHolder offsetV = new IntHolder();
+		IntHolder offsetI = new IntHolder();
+		IntHolder indexOffset = new IntHolder();
+		for(Meshable m : textures)
+		{
+			((TexturedFace) m).generateModel(vertices, offsetV, indices, offsetI, indexOffset, offset);
+		}
+		textureVAO = new LabelVAO(vertices, indices);
 	}
 	
 	public void drawTextures()
 	{
 		textureVAO.use();
 		textureVAO.draw();
-	}
-	
-	public enum TestModelType
-	{
-		JustTexture,
-		Line;
 	}
 	
 	public static class IntHolder
