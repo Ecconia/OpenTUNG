@@ -434,7 +434,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
 		
-		drawStencilComponent(component, view);
+		World3DHelper.drawStencilComponent(justShape, cubeVAO, component, view);
 		
 		//Draw on top
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
@@ -462,56 +462,6 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		GL30.glStencilMask(0x00);
 	}
 	
-	private void drawStencilComponent(Component component, float[] view)
-	{
-		justShape.use();
-		justShape.setUniform(1, view);
-		justShape.setUniformV4(3, new float[] {0,0,0,0});
-		Matrix matrix = new Matrix();
-		for(Meshable meshable : component.getModelHolder().getPegModels())
-		{
-			drawCubeFull((CubeFull) meshable, component, matrix);
-		}
-		for(Meshable meshable : component.getModelHolder().getBlotModels())
-		{
-			drawCubeFull((CubeFull) meshable, component, matrix);
-		}
-		for(Meshable meshable : component.getModelHolder().getColorables())
-		{
-			drawCubeFull((CubeFull) meshable, component, matrix);
-		}
-		for(Meshable meshable : component.getModelHolder().getSolid())
-		{
-			drawCubeFull((CubeFull) meshable, component, matrix);
-		}
-		for(Meshable meshable : component.getModelHolder().getConductors())
-		{
-			drawCubeFull((CubeFull) meshable, component, matrix);
-		}
-	}
-	
-	private void drawCubeFull(CubeFull cube, Component component, Matrix matrix)
-	{
-		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
-		matrix.identity();
-		Vector3 position = component.getPosition();
-		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-		Matrix rotMat = new Matrix(component.getRotation().createMatrix());
-		matrix.multiply(rotMat);
-		Vector3 size = cube.getSize();
-		if(cube.getMapper() != null)
-		{
-			size = cube.getMapper().getMappedSize(size, component);
-		}
-		position = cube.getPosition().add(component.getModelHolder().getPlacementOffset());
-		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		justShape.setUniform(2, matrix.getMat());
-		
-		cubeVAO.use();
-		cubeVAO.draw();
-	}
-	
 	private void highlightCluster(float[] view)
 	{
 		if(clusterToHighlight == null)
@@ -528,7 +478,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			{
 				continue;
 			}
-			drawStencilComponent((CompWireRaw) wire, view);
+			World3DHelper.drawStencilComponent(justShape, cubeVAO, (CompWireRaw) wire, view);
 		}
 		justShape.use();
 		justShape.setUniform(1, view);
@@ -536,7 +486,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		Matrix matrix = new Matrix();
 		for(Connector connector : connectorsToHighlight)
 		{
-			drawCubeFull(connector.getModel(), connector.getBase(), matrix);
+			World3DHelper.drawCubeFull(justShape, cubeVAO, connector.getModel(), connector.getBase(), matrix);
 		}
 		
 		//Draw on top
