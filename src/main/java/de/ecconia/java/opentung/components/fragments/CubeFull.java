@@ -61,50 +61,6 @@ public class CubeFull extends Meshable
 		return mapper;
 	}
 	
-	@Override
-	public void generateModel(float[] vertices, ModelHolder.IntHolder offsetV, short[] indices, ModelHolder.IntHolder offsetI, ModelHolder.IntHolder indexOffset, ModelHolder.TestModelType type, Vector3 offset)
-	{
-		Vector3 realPosition = position.add(offset);
-		Vector3 min = realPosition.subtract(size);
-		Vector3 max = realPosition.add(size);
-		//Up:
-		genVertex(vertices, offsetV, min.getX(), max.getY(), min.getZ(), 0, 1, 0);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), min.getZ(), 0, 1, 0);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), max.getZ(), 0, 1, 0);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), 0, 1, 0);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Down
-		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, -1, 0);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, -1, 0);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Right:
-		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 1, 0, 0);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 1, 0, 0);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), max.getZ(), 1, 0, 0);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), min.getZ(), 1, 0, 0);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Left:
-		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), -1, 0, 0);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), -1, 0, 0);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), min.getZ(), -1, 0, 0);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), -1, 0, 0);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Forward:
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, 0, 1);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, 0, 1);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), min.getZ(), 0, 0, 1);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), min.getZ(), 0, 0, 1);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Back:
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, 0, -1);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, 0, -1);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), 0, 0, -1);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), max.getZ(), 0, 0, -1);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-	}
-	
 	protected void genIndex(short[] indices, ModelHolder.IntHolder offsetI, int index)
 	{
 		indices[offsetI.getAndInc()] = (short) (index + 0);

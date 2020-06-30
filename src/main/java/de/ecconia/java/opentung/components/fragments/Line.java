@@ -28,7 +28,6 @@ public class Line extends Meshable
 		return 2;
 	}
 	
-	@Override
 	public void generateModel(float[] vertices, ModelHolder.IntHolder offsetV, short[] indices, ModelHolder.IntHolder offsetI, ModelHolder.IntHolder indexOffset, ModelHolder.TestModelType type, Vector3 offset)
 	{
 		vertices[offsetV.getAndInc()] = (float) start.getX();

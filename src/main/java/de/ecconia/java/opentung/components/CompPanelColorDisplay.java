@@ -28,11 +28,6 @@ public class CompPanelColorDisplay extends Component implements Updateable, Colo
 		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.15, -0.1), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

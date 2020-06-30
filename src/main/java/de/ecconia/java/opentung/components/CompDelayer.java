@@ -27,11 +27,6 @@ public class CompDelayer extends Component implements Powerable, Updateable
 		modelHolder.addBlot(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xn), new Vector3(0.0, 0.15 + 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

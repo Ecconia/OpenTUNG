@@ -27,7 +27,7 @@ public class CompLabel extends Component
 	
 	public static void initGL()
 	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
+		modelHolder.generateTestModel(ModelHolder.TestModelType.JustTexture);
 	}
 	
 	@Override

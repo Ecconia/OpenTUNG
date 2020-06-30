@@ -34,65 +34,6 @@ public class CubeBoard extends CubeFull
 	}
 	
 	@Override
-	public void generateModel(float[] vertices, ModelHolder.IntHolder offsetV, short[] indices, ModelHolder.IntHolder offsetI, ModelHolder.IntHolder indexOffset, ModelHolder.TestModelType type, Vector3 offset)
-	{
-		final float t = 0.01f;
-		Vector3 realPosition = position.add(offset);
-		Vector3 min = realPosition.subtract(size);
-		Vector3 max = realPosition.add(size);
-		//Up:
-		genVertex(vertices, offsetV, min.getX(), max.getY(), min.getZ(), 0, 1, 0, 1, 0, 0);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), min.getZ(), 0, 1, 0, 0, 0, 0);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), max.getZ(), 0, 1, 0, 0, 1, 0);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), 0, 1, 0, 1, 1, 0);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Down
-		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, -1, 0, 0, 0, 0);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, -1, 0, 1, 0, 0);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, -1, 0, 1, 1, 0);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, -1, 0, 0, 1, 0);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Right:
-		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 1, 0, 0, t, 0, 1);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 1, 0, 0, 0, 0, 1);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), max.getZ(), 1, 0, 0, 0, t, 1);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), min.getZ(), 1, 0, 0, t, t, 1);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Left:
-		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), -1, 0, 0, t, 0, 1);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), -1, 0, 0, 0, 0, 1);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), min.getZ(), -1, 0, 0, 0, t, 1);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), -1, 0, 0, t, t, 1);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Forward:
-		genVertex(vertices, offsetV, min.getX(), min.getY(), min.getZ(), 0, 0, 1, t, 0, 1);
-		genVertex(vertices, offsetV, max.getX(), min.getY(), min.getZ(), 0, 0, 1, 0, 0, 1);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), min.getZ(), 0, 0, 1, 0, t, 1);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), min.getZ(), 0, 0, 1, t, t, 1);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-		//Back:
-		genVertex(vertices, offsetV, max.getX(), min.getY(), max.getZ(), 0, 0, -1, t, 0, 1);
-		genVertex(vertices, offsetV, min.getX(), min.getY(), max.getZ(), 0, 0, -1, 0, 0, 1);
-		genVertex(vertices, offsetV, min.getX(), max.getY(), max.getZ(), 0, 0, -1, 0, t, 1);
-		genVertex(vertices, offsetV, max.getX(), max.getY(), max.getZ(), 0, 0, -1, t, t, 1);
-		genIndex(indices, offsetI, indexOffset.getAndInc(4));
-	}
-	
-	private void genVertex(float[] vertices, ModelHolder.IntHolder offsetV,
-	                       double x, double y, double z, int nx, int ny, int nz, float tx, float ty, int side)
-	{
-		vertices[offsetV.getAndInc()] = (float) x;
-		vertices[offsetV.getAndInc()] = (float) y;
-		vertices[offsetV.getAndInc()] = (float) z;
-		vertices[offsetV.getAndInc()] = nx;
-		vertices[offsetV.getAndInc()] = ny;
-		vertices[offsetV.getAndInc()] = nz;
-		vertices[offsetV.getAndInc()] = tx;
-		vertices[offsetV.getAndInc()] = ty;
-		vertices[offsetV.getAndInc()] = side;
-	}
-	
-	@Override
 	public void generateMeshEntry(Component component, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
 		Vector3 size = mapper == null ? this.size : mapper.getMappedSize(this.getSize(), component);

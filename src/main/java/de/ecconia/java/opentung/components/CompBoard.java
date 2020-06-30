@@ -27,11 +27,6 @@ public class CompBoard extends CompContainer
 		})); //1 gets replaced in shader. no color cause texture.
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Board);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

@@ -24,11 +24,6 @@ public class CompThroughPeg extends Component
 		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.075 -0.0875 -0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

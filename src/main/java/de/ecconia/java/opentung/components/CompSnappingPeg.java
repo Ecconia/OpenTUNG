@@ -21,11 +21,6 @@ public class CompSnappingPeg extends Component
 		modelHolder.addPeg(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

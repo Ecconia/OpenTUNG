@@ -25,11 +25,6 @@ public class CompSwitch extends Component implements Powerable, Updateable
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.2, 0.0), new Vector3(0.15, 0.207, 0.06), Color.interactable));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

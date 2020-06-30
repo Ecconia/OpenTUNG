@@ -22,7 +22,6 @@ public class TexturedFace extends CubeOpen
 		return 6;
 	}
 	
-	@Override
 	public void generateModel(float[] vertices, ModelHolder.IntHolder offsetV, short[] indices, ModelHolder.IntHolder offsetI, ModelHolder.IntHolder indexOffset, ModelHolder.TestModelType type, Vector3 offset)
 	{
 		Vector3 realPosition = position.add(offset);

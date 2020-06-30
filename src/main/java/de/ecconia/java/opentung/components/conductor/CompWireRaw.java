@@ -29,11 +29,6 @@ public class CompWireRaw extends Component implements Wire
 		}));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Wire);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

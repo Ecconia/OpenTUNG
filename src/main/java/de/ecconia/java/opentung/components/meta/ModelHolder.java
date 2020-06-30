@@ -1,16 +1,12 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.CubeTunnel;
+import de.ecconia.java.opentung.components.fragments.Line;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.fragments.TexturedFace;
-import de.ecconia.java.opentung.libwrap.vaos.DynamicBoardVAO;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LabelVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
-import de.ecconia.java.opentung.libwrap.vaos.SolidVAO;
-import de.ecconia.java.opentung.libwrap.vaos.WireVAO;
 import de.ecconia.java.opentung.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,130 +92,48 @@ public class ModelHolder
 	 */
 	public void generateTestModel(TestModelType type)
 	{
-		int vCount = 0;
-		int iCount = 0;
-		for(Meshable m : solid)
+		if(type == TestModelType.Line)
 		{
-			vCount += m.getVCount();
-			iCount += m.getICount();
+			int vCount = 0;
+			int iCount = 0;
+			for(Meshable m : solid)
+			{
+				vCount += m.getVCount();
+				iCount += m.getICount();
+			}
 			
-		}
-		for(Meshable m : conductors)
-		{
-			vCount += m.getVCount();
-			iCount += m.getICount();
-		}
-		for(CubeFull pegModel : pegModels)
-		{
-			vCount += pegModel.getVCount();
-			iCount += pegModel.getICount();
-		}
-		for(CubeFull blotModel : blotModels)
-		{
-			vCount += blotModel.getVCount();
-			iCount += blotModel.getICount();
-		}
-		for(Meshable m : colorables)
-		{
-			vCount += m.getVCount();
-			iCount += m.getICount();
-		}
-		
-		float[] vertices = new float[vCount];
-		short[] indices = new short[iCount];
-		IntHolder offsetV = new IntHolder();
-		IntHolder offsetI = new IntHolder();
-		IntHolder indexOffset = new IntHolder();
-		for(Meshable m : solid)
-		{
-			m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-		}
-		for(Meshable m : conductors)
-		{
-			boolean extColor = m instanceof CubeFull && !(m instanceof CubeTunnel) && ((CubeFull) m).getColor() == null;
-			if(extColor)
+			float[] vertices = new float[vCount];
+			short[] indices = new short[iCount];
+			IntHolder offsetV = new IntHolder();
+			IntHolder offsetI = new IntHolder();
+			IntHolder indexOffset = new IntHolder();
+			for(Meshable m : solid)
 			{
-				((CubeFull) m).setColor(Color.circuitOFF); //Not that the color matters, but this the color is nothing fixed. This model is only used for raycasting by now.
+				((Line) m).generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
 			}
-			m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-			if(extColor)
-			{
-				((CubeFull) m).setColor(null);
-			}
-		}
-		for(CubeFull pegModel : pegModels)
-		{
-			//Pegs don't have a color - Oh but snapping pegs.
-			boolean placeboColor = pegModel.getColor() == null;
-			if(placeboColor)
-			{
-				pegModel.setColor(Color.circuitOFF); //TODO: Get rid of this color stuff.
-			}
-			pegModel.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-			if(placeboColor)
-			{
-				pegModel.setColor(null);
-			}
-		}
-		for(CubeFull blotModel : blotModels)
-		{
-			//Pegs don't have a color - Oh but snapping pegs.
-			boolean placeboColor = blotModel.getColor() == null;
-			if(placeboColor)
-			{
-				blotModel.setColor(Color.circuitOFF); //TODO: Get rid of this color stuff.
-			}
-			blotModel.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-			if(placeboColor)
-			{
-				blotModel.setColor(null);
-			}
-		}
-		for(Meshable m : colorables)
-		{
-			m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
-		}
-		
-		if(type == TestModelType.Board)
-		{
-			//Shader has texture+side, and scales the board
-			vao = new DynamicBoardVAO(vertices, indices);
-		}
-		else if(type == TestModelType.Line)
-		{
+			
 			//Shader has no normals
 			vao = new LineVAO(vertices, indices);
-		}
-		//Currently only a tunnel which is a cube...
-		else if(type == TestModelType.Wire)
-		{
-			//Shader has no color, and scales the length
-			vao = new WireVAO(vertices, indices);
-		}
-		else
-		{
-			//Shader has position, normals and color
-			vao = new SolidVAO(vertices, indices);
 		}
 		
 		//Shader only has position and texture, TODO: add normals cause it defaults to Y+
 		if(!textures.isEmpty())
 		{
-			vCount = 0;
-			iCount = 0;
+			int vCount = 0;
+			int iCount = 0;
 			for(Meshable m : textures)
 			{
 				vCount += m.getVCount();
 				iCount += m.getICount();
 			}
-			vertices = new float[vCount];
-			indices = new short[iCount];
-			offsetV = new IntHolder();
-			offsetI = new IntHolder();
-			indexOffset = new IntHolder();
+			float[] vertices = new float[vCount];
+			short[] indices = new short[iCount];
+			IntHolder offsetV = new IntHolder();
+			IntHolder offsetI = new IntHolder();
+			IntHolder indexOffset = new IntHolder();
 			for(Meshable m : textures)
 			{
-				m.generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
+				((TexturedFace) m).generateModel(vertices, offsetV, indices, offsetI, indexOffset, type, offset);
 			}
 			textureVAO = new LabelVAO(vertices, indices);
 		}
@@ -239,9 +153,7 @@ public class ModelHolder
 	
 	public enum TestModelType
 	{
-		Simple,
-		Board,
-		Wire,
+		JustTexture,
 		Line;
 	}
 	

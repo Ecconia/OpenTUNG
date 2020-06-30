@@ -27,11 +27,6 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YPos));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{

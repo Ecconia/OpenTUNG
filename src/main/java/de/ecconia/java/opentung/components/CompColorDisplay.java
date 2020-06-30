@@ -26,11 +26,6 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.24, -0.1), new Vector3(0.1, 0.48, 0.1), Direction.YPos));
 	}
 	
-	public static void initGL()
-	{
-		modelHolder.generateTestModel(ModelHolder.TestModelType.Simple);
-	}
-	
 	@Override
 	public ModelHolder getModelHolder()
 	{
