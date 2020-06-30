@@ -33,8 +33,16 @@ public class ConductorMesh
 		int indicesAmount = wires.size() * 4 * (2 * 3);
 		for(Component component : components)
 		{
-			verticesAmount += component.getWholeMeshEntryVCount(MeshTypeThing.Conductor);
-			indicesAmount += component.getWholeMeshEntryICount(MeshTypeThing.Conductor);
+			for(Peg peg : component.getPegs())
+			{
+				verticesAmount += peg.getWholeMeshEntryVCount(MeshTypeThing.Conductor);
+				indicesAmount += peg.getWholeMeshEntryICount(MeshTypeThing.Conductor);
+			}
+			for(Blot blot : component.getBlots())
+			{
+				verticesAmount += blot.getWholeMeshEntryVCount(MeshTypeThing.Conductor);
+				indicesAmount += blot.getWholeMeshEntryICount(MeshTypeThing.Conductor);
+			}
 		}
 		
 		float[] vertices = new float[verticesAmount];
@@ -65,7 +73,6 @@ public class ConductorMesh
 		}
 		for(Component comp : components)
 		{
-			comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 			if(comp instanceof CompSnappingPeg)
 			{
 				continue;
@@ -73,6 +80,7 @@ public class ConductorMesh
 			//TODO: Ungeneric:
 			for(Peg peg : comp.getPegs())
 			{
+				peg.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 				if(peg.hasCluster())
 				{
 					int clusterID = peg.getCluster().getId();
@@ -88,6 +96,7 @@ public class ConductorMesh
 			}
 			for(Blot blot : comp.getBlots())
 			{
+				blot.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 				if(blot.hasCluster())
 				{
 					int clusterID = blot.getCluster().getId();

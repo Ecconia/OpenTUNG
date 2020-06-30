@@ -10,59 +10,167 @@ import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.simulation.SimulationManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Component
+public abstract class Component extends Part
 {
 	//Bounds:
 	protected MinMaxBox connectorBounds;
 	
-	//Main data:
-	private Quaternion rotation;
-	private Vector3 position;
-	
-	//Custom data:
-	private CompContainer parent;
-	private int rayID;
-	
-	public Component(CompContainer parent)
+	public Component(Component parent)
 	{
-		this.parent = parent;
+		super(parent);
 	}
 	
+	//TODO: Find a better long-term for this code. Currently the peg's get the injection from here.
+	@Override
 	public void setPosition(Vector3 position)
 	{
-		this.position = position;
+		super.setPosition(position);
+		for(Peg peg : pegs)
+		{
+			peg.setPosition(position);
+		}
+		for(Blot blot : blots)
+		{
+			blot.setPosition(position);
+		}
 	}
 	
+	@Override
 	public void setRotation(Quaternion rotation)
 	{
-		this.rotation = rotation;
+		super.setRotation(rotation);
+		for(Peg peg : pegs)
+		{
+			peg.setRotation(rotation);
+		}
+		for(Blot blot : blots)
+		{
+			blot.setRotation(rotation);
+		}
 	}
 	
-	public Vector3 getPosition()
-	{
-		return position;
-	}
-	
-	public Quaternion getRotation()
-	{
-		return rotation;
-	}
-	
-	public void setParent(CompContainer parent)
-	{
-		this.parent = parent;
-	}
-	
-	public CompContainer getParent()
-	{
-		return parent;
-	}
+	//ModelHolder getter:
 	
 	public abstract ModelHolder getModelHolder();
+	
+	//Meshable section:
+	
+	@Override
+	public int getWholeMeshEntryVCount(MeshTypeThing type)
+	{
+		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
+		{
+			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
+		}
+		
+		int attributeAmount = type.getFloatCount();
+		int amount = 0;
+		if(type == MeshTypeThing.Display)
+		{
+			for(Meshable m : getModelHolder().getColorables())
+			{
+				amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+			}
+		}
+		else
+		{
+			for(Meshable m : getModelHolder().getSolid())
+			{
+				amount += getModelHolder().getSolid().size() * ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+			}
+			
+			if(type == MeshTypeThing.Raycast)
+			{
+				for(Meshable m : getModelHolder().getColorables())
+				{
+					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
+				}
+			}
+		}
+		
+		return amount;
+	}
+	
+	@Override
+	public int getWholeMeshEntryICount(MeshTypeThing type)
+	{
+		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
+		{
+			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
+		}
+		
+		int amount = 0;
+		if(type == MeshTypeThing.Display)
+		{
+			for(Meshable m : getModelHolder().getColorables())
+			{
+				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
+			}
+		}
+		else
+		{
+			for(Meshable m : getModelHolder().getSolid())
+			{
+				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
+			}
+			
+			if(type == MeshTypeThing.Raycast)
+			{
+				for(Meshable m : getModelHolder().getColorables())
+				{
+					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
+				}
+			}
+		}
+		
+		return amount;
+	}
+	
+	@Override
+	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesOffset, int[] indices, ModelHolder.IntHolder indicesOffset, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
+	{
+		if(type == MeshTypeThing.Display)
+		{
+			for(Meshable m : getModelHolder().getColorables())
+			{
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+			}
+		}
+		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
+		{
+			Vector3 color = null;
+			if(type.colorISID())
+			{
+				int id = getRayID();
+				int r = id & 0xFF;
+				int g = (id & 0xFF00) >> 8;
+				int b = (id & 0xFF0000) >> 16;
+				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+			}
+			
+			for(Meshable m : getModelHolder().getSolid())
+			{
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+			}
+			
+			if(type == MeshTypeThing.Raycast)
+			{
+				for(Meshable m : getModelHolder().getColorables())
+				{
+					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				}
+			}
+		}
+		else
+		{
+			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
+		}
+	}
+	
+	//### non property ###
 	
 	public void createConnectorBounds()
 	{
@@ -167,196 +275,6 @@ public abstract class Component
 		return null;
 	}
 	
-	public void setRayCastID(int id)
-	{
-		this.rayID = id;
-	}
-	
-	public int getRayID()
-	{
-		return rayID;
-	}
-	
-	//Meshable section:
-	
-	public int getWholeMeshEntryVCount(MeshTypeThing type)
-	{
-		int attributeAmount;
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Display)
-		{
-			attributeAmount = 3 + 3; //Position + Normal
-		}
-		else if(type == MeshTypeThing.Raycast)
-		{
-			attributeAmount = 3 + 3; //Position + Color
-		}
-		else if(type == MeshTypeThing.Solid)
-		{
-			attributeAmount = 3 + 3 + 3; //Position + Normal + Color
-		}
-		else
-		{
-			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
-		}
-		
-		int amount = 0;
-		if(type == MeshTypeThing.Conductor)
-		{
-			for(Peg peg : pegs)
-			{
-				amount += peg.getModel().getFacesCount() * 4 * attributeAmount;
-			}
-			for(Blot blot : blots)
-			{
-				amount += blot.getModel().getFacesCount() * 4 * attributeAmount;
-			}
-		}
-		else if(type == MeshTypeThing.Display)
-		{
-			for(Meshable m : getModelHolder().getColorables())
-			{
-				amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
-			}
-		}
-		else
-		{
-			for(Meshable m : getModelHolder().getSolid())
-			{
-				amount += getModelHolder().getSolid().size() * ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
-			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Peg peg : pegs)
-				{
-					amount += peg.getModel().getFacesCount() * 4 * attributeAmount;
-				}
-				for(Blot blot : blots)
-				{
-					amount += blot.getModel().getFacesCount() * 4 * attributeAmount;
-				}
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
-				}
-			}
-		}
-		
-		return amount;
-	}
-	
-	public int getWholeMeshEntryICount(MeshTypeThing type)
-	{
-		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Conductor || type == MeshTypeThing.Display))
-		{
-			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
-		}
-		
-		int amount = 0;
-		if(type == MeshTypeThing.Conductor)
-		{
-			for(Peg peg : pegs)
-			{
-				amount += peg.getModel().getFacesCount() * (2 * 3);
-			}
-			for(Blot blot : blots)
-			{
-				amount += blot.getModel().getFacesCount() * (2 * 3);
-			}
-		}
-		else if(type == MeshTypeThing.Display)
-		{
-			for(Meshable m : getModelHolder().getColorables())
-			{
-				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
-			}
-		}
-		else
-		{
-			for(Meshable m : getModelHolder().getSolid())
-			{
-				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
-			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Peg peg : pegs)
-				{
-					amount += peg.getModel().getFacesCount() * (2 * 3);
-				}
-				for(Blot blot : blots)
-				{
-					amount += blot.getModel().getFacesCount() * (2 * 3);
-				}
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
-				}
-			}
-		}
-		
-		return amount;
-	}
-	
-	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesOffset, int[] indices, ModelHolder.IntHolder indicesOffset, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
-	{
-		if(type == MeshTypeThing.Conductor)
-		{
-			for(Peg peg : pegs)
-			{
-				peg.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-			for(Blot blot : blots)
-			{
-				blot.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-		}
-		else if(type == MeshTypeThing.Display)
-		{
-			for(Meshable m : getModelHolder().getColorables())
-			{
-				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-		}
-		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
-		{
-			Vector3 color = null;
-			if(type.colorISID())
-			{
-				int id = getRayID();
-				int r = id & 0xFF;
-				int g = (id & 0xFF00) >> 8;
-				int b = (id & 0xFF0000) >> 16;
-				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
-			}
-			
-			for(Meshable m : getModelHolder().getSolid())
-			{
-				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Peg peg : pegs)
-				{
-					peg.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
-				for(Blot blot : blots)
-				{
-					blot.getModel().generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
-			}
-		}
-		else
-		{
-			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
-		}
-	}
-	
 	//Conductors:
 	
 	protected final List<Peg> pegs = new ArrayList<>();
@@ -370,14 +288,5 @@ public abstract class Component
 	public List<Blot> getBlots()
 	{
 		return blots;
-	}
-	
-	//Interaction:
-	
-	/**
-	 * Warning, executed from InputThread (only call simulation).
-	 */
-	public void rightClicked(SimulationManager simulation)
-	{
 	}
 }

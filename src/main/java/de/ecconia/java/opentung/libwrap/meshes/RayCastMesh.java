@@ -1,7 +1,9 @@
 package de.ecconia.java.opentung.libwrap.meshes;
 
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -27,6 +29,16 @@ public class RayCastMesh
 		{
 			verticesAmount += component.getWholeMeshEntryVCount(MeshTypeThing.Raycast);
 			indicesAmount += component.getWholeMeshEntryICount(MeshTypeThing.Raycast);
+			for(Peg peg : component.getPegs())
+			{
+				verticesAmount += peg.getWholeMeshEntryVCount(MeshTypeThing.Raycast);
+				indicesAmount += peg.getWholeMeshEntryICount(MeshTypeThing.Raycast);
+			}
+			for(Blot blot : component.getBlots())
+			{
+				verticesAmount += blot.getWholeMeshEntryVCount(MeshTypeThing.Raycast);
+				indicesAmount += blot.getWholeMeshEntryICount(MeshTypeThing.Raycast);
+			}
 		}
 		
 		float[] vertices = new float[verticesAmount];
@@ -46,6 +58,14 @@ public class RayCastMesh
 		for(Component comp : components)
 		{
 			comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Raycast);
+			for(Peg peg : comp.getPegs())
+			{
+				peg.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Raycast);
+			}
+			for(Blot blot : comp.getBlots())
+			{
+				blot.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Raycast);
+			}
 		}
 		
 		vao = new RayCastMeshVAO(vertices, indices);

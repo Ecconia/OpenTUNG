@@ -6,10 +6,13 @@ import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompThroughPeg;
+import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -77,10 +80,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
 	
-	private Component[] idLookup;
+	private Part[] idLookup;
 	private int currentlySelectedIndex = 0;
 	private Cluster clusterToHighlight;
-	private Set<Connector> connectorsToHighlight = new HashSet<>();
+	private List<Connector> connectorsToHighlight = new ArrayList<>();
 	private int width = 0;
 	private int height = 0;
 	
@@ -92,7 +95,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	
 	//Mouse handling:
 	
-	private Component downer;
+	private Part downer;
 	private long downTime;
 	private boolean down;
 	private Holdable tempDowner;
@@ -102,7 +105,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	{
 		if(currentlySelectedIndex != 0)
 		{
-			Component downer = idLookup[currentlySelectedIndex];
+			Part downer = idLookup[currentlySelectedIndex];
 			long time = (System.currentTimeMillis() - downTime);
 			//If the click was longer than a second, validate that its the intended component...
 			if(time > Settings.longMousePressDuration)
@@ -122,34 +125,34 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		downTime = 0;
 	}
 	
-	private void componentClicked(Component component)
+	private void componentClicked(Part part)
 	{
 		//TODO: Move this somewhere more generic.
 		Cluster cluster = null;
-		if(component instanceof CompWireRaw)
+		if(part instanceof CompWireRaw)
 		{
-			cluster = ((CompWireRaw) component).getCluster();
+			cluster = ((CompWireRaw) part).getCluster();
 		}
-		else if(component instanceof CompThroughPeg || component instanceof CompPeg || component instanceof CompSnappingPeg)
+		else if(part instanceof CompThroughPeg || part instanceof CompPeg || part instanceof CompSnappingPeg)
 		{
-			cluster = component.getPegs().get(0).getCluster();
+			cluster = ((Component) part).getPegs().get(0).getCluster();
 		}
+		else if(part instanceof Connector)
+		{
+			cluster = ((Connector) part).getCluster();
+		}
+		
 		if(cluster != null)
 		{
 			if(clusterToHighlight == cluster)
 			{
 				clusterToHighlight = null;
-				connectorsToHighlight = new HashSet<>();
+				connectorsToHighlight = new ArrayList<>();
 			}
 			else
 			{
 				clusterToHighlight = cluster;
-				connectorsToHighlight = new HashSet<>();
-				for(Wire wire : cluster.getWires())
-				{
-					connectorsToHighlight.add(wire.getConnectorA());
-					connectorsToHighlight.add(wire.getConnectorB());
-				}
+				connectorsToHighlight = cluster.getConnectors();
 			}
 		}
 	}
@@ -213,13 +216,17 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		}
 		
 		{
-			int amount = board.getBoardsToRender().size() + board.getWiresToRender().size() + board.getComponentsToRender().size() + 1;
+			int amount = board.getBoardsToRender().size() + board.getWiresToRender().size() + 1;
+			for(Component component : board.getComponentsToRender())
+			{
+				amount += 1 + component.getPegs().size() + component.getBlots().size();
+			}
 			System.out.println("Raycast ID amount: " + amount);
 			if((amount) > 0xFFFFFF)
 			{
 				throw new RuntimeException("Out of raycast IDs. Tell the dev to do fancy programming, so that this never happens again.");
 			}
-			idLookup = new Component[amount];
+			idLookup = new Part[amount];
 			
 			int id = 1;
 			for(Component comp : board.getBoardsToRender())
@@ -239,6 +246,18 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				comp.setRayCastID(id);
 				idLookup[id] = comp;
 				id++;
+				for(Peg peg : comp.getPegs())
+				{
+					peg.setRayCastID(id);
+					idLookup[id] = peg;
+					id++;
+				}
+				for(Blot blot : comp.getBlots())
+				{
+					blot.setRayCastID(id);
+					idLookup[id] = blot;
+					id++;
+				}
 			}
 		}
 		
@@ -287,10 +306,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		{
 			if(currentlySelectedIndex != 0)
 			{
-				Component comp = idLookup[currentlySelectedIndex];
-				if(comp instanceof Holdable)
+				Part part = idLookup[currentlySelectedIndex];
+				if(part instanceof Holdable)
 				{
-					Holdable currentlyHold = (Holdable) comp;
+					Holdable currentlyHold = (Holdable) part;
 					if(currentlyHold != tempDowner)
 					{
 						if(tempDowner != null)
@@ -344,22 +363,22 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		if(Settings.drawWorld)
 		{
 			drawDynamic(view);
-		}
-		highlightCluster(view);
-		drawHighlight(view);
-		
-		if(Settings.drawComponentPositionIndicator)
-		{
-			lineShader.use();
-			lineShader.setUniform(1, view);
-			Matrix model = new Matrix();
-			for(Component comp : board.getComponentsToRender())
+			highlightCluster(view);
+			drawHighlight(view);
+			
+			if(Settings.drawComponentPositionIndicator)
 			{
-				model.identity();
-				model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-				labelShader.setUniform(2, model.getMat());
-				crossyIndicator.use();
-				crossyIndicator.draw();
+				lineShader.use();
+				lineShader.setUniform(1, view);
+				Matrix model = new Matrix();
+				for(Component comp : board.getComponentsToRender())
+				{
+					model.identity();
+					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+					labelShader.setUniform(2, model.getMat());
+					crossyIndicator.use();
+					crossyIndicator.draw();
+				}
 			}
 		}
 	}
@@ -419,10 +438,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			return;
 		}
 		
-		Component component = idLookup[currentlySelectedIndex];
+		Part part = idLookup[currentlySelectedIndex];
 		
-		boolean isBoard = component instanceof CompBoard;
-		boolean isWire = component instanceof CompWireRaw;
+		boolean isBoard = part instanceof CompBoard;
+		boolean isWire = part instanceof CompWireRaw;
 		if(
 				isBoard && !Settings.highlightBoards
 						|| isWire && !Settings.highlightWires
@@ -435,7 +454,18 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
 		
-		World3DHelper.drawStencilComponent(justShape, cubeVAO, component, view);
+		if(part instanceof Component)
+		{
+			World3DHelper.drawStencilComponent(justShape, cubeVAO, (Component) part, view);
+		}
+		else //Connector
+		{
+			justShape.use();
+			justShape.setUniform(1, view);
+			justShape.setUniformV4(3, new float[] {0,0,0,0});
+			Matrix matrix = new Matrix();
+			World3DHelper.drawCubeFull(justShape, cubeVAO, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
+		}
 		
 		//Draw on top
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
@@ -487,7 +517,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		Matrix matrix = new Matrix();
 		for(Connector connector : connectorsToHighlight)
 		{
-			World3DHelper.drawCubeFull(justShape, cubeVAO, connector.getModel(), connector.getBase(), matrix);
+			World3DHelper.drawCubeFull(justShape, cubeVAO, connector.getModel(), connector.getParent(), connector.getParent().getModelHolder().getPlacementOffset(), matrix);
 		}
 		
 		//Draw on top

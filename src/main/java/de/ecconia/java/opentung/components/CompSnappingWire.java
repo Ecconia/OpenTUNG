@@ -6,9 +6,9 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.fragments.ModelMapper;
-import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 
@@ -22,7 +22,7 @@ public class CompSnappingWire extends CompWireRaw
 		modelHolder.addSolid(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, Color.snappingPeg, new ModelMapper()
 		{
 			@Override
-			public Vector3 getMappedSize(Vector3 size, Component component)
+			public Vector3 getMappedSize(Vector3 size, Part component)
 			{
 				return new Vector3(size.getX(), size.getY(), size.getZ() * ((CompSnappingWire) component).getLength() * 0.5f);
 			}
@@ -37,7 +37,7 @@ public class CompSnappingWire extends CompWireRaw
 	
 	//### Non-Static ###
 	
-	public CompSnappingWire(CompContainer parent)
+	public CompSnappingWire(Component parent)
 	{
 		super(parent);
 	}

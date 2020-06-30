@@ -4,9 +4,9 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.fragments.ModelMapper;
-import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -22,7 +22,7 @@ public class CompWireRaw extends Component implements Wire
 		modelHolder.addMeta(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, new ModelMapper()
 		{
 			@Override
-			public Vector3 getMappedSize(Vector3 size, Component component)
+			public Vector3 getMappedSize(Vector3 size, Part component)
 			{
 				return new Vector3(size.getX(), size.getY(), size.getZ() * ((CompWireRaw) component).getLength() * 0.5f);
 			}
@@ -40,7 +40,7 @@ public class CompWireRaw extends Component implements Wire
 	private float length;
 	private boolean powered;
 	
-	public CompWireRaw(CompContainer parent)
+	public CompWireRaw(Component parent)
 	{
 		super(parent);
 	}

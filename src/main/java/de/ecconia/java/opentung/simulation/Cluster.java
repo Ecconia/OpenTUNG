@@ -46,11 +46,16 @@ public abstract class Cluster implements Updateable
 			if(connector instanceof Peg)
 			{
 				Peg peg = (Peg) connector;
-				if(peg.getBase() instanceof Updateable)
+				if(peg.getParent() instanceof Updateable)
 				{
-					simulation.updateNextTick((Updateable) connector.getBase());
+					simulation.updateNextTick((Updateable) connector.getParent());
 				}
 			}
 		}
+	}
+	
+	public List<Connector> getConnectors()
+	{
+		return connectors;
 	}
 }
