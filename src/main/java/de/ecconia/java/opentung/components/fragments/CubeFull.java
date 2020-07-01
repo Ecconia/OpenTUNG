@@ -12,14 +12,14 @@ public class CubeFull extends Meshable
 	protected final Vector3 size;
 	
 	protected ModelMapper mapper;
-	protected Color color;
+	protected Vector3 color;
 	
 	public CubeFull(Vector3 position, Vector3 size, Color color, ModelMapper mapper)
 	{
 		this.position = position;
 		this.size = size.divide(2); //Collision as well as shader only use half the value.
 		this.mapper = mapper;
-		this.color = color;
+		this.color = color == null ? null : color.asVector();
 	}
 	
 	public CubeFull(Vector3 position, Vector3 size, Color color)
@@ -61,43 +61,6 @@ public class CubeFull extends Meshable
 		return mapper;
 	}
 	
-	protected void genIndex(short[] indices, ModelHolder.IntHolder offsetI, int index)
-	{
-		indices[offsetI.getAndInc()] = (short) (index + 0);
-		indices[offsetI.getAndInc()] = (short) (index + 1);
-		indices[offsetI.getAndInc()] = (short) (index + 2);
-		indices[offsetI.getAndInc()] = (short) (index + 0);
-		indices[offsetI.getAndInc()] = (short) (index + 2);
-		indices[offsetI.getAndInc()] = (short) (index + 3);
-	}
-	
-	protected void genVertex(float[] vertices, ModelHolder.IntHolder offsetV,
-	                         double x, double y, double z, float nx, float ny, float nz)
-	{
-		vertices[offsetV.getAndInc()] = (float) x;
-		vertices[offsetV.getAndInc()] = (float) y;
-		vertices[offsetV.getAndInc()] = (float) z;
-		vertices[offsetV.getAndInc()] = nx;
-		vertices[offsetV.getAndInc()] = ny;
-		vertices[offsetV.getAndInc()] = nz;
-		if(color != null)
-		{
-			vertices[offsetV.getAndInc()] = (float) color.getR();
-			vertices[offsetV.getAndInc()] = (float) color.getG();
-			vertices[offsetV.getAndInc()] = (float) color.getB();
-		}
-	}
-	
-	public Color getColor()
-	{
-		return color;
-	}
-	
-	public void setColor(Color color)
-	{
-		this.color = color;
-	}
-	
 	public Vector3 getPosition()
 	{
 		return position;
@@ -108,11 +71,12 @@ public class CubeFull extends Meshable
 		return size;
 	}
 	
-	public void generateMeshEntry(Part instance, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
+	public void generateMeshEntry(Part instance, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Color colorOverwrite, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
-		if(color == null && this.color != null)
+		Vector3 color = this.color;
+		if(colorOverwrite != null)
 		{
-			color = this.color.asVector();
+			color = colorOverwrite.asVector();
 		}
 		
 		Vector3 size = new Vector3(this.size.getX(), this.size.getY(), this.size.getZ());

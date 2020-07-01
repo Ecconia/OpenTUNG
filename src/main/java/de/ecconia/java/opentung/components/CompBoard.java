@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeBoard;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.ModelMapper;
@@ -35,7 +36,7 @@ public class CompBoard extends CompContainer
 	
 	//### Non-Static ###
 	
-	private Vector3 color = new Vector3(195f / 255f, 195f / 255f, 195f / 255f);
+	private Color color = Color.boardDefault;
 	private int x, z;
 	
 	public CompBoard(CompContainer parent, int x, int z)
@@ -46,12 +47,12 @@ public class CompBoard extends CompContainer
 		this.z = z;
 	}
 	
-	public void setColor(Vector3 color)
+	public void setColor(Color color)
 	{
 		this.color = color;
 	}
 	
-	public Vector3 getColor()
+	public Color getColor()
 	{
 		return color;
 	}
@@ -73,14 +74,14 @@ public class CompBoard extends CompContainer
 		//TODO: This is still ungeneric.
 		CubeFull shape = (CubeFull) getModelHolder().getSolid().get(0);
 		
-		Vector3 color = this.color;
+		Color color = this.color;
 		if(type.colorISID())
 		{
 			int id = getRayID();
 			int r = id & 0xFF;
 			int g = (id & 0xFF00) >> 8;
 			int b = (id & 0xFF0000) >> 16;
-			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+			color = new Color(r, g, b);
 		}
 		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 	}

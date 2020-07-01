@@ -15,9 +15,9 @@ public enum TungColorEnum
 	
 	private int index;
 	
-	private int r;
-	private int g;
-	private int b;
+	private final int r;
+	private final int g;
+	private final int b;
 	
 	TungColorEnum(int red, int green, int blue)
 	{
@@ -51,7 +51,7 @@ public enum TungColorEnum
 		return b;
 	}
 	
-	private static TungColorEnum[] colors;
+	private static final TungColorEnum[] colors;
 	
 	static
 	{

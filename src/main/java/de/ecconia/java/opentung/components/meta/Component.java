@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
@@ -169,14 +170,14 @@ public abstract class Component extends Part
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
 		{
-			Vector3 color = null;
+			Color color = null;
 			if(type.colorISID())
 			{
 				int id = getRayID();
 				int r = id & 0xFF;
 				int g = (id & 0xFF00) >> 8;
 				int b = (id & 0xFF0000) >> 16;
-				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+				color = new Color(r, g, b);
 			}
 			
 			for(Meshable m : getModelHolder().getSolid())

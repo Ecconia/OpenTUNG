@@ -19,7 +19,7 @@ public class ColorMesh
 	
 	//TODO: Apply check, that the ID's never get over the size below *32
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
-	private final float[] falseDataArray = new float[(4096 - 32) / 4 * 3];
+	private final int[] falseDataArray = new int[(4096 - 32) / 4 * 4];
 	
 	public ColorMesh(List<Component> components, SimulationManager simulation)
 	{
@@ -73,7 +73,7 @@ public class ColorMesh
 		
 		vao = new ColorMeshVAO(vertices, indices, colorIDs);
 		
-		Arrays.fill(falseDataArray, 1.0f);
+		Arrays.fill(falseDataArray, 0);
 	}
 	
 	public void draw(float[] view)

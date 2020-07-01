@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components.conductor;
 
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeTunnel;
 import de.ecconia.java.opentung.components.fragments.Direction;
@@ -19,7 +20,7 @@ public class CompWireRaw extends Component implements Wire
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addMeta(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, new ModelMapper()
+		modelHolder.addConductor(new CubeTunnel(new Vector3(0.0, 0.0, 0.0), new Vector3(0.05, 0.02, 2.0), Direction.ZPos, new ModelMapper()
 		{
 			@Override
 			public Vector3 getMappedSize(Vector3 size, Part component)
@@ -84,14 +85,14 @@ public class CompWireRaw extends Component implements Wire
 		//TODO: This is super ungeneric, beware.
 		CubeFull shape = (CubeFull) getModelHolder().getConductors().get(0);
 		
-		Vector3 color = new Vector3(1, 0, 0);
+		Color color = Color.circuitON;
 		if(type.colorISID())
 		{
 			int id = getRayID();
 			int r = id & 0xFF;
 			int g = (id & 0xFF00) >> 8;
 			int b = (id & 0xFF0000) >> 16;
-			color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+			color = new Color(r, g, b);
 		}
 		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 	}

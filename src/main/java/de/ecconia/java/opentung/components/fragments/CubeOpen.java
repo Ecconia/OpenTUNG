@@ -43,11 +43,12 @@ public class CubeOpen extends CubeFull
 	}
 	
 	@Override
-	public void generateMeshEntry(Part instance, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
+	public void generateMeshEntry(Part instance, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Color colorOverwrite, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
-		if(color == null && this.color != null)
+		Vector3 color = this.color;
+		if(colorOverwrite != null)
 		{
-			color = this.color.asVector();
+			color = colorOverwrite.asVector();
 		}
 		
 		Vector3 size = new Vector3(this.size.getX(), this.size.getY(), this.size.getZ());

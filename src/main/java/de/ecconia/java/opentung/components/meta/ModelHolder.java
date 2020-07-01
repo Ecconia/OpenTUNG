@@ -68,18 +68,10 @@ public class ModelHolder
 		textures.add(meshable);
 	}
 	
-	public void addMeta(Meshable meshable)
+	public void addConductor(Meshable meshable)
 	{
 		//Non bounds, but outline
-		if(meshable instanceof CubeFull && ((CubeFull) meshable).getColor() == null)
-		{
-			conductors.add(meshable);
-		}
-		else
-		{
-			//Solid own list?
-			throw new IllegalArgumentException("Uff no don't put that here without checking first - dev doesn't know what he is doing.");
-		}
+		conductors.add(meshable);
 	}
 	
 	//### Generators ###

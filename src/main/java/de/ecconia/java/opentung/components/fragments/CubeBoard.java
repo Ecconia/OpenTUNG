@@ -34,8 +34,14 @@ public class CubeBoard extends CubeFull
 	}
 	
 	@Override
-	public void generateMeshEntry(Part component, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Vector3 color, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
+	public void generateMeshEntry(Part component, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Color colorOverwrite, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)
 	{
+		Vector3 color = this.color;
+		if(colorOverwrite != null)
+		{
+			color = colorOverwrite.asVector();
+		}
+		
 		Vector3 size = mapper == null ? this.size : mapper.getMappedSize(this.getSize(), component);
 		Vector3 min = this.position.subtract(size);
 		Vector3 max = this.position.add(size);

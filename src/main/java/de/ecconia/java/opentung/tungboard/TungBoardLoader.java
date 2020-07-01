@@ -24,6 +24,7 @@ import de.ecconia.java.opentung.components.CompThroughBlotter;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
@@ -51,6 +52,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
@@ -204,7 +206,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompBoard board = new CompBoard(parent, x, z);
-			board.setColor(new Vector3(tungBoard.getColor().getR(), tungBoard.getColor().getG(), tungBoard.getColor().getB()));
+			TungColor componentColor = tungBoard.getColor();
+			board.setColor(Color.fromComponent(componentColor.getR(), componentColor.getG(), componentColor.getB()));
 			board.setPosition(globalPosition.add(rotatedFixPoint));
 			board.setRotation(globalRotation);
 			
@@ -349,7 +352,7 @@ public class TungBoardLoader
 			display.setPosition(globalPosition.add(rotatedFixPoint));
 			display.setRotation(globalRotation);
 			TungColorEnum c = ((TungDisplay) object).getColor();
-			display.setColorRaw(new Vector3(c.getR(), c.getG(), c.getB()));
+			display.setColorRaw(new Color(c.getR(), c.getG(), c.getB()));
 			
 			return display;
 		}
@@ -397,7 +400,7 @@ public class TungBoardLoader
 			display.setPosition(globalPosition.add(rotatedFixPoint));
 			display.setRotation(globalRotation);
 			TungColorEnum c = ((TungPanelDisplay) object).getColor();
-			display.setColorRaw(new Vector3(c.getR(), c.getG(), c.getB()));
+			display.setColorRaw(new Color(c.getR(), c.getG(), c.getB()));
 			
 			return display;
 		}

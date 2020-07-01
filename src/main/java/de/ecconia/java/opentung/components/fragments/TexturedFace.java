@@ -96,4 +96,14 @@ public class TexturedFace extends CubeOpen
 		vertices[offsetV.getAndInc()] = tx;
 		vertices[offsetV.getAndInc()] = ty;
 	}
+	
+	protected void genIndex(short[] indices, ModelHolder.IntHolder offsetI, int index)
+	{
+		indices[offsetI.getAndInc()] = (short) (index + 0);
+		indices[offsetI.getAndInc()] = (short) (index + 1);
+		indices[offsetI.getAndInc()] = (short) (index + 2);
+		indices[offsetI.getAndInc()] = (short) (index + 0);
+		indices[offsetI.getAndInc()] = (short) (index + 2);
+		indices[offsetI.getAndInc()] = (short) (index + 3);
+	}
 }

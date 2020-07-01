@@ -13,7 +13,7 @@ public class SimulationManager extends Thread
 	private final List<Cluster> clustersToUpdate = new ArrayList<>();
 	
 	private int[] connectorMeshStates;
-	private float[] colorMeshStates;
+	private int[] colorMeshStates;
 	
 	private int tps;
 	private int ups;
@@ -29,7 +29,7 @@ public class SimulationManager extends Thread
 		this.connectorMeshStates = connectorMeshStates;
 	}
 	
-	public void setColorMeshStates(float[] colorMeshStates)
+	public void setColorMeshStates(int[] colorMeshStates)
 	{
 		this.colorMeshStates = colorMeshStates;
 	}
@@ -151,9 +151,6 @@ public class SimulationManager extends Thread
 	
 	public void setColor(int colorID, Color color)
 	{
-		int indexOffset = colorID * 3;
-		colorMeshStates[indexOffset++] = (float) color.getR();
-		colorMeshStates[indexOffset++] = (float) color.getG();
-		colorMeshStates[indexOffset] = (float) color.getB();
+		colorMeshStates[colorID] = color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 255;
 	}
 }

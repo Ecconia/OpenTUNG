@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components.conductor;
 
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
@@ -97,14 +98,14 @@ public abstract class Connector extends Part implements Clusterable
 	{
 		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
 		{
-			Vector3 color = null;
+			Color color = null;
 			if(type.colorISID())
 			{
 				int id = getRayID();
 				int r = id & 0xFF;
 				int g = (id & 0xFF00) >> 8;
 				int b = (id & 0xFF0000) >> 16;
-				color = new Vector3((float) r / 255f, (float) g / 255f, (float) b / 255f);
+				color = new Color(r, g, b);
 			}
 			
 			model.generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getParent().getModelHolder().getPlacementOffset(), type);

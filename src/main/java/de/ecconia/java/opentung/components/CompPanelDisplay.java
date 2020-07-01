@@ -39,9 +39,9 @@ public class CompPanelDisplay extends Component implements Updateable, Colorable
 		super(parent);
 	}
 	
-	public void setColorRaw(Vector3 colorRaw)
+	public void setColorRaw(Color color)
 	{
-		this.colorRaw = colorRaw.asColor();
+		this.colorRaw = color;
 	}
 	
 	public Color getColorRaw()

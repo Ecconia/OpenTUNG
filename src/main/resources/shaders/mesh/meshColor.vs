@@ -7,7 +7,7 @@ layout(location = 2) in uint inIndex;
 uniform mat4 projection;
 uniform mat4 view;
 
-uniform vec3 states[1016]; //(4064 - 32)/ 4 // (16384 - 32) / 4
+uniform uvec4 states[1016]; //(4064 - 32)/ 4 // (16384 - 32) / 4
 
 out vec4 tColor;
 out vec3 tPosition;
@@ -15,7 +15,37 @@ out vec3 tNormal;
 
 void main()
 {
-	tColor = vec4(states[inIndex], 1.0);
+	//******** SS
+	//* - Actual index in array
+	//S - xyzw selector of each vector in array
+	uint actualIndex = inIndex >> 2;
+	uint partSelector = inIndex & 3u;
+	
+	uvec4 vector = states[actualIndex];
+	uint value;
+	if(partSelector == 0u)
+	{
+		value = vector.r;
+	}
+	else if(partSelector == 1u)
+	{
+		value = vector.g;
+	}
+	else if(partSelector == 2u)
+	{
+		value = vector.z;
+	}
+	else
+	{
+		value = vector.w;
+	}
+	
+	uint r = (value >> 24) & 255u;
+	uint g = (value >> 16) & 255u;
+	uint b = (value >> 8) & 255u;
+	uint a = value & 255u;
+	
+	tColor = vec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
 	
 	vec4 transformedPos = view * vec4(inPosition, 1.0);
 	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement

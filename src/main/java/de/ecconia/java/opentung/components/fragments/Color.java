@@ -4,27 +4,29 @@ import de.ecconia.java.opentung.math.Vector3;
 
 public class Color
 {
-	public static final Color material = new Color(1, 1, 1);
-	public static final Color circuitON = new Color(1, 0, 0);
+	public static final Color material = new Color(255, 255, 255);
+	//These two are redundant in the conductor-shader:
+	public static final Color circuitON = new Color(255, 0, 0);
 	public static final Color circuitOFF = new Color(0, 0, 0);
 	
-	public static final Color interactable = Color.rgb(109, 53, 6);
-	public static final Color noisemakerOFF = Color.rgb(56, 22, 120);
-	public static final Color noisemakerON = Color.rgb(168, 127, 223);
-	public static final Color snappingPeg = Color.rgb(0, 150, 141);
+	public static final Color boardDefault = new Color(195, 195, 195);
+	public static final Color interactable = new Color(109, 53, 6);
+	public static final Color noisemakerOFF = new Color(56, 22, 120);
+	public static final Color noisemakerON = new Color(168, 127, 223);
+	public static final Color snappingPeg = new Color(0, 150, 141);
 	
-	public static final Color displayOff = Color.rgb(32, 32, 32);
-	public static final Color displayYellow = Color.rgb(255, 227, 2);
-	public static final Color displayBlue = Color.rgb(0, 50, 200);
-	public static final Color displayGreen = Color.rgb(20, 150, 0);
-	public static final Color displayRed = Color.rgb(186, 0, 0);
-	public static final Color displayOrange = Color.rgb(225, 95, 0);
-	public static final Color displayPurple = Color.rgb(142, 18, 255);
-	public static final Color displayWhite = Color.rgb(200, 200, 210);
+	public static final Color displayOff = new Color(32, 32, 32);
+	public static final Color displayYellow = new Color(255, 227, 2);
+	public static final Color displayBlue = new Color(0, 50, 200);
+	public static final Color displayGreen = new Color(20, 150, 0);
+	public static final Color displayRed = new Color(186, 0, 0);
+	public static final Color displayOrange = new Color(225, 95, 0);
+	public static final Color displayPurple = new Color(142, 18, 255);
+	public static final Color displayWhite = new Color(200, 200, 210);
 	
-	private final double r, g, b;
+	private final int r, g, b;
 	
-	public Color(double r, double g, double b)
+	public Color(int r, int g, int b)
 	{
 		this.r = r;
 		this.b = b;
@@ -56,42 +58,33 @@ public class Color
 		}
 	}
 	
-	public double getR()
+	public static Color fromComponent(float r, float g, float b)
+	{
+		return new Color(
+				(int) (r * 255f),
+				(int) (g * 255f),
+				(int) (b * 255f)
+		);
+	}
+	
+	public int getR()
 	{
 		return r;
 	}
 	
-	public double getG()
+	public int getG()
 	{
 		return g;
 	}
 	
-	public double getB()
+	public int getB()
 	{
 		return b;
 	}
 	
-	public static Color rgb(int r, int g, int b)
-	{
-		return new Color(
-				(double) r / 255D,
-				(double) g / 255D,
-				(double) b / 255D
-		);
-	}
-	
-	public static Color rgb(double r, double g, double b)
-	{
-		return new Color(
-				r / 255D,
-				g / 255D,
-				b / 255D
-		);
-	}
-	
-	//TODO: Fix code containing this method. (Deprecated)
+	//Export as 0...1 values.
 	public Vector3 asVector()
 	{
-		return new Vector3(r, g, b);
+		return new Vector3(r / 255.0, g / 255.0, b / 255.0);
 	}
 }

@@ -5,10 +5,8 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRFloatField;
 
-public class TungColor
+public class TungColor //uses 0...1
 {
-	public static final TungColor preset = new TungColor(195f / 255f, 195f / 255f, 195f / 255f);
-	
 	private float r;
 	private float g;
 	private float b;

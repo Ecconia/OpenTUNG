@@ -24,7 +24,7 @@ public class TungBoard extends TungChildable implements Angles
 	
 	public TungBoard(int x, int z)
 	{
-		this(x, z, TungColor.preset);
+		this(x, z, null); //Assume they always have a color.
 	}
 	
 	public TungBoard(NRClass clazz)
