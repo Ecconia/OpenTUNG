@@ -19,6 +19,25 @@ void main()
 	//* - Actual index in array
 	//S - xyzw selector of each vector in array
 	//B - bitmask for selecting the bit of each value
+	/*
+	//Conditionless code. Maybe it eventually optimizes stuff. But it doesn't rn.
+	uint actualIndex = inIndex >> 7;
+	uint partSelector = (inIndex >> 5) & 3u;
+	uint shiftAmount = inIndex & 31u;
+	
+	uvec4 vector = states[actualIndex];
+	uint bit0 = (vector.x >> shiftAmount) & 1u;
+	uint bit1 = (vector.y >> shiftAmount) & 1u;
+	uint bit2 = (vector.z >> shiftAmount) & 1u;
+	uint bit3 = (vector.w >> shiftAmount) & 1u;
+	
+	uint selectionMask = 1u << partSelector;
+	uint merged = bit0 | (bit1 << 1u) | (bit2 << 2u) | (bit3 << 3u);
+	uint relevantBit = (merged & selectionMask) >> partSelector;
+	
+	tColor = float(relevantBit) * vec4(0.9, 0, 0, 1.0) + float(1u - relevantBit) * vec4(0.2, 0.2, 0.2, 1.0);
+	*/
+	
 	uint actualIndex = inIndex >> 7;
 	uint partSelector = (inIndex >> 5) & 3u;
 	uint bitmask = 1u << (inIndex & 31u);
