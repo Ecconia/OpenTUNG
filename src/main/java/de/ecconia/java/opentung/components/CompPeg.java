@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
@@ -28,9 +27,5 @@ public class CompPeg extends Component
 	public CompPeg(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
 	}
 }

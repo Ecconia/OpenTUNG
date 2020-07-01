@@ -35,16 +35,16 @@ public class CompThroughPeg extends Component
 	public CompThroughPeg(CompContainer parent)
 	{
 		super(parent);
+	}
+	
+	@Override
+	public void init()
+	{
 		Wire internalWire = new HiddenWire();
-		Peg peg;
-		
-		peg = new Peg(this, getModelHolder().getPegModels().get(0));
-		pegs.add(peg);
+		Peg peg = pegs.get(0);
 		internalWire.setConnectorA(peg);
 		peg.addWire(internalWire);
-		
-		peg = new Peg(this, getModelHolder().getPegModels().get(1));
-		pegs.add(peg);
+		peg = pegs.get(1);
 		internalWire.setConnectorB(peg);
 		peg.addWire(internalWire);
 	}

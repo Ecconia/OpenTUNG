@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.conductor.Blot;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -37,8 +36,6 @@ public class CompThroughBlotter extends Component implements Powerable, Updateab
 	public CompThroughBlotter(CompContainer parent)
 	{
 		super(parent);
-		pegs.add(new Peg(this, getModelHolder().getPegModels().get(0)));
-		blots.add(new Blot(this, getModelHolder().getBlotModels().get(0)));
 	}
 	
 	private boolean powered;

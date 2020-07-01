@@ -36,10 +36,6 @@ public class CompSwitch extends Component implements Powerable, Updateable
 	public CompSwitch(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getBlotModels())
-		{
-			blots.add(new Blot(this, cube));
-		}
 	}
 	
 	private boolean powered;

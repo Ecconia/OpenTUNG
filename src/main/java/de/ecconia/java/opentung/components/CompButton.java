@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -38,10 +37,6 @@ public class CompButton extends Component implements Powerable, Updateable, Hold
 	public CompButton(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getBlotModels())
-		{
-			blots.add(new Blot(this, cube));
-		}
 	}
 	
 	private boolean powered;

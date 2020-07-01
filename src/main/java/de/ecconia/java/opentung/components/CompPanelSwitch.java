@@ -37,10 +37,6 @@ public class CompPanelSwitch extends Component implements Powerable, Updateable
 	public CompPanelSwitch(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getBlotModels())
-		{
-			blots.add(new Blot(this, cube));
-		}
 	}
 	
 	private boolean powered;

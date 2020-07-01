@@ -78,6 +78,9 @@ public class TungBoardLoader
 			return null;
 		}
 		
+		System.out.println("[BoardImport] Initializing components.");
+		init(board);
+		
 		System.out.println("[BoardImport] Creating connector bounds.");
 		board.createConnectorBounds();
 		System.out.println("[BoardImport] Creating SnappingPeg bounds.");
@@ -95,6 +98,21 @@ public class TungBoardLoader
 		}
 		
 		return board;
+	}
+	
+	private static void init(CompContainer container)
+	{
+		container.init();
+		
+		for(Component component : container.getChildren())
+		{
+			if(component instanceof CompContainer)
+			{
+				init((CompContainer) component);
+				continue;
+			}
+			component.init();
+		}
 	}
 	
 	//TODO: remove.

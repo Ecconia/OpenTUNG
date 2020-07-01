@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.MinMaxBox;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -32,10 +31,6 @@ public class CompSnappingPeg extends Component
 	public CompSnappingPeg(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
 	}
 	
 	@Override

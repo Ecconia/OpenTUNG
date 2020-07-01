@@ -18,12 +18,25 @@ public abstract class Component extends Part
 	//Bounds:
 	protected MinMaxBox connectorBounds;
 	
+	//Connector:
+	protected final List<Peg> pegs = new ArrayList<>();
+	protected final List<Blot> blots = new ArrayList<>();
+	
 	public Component(Component parent)
 	{
 		super(parent);
+		for(CubeFull cube : getModelHolder().getPegModels())
+		{
+			pegs.add(new Peg(this, cube));
+		}
+		for(CubeFull cube : getModelHolder().getBlotModels())
+		{
+			blots.add(new Blot(this, cube));
+		}
 	}
 	
 	//TODO: Find a better long-term for this code. Currently the peg's get the injection from here.
+	//^This is dependant on how interaction uses the methods below.
 	@Override
 	public void setPosition(Vector3 position)
 	{
@@ -52,9 +65,24 @@ public abstract class Component extends Part
 		}
 	}
 	
+	public List<Peg> getPegs()
+	{
+		return pegs;
+	}
+	
+	public List<Blot> getBlots()
+	{
+		return blots;
+	}
+	
 	//ModelHolder getter:
 	
 	public abstract ModelHolder getModelHolder();
+	
+	public void init()
+	{
+		//Can be used my components to setup internal wires.
+	}
 	
 	//Meshable section:
 	
@@ -273,20 +301,5 @@ public abstract class Component extends Part
 			}
 		}
 		return null;
-	}
-	
-	//Conductors:
-	
-	protected final List<Peg> pegs = new ArrayList<>();
-	protected final List<Blot> blots = new ArrayList<>();
-	
-	public List<Peg> getPegs()
-	{
-		return pegs;
-	}
-	
-	public List<Blot> getBlots()
-	{
-		return blots;
 	}
 }
