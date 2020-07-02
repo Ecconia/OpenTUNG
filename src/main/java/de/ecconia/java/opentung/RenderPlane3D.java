@@ -423,10 +423,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		boolean biggerY = cameraPositionBoardSpace.getY() > 0;
 		boolean biggerZ = cameraPositionBoardSpace.getZ() > 0;
 		
-		Vector3 probePosition = Vector3.zero;
-		probePosition = probePosition.addX(biggerX ? size.getX() : -size.getX());
-		probePosition = probePosition.addY(biggerY ? size.getY() : -size.getY());
-		probePosition = probePosition.addZ(biggerZ ? size.getZ() : -size.getZ());
+//		Vector3 probePosition = Vector3.zero;
+//		probePosition = probePosition.addX(biggerX ? size.getX() : -size.getX());
+//		probePosition = probePosition.addY(biggerY ? size.getY() : -size.getY());
+//		probePosition = probePosition.addZ(biggerZ ? size.getZ() : -size.getZ());
 		
 		double txMin = (size.getX() - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
 		double txMax = ((-size.getX()) - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();

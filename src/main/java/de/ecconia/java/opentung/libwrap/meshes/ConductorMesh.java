@@ -112,7 +112,7 @@ public class ConductorMesh
 			}
 		}
 		
-		vao = new SolidMeshVAO(vertices, indices, clusterIDs);
+		vao = new ConductorMeshVAO(vertices, indices, clusterIDs);
 		
 		//By clusters:
 		Arrays.fill(falseDataArray, 0);
@@ -153,9 +153,9 @@ public class ConductorMesh
 		solidMeshShader.setUniform(0, projection);
 	}
 	
-	private static class SolidMeshVAO extends LargeGenericVAO
+	private static class ConductorMeshVAO extends LargeGenericVAO
 	{
-		protected SolidMeshVAO(float[] vertices, int[] indices, int[] ids)
+		protected ConductorMeshVAO(float[] vertices, int[] indices, int[] ids)
 		{
 			super(vertices, indices, ids);
 		}
