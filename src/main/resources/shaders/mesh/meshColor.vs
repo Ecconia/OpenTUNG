@@ -40,10 +40,10 @@ void main()
 		value = vector.w;
 	}
 	
-	uint r = (value >> 24) & 255u;
-	uint g = (value >> 16) & 255u;
-	uint b = (value >> 8) & 255u;
-	uint a = value & 255u;
+	float r = float((value >> 24) & 255u);
+	float g = float((value >> 16) & 255u);
+	float b = float((value >> 8) & 255u);
+	float a = float(value & 255u);
 	
 	tColor = vec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
 	
