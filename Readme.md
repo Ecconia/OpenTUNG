@@ -45,12 +45,14 @@ Everyone is free to use this, if he/she doesn't hate Java :P
 - Install JDK
   - Be sure to have Environment Variable `JAVA_HOME` set and pointing to where you installed the JDK.
   - Add `%JAVA_HOME%\bin` to your `Path` if its not there already.
+  - You may have to restart after adding/changing an environment variable.
   - Try `java -version` in `cmd`, if it doesn't work consult your favorite search engine.
 - Install Maven
   - Download from their website.
   - Extract to anywhere where you don't move it.
-  - Set Environment Variable `%MAVEN_HOME%` pointing to where you extracted the file.
+  - Set Environment Variable `MAVEN_HOME` pointing to where you extracted the file.
   - Add `%MAVEN_HOME%\bin` to your `Path`.
+  - You may have to restart after adding/changing an environment variable.
   - Try `mvn -version` in `cmd`, if it doesn't work consult your favorite search engine.
 
 ##### Linux:
