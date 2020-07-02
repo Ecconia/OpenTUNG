@@ -181,16 +181,22 @@ public class BoardUniverse
 			wire.setCluster(cluster);
 		}
 		
+		List<Wire> wires = new ArrayList<>(cluster.getWires());
+		for(Wire wire : wires)
+		{
+			Connector otherSide = wire.getOtherSide(blot);
+			expandBlottyCluster(cluster, otherSide);
+		}
+	}
+	
+	private void expandBlottyCluster(Cluster cluster, Connector start)
+	{
 		Set<Wire> additionalWires = new HashSet<>();
 		Set<Connector> additionalConnectors = new HashSet<>();
 		boolean abort = false;
 		
 		List<Connector> connectorsToProbe = new ArrayList<>();
-		for(Wire wire : cluster.getWires())
-		{
-			Connector otherSide = wire.getOtherSide(blot);
-			connectorsToProbe.add(otherSide);
-		}
+		connectorsToProbe.add(start);
 		
 		while(!connectorsToProbe.isEmpty())
 		{
@@ -234,7 +240,7 @@ public class BoardUniverse
 				{
 					continue;
 				}
-				//If the other component has a cluster already we need to know which
+				//If the other wire has a cluster already we need to know which
 				if(wireAtConnector.getCluster() != null)
 				{
 					if(wireAtConnector.getCluster() != cluster)

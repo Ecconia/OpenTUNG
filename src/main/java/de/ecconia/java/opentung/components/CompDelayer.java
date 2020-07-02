@@ -109,7 +109,7 @@ public class CompDelayer extends Component implements Powerable, Updateable
 		if(powered != state)
 		{
 			powered = state;
-			blots.get(0).getCluster().update(simulation);
+			simulation.mightHaveChanged(blots.get(0).getCluster());
 		}
 	}
 }

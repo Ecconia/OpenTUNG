@@ -70,7 +70,7 @@ public class CompBlotter extends Component implements Powerable, Updateable
 		if(powered != input)
 		{
 			powered = input;
-			blots.get(0).getCluster().update(simulation);
+			simulation.mightHaveChanged(blots.get(0).getCluster());
 		}
 	}
 }

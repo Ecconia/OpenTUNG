@@ -10,7 +10,7 @@ public class SimulationManager extends Thread
 	private List<Updateable> updateNextTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateNextTick = new ArrayList<>();
 	
-	private final List<Cluster> clustersToUpdate = new ArrayList<>();
+	private List<Cluster> clustersToUpdate = new ArrayList<>();
 	
 	private int[] connectorMeshStates;
 	private int[] colorMeshStates;
@@ -112,6 +112,14 @@ public class SimulationManager extends Thread
 		for(Updateable updateable : updateThisTick)
 		{
 			updateable.update(this);
+		}
+		
+		List<Cluster> sourceClusters = clustersToUpdate;
+		clustersToUpdate = new ArrayList<>();
+		
+		for(Cluster cluster : sourceClusters)
+		{
+			cluster.update(this);
 		}
 		
 		for(Cluster cluster : clustersToUpdate)
