@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.inputs.InputConsumer;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
+import de.ecconia.java.opentung.math.Vector3;
 import org.lwjgl.glfw.GLFW;
 
 public class Camera implements InputConsumer
@@ -16,6 +17,8 @@ public class Camera implements InputConsumer
 	
 	//Thread-safe cause only one accessor and one consumer:
 	private Location currentPosition;
+	//Location on the graphic thread:
+	private Location currentPositionLock;
 	
 	private final Matrix view = new Matrix();
 	private final InputProcessor handler;
@@ -88,13 +91,12 @@ public class Camera implements InputConsumer
 	
 	public float[] getMatrix()
 	{
-		Location loc = currentPosition;
-		if(loc != null)
+		if(currentPositionLock != null)
 		{
 			view.identity();
-			view.rotate(loc.getNeck(), 1, 0, 0); //Neck
-			view.rotate(loc.getRotation(), 0, 1, 0); //Rotation
-			view.translate(-loc.getX(), -loc.getY(), -loc.getZ());
+			view.rotate(currentPositionLock.getNeck(), 1, 0, 0); //Neck
+			view.rotate(currentPositionLock.getRotation(), 0, 1, 0); //Rotation
+			view.translate(-currentPositionLock.getX(), -currentPositionLock.getY(), -currentPositionLock.getZ());
 		}
 		
 		return view.getMat();
@@ -243,6 +245,26 @@ public class Camera implements InputConsumer
 		float dir = (float) ((this.rotation + direction) * Math.PI / 180D);
 		this.x += distance * Math.sin(dir);
 		this.z -= distance * Math.cos(dir);
+	}
+	
+	public Vector3 getPosition()
+	{
+		return new Vector3(currentPositionLock.getX(), currentPositionLock.getY(), currentPositionLock.getZ());
+	}
+	
+	public float getNeck()
+	{
+		return currentPositionLock.getNeck();
+	}
+	
+	public float getRotation()
+	{
+		return currentPositionLock.getRotation();
+	}
+	
+	public void lockLocation()
+	{
+		currentPositionLock = currentPosition;
 	}
 	
 	public interface RightClickReceiver

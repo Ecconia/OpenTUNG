@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -25,6 +26,7 @@ import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
+import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.models.CoordIndicatorModel;
 import de.ecconia.java.opentung.models.DebugBlockModel;
@@ -36,9 +38,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.lwjgl.opengl.GL30;
 
 public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
@@ -353,6 +353,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	@Override
 	public void render()
 	{
+		camera.lockLocation();
 		checkMouseInteraction();
 		
 		float[] view = camera.getMatrix();
@@ -363,6 +364,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		if(Settings.drawWorld)
 		{
 			drawDynamic(view);
+			drawPlacementPosition(view);
 			highlightCluster(view);
 			drawHighlight(view);
 			
@@ -381,6 +383,77 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				}
 			}
 		}
+	}
+	
+	private void drawPlacementPosition(float[] view)
+	{
+		if(currentlySelectedIndex == 0)
+		{
+			return;
+		}
+		
+		Part part = idLookup[currentlySelectedIndex];
+		
+		if(!(part instanceof CompBoard))
+		{
+			return;
+		}
+		
+		CompBoard board = (CompBoard) part;
+		
+		CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
+		Vector3 position = board.getPosition();
+		Quaternion rotation = board.getRotation();
+		Vector3 size = shape.getSize();
+		if(shape.getMapper() != null)
+		{
+			size = shape.getMapper().getMappedSize(size, board);
+		}
+		
+		Vector3 cameraPosition = camera.getPosition();
+		
+		Vector3 cameraRay = Vector3.zp;
+		cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+		cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
+		Vector3 cameraRayBoardSpace = rotation.multiply(cameraRay);
+		
+		Vector3 cameraPositionBoardSpace = rotation.multiply(cameraPosition.subtract(position)); //Convert the camera position, in the board space.
+		
+		boolean biggerX = cameraPositionBoardSpace.getX() > 0;
+		boolean biggerY = cameraPositionBoardSpace.getY() > 0;
+		boolean biggerZ = cameraPositionBoardSpace.getZ() > 0;
+		
+		Vector3 probePosition = Vector3.zero;
+		probePosition = probePosition.addX(biggerX ? size.getX() : -size.getX());
+		probePosition = probePosition.addY(biggerY ? size.getY() : -size.getY());
+		probePosition = probePosition.addZ(biggerZ ? size.getZ() : -size.getZ());
+		
+		double txMin = (size.getX() - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
+		double txMax = ((-size.getX()) - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
+		double tMin = Math.min(txMin, txMax);
+//		double tMax = Math.max(txMin, txMax);
+		
+		double tyMin = (size.getY() - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
+		double tyMax = ((-size.getY()) - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
+		tMin = Math.max(tMin, Math.min(tyMin, tyMax));
+//		tMax = Math.min(tMin, Math.max(tyMin, tyMax));
+		
+		double tzMin = (size.getZ() - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
+		double tzMax = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
+		tMin = Math.max(tMin, Math.min(tzMin, tzMax));
+//		tMax = Math.min(tMin, Math.max(tzMin, tzMax));
+		
+		Vector3 draw = cameraPosition.add(cameraRay.multiply(tMin));
+		
+		lineShader.use();
+		lineShader.setUniform(1, view);
+		GL30.glLineWidth(5f);
+		Matrix model = new Matrix();
+		model.identity();
+		model.translate((float) draw.getX(), (float) draw.getY(), (float) draw.getZ());
+		labelShader.setUniform(2, model.getMat());
+		crossyIndicator.use();
+		crossyIndicator.draw();
 	}
 	
 	private void drawDynamic(float[] view)
@@ -462,7 +535,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		{
 			justShape.use();
 			justShape.setUniform(1, view);
-			justShape.setUniformV4(3, new float[] {0,0,0,0});
+			justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
 			Matrix matrix = new Matrix();
 			World3DHelper.drawCubeFull(justShape, cubeVAO, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
 		}
@@ -513,7 +586,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		}
 		justShape.use();
 		justShape.setUniform(1, view);
-		justShape.setUniformV4(3, new float[] {0,0,0,0});
+		justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		for(Connector connector : connectorsToHighlight)
 		{
