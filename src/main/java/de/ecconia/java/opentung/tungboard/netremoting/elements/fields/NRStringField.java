@@ -7,6 +7,17 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.NRText;
 public class NRStringField extends NRField
 {
 	private NRText text;
+	private final boolean unexpected;
+	
+	public NRStringField(boolean unexpected)
+	{
+		this.unexpected = unexpected;
+	}
+	
+	public NRStringField()
+	{
+		this.unexpected = true;
+	}
 	
 	@Override
 	public NRField copy()
@@ -19,7 +30,7 @@ public class NRStringField extends NRField
 	@Override
 	public void parseContent(NRParseBundle b)
 	{
-		text = new NRText(b, true);
+		text = new NRText(b, unexpected);
 	}
 	
 	public String getValue()

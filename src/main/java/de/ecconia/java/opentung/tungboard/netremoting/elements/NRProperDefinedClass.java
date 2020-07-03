@@ -10,7 +10,7 @@ public class NRProperDefinedClass extends NRClass
 		b.readAndStoreID(this);
 		
 		this.name = b.string();
-		this.fields = NRFieldResolver.parseFileds(b);
+		this.fields = NRFieldResolver.parseFields(b);
 		this.library = b.readLibraryAndResolve();
 		
 //		System.out.println("ClassFull: ID: " + id + " Name: " + name + " Lib: " + library.getId() + " Fields... " + fields.length + "x");

@@ -1,8 +1,10 @@
 package de.ecconia.java.opentung.tungboard.netremoting;
 
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArrayPrimitive;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArray;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRHeader;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
+import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArrayObject;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRProperDefinedClass;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRReferencedClass;
 
@@ -64,6 +66,16 @@ public class NRParser
 				case 12:
 				{
 					pf.registerLibrary(new NRLibrary(b));
+					break;
+				}
+				case 15:
+				{
+					pf.addRoot(new NRArrayPrimitive(b));
+					break;
+				}
+				case 16:
+				{
+					pf.addRoot(new NRArrayObject(b));
 					break;
 				}
 				default:
