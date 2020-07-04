@@ -31,9 +31,9 @@ public class Settings
 	
 	//### SIMULATION ###
 	
-	//There is no target TPS yet, instead a delay of x milliseconds:
-	//0 means no waiting.
-	public static int delayBetweenTicks = 10;
+	//TPS which the game will try to archive.
+	//0 is unlimited.
+	public static int targetTPS = 100;
 	
 	//### HIGHLIGHTING & DRAWING ###
 	

@@ -40,6 +40,10 @@ public class SimulationManager extends Thread
 		long past = System.currentTimeMillis();
 		int finishedTicks = 0;
 		
+		long before = 0;
+		long after;
+		long targetSleep;
+		
 		while(!Thread.currentThread().isInterrupted())
 		{
 			doTick();
@@ -55,15 +59,27 @@ public class SimulationManager extends Thread
 				upsCounter = 0;
 			}
 			
-			if(Settings.delayBetweenTicks > 0)
+			if(Settings.targetTPS > 0)
 			{
-				try
+				targetSleep = 1000000000L / Settings.targetTPS;
+				if(targetSleep > 1000000)
 				{
-					Thread.sleep(Settings.delayBetweenTicks);
+					try
+					{
+						Thread.sleep(targetSleep / 1000000);
+					}
+					catch(InterruptedException e)
+					{
+						break;
+					}
 				}
-				catch(InterruptedException e)
+				else
 				{
-					break;
+					after = System.nanoTime();
+					long delta = after - before;
+					long targetTime = after + targetSleep - delta;
+					while(System.nanoTime() < targetTime) ;
+					before = System.nanoTime();
 				}
 			}
 		}
