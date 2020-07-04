@@ -28,8 +28,6 @@ import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.models.CoordIndicatorModel;
-import de.ecconia.java.opentung.models.DebugBlockModel;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.Wire;
@@ -66,9 +64,6 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private SimpleCubeVAO cubeVAO;
 	private TextureWrapper boardTexture;
 	private LineVAO crossyIndicator;
-	
-	private CoordIndicatorModel coords;
-	private DebugBlockModel block;
 	
 	private final InputProcessor inputHandler;
 	
@@ -275,9 +270,6 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		cubeVAO = SimpleCubeVAO.generateCube();
 		crossyIndicator = LineVAO.generateCrossyIndicator();
 		sdfShader = new ShaderProgram("sdfLabel");
-		
-		coords = new CoordIndicatorModel();
-		block = new DebugBlockModel();
 		
 		camera = new Camera(inputHandler, this);
 		
