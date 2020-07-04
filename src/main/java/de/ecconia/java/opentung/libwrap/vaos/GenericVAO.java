@@ -9,6 +9,7 @@ public abstract class GenericVAO
 	
 	protected GenericVAO(float[] vertices, int[] indices, Object... extra)
 	{
+		System.out.println(getClass().getSimpleName() + " V: " + vertices.length + " I: " + indices.length);
 		vaoID = GL30.glGenVertexArrays();
 		GL30.glBindVertexArray(vaoID);
 		

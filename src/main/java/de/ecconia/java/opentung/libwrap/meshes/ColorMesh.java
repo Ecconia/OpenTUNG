@@ -102,6 +102,7 @@ public class ColorMesh
 		@Override
 		protected void uploadMoreData(Object... extra)
 		{
+			System.out.println(getClass().getSimpleName() + " E: " + ((int[]) extra[0]).length);
 			int vboID = GL30.glGenBuffers();
 			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
 			GL30.glBufferData(GL30.GL_ARRAY_BUFFER, (int[]) extra[0], GL30.GL_STATIC_DRAW);
