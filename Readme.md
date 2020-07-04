@@ -2,36 +2,39 @@
 
 OpenTUNG is basically a WIP clone of "The Ultimate Nerd Game" written in Java.
 
+Started by @Ecconia
+
 ## Kilometer-marks
 
 Arrived at:
-- The game imports `.tungboard` files. (Missing Noisemaker and Delayer support currently).
-- The game displays the loaded TUNGBoard.
-- Wires have a state and are connected with each other, waiting for the simulation to control them.
+- The game imports `.tungboard` files.
+- The game displays everything of the loaded TUNGBoard.
+- The game can simulate the whole board circuit.
 
 To arrive:
 - Add animated interaction with buttons/switches.
-- Have every component visible in the game and give label-text a good formatting.
-- Run the simulation so that it behaves the same as in TUNG, with better visuals on low tick rates.
+- Give label-text a good formatting and graphic.
 - Add modification of the builds (collision checking), so that things can be placed or move at each other.
-- Update the simulation network properly on modifications of it.
+- Update the simulation network when modified of it.
 - Improve the looks of the game, better light calculation pending.
 
 ## Why? (Story...)
 
-TUNG was written some time ago and has not received any update since then.
-It is however an amazing game/tool to make some of your dream reality.
+Some ages ago @JimmyCushnie wrote "The Ultimate Nerd Game".\
+But then TUNG got declared as the alpha version of the much superior "Logic World".\
+That was some years ago and since then it has not received any update.\
+It is however an amazing game/tool to make some of our dreams reality.
 
-Sadly it comes with a bunch of negative factors.
-Without a dedicated GPU, the game does not run very well (5 FPS with decent content).
-Additional the modding framework is only compatible with 0.2.6 which has an aweful typing bug on Linux. And without mods the game might be tricky.
-And 0.2.7 has a bunch of bugs on Windows, but works on Linux. In either OS with that version one cannot stack boards, which is painful.
-Additional to that if you build something bigger, you may end up with huge load times and an almost frozen computer since the game needs 15GB for unknown reasons.
+Sadly it comes with a bunch of negative factors.\
+If you have bad hardware like @Ecconia and run the game on Linux, you might experience the game to only run on 15FPS (or less) as well as having it use 20GB of RAM. The game runs properly, until you start to build very big things, like memories.\
+Additional depending on version and OS you have a bunch of bugs which sometimes make building difficult.\
+There is a modding framework, but that does not support the latest version, the modding-supported version has a horrible bug on Linux.\
+So for @Ecconia that means "no mods", which makes placing many wires a tedious task.\
 
-In a nutshell, this clone is an attempt to make a more performant and simplified TUNG which can be used, without the known struggles.
-If its at a stage similar/equal to TUNG, it will provide a better GUI since its just possible to rewrite it in any desired way, yay open-source.
+In a nutshell, this project aims to provide a version of TUNG which does not have any of the old bugs and even comes with more features and performance.\
+This is nevertheless a Work-In-Progress project which has yet to arrive at the level of TUNG. Some things are better already, some are not even implemented. Things like the nice landscape will however never make it into OpenTUNG.
 
-Everyone is free to use this, if he/she doesn't hate Java :P
+Everyone is free to use this program/game/tool/simulator, if he/she doesn't hate Java :P
 
 ## Install (Build from source...)
 
