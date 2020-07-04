@@ -1,13 +1,19 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.BlockingQueue;
+import javax.imageio.ImageIO;
 
 public class LabelToolkit
 {
@@ -45,31 +51,71 @@ public class LabelToolkit
 		return new LabelTextureWrapper(image);
 	}
 	
-	private final Map<LabelContainer, LabelTextureWrapper> labels = new HashMap<>();
-	private LabelTextureWrapper ducky;
+	private Map<LabelContainer, List<CompLabel>> map = new HashMap<>();
 	
-	public LabelTextureWrapper generate(String text, float fontSize)
+	public void startProcessing(BlockingQueue<GPUTask> gpuTasks, List<CompLabel> labelsToRender)
 	{
-		if(ducky == null)
+		LabelTextureWrapper loading;
+		try
 		{
-			ducky = LabelTextureWrapper.debuggyDuck();
+			BufferedImage image = ImageIO.read(LabelTextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
+			loading = new LabelTextureWrapper(image);
+			loading.upload();
 		}
-		LabelContainer container = new LabelContainer(text, fontSize);
-		
-		LabelTextureWrapper texture = labels.get(container);
-		if(texture != null)
+		catch(IOException e)
 		{
-			return texture;
+			e.printStackTrace();
+			System.exit(1);
+			throw new RuntimeException("Tilt."); //Yes Java, this really means I stopped here.
 		}
 		
-		texture = generateUploadTexture(text, fontSize);
-		labels.put(container, texture);
-		return texture;
-	}
-	
-	public int getLabelCount()
-	{
-		return labels.size();
+		for(CompLabel label : labelsToRender)
+		{
+			label.setTexture(loading);
+			LabelContainer labelHash = new LabelContainer(label.getText(), label.getFontSize());
+			List<CompLabel> list = map.get(labelHash);
+			if(list == null)
+			{
+				list = new ArrayList<>();
+				map.put(labelHash, list);
+			}
+			list.add(label);
+		}
+		
+		Thread labelThread = new Thread(() -> {
+			List<Map.Entry<LabelContainer, List<CompLabel>>> daList = new ArrayList<>(map.entrySet());
+			for(int i = 0; i < daList.size(); i++)
+			{
+				Map.Entry<LabelContainer, List<CompLabel>> entry = daList.get(i);
+				LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize);
+				try
+				{
+					gpuTasks.put(() -> {
+						texture.upload();
+					});
+				}
+				catch(InterruptedException e)
+				{
+					//Should never happen.
+					e.printStackTrace();
+					return;
+				}
+
+				for(CompLabel label : entry.getValue())
+				{
+					label.setTexture(texture);
+				}
+
+				if(i % 100 == 0)
+				{
+					System.out.println("Generated " + (i + 1) + "/" + map.size() + " labels.");
+				}
+			}
+			System.out.println("Finished generating labels.");
+		}, "LabelThread");
+		System.out.println("Starting to generate " + map.size() + " labels.");
+		labelThread.setDaemon(true);
+		labelThread.start();
 	}
 	
 	private static class LabelContainer

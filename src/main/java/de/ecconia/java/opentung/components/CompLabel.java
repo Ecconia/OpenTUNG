@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.LabelToolkit;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Direction;
@@ -65,13 +64,13 @@ public class CompLabel extends Component
 		return fontSize;
 	}
 	
-	public void initialize(LabelToolkit labelToolkit)
-	{
-		texture = labelToolkit.generate(text, fontSize);
-	}
-	
 	public void activate()
 	{
 		texture.activate();
+	}
+	
+	public void setTexture(LabelTextureWrapper texture)
+	{
+		this.texture = texture;
 	}
 }

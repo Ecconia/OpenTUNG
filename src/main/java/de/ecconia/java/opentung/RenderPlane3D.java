@@ -39,6 +39,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.lwjgl.opengl.GL30;
 
 public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
@@ -78,6 +80,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	
 	private final List<Vector3> wireEndsToRender = new ArrayList<>();
 	private final LabelToolkit labelToolkit = new LabelToolkit();
+	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
@@ -191,15 +194,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		//TODO: Currently manually triggered, but to be optimized away.
 		CompLabel.initGL();
 		CompPanelLabel.initGL();
-		{
-			System.out.println("Started label generation...");
-			//Import section:
-			for(CompLabel label : board.getLabelsToRender())
-			{
-				label.initialize(labelToolkit);
-			}
-			System.out.println("Labels generated: " + labelToolkit.getLabelCount());
-		}
+		System.out.println("Starting label generation.");
+		labelToolkit.startProcessing(gpuTasks, board.getLabelsToRender());
 		
 		System.out.println("Broken wires rendered: " + TungBoardLoader.brokenWires.size());
 		if(!TungBoardLoader.brokenWires.isEmpty())
@@ -355,6 +351,11 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	@Override
 	public void render()
 	{
+		while(!gpuTasks.isEmpty())
+		{
+			gpuTasks.poll().execute();
+		}
+		
 		camera.lockLocation();
 		checkMouseInteraction();
 		
