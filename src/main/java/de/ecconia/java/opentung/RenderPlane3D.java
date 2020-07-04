@@ -58,6 +58,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private ShaderProgram outlineWireShader;
 	private ShaderProgram outlineBoardShader;
 	private ShaderProgram inYaFace;
+	private ShaderProgram sdfShader;
 	private InYaFaceVAO inYaFaceVAO;
 	private ShaderProgram justShape;
 	private SimpleCubeVAO cubeVAO;
@@ -76,6 +77,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private ColorMesh colorMesh;
 	
 	private final List<Vector3> wireEndsToRender = new ArrayList<>();
+	private final LabelToolkit labelToolkit = new LabelToolkit();
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
@@ -190,16 +192,13 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		CompLabel.initGL();
 		CompPanelLabel.initGL();
 		{
+			System.out.println("Started label generation...");
 			//Import section:
 			for(CompLabel label : board.getLabelsToRender())
 			{
-				label.initialize();
+				label.initialize(labelToolkit);
 			}
-//			for(CompWireRaw wire : board.getWiresToRender())
-//			{
-//				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd1()));
-//				wireEndsToRender.add(new CompCrossyIndicator(wire.getEnd2()));
-//			}
+			System.out.println("Labels generated: " + labelToolkit.getLabelCount());
 		}
 		
 		System.out.println("Broken wires rendered: " + TungBoardLoader.brokenWires.size());
@@ -279,6 +278,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		justShape = new ShaderProgram("justShape");
 		cubeVAO = SimpleCubeVAO.generateCube();
 		crossyIndicator = LineVAO.generateCrossyIndicator();
+		sdfShader = new ShaderProgram("sdfLabel");
 		
 		coords = new CoordIndicatorModel();
 		block = new DebugBlockModel();
@@ -297,6 +297,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		}
 		
 		board.getSimulation().start();
+		System.out.println("Label amount: " + board.getLabelsToRender().size());
+		System.out.println("Wire amount: " + board.getWiresToRender().size());
 		lastCycle = System.currentTimeMillis();
 	}
 	
@@ -474,9 +476,8 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		}
 		colorMesh.draw(view);
 		
-		labelShader.use();
-		labelShader.setUniform(1, view);
-		labelShader.setUniform(3, view);
+		sdfShader.use();
+		sdfShader.setUniform(1, view);
 		for(CompLabel label : board.getLabelsToRender())
 		{
 			label.activate();
@@ -484,7 +485,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			model.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
 			Matrix rotMat = new Matrix(label.getRotation().createMatrix());
 			model.multiply(rotMat);
-			labelShader.setUniform(2, model.getMat());
+			sdfShader.setUniform(2, model.getMat());
 			label.getModelHolder().drawTextures();
 		}
 		
@@ -669,8 +670,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		solidMesh.updateProjection(projection);
 		conductorMesh.updateProjection(projection);
 		colorMesh.updateProjection(projection);
-		
 		textureMesh.updateProjection(projection);
+		
+		sdfShader.use();
+		sdfShader.setUniform(0, projection);
 		faceShader.use();
 		faceShader.setUniform(0, projection);
 		lineShader.use();

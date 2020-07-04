@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.LabelToolkit;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.fragments.TexturedFace;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
 import de.ecconia.java.opentung.math.Vector3;
 
 public class CompPanelLabel extends CompLabel
@@ -36,7 +37,7 @@ public class CompPanelLabel extends CompLabel
 	private String text;
 	private float fontSize;
 	
-	private TextureWrapper texture;
+	private LabelTextureWrapper texture;
 	
 	public CompPanelLabel(CompContainer parent)
 	{
@@ -63,9 +64,9 @@ public class CompPanelLabel extends CompLabel
 		return fontSize;
 	}
 	
-	public void initialize()
+	public void initialize(LabelToolkit labelToolkit)
 	{
-		texture = CompLabel.generateUploadTexture(text, fontSize);
+		texture = labelToolkit.generate(text, fontSize);
 	}
 	
 	public void activate()
