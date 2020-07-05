@@ -148,6 +148,7 @@ public class Controller3D implements Controller
 	public void doFrameCycle()
 	{
 		doLeftHoldableCheck();
+		mouseRightCheckDrag();
 	}
 	
 	//Left:
@@ -239,6 +240,7 @@ public class Controller3D implements Controller
 	private long mouseRightDown;
 	private Part mouseRightDownOn;
 	private boolean mouseRightDownOnConnector;
+	private boolean mouseRightConnectorMode;
 	
 	private void mouseRightDown()
 	{
@@ -247,16 +249,22 @@ public class Controller3D implements Controller
 		if(mouseRightDownOn instanceof Connector)
 		{
 			mouseRightDownOnConnector = true;
-			renderPlane3D.rightDragOnConnector((Connector) mouseRightDownOn);
 		}
 	}
 	
 	private void mouseRightUp()
 	{
 		Part mouseRightDownOn = renderPlane3D.getCursorObject();
-		if(mouseRightDownOnConnector)
+		if(mouseRightConnectorMode)
 		{
-			renderPlane3D.rightDragOnConnector(null);
+			if(mouseRightDownOn instanceof Connector)
+			{
+				renderPlane3D.rightDragOnConnectorStop((Connector) mouseRightDownOn);
+			}
+			else
+			{
+				renderPlane3D.rightDragOnConnectorStop(null);
+			}
 		}
 		else
 		{
@@ -277,7 +285,24 @@ public class Controller3D implements Controller
 				}
 			}
 		}
+		
 		mouseRightDown = 0;
 		mouseRightDownOnConnector = false;
+		mouseRightConnectorMode = false;
+	}
+	
+	private void mouseRightCheckDrag()
+	{
+		if(mouseRightConnectorMode || !mouseRightDownOnConnector)
+		{
+			return;
+		}
+		
+		Part part = renderPlane3D.getCursorObject();
+		if(part != mouseRightDownOn)
+		{
+			mouseRightConnectorMode = true;
+			renderPlane3D.rightDragOnConnector((Connector) mouseRightDownOn);
+		}
 	}
 }

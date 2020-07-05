@@ -165,6 +165,11 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println(">>> Connector: " + (connector == null ? "null" : connector.getPosition()));
 	}
 	
+	public void rightDragOnConnectorStop(Connector connector)
+	{
+		System.out.println(">>> Connector: " + (connector == null ? "null" : connector.getPosition()));
+	}
+	
 	@Override
 	public void setup()
 	{
