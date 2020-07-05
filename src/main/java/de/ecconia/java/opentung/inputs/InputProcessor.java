@@ -1,11 +1,15 @@
 package de.ecconia.java.opentung.inputs;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.lwjgl.glfw.GLFW;
 
-public class InputProcessor
+public class InputProcessor implements Controller
 {
+	//TODO: Add fancy stuff, for example that one can walk - while a menu is open - as long as no text field is in focus.
+	
+	public static final int MOUSE_RIGHT = GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+	public static final int MOUSE_LEFT = GLFW.GLFW_MOUSE_BUTTON_LEFT;
+	public static final int MOUSE_MIDDLE = GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
+	
 	private int latestX;
 	private int latestY;
 	private int mouseXChange;
@@ -13,16 +17,10 @@ public class InputProcessor
 	
 	private final long windowID;
 	private final InputReceiver receiver;
-	private final List<InputConsumer> inputConsumers = new ArrayList<>();
 	
-	private InputConsumer blockingConsumer = null;
-	private InputConsumer soonConsumer = null; //Wait a cycle before applying this.
-	private boolean applyNewConsumer = false;
-	
-	public void registerClickConsumer(InputConsumer inputConsumer)
-	{
-		this.inputConsumers.add(inputConsumer);
-	}
+	private Controller3D controller3D;
+	private Controller2D controller2D;
+	private Controller activeController = this;
 	
 	public InputProcessor(long windowID)
 	{
@@ -33,7 +31,46 @@ public class InputProcessor
 	
 	public void eventPollEntry()
 	{
+		//Switch to InputReceiver to receive all events.
 		receiver.eventPollEntry();
+	}
+	
+	public void stop()
+	{
+		receiver.stop();
+	}
+	
+	public void setController(Controller controller)
+	{
+		if(controller instanceof Controller2D)
+		{
+			controller2D = (Controller2D) controller;
+		}
+		else
+		{
+			controller3D = (Controller3D) controller;
+		}
+		controller.setInputThread(this);
+		
+		if(controller3D != null && controller2D != null)
+		{
+			activeController = controller2D;
+		}
+	}
+	
+	public long getWindowID()
+	{
+		return windowID;
+	}
+	
+	public int getMouseXChange()
+	{
+		return mouseXChange;
+	}
+	
+	public int getMouseYChange()
+	{
+		return mouseYChange;
 	}
 	
 	//#########################
@@ -47,143 +84,85 @@ public class InputProcessor
 		latestX = x;
 		latestY = y;
 		
-		if(blockingConsumer == null)
-		{
-			for(InputConsumer consumer : inputConsumers)
-			{
-				if(consumer.move(latestX, latestY, mouseXChange, mouseYChange))
-				{
-					break;
-				}
-			}
-		}
+		activeController.mouseMove(latestX, latestY, mouseXChange, mouseYChange);
 	}
 	
 	public void cursorPressed(int button)
 	{
-		for(InputConsumer consumer : inputConsumers)
-		{
-			if(consumer.down(button, latestX, latestY))
-			{
-				break;
-			}
-		}
+		activeController.mouseDown(button, latestX, latestY);
 	}
 	
 	public void cursorReleased(int button)
 	{
-		for(InputConsumer consumer : inputConsumers)
-		{
-			if(consumer.up(button, latestX, latestY))
-			{
-				break;
-			}
-		}
+		activeController.mouseUp(button, latestX, latestY);
 	}
 	
 	public void keyPressed(int key, int scancode, int mods)
 	{
-		//TODO: Forward to consumer.
+		activeController.keyDown(key, scancode, mods);
 	}
 	
 	public void keyReleased(int key, int scancode, int mods)
 	{
-		if(key == GLFW.GLFW_KEY_ESCAPE)
+		activeController.keyUp(key, scancode, mods);
+	}
+	
+	public void focusChanged(boolean state)
+	{
+		if(!state)
 		{
-			skip:
-			{
-				for(InputConsumer consumer : inputConsumers)
-				{
-					if(consumer.escapeIssued())
-					{
-						break skip;
-					}
-				}
-				
-				//No layer used the ESC, close game.
-				//TODO: Add settings toggle later on.
-				GLFW.glfwSetWindowShouldClose(windowID, true);
-			}
-			
-			return;
+			activeController.unfocus();
 		}
-		
-		//TODO: Forward to consumer.
-//		if(blockingConsumer != null)
-//		{
-//			for(InputConsumer consumer : inputConsumers)
-//			{
-//			}
-//		}
 	}
 	
 	public void postEvents()
 	{
-		if(blockingConsumer != null)
-		{
-			boolean isA = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS;
-			boolean isS = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
-			boolean isD = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS;
-			boolean isW = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS;
-			boolean isSp = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
-			boolean isSh = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS;
-			boolean isControl = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
-			
-			blockingConsumer.movement(mouseXChange, mouseYChange, isA, isD, isW, isS, isSp, isSh, isControl);
-		}
+		activeController.inputInterval();
 		
-		//Who knows who calls the blocking thing when, first lets finish all handling, then update this.
-		if(this.applyNewConsumer)
-		{
-			this.blockingConsumer = this.soonConsumer;
-			this.applyNewConsumer = false;
-		}
 		//Reset mouse movement, it should have been processed by now.
 		mouseXChange = 0;
 		mouseYChange = 0;
 	}
 	
-	public void stop()
+	//Switching modes:
+	
+	public void switchTo3D()
 	{
-		receiver.stop();
+		//Disable cursor.
+		GLFW.glfwSetInputMode(windowID, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		activeController = controller3D;
+		receiver.setIntervalMode(true);
 	}
 	
-	public void captureMode(InputConsumer consumer)
+	public void switchTo2D()
 	{
-		this.soonConsumer = consumer;
-		applyNewConsumer = true;
-		if(consumer == null)
+		//Rearm cursor
+		GLFW.glfwSetInputMode(windowID, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+		activeController = controller2D;
+		receiver.setIntervalMode(false);
+	}
+	
+	//Controller commands:
+	
+	public void issueShutdown()
+	{
+		GLFW.glfwSetWindowShouldClose(windowID, true);
+	}
+	
+	//Startup Controller, handles what can't be handled yet - boot process:
+	
+	@Override
+	public void setInputThread(InputProcessor inputProcessor)
+	{
+	}
+	
+	@Override
+	public void keyUp(int keyIndex, int scancode, int mods)
+	{
+		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
-			GLFW.glfwSetInputMode(windowID, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
-		}
-		else
-		{
-			GLFW.glfwSetInputMode(windowID, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-		}
-	}
-	
-	public boolean isCaptured(InputConsumer consumer)
-	{
-		return blockingConsumer == consumer;
-	}
-	
-	public boolean isCaptured()
-	{
-		return blockingConsumer != null;
-	}
-	
-	public void focusChanged(boolean state)
-	{
-		//TBI: May fight with the setting by click or?
-		if(!state)
-		{
-			for(InputConsumer consumer : inputConsumers)
-			{
-				if(consumer.escapeIssued())
-				{
-					consumer.unfocus();
-				}
-			}
+			//TODO: Add setting for this behavior:
+			issueShutdown();
 		}
 	}
 }

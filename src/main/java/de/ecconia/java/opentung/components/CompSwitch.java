@@ -70,7 +70,7 @@ public class CompSwitch extends Component implements Powerable, Updateable
 	}
 	
 	@Override
-	public void rightClicked(SimulationManager simulation)
+	public void leftClicked(SimulationManager simulation)
 	{
 		//Flip the internal state.
 		powered = !powered; //This can be changed, since the essential check is happening in the cluster.

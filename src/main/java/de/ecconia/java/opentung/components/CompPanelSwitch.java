@@ -71,7 +71,7 @@ public class CompPanelSwitch extends Component implements Powerable, Updateable
 	}
 	
 	@Override
-	public void rightClicked(SimulationManager simulation)
+	public void leftClicked(SimulationManager simulation)
 	{
 		powered = !powered;
 		simulation.updateNextTickThreadSafe(this);

@@ -1,19 +1,14 @@
 package de.ecconia.java.opentung;
 
-import de.ecconia.java.opentung.inputs.InputConsumer;
-import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.math.Vector3;
-import org.lwjgl.glfw.GLFW;
 
-public class Camera implements InputConsumer
+public class Camera
 {
 	private float x, y, z;
 	private float rotation;
 	private float neck;
-	
-	private boolean mousedown;
 	
 	//Thread-safe cause only one accessor and one consumer:
 	private Location currentPosition;
@@ -21,72 +16,14 @@ public class Camera implements InputConsumer
 	private Location currentPositionLock;
 	
 	private final Matrix view = new Matrix();
-	private final InputProcessor handler;
-	private final RightClickReceiver rightClickReceiver;
 	
-	public Camera(InputProcessor handler, RightClickReceiver rightClickReceiver)
+	public Camera()
 	{
-		this.handler = handler;
-		this.rightClickReceiver = rightClickReceiver;
-		
-		handler.registerClickConsumer(this);
-		
 		x += Settings.playerSpawnX;
 		y += Settings.playerSpawnY;
 		z += Settings.playerSpawnZ;
 		
 		currentPosition = new Location(x, y, z, rotation, neck);
-	}
-	
-	@Override
-	public boolean up(int type, int x, int y)
-	{
-		if(type == GLFW.GLFW_MOUSE_BUTTON_1)
-		{
-			if(!handler.isCaptured(this))
-			{
-				//Canvas got clicked, capture mode.
-				handler.captureMode(this);
-				return true;
-			}
-		}
-		else if(type == GLFW.GLFW_MOUSE_BUTTON_2)
-		{
-			if(handler.isCaptured(this))
-			{
-				checkMouse(false);
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	@Override
-	public boolean down(int type, int x, int y)
-	{
-		if(type == GLFW.GLFW_MOUSE_BUTTON_2)
-		{
-			if(handler.isCaptured(this))
-			{
-				checkMouse(true);
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	@Override
-	public boolean escapeIssued()
-	{
-		if(handler.isCaptured(this))
-		{
-			handler.captureMode(null);
-			checkMouse(false);
-			return true;
-		}
-		return false;
 	}
 	
 	public float[] getMatrix()
@@ -102,41 +39,6 @@ public class Camera implements InputConsumer
 		return view.getMat();
 	}
 	
-	@Override
-	public void unfocus()
-	{
-		if(handler.isCaptured(this))
-		{
-			handler.captureMode(null);
-			checkMouse(false);
-		}
-	}
-	
-	private void checkMouse(boolean target)
-	{
-		if(!target)
-		{
-			if(mousedown)
-			{
-				mousedown = false;
-				rightClickReceiver.rightUp();
-			}
-		}
-		else
-		{
-			if(mousedown)
-			{
-				System.out.println("Right click already marked down 3D-Pane, but got downed again.");
-			}
-			else
-			{
-				mousedown = true;
-				rightClickReceiver.rightDown();
-			}
-		}
-	}
-	
-	@Override
 	public void movement(float mx, float my, boolean l, boolean r, boolean f, boolean b, boolean u, boolean d, boolean control)
 	{
 		float rotationSpeed = Settings.playerRotationSpeed;
@@ -265,12 +167,5 @@ public class Camera implements InputConsumer
 	public void lockLocation()
 	{
 		currentPositionLock = currentPosition;
-	}
-	
-	public interface RightClickReceiver
-	{
-		void rightUp();
-		
-		void rightDown();
 	}
 }

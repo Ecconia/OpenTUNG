@@ -14,6 +14,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
+import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -41,7 +42,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.lwjgl.opengl.GL30;
 
-public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
+public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiver
 {
 	private Camera camera;
 	private long lastCycle;
@@ -101,7 +102,7 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 	private Holdable tempDowner;
 	
 	@Override
-	public void rightUp()
+	public void mouseLeftUp()
 	{
 		if(currentlySelectedIndex != 0)
 		{
@@ -112,20 +113,42 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 			{
 				if(this.downer == downer)
 				{
-					downer.rightClicked(board.getSimulation());
-					componentClicked(downer);
+					downer.leftClicked(board.getSimulation());
 				}
 			}
 			else
 			{
-				downer.rightClicked(board.getSimulation());
-				componentClicked(downer);
+				downer.leftClicked(board.getSimulation());
 			}
 		}
 		downTime = 0;
 	}
 	
-	private void componentClicked(Part part)
+	@Override
+	public void mouseLeftDown()
+	{
+		downTime = System.currentTimeMillis();
+		if(currentlySelectedIndex != 0)
+		{
+			downer = idLookup[currentlySelectedIndex];
+		}
+		else
+		{
+			downer = null;
+		}
+	}
+	
+	@Override
+	public void mouseRightClick()
+	{
+		if(currentlySelectedIndex != 0)
+		{
+			Part part = idLookup[currentlySelectedIndex];
+			componentRightClicked(part);
+		}
+	}
+	
+	private void componentRightClicked(Part part)
 	{
 		//TODO: Move this somewhere more generic.
 		Cluster cluster = null;
@@ -154,20 +177,6 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 				clusterToHighlight = cluster;
 				connectorsToHighlight = cluster.getConnectors();
 			}
-		}
-	}
-	
-	@Override
-	public void rightDown()
-	{
-		downTime = System.currentTimeMillis();
-		if(currentlySelectedIndex != 0)
-		{
-			downer = idLookup[currentlySelectedIndex];
-		}
-		else
-		{
-			downer = null;
 		}
 	}
 	
@@ -271,7 +280,9 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		crossyIndicator = LineVAO.generateCrossyIndicator();
 		sdfShader = new ShaderProgram("sdfLabel");
 		
-		camera = new Camera(inputHandler, this);
+		camera = new Camera();
+		//Do not start receiving events before here. Be sure the whole thing is properly setted up.
+		inputHandler.setController(new Controller3D(this));
 		
 		//Create meshes:
 		{
@@ -691,5 +702,10 @@ public class RenderPlane3D implements RenderPlane, Camera.RightClickReceiver
 		outlineBoardShader.setUniform(0, projection);
 		justShape.use();
 		justShape.setUniform(0, projection);
+	}
+	
+	public Camera getCamera()
+	{
+		return camera;
 	}
 }

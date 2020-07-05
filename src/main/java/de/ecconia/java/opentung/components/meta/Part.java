@@ -75,7 +75,7 @@ public abstract class Part
 	/**
 	 * Warning, executed from InputThread (only call simulation).
 	 */
-	public void rightClicked(SimulationManager simulation)
+	public void leftClicked(SimulationManager simulation)
 	{
 	}
 }

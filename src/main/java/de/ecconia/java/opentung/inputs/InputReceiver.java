@@ -7,6 +7,8 @@ public class InputReceiver
 	private final InputProcessor processor;
 	private final Thread inputThread;
 	
+	private boolean intervalMode;
+	
 	public InputReceiver(InputProcessor processor, long windowID)
 	{
 		this.processor = processor;
@@ -54,24 +56,39 @@ public class InputReceiver
 		long time = System.currentTimeMillis();
 		while(!Thread.currentThread().isInterrupted())
 		{
-			GLFW.glfwPollEvents();
-			
-			processor.postEvents();
-			
-			try
+			if(intervalMode)
 			{
-				long cTime = System.currentTimeMillis();
-				long wTime = cTime - time;
-				time = cTime;
-				if(wTime > 0)
+				GLFW.glfwPollEvents();
+				
+				processor.postEvents();
+				
+				try
 				{
-					Thread.sleep(10);
+					//Calculates 'wTime', the time since the last execution... But dunno how it should be used properly.
+					long cTime = System.currentTimeMillis();
+					long wTime = cTime - time;
+					time = cTime;
+					if(wTime > 0)
+					{
+						Thread.sleep(10);
+					}
+				}
+				catch(InterruptedException e)
+				{
+					break;
 				}
 			}
-			catch(InterruptedException e)
+			else
 			{
-				break;
+				GLFW.glfwWaitEvents();
+				processor.postEvents(); //Call anyway.
+				time = System.currentTimeMillis(); //Keep track of time, in case of switching.
 			}
 		}
+	}
+	
+	public void setIntervalMode(boolean intervalMode)
+	{
+		this.intervalMode = intervalMode;
 	}
 }
