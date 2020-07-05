@@ -42,7 +42,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.lwjgl.opengl.GL30;
 
-public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiver
+public class RenderPlane3D implements RenderPlane
 {
 	private Camera camera;
 	private long lastCycle;
@@ -78,6 +78,8 @@ public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiv
 	private final LabelToolkit labelToolkit = new LabelToolkit();
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
 	
+	private Controller3D controller;
+	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
 	
@@ -96,59 +98,37 @@ public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiv
 	
 	//Mouse handling:
 	
-	private Part downer;
 	private long downTime;
 	private boolean down;
 	private Holdable tempDowner;
 	
-	@Override
-	public void mouseLeftUp()
+	public Part getCursorObject()
 	{
-		if(currentlySelectedIndex != 0)
+		if(currentlySelectedIndex <= 0)
 		{
-			Part downer = idLookup[currentlySelectedIndex];
-			long time = (System.currentTimeMillis() - downTime);
-			//If the click was longer than a second, validate that its the intended component...
-			if(time > Settings.longMousePressDuration)
-			{
-				if(this.downer == downer)
-				{
-					downer.leftClicked(board.getSimulation());
-				}
-			}
-			else
-			{
-				downer.leftClicked(board.getSimulation());
-			}
+			return null;
 		}
-		downTime = 0;
+		return idLookup[currentlySelectedIndex];
 	}
 	
-	@Override
-	public void mouseLeftDown()
+	//Click events:
+	
+	public void componentLeftClicked(Part part)
 	{
-		downTime = System.currentTimeMillis();
-		if(currentlySelectedIndex != 0)
-		{
-			downer = idLookup[currentlySelectedIndex];
-		}
-		else
-		{
-			downer = null;
-		}
+		part.leftClicked(board.getSimulation());
 	}
 	
-	@Override
-	public void mouseRightClick()
+	public void componentLeftHold(Holdable holdable)
 	{
-		if(currentlySelectedIndex != 0)
-		{
-			Part part = idLookup[currentlySelectedIndex];
-			componentRightClicked(part);
-		}
+		holdable.setHold(true, board.getSimulation());
 	}
 	
-	private void componentRightClicked(Part part)
+	public void componentLeftUnHold(Holdable holdable)
+	{
+		holdable.setHold(false, board.getSimulation());
+	}
+	
+	public void componentRightClicked(Part part)
 	{
 		//TODO: Move this somewhere more generic.
 		Cluster cluster = null;
@@ -178,6 +158,11 @@ public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiv
 				connectorsToHighlight = cluster.getConnectors();
 			}
 		}
+	}
+	
+	public void rightDragOnConnector(Connector connector)
+	{
+		System.out.println(">>> Connector: " + (connector == null ? "null" : connector.getPosition()));
 	}
 	
 	@Override
@@ -282,7 +267,8 @@ public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiv
 		
 		camera = new Camera();
 		//Do not start receiving events before here. Be sure the whole thing is properly setted up.
-		inputHandler.setController(new Controller3D(this));
+		controller = new Controller3D(this);
+		inputHandler.setController(controller);
 		
 		//Create meshes:
 		{
@@ -301,56 +287,6 @@ public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiv
 		lastCycle = System.currentTimeMillis();
 	}
 	
-	private void checkMouseInteraction()
-	{
-		if(downTime != 0)
-		{
-			if(currentlySelectedIndex != 0)
-			{
-				Part part = idLookup[currentlySelectedIndex];
-				if(part instanceof Holdable)
-				{
-					Holdable currentlyHold = (Holdable) part;
-					if(currentlyHold != tempDowner)
-					{
-						if(tempDowner != null)
-						{
-							//If mouse over something else.
-							tempDowner.setHold(false, board.getSimulation());
-						}
-						//If something new is hold:
-						tempDowner = currentlyHold;
-						tempDowner.setHold(true, board.getSimulation());
-					}
-				}
-				else
-				{
-					if(tempDowner != null)
-					{
-						//If mouse over something non-holdable.
-						tempDowner.setHold(false, board.getSimulation());
-						tempDowner = null;
-					}
-				}
-			}
-			else
-			{
-				if(tempDowner != null)
-				{
-					//If mouse no longer over a component.
-					tempDowner.setHold(false, board.getSimulation());
-					tempDowner = null;
-				}
-			}
-		}
-		else if(tempDowner != null)
-		{
-			//If mouse has been lifted.
-			tempDowner.setHold(false, board.getSimulation());
-			tempDowner = null;
-		}
-	}
-	
 	@Override
 	public void render()
 	{
@@ -360,7 +296,7 @@ public class RenderPlane3D implements RenderPlane, Controller3D.RightClickReceiv
 		}
 		
 		camera.lockLocation();
-		checkMouseInteraction();
+		controller.doFrameCycle();
 		
 		float[] view = camera.getMatrix();
 		if(Settings.doRaycasting)

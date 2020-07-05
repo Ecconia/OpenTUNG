@@ -2,20 +2,22 @@ package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.Camera;
 import de.ecconia.java.opentung.RenderPlane3D;
+import de.ecconia.java.opentung.Settings;
+import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.Part;
 import org.lwjgl.glfw.GLFW;
 
 public class Controller3D implements Controller
 {
-	private final RightClickReceiver mouseClickReceiver;
+	private final RenderPlane3D renderPlane3D;
 	private final Camera camera;
 	
 	private InputProcessor inputProcessor;
 	
-	private boolean mousedown;
-	
 	public Controller3D(RenderPlane3D renderPlane3D)
 	{
-		mouseClickReceiver = renderPlane3D;
+		this.renderPlane3D = renderPlane3D;
 		camera = renderPlane3D.getCamera();
 	}
 	
@@ -45,11 +47,11 @@ public class Controller3D implements Controller
 	{
 		if(type == InputProcessor.MOUSE_LEFT)
 		{
-			checkMouse(false);
+			checkMouseLeft(false);
 		}
 		else if(type == InputProcessor.MOUSE_RIGHT)
 		{
-			mouseClickReceiver.mouseRightClick();
+			checkMouseRight(false);
 		}
 	}
 	
@@ -58,7 +60,11 @@ public class Controller3D implements Controller
 	{
 		if(type == InputProcessor.MOUSE_LEFT)
 		{
-			checkMouse(true);
+			checkMouseLeft(true);
+		}
+		else if(type == InputProcessor.MOUSE_RIGHT)
+		{
+			checkMouseRight(true);
 		}
 	}
 	
@@ -77,42 +83,201 @@ public class Controller3D implements Controller
 		switchToInterface();
 	}
 	
+	//Stuff:
+	
+	private boolean mouseDownLeft;
+	private boolean mouseDownRight;
+	
 	private void switchToInterface()
 	{
 		inputProcessor.switchTo2D();
-		checkMouse(false);
+		checkMouseLeft(false);
+		checkMouseRight(false);
 	}
 	
-	private void checkMouse(boolean shouldBePressed)
+	private void checkMouseLeft(boolean shouldBePressed)
 	{
 		if(shouldBePressed)
 		{
-			if(mousedown)
+			if(mouseDownLeft)
+			{
+				System.out.println("Left click already marked down 3D-Pane, but got downed again.");
+			}
+			else
+			{
+				mouseDownLeft = true;
+				mouseLeftDown();
+			}
+		}
+		else
+		{
+			if(mouseDownLeft)
+			{
+				mouseDownLeft = false;
+				mouseLeftUp();
+			}
+		}
+	}
+	
+	private void checkMouseRight(boolean shouldBePressed)
+	{
+		if(shouldBePressed)
+		{
+			if(mouseDownRight)
 			{
 				System.out.println("Right click already marked down 3D-Pane, but got downed again.");
 			}
 			else
 			{
-				mousedown = true;
-				mouseClickReceiver.mouseLeftDown();
+				mouseDownRight = true;
+				mouseRightDown();
 			}
 		}
 		else
 		{
-			if(mousedown)
+			if(mouseDownRight)
 			{
-				mousedown = false;
-				mouseClickReceiver.mouseLeftUp();
+				mouseDownRight = false;
+				mouseRightUp();
 			}
 		}
 	}
 	
-	public interface RightClickReceiver
+	//State awareness / actual handling / non framework:
+	
+	public void doFrameCycle()
 	{
-		void mouseLeftUp();
-		
-		void mouseLeftDown();
-		
-		void mouseRightClick();
+		doLeftHoldableCheck();
+	}
+	
+	//Left:
+	
+	private long mouseLeftDown;
+	private Part mouseLeftDownOn;
+	private Holdable mouseLeftHoldable;
+	
+	private void mouseLeftDown()
+	{
+		mouseLeftDown = System.currentTimeMillis();
+		mouseLeftDownOn = renderPlane3D.getCursorObject();
+	}
+	
+	private void mouseLeftUp()
+	{
+		Part mouseLeftDownOn = renderPlane3D.getCursorObject();
+		if(mouseLeftDownOn != null)
+		{
+			long clickDuration = (System.currentTimeMillis() - mouseLeftDown);
+			//If the click was longer than a second, validate that its the intended component...
+			if(clickDuration > Settings.longMousePressDuration)
+			{
+				if(this.mouseLeftDownOn == mouseLeftDownOn)
+				{
+					renderPlane3D.componentLeftClicked(mouseLeftDownOn);
+				}
+			}
+			else
+			{
+				renderPlane3D.componentLeftClicked(mouseLeftDownOn);
+			}
+		}
+		mouseLeftDown = 0;
+	}
+	
+	private void doLeftHoldableCheck()
+	{
+		if(mouseLeftDown != 0)
+		{
+			Part part = renderPlane3D.getCursorObject();
+			if(part != null)
+			{
+				if(part instanceof Holdable)
+				{
+					Holdable currentlyHold = (Holdable) part;
+					if(currentlyHold != mouseLeftHoldable)
+					{
+						if(mouseLeftHoldable != null)
+						{
+							//If mouse over something else.
+							renderPlane3D.componentLeftUnHold(mouseLeftHoldable);
+						}
+						//If something new is hold:
+						mouseLeftHoldable = currentlyHold;
+						renderPlane3D.componentLeftHold(mouseLeftHoldable);
+					}
+				}
+				else
+				{
+					if(mouseLeftHoldable != null)
+					{
+						//If mouse over something non-holdable.
+						renderPlane3D.componentLeftUnHold(mouseLeftHoldable);
+						mouseLeftHoldable = null;
+					}
+				}
+			}
+			else
+			{
+				if(mouseLeftHoldable != null)
+				{
+					//If mouse no longer over a component.
+					renderPlane3D.componentLeftUnHold(mouseLeftHoldable);
+					mouseLeftHoldable = null;
+				}
+			}
+		}
+		else if(mouseLeftHoldable != null)
+		{
+			//If mouse has been lifted.
+			renderPlane3D.componentLeftUnHold(mouseLeftHoldable);
+			mouseLeftHoldable = null;
+		}
+	}
+	
+	//Right:
+	
+	private long mouseRightDown;
+	private Part mouseRightDownOn;
+	private boolean mouseRightDownOnConnector;
+	
+	private void mouseRightDown()
+	{
+		mouseRightDown = System.currentTimeMillis();
+		mouseRightDownOn = renderPlane3D.getCursorObject();
+		if(mouseRightDownOn instanceof Connector)
+		{
+			mouseRightDownOnConnector = true;
+			renderPlane3D.rightDragOnConnector((Connector) mouseRightDownOn);
+		}
+	}
+	
+	private void mouseRightUp()
+	{
+		Part mouseRightDownOn = renderPlane3D.getCursorObject();
+		if(mouseRightDownOnConnector)
+		{
+			renderPlane3D.rightDragOnConnector(null);
+		}
+		else
+		{
+			if(mouseRightDownOn != null)
+			{
+				long clickDuration = (System.currentTimeMillis() - mouseRightDown);
+				//If the click was longer than a second, validate that its the intended component...
+				if(clickDuration > Settings.longMousePressDuration)
+				{
+					if(this.mouseRightDownOn == mouseRightDownOn)
+					{
+						renderPlane3D.componentRightClicked(mouseRightDownOn);
+					}
+				}
+				else
+				{
+					renderPlane3D.componentRightClicked(mouseRightDownOn);
+				}
+			}
+		}
+		mouseRightDown = 0;
+		mouseRightDownOnConnector = false;
 	}
 }
