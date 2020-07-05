@@ -21,7 +21,7 @@ public class LabelToolkit
 	{
 		String[] lines = text.split("\n");
 		
-		int side = 300;
+		int side = Settings.labelTexturePixelResolution;
 		//Generate image:
 		BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();

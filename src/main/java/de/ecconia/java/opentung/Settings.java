@@ -80,4 +80,8 @@ public class Settings
 	//Time in ms, which interaction-presses will be considered long.
 	//If that is the case, one can cancel interactions, by not looking at the initial component.
 	public static int longMousePressDuration = 1000;
+	
+	//Label-Textures will be generate with this resolution², you may increase this.
+	//The labels get generated in background, so you might see more "Loading..." textures.
+	public static int labelTexturePixelResolution = 300;
 }
