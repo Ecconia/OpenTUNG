@@ -38,7 +38,6 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 	public CompPanelButton(CompContainer parent)
 	{
 		super(parent);
-		blots.add(new Blot(this, getModelHolder().getBlotModels().get(0)));
 	}
 	
 	private boolean powered;

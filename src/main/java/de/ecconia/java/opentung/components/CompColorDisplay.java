@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -37,10 +36,6 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 	public CompColorDisplay(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
 	}
 	
 	@Override

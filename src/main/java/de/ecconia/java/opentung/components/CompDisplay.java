@@ -37,10 +37,6 @@ public class CompDisplay extends Component implements Updateable, Colorable
 	public CompDisplay(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
 	}
 	
 	public void setColorRaw(Color color)

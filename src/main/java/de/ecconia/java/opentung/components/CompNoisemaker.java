@@ -35,10 +35,6 @@ public class CompNoisemaker extends Component implements Updateable, Colorable
 	public CompNoisemaker(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
 	}
 	
 	public void setFrequency(float frequency)

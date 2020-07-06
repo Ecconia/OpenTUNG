@@ -38,14 +38,6 @@ public class CompDelayer extends Component implements Powerable, Updateable
 	public CompDelayer(CompContainer parent)
 	{
 		super(parent);
-		for(CubeFull cube : getModelHolder().getPegModels())
-		{
-			pegs.add(new Peg(this, cube));
-		}
-		for(CubeFull cube : getModelHolder().getBlotModels())
-		{
-			blots.add(new Blot(this, cube));
-		}
 	}
 	
 	private boolean powered;
