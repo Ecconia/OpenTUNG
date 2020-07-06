@@ -2,15 +2,19 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.Settings;
 import de.ecconia.java.opentung.components.fragments.Color;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class SimulationManager extends Thread
 {
 	private List<Updateable> updateNextTickThreadSafe = new ArrayList<>();
+	private List<Updateable> updateThisTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateNextTick = new ArrayList<>();
+	private List<Updateable> updateThisTick = new ArrayList<>();
 	
 	private List<Cluster> clustersToUpdate = new ArrayList<>();
+	private List<Cluster> sourceClusters = new ArrayList<>();
 	
 	private int[] connectorMeshStates;
 	private int[] colorMeshStates;
@@ -107,18 +111,21 @@ public class SimulationManager extends Thread
 	
 	private void doTick()
 	{
-		List<Updateable> updateThisTick = updateNextTick;
-		updateNextTick = new ArrayList<>();
-		
+		{
+			List<Updateable> tmp = updateThisTick;
+			updateThisTick = updateNextTick;
+			updateNextTick = tmp;
+			updateNextTick.clear();
+		}
 		if(!updateNextTickThreadSafe.isEmpty())
 		{
-			List<Updateable> reference;
-			synchronized(this)
-			{
-				reference = updateNextTickThreadSafe;
-				updateNextTickThreadSafe = new ArrayList<>();
+			synchronized (this) {
+				List<Updateable> tmp = updateThisTickThreadSafe;
+				updateThisTickThreadSafe = updateNextTickThreadSafe;
+				updateNextTickThreadSafe = tmp;
+				updateNextTickThreadSafe.clear();
 			}
-			updateThisTick.addAll(reference);
+			updateThisTick.addAll(updateThisTickThreadSafe);
 		}
 		
 		upsCounter += updateThisTick.size();
@@ -129,10 +136,14 @@ public class SimulationManager extends Thread
 		{
 			updateable.update(this);
 		}
-		
-		List<Cluster> sourceClusters = clustersToUpdate;
-		clustersToUpdate = new ArrayList<>();
-		
+
+		{
+			List<Cluster> tmp = sourceClusters;
+			sourceClusters.clear();
+			sourceClusters = clustersToUpdate;
+			clustersToUpdate = tmp;
+		}
+
 		for(Cluster cluster : sourceClusters)
 		{
 			cluster.update(this);
