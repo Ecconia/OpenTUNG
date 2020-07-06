@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -35,7 +36,10 @@ public class CompNoisemaker extends Component implements Updateable, Colorable
 	public CompNoisemaker(CompContainer parent)
 	{
 		super(parent);
+		inputPeg = pegs.get(0);
 	}
+
+	private Peg inputPeg;
 	
 	public void setFrequency(float frequency)
 	{
@@ -44,7 +48,7 @@ public class CompNoisemaker extends Component implements Updateable, Colorable
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		boolean on = pegs.get(0).getCluster().isActive();
+		boolean on = inputPeg.getCluster().isActive();
 		simulation.setColor(colorID, on ? Color.noisemakerON : Color.noisemakerOFF);
 	}
 	
