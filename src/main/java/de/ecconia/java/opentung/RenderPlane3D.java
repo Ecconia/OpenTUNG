@@ -78,8 +78,6 @@ public class RenderPlane3D implements RenderPlane
 	private final LabelToolkit labelToolkit = new LabelToolkit();
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
 	
-	private Controller3D controller;
-	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
 	
@@ -96,11 +94,14 @@ public class RenderPlane3D implements RenderPlane
 		this.inputHandler = inputHandler;
 	}
 	
+	//Other:
+	
+	private Vector3 placementPosition;
+	
 	//Mouse handling:
 	
-	private long downTime;
-	private boolean down;
-	private Holdable tempDowner;
+	private Controller3D controller;
+	private Connector wireStartPoint;
 	
 	public Part getCursorObject()
 	{
@@ -162,12 +163,12 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void rightDragOnConnector(Connector connector)
 	{
-		System.out.println(">>> Connector: " + (connector == null ? "null" : connector.getPosition()));
+		wireStartPoint = connector;
 	}
 	
 	public void rightDragOnConnectorStop(Connector connector)
 	{
-		System.out.println(">>> Connector: " + (connector == null ? "null" : connector.getPosition()));
+		wireStartPoint = null;
 	}
 	
 	@Override
@@ -311,8 +312,9 @@ public class RenderPlane3D implements RenderPlane
 		if(Settings.drawWorld)
 		{
 			drawDynamic(view);
-			drawPlacementPosition(view);
+			drawPlacementPosition(view); //Must be called before drawWireToBePlaced, currently!!!
 			highlightCluster(view);
+			drawWireToBePlaced(view);
 			drawHighlight(view);
 			
 			if(Settings.drawComponentPositionIndicator)
@@ -329,6 +331,56 @@ public class RenderPlane3D implements RenderPlane
 					crossyIndicator.draw();
 				}
 			}
+		}
+		
+		placementPosition = null; //TODO: Remove reset.
+	}
+	
+	private void drawWireToBePlaced(float[] view)
+	{
+		if(wireStartPoint == null)
+		{
+			return;
+		}
+		
+		Vector3 startingPos = wireStartPoint.getConnectionPoint();
+		
+		lineShader.use();
+		lineShader.setUniform(1, view);
+		Matrix model = new Matrix();
+		model.identity();
+		model.translate((float) startingPos.getX(), (float) startingPos.getY(), (float) startingPos.getZ());
+		labelShader.setUniform(2, model.getMat());
+		crossyIndicator.use();
+		crossyIndicator.draw();
+		
+		if(placementPosition != null)
+		{
+			//Draw wire between placementPosition and startingPos:
+			Vector3 direction = placementPosition.subtract(startingPos).divide(2);
+			double distance = direction.length();
+			
+			Quaternion rotation;
+			if(direction.getX() == 0 && direction.getY() == 0)
+			{
+				rotation = Quaternion.angleAxis(0, Vector3.yp);
+			}
+			else
+			{
+				double angle = Math.toDegrees(Math.acos(Vector3.zp.dot(direction.normalize())));
+				rotation = Quaternion.angleAxis(-angle, Vector3.zp.cross(direction).normalize());
+			}
+			
+			model.identity();
+			Vector3 position = startingPos.add(direction);
+			model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			model.multiply(new Matrix(rotation.createMatrix()));
+			Vector3 size = new Vector3(0.025, 0.01, distance);
+			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+			justShape.setUniform(2, model.getMat());
+			
+			cubeVAO.use();
+			cubeVAO.draw();
 		}
 	}
 	
@@ -391,6 +443,8 @@ public class RenderPlane3D implements RenderPlane
 //		tMax = Math.min(tMin, Math.max(tzMin, tzMax));
 		
 		Vector3 draw = cameraPosition.add(cameraRay.multiply(tMin));
+		//TODO: Set from a more appropriate place!
+		placementPosition = draw;
 		
 		lineShader.use();
 		lineShader.setUniform(1, view);

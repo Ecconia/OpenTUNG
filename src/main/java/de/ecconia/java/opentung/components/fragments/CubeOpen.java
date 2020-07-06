@@ -22,6 +22,11 @@ public class CubeOpen extends CubeFull
 		this.direction = openDirection;
 	}
 	
+	public Direction getDirection()
+	{
+		return direction;
+	}
+	
 	@Override
 	public int getFacesCount()
 	{

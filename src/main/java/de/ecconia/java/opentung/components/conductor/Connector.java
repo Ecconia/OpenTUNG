@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.components.conductor;
 
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -114,5 +115,25 @@ public abstract class Connector extends Part implements Clusterable
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here. Type: " + type.name());
 		}
+	}
+	
+	public Vector3 getConnectionPoint()
+	{
+		//TODO: VERY ungeneric, to be fixed!!!
+		Vector3 connectionOffset;
+		if(model instanceof CubeOpen)
+		{
+			Vector3 directionV = ((CubeOpen) model).getDirection().asVector();
+			connectionOffset = new Vector3(
+					directionV.getX() * model.getSize().getX(),
+					directionV.getY() * model.getSize().getY(),
+					directionV.getZ() * model.getSize().getZ()).multiply(-0.8);
+		}
+		else
+		{
+			connectionOffset = new Vector3(0, model.getSize().getY() * 0.8, 0);
+		}
+		
+		return getPosition().add(getParent().getRotation().inverse().multiply(getModel().getPosition().add(connectionOffset).add(getParent().getModelHolder().getPlacementOffset())));
 	}
 }
