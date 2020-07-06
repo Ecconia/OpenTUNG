@@ -49,6 +49,7 @@ public class InputReceiver
 	public void stop()
 	{
 		inputThread.interrupt();
+		GLFW.glfwPostEmptyEvent();
 	}
 	
 	public void eventPollEntry()
