@@ -141,6 +141,7 @@ public class BoardUniverse
 				e.printStackTrace();
 			}
 		}, "BoardProcessingThread");
+		finalizeThread.setDaemon(true);
 		finalizeThread.start();
 	}
 	
