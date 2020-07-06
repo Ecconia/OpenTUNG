@@ -22,7 +22,6 @@ public class OpenTUNG
 	private static RenderPlane3D worldView;
 	
 	private static File boardFile;
-	private static CompBoard board;
 	private static BoardUniverse boardUniverse;
 	
 	public static void main(String[] args)
@@ -35,7 +34,7 @@ public class OpenTUNG
 			e.printStackTrace(System.out);
 		});
 		
-		board = TungBoardLoader.importTungBoard(boardFile);
+		CompBoard board = TungBoardLoader.importTungBoard(boardFile);
 		boardUniverse = new BoardUniverse(board);
 		
 		System.out.println("Starting GUI...");

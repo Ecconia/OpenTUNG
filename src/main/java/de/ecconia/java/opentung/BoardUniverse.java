@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.Ansi;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -19,89 +20,128 @@ import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
-import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 
 public class BoardUniverse
 {
+	private final CompBoard rootBoard;
+	
 	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
 	private final List<Component> componentsToRender = new ArrayList<>();
 	private final List<CompLabel> labelsToRender = new ArrayList<>();
 	private final List<CompSnappingWire> snappingWires = new ArrayList<>();
+	//TODO: remove.
+	public final List<CompWireRaw> brokenWires = new ArrayList<>();
 	
 	//TODO: Switch to indexed data structure.
 	private final List<Cluster> clusters = new ArrayList<>();
 	
 	private final SimulationManager simulation = new SimulationManager();
 	
-	private int nextClusterID = TungBoardLoader.ids++;
+	private int nextClusterID = 0;
 	
 	public BoardUniverse(CompBoard board)
 	{
+		this.rootBoard = board;
+		
 		System.out.println("[BoardImport] Sorting components.");
 		//Sort Elements into Lists, for the 3D section to use:
 		importComponent(board);
 		
+		System.out.println("[BoardImport] Creating SnappingPeg bounds.");
+		board.createSnappingPegBounds();
+		
 		System.out.println("[BoardImport] Linking SnappingPegs.");
 		//Connect snapping pegs:
 		linkSnappingPegs(board);
-		
-		System.out.println("[BoardImport] Creating connection-clusters.");
-		//Create clusters:
-		for(Wire wire : wiresToRender)
-		{
-			wire.getConnectorA().addWire(wire);
-			wire.getConnectorB().addWire(wire);
-		}
-		for(Wire snappingWire : snappingWires)
-		{
-			snappingWire.getConnectorA().addWire(snappingWire);
-			snappingWire.getConnectorB().addWire(snappingWire);
-		}
-		
-		//Create blot clusters:
-		for(Component comp : componentsToRender)
-		{
-			for(Blot blot : comp.getBlots())
+	}
+	
+	public void startFinalizeImport(BlockingQueue<GPUTask> gpuTasks)
+	{
+		Thread finalizeThread = new Thread(() -> {
+			System.out.println("[BoardImport] Creating connector bounds.");
+			rootBoard.createConnectorBounds();
+			System.out.println("[BoardImport] Linking wires.");
+			try
 			{
-				createBlottyCluster(blot);
+				linkWires(rootBoard, rootBoard);
 			}
-		}
-		for(Component comp : componentsToRender)
-		{
-			for(Peg peg : comp.getPegs())
+			catch(Exception e)
 			{
-				if(!peg.hasCluster())
+				e.printStackTrace();
+				System.out.println(Ansi.red + "Couldn't find wire ports... " + Ansi.r);
+			}
+			
+			System.out.println("[BoardImport] Creating connection-clusters.");
+			//Create clusters:
+			for(Wire wire : wiresToRender)
+			{
+				wire.getConnectorA().addWire(wire);
+				wire.getConnectorB().addWire(wire);
+			}
+			for(Wire snappingWire : snappingWires)
+			{
+				snappingWire.getConnectorA().addWire(snappingWire);
+				snappingWire.getConnectorB().addWire(snappingWire);
+			}
+			
+			//Create blot clusters:
+			for(Component comp : componentsToRender)
+			{
+				for(Blot blot : comp.getBlots())
 				{
-					createPeggyCluster(peg);
+					createBlottyCluster(blot);
 				}
 			}
-		}
-		
-		System.out.println("[Debug] Cluster amount: " + nextClusterID);
-		
-		System.out.println("[BoardImport] Initializing simulation.");
-		//Update clusters:
-		for(Component component : componentsToRender)
-		{
-			if(component instanceof Powerable)
+			for(Component comp : componentsToRender)
 			{
-				((Powerable) component).forceUpdateOutput();
+				for(Peg peg : comp.getPegs())
+				{
+					if(!peg.hasCluster())
+					{
+						createPeggyCluster(peg);
+					}
+				}
 			}
-		}
-		
-		//Send every updateable into the simulation, to let each component have the chance to resume a clock.
-		for(Component comp : componentsToRender)
-		{
-			if(comp instanceof Updateable)
+			
+			System.out.println("[Debug] Cluster amount: " + nextClusterID);
+			
+			System.out.println("[BoardImport] Initializing simulation.");
+			//Update clusters:
+			for(Component component : componentsToRender)
 			{
-				simulation.updateNextTick((Updateable) comp);
+				if(component instanceof Powerable)
+				{
+					((Powerable) component).forceUpdateOutput();
+				}
 			}
-		}
+			
+			//Send every updateable into the simulation, to let each component have the chance to resume a clock.
+			for(Component comp : componentsToRender)
+			{
+				if(comp instanceof Updateable)
+				{
+					simulation.updateNextTick((Updateable) comp);
+				}
+			}
+			
+			try
+			{
+				gpuTasks.put((RenderPlane3D world3D) -> {
+					world3D.refreshPostWorldLoad();
+				});
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}, "BoardProcessingThread");
+		finalizeThread.start();
 	}
 	
 	private void createPeggyCluster(Peg peg)
@@ -186,6 +226,68 @@ public class BoardUniverse
 		{
 			Connector otherSide = wire.getOtherSide(blot);
 			expandBlottyCluster(cluster, otherSide);
+		}
+	}
+	
+	private void linkWires(CompContainer container, CompContainer scannable)
+	{
+		boolean maintenance = Settings.importMaintenanceMode;
+		Connector placebo = null;
+		if(maintenance)
+		{
+			placebo = new Connector(null, null)
+			{
+			};
+		}
+		
+		for(Component component : container.getChildren())
+		{
+			if(component instanceof CompWireRaw)
+			{
+				CompWireRaw wire = (CompWireRaw) component;
+				
+				Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
+				Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
+				if(!maintenance)
+				{
+					if(connectorA == null || connectorB == null)
+					{
+						brokenWires.add(wire);
+						throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
+					}
+					wire.setConnectorA(connectorA);
+					wire.setConnectorB(connectorB);
+				}
+				else
+				{
+					if(connectorA == null && connectorB == null)
+					{
+						//Ignore this wire, it will never be accessed.
+						wire.setConnectorA(placebo);
+						wire.setConnectorB(placebo);
+						wire.setCluster(new InheritingCluster(nextClusterID++)); //Assign empty cluster, just for the ID.
+					}
+					else if(connectorA == null)
+					{
+						wire.setConnectorA(connectorB);
+						wire.setConnectorB(connectorB);
+					}
+					else if(connectorB == null)
+					{
+						wire.setConnectorA(connectorA);
+						wire.setConnectorB(connectorA);
+					}
+					else
+					{
+						wire.setConnectorA(connectorA);
+						wire.setConnectorB(connectorB);
+					}
+				}
+			}
+			else if(component instanceof CompContainer)
+			{
+				linkWires((CompContainer) component, scannable);
+			}
 		}
 	}
 	
@@ -404,5 +506,10 @@ public class BoardUniverse
 	public List<Cluster> getClusters()
 	{
 		return clusters;
+	}
+	
+	public List<CompWireRaw> getBrokenWires()
+	{
+		return brokenWires;
 	}
 }

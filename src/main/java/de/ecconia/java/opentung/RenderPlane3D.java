@@ -32,7 +32,6 @@ import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.Wire;
-import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -87,10 +86,12 @@ public class RenderPlane3D implements RenderPlane
 	private List<Connector> connectorsToHighlight = new ArrayList<>();
 	private int width = 0;
 	private int height = 0;
+	private float[] latestProjectionMat;
 	
 	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board)
 	{
 		this.board = board;
+		board.startFinalizeImport(gpuTasks);
 		this.inputHandler = inputHandler;
 	}
 	
@@ -192,12 +193,12 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("Starting label generation.");
 		labelToolkit.startProcessing(gpuTasks, board.getLabelsToRender());
 		
-		System.out.println("Broken wires rendered: " + TungBoardLoader.brokenWires.size());
-		if(!TungBoardLoader.brokenWires.isEmpty())
+		System.out.println("Broken wires rendered: " + board.getBrokenWires().size());
+		if(!board.getBrokenWires().isEmpty())
 		{
 			board.getWiresToRender().clear();
-			board.getWiresToRender().addAll(TungBoardLoader.brokenWires); //Debuggy
-			for(CompWireRaw wire : TungBoardLoader.brokenWires)
+			board.getWiresToRender().addAll(board.getBrokenWires()); //Debuggy
+			for(CompWireRaw wire : board.getBrokenWires())
 			{
 				//TODO: Highlight which exactly failed (Or just remove this whole section, rip)
 				wireEndsToRender.add(wire.getEnd1());
@@ -282,15 +283,24 @@ public class RenderPlane3D implements RenderPlane
 			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
 			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
-			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation());
+			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation(), true);
 			colorMesh = new ColorMesh(board.getComponentsToRender(), board.getSimulation());
 			System.out.println("Done.");
 		}
 		
-		board.getSimulation().start();
 		System.out.println("Label amount: " + board.getLabelsToRender().size());
 		System.out.println("Wire amount: " + board.getWiresToRender().size());
 		lastCycle = System.currentTimeMillis();
+	}
+	
+	public void refreshPostWorldLoad()
+	{
+		System.out.println("Update:");
+		conductorMesh.unload();
+		conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation(), false);
+		conductorMesh.updateProjection(latestProjectionMat);
+		board.getSimulation().start();
+		System.out.println("Done.");
 	}
 	
 	@Override
@@ -298,7 +308,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		while(!gpuTasks.isEmpty())
 		{
-			gpuTasks.poll().execute();
+			gpuTasks.poll().execute(this);
 		}
 		
 		camera.lockLocation();
@@ -664,6 +674,7 @@ public class RenderPlane3D implements RenderPlane
 		Matrix p = new Matrix();
 		p.perspective(Settings.fov, (float) width / (float) height, 0.1f, 100000f);
 		float[] projection = p.getMat();
+		latestProjectionMat = projection;
 		
 		rayCastMesh.updateProjection(projection);
 		solidMesh.updateProjection(projection);

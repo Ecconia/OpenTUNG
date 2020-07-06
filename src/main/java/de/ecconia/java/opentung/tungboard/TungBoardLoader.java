@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.tungboard;
 
-import de.ecconia.Ansi;
 import de.ecconia.java.opentung.Settings;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
@@ -23,13 +22,11 @@ import de.ecconia.java.opentung.components.CompSwitch;
 import de.ecconia.java.opentung.components.CompThroughBlotter;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
-import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
@@ -57,8 +54,6 @@ import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TungBoardLoader
 {
@@ -75,29 +70,9 @@ public class TungBoardLoader
 	public static CompBoard importTungBoard(File file)
 	{
 		CompBoard board = convertTungBoard(file);
-		if(board == null)
-		{
-			return null;
-		}
 		
 		System.out.println("[BoardImport] Initializing components.");
 		init(board);
-		
-		System.out.println("[BoardImport] Creating connector bounds.");
-		board.createConnectorBounds();
-		System.out.println("[BoardImport] Creating SnappingPeg bounds.");
-		board.createSnappingPegBounds();
-		
-		System.out.println("[BoardImport] Linking wires.");
-		try
-		{
-			linkWires(board, board);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-			System.out.println(Ansi.red + "Couldn't find wire ports... " + Ansi.r);
-		}
 		
 		return board;
 	}
@@ -114,72 +89,6 @@ public class TungBoardLoader
 				continue;
 			}
 			component.init();
-		}
-	}
-	
-	//TODO: remove.
-	public static List<CompWireRaw> brokenWires = new ArrayList<>();
-	public static int ids = 0;
-	
-	private static void linkWires(CompContainer container, CompContainer scannable)
-	{
-		boolean maintenance = Settings.importMaintenanceMode;
-		Connector placebo = null;
-		if(maintenance)
-		{
-			placebo = new Connector(null, null)
-			{
-			};
-		}
-		
-		for(Component component : container.getChildren())
-		{
-			if(component instanceof CompWireRaw)
-			{
-				CompWireRaw wire = (CompWireRaw) component;
-				
-				Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
-				Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
-				if(!maintenance)
-				{
-					if(connectorA == null || connectorB == null)
-					{
-						brokenWires.add(wire);
-						throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
-					}
-					wire.setConnectorA(connectorA);
-					wire.setConnectorB(connectorB);
-				}
-				else
-				{
-					if(connectorA == null && connectorB == null)
-					{
-						//Ignore this wire, it will never be accessed.
-						wire.setConnectorA(placebo);
-						wire.setConnectorB(placebo);
-						wire.setCluster(new InheritingCluster(ids++)); //Assign empty cluster, just for the ID.
-					}
-					else if(connectorA == null)
-					{
-						wire.setConnectorA(connectorB);
-						wire.setConnectorB(connectorB);
-					}
-					else if(connectorB == null)
-					{
-						wire.setConnectorA(connectorA);
-						wire.setConnectorB(connectorA);
-					}
-					else
-					{
-						wire.setConnectorA(connectorA);
-						wire.setConnectorB(connectorB);
-					}
-				}
-			}
-			else if(component instanceof CompContainer)
-			{
-				linkWires((CompContainer) component, scannable);
-			}
 		}
 	}
 	

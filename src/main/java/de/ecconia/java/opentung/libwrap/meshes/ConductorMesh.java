@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.Clusterable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +25,7 @@ public class ConductorMesh
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
 	private final int[] falseDataArray = new int[1016 * 4];
 	
-	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters, SimulationManager simulation)
+	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters, SimulationManager simulation, boolean maybeClusterless)
 	{
 		this.solidMeshShader = new ShaderProgram("mesh/meshConductor");
 		simulation.setConnectorMeshStates(falseDataArray);
@@ -57,18 +58,11 @@ public class ConductorMesh
 		{
 			wire.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 			//TODO: Ungeneric:
-			if(wire.hasCluster())
+			int clusterID = getClusterID(wire, maybeClusterless);
+			//Wire has 4 Sides, each 4 vertices: 16
+			for(int i = 0; i < 4 * 4; i++)
 			{
-				int clusterID = wire.getCluster().getId();
-				//Wire has 4 Sides, each 4 vertices: 16
-				for(int i = 0; i < 4 * 4; i++)
-				{
-					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
-				}
-			}
-			else
-			{
-				throw new RuntimeException("Found wire without a cluster :/");
+				clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 			}
 		}
 		for(Component comp : components)
@@ -81,33 +75,19 @@ public class ConductorMesh
 			for(Peg peg : comp.getPegs())
 			{
 				peg.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
-				if(peg.hasCluster())
+				int clusterID = getClusterID(peg, maybeClusterless);
+				for(int i = 0; i < peg.getModel().getFacesCount() * 4; i++)
 				{
-					int clusterID = peg.getCluster().getId();
-					for(int i = 0; i < peg.getModel().getFacesCount() * 4; i++)
-					{
-						clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
-					}
-				}
-				else
-				{
-					throw new RuntimeException("Found peg without a cluster :/");
+					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 				}
 			}
 			for(Blot blot : comp.getBlots())
 			{
 				blot.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
-				if(blot.hasCluster())
+				int clusterID = getClusterID(blot, maybeClusterless);
+				for(int i = 0; i < blot.getModel().getFacesCount() * 4; i++)
 				{
-					int clusterID = blot.getCluster().getId();
-					for(int i = 0; i < blot.getModel().getFacesCount() * 4; i++)
-					{
-						clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
-					}
-				}
-				else
-				{
-					throw new RuntimeException("Found blot without a cluster :/");
+					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 				}
 			}
 		}
@@ -119,6 +99,22 @@ public class ConductorMesh
 		for(Cluster cluster : clusters)
 		{
 			setStateByID(cluster.getId(), cluster.isActive());
+		}
+	}
+	
+	private int getClusterID(Clusterable clusterable, boolean maybeClusterless)
+	{
+		if(maybeClusterless)
+		{
+			return 0;
+		}
+		if(clusterable.hasCluster())
+		{
+			return clusterable.getCluster().getId();
+		}
+		else
+		{
+			throw new RuntimeException("Found Clusterable without a cluster :/");
 		}
 	}
 	
@@ -151,6 +147,11 @@ public class ConductorMesh
 	{
 		solidMeshShader.use();
 		solidMeshShader.setUniform(0, projection);
+	}
+	
+	public void unload()
+	{
+		vao.unload();
 	}
 	
 	private static class ConductorMeshVAO extends LargeGenericVAO

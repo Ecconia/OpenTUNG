@@ -90,7 +90,7 @@ public class LabelToolkit
 				LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize);
 				try
 				{
-					gpuTasks.put(() -> {
+					gpuTasks.put((unused) -> {
 						texture.upload();
 					});
 				}
