@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.libwrap.meshes;
 
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.Component;
@@ -73,7 +74,8 @@ public class ColorMesh
 		
 		vao = new ColorMeshVAO(vertices, indices, colorIDs);
 		
-		Arrays.fill(falseDataArray, 0);
+		Color color = Color.displayOff;
+		Arrays.fill(falseDataArray, color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 0xff);
 	}
 	
 	public void draw(float[] view)
