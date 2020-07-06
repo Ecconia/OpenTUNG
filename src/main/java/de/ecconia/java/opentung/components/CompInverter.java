@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.conductor.Blot;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -36,7 +37,12 @@ public class CompInverter extends Component implements Powerable, Updateable
 	public CompInverter(CompContainer parent)
 	{
 		super(parent);
+		inputPeg = pegs.get(0);
+		outputBlot = blots.get(0);
 	}
+
+	private Peg inputPeg;
+	private Blot outputBlot;
 	
 	private boolean powered;
 	
@@ -58,20 +64,19 @@ public class CompInverter extends Component implements Powerable, Updateable
 		//Default state is off. Only update on ON.
 		if(powered)
 		{
-			Blot blot = blots.get(0);
-			blot.forceUpdateON();
+			outputBlot.forceUpdateON();
 		}
 	}
 	
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		boolean input = pegs.get(0).getCluster().isActive();
+		boolean input = inputPeg.getCluster().isActive();
 		//If they are the same, invalid, has to be inverted.
 		if(powered == input)
 		{
 			powered = !input;
-			simulation.mightHaveChanged(blots.get(0).getCluster());
+			simulation.mightHaveChanged(outputBlot.getCluster());
 		}
 	}
 }
