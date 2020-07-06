@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.conductor.Blot;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -36,13 +35,13 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 	
 	//### Non-Static ###
 	
+	private final Blot output;
+	
 	public CompPanelButton(CompContainer parent)
 	{
 		super(parent);
-		outputBlot = blots.get(0);
+		output = blots.get(0);
 	}
-
-	private Blot outputBlot;
 	
 	private boolean powered;
 	
@@ -64,14 +63,14 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 		//Default state is off. Only update on ON.
 		if(powered)
 		{
-			outputBlot.forceUpdateON();
+			output.forceUpdateON();
 		}
 	}
 	
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		outputBlot.getCluster().update(simulation);
+		output.getCluster().update(simulation);
 	}
 	
 	@Override

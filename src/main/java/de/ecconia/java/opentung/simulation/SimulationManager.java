@@ -2,19 +2,18 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.Settings;
 import de.ecconia.java.opentung.components.fragments.Color;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class SimulationManager extends Thread
 {
+	//TODO: Replace with custom lists:
 	private List<Updateable> updateNextTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateThisTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateNextTick = new ArrayList<>();
 	private List<Updateable> updateThisTick = new ArrayList<>();
-	
-	private List<Cluster> clustersToUpdate = new ArrayList<>();
-	private List<Cluster> sourceClusters = new ArrayList<>();
+	private List<Cluster> updateClusterNextStage = new ArrayList<>();
+	private List<Cluster> updateClusterThisStage = new ArrayList<>();
 	
 	private int[] connectorMeshStates;
 	private int[] colorMeshStates;
@@ -82,7 +81,9 @@ public class SimulationManager extends Thread
 					after = System.nanoTime();
 					long delta = after - before;
 					long targetTime = after + targetSleep - delta;
-					while(System.nanoTime() < targetTime) ;
+					while(System.nanoTime() < targetTime)
+					{
+					}
 					before = System.nanoTime();
 				}
 			}
@@ -104,9 +105,9 @@ public class SimulationManager extends Thread
 		updateNextTick.add(updateable);
 	}
 	
-	public void mightHaveChanged(Cluster cluster)
+	public void updateNextStage(Cluster cluster)
 	{
-		clustersToUpdate.add(cluster);
+		updateClusterNextStage.add(cluster);
 	}
 	
 	private void doTick()
@@ -117,12 +118,16 @@ public class SimulationManager extends Thread
 			updateNextTick = tmp;
 			updateNextTick.clear();
 		}
+		
 		if(!updateNextTickThreadSafe.isEmpty())
 		{
-			synchronized (this) {
+			synchronized(this)
+			{
 				List<Updateable> tmp = updateThisTickThreadSafe;
 				updateThisTickThreadSafe = updateNextTickThreadSafe;
 				updateNextTickThreadSafe = tmp;
+				//TBI: The clearing could be done in the synchronized section of the input/graphic thread.
+				//TBI: Alternatively overwrite the class and let clear only reset the pointer.
 				updateNextTickThreadSafe.clear();
 			}
 			updateThisTick.addAll(updateThisTickThreadSafe);
@@ -136,26 +141,32 @@ public class SimulationManager extends Thread
 		{
 			updateable.update(this);
 		}
-
+		
 		{
-			List<Cluster> tmp = sourceClusters;
-			sourceClusters.clear();
-			sourceClusters = clustersToUpdate;
-			clustersToUpdate = tmp;
+			List<Cluster> tmp = updateClusterThisStage;
+			updateClusterThisStage = updateClusterNextStage;
+			updateClusterNextStage = tmp;
 		}
-
-		for(Cluster cluster : sourceClusters)
+		
+		//Source clusters:
+		for(Cluster cluster : updateClusterThisStage)
 		{
 			cluster.update(this);
 		}
 		
-		for(Cluster cluster : clustersToUpdate)
+		//Inheriting clusters:
+		for(Cluster cluster : updateClusterNextStage)
 		{
 			cluster.update(this);
 		}
-		if(!clustersToUpdate.isEmpty())
+		
+		if(!updateClusterThisStage.isEmpty())
 		{
-			clustersToUpdate.clear();
+			updateClusterThisStage.clear();
+		}
+		if(!updateClusterNextStage.isEmpty())
+		{
+			updateClusterNextStage.clear();
 		}
 	}
 	

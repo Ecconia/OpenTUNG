@@ -19,9 +19,9 @@ public class CompThroughPeg extends Component
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.2, +0.15 +0.175, 0.2), Color.material));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, +0.075 +0.0875 +0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YNeg));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.075 -0.0875 -0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
+		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.2, +0.15 + 0.175, 0.2), Color.material));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, +0.075 + 0.0875 + 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YNeg));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.0875 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
 	}
 	
 	@Override

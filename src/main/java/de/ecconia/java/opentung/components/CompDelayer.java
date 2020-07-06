@@ -35,15 +35,15 @@ public class CompDelayer extends Component implements Powerable, Updateable
 	
 	//### Non-Static ###
 	
+	private final Peg input;
+	private final Blot output;
+	
 	public CompDelayer(CompContainer parent)
 	{
 		super(parent);
-		inputPeg = pegs.get(0);
-		outputBlot = blots.get(0);
+		input = pegs.get(0);
+		output = blots.get(0);
 	}
-
-	private Peg inputPeg;
-	private Blot outputBlot;
 	
 	private boolean powered;
 	
@@ -72,14 +72,14 @@ public class CompDelayer extends Component implements Powerable, Updateable
 		//Default state is off. Only update on ON.
 		if(powered)
 		{
-			outputBlot.forceUpdateON();
+			output.forceUpdateON();
 		}
 	}
 	
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		boolean input = inputPeg.getCluster().isActive();
+		boolean input = this.input.getCluster().isActive();
 		if(delayCount == 9)
 		{
 			changeOutputState(simulation, true);
@@ -105,7 +105,7 @@ public class CompDelayer extends Component implements Powerable, Updateable
 		if(powered != state)
 		{
 			powered = state;
-			simulation.mightHaveChanged(outputBlot.getCluster());
+			simulation.updateNextStage(output.getCluster());
 		}
 	}
 }

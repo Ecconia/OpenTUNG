@@ -47,13 +47,13 @@ public class InheritingCluster extends Cluster
 	public void oneIn(SimulationManager simulation)
 	{
 		activeSources++;
-		simulation.mightHaveChanged(this);
+		simulation.updateNextStage(this);
 	}
 	
 	public void oneOut(SimulationManager simulation)
 	{
 		activeSources--;
-		simulation.mightHaveChanged(this);
+		simulation.updateNextStage(this);
 	}
 	
 	@Override

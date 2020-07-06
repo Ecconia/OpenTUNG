@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -33,24 +34,31 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 	
 	//### Non-Static ###
 	
+	private final Peg inputSmall;
+	private final Peg inputMedium;
+	private final Peg inputLong;
+	
 	public CompColorDisplay(CompContainer parent)
 	{
 		super(parent);
+		inputSmall = pegs.get(0);
+		inputMedium = pegs.get(1);
+		inputLong = pegs.get(2);
 	}
 	
 	@Override
 	public void update(SimulationManager simulation)
 	{
 		int colorIndex = 0;
-		if(pegs.get(0).getCluster().isActive())
+		if(inputSmall.getCluster().isActive())
 		{
 			colorIndex |= 1;
 		}
-		if(pegs.get(1).getCluster().isActive())
+		if(inputMedium.getCluster().isActive())
 		{
 			colorIndex |= 2;
 		}
-		if(pegs.get(2).getCluster().isActive())
+		if(inputLong.getCluster().isActive())
 		{
 			colorIndex |= 4;
 		}
@@ -59,7 +67,7 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 		simulation.setColor(colorID, color);
 	}
 	
-	int colorID;
+	private int colorID;
 	
 	@Override
 	public void setColorID(int id, int colorID)

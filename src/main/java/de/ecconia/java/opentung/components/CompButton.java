@@ -22,7 +22,7 @@ public class CompButton extends Component implements Powerable, Updateable, Hold
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15f + 0.075f, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
 		//TODO: Open bottom
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.15 + 0.03, 0.0), new Vector3(0.18, 0.06, 0.18), Color.interactable));
 	}
@@ -35,13 +35,13 @@ public class CompButton extends Component implements Powerable, Updateable, Hold
 	
 	//### Non-Static ###
 	
+	private final Blot output;
+	
 	public CompButton(CompContainer parent)
 	{
 		super(parent);
-		outputBlot = blots.get(0);
+		output = blots.get(0);
 	}
-
-	private Blot outputBlot;
 	
 	private boolean powered;
 	
@@ -66,7 +66,7 @@ public class CompButton extends Component implements Powerable, Updateable, Hold
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		outputBlot.getCluster().update(simulation);
+		output.getCluster().update(simulation);
 	}
 	
 	@Override

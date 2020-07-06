@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.components;
 
 import de.ecconia.java.opentung.components.conductor.Blot;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
@@ -22,7 +21,7 @@ public class CompSwitch extends Component implements Powerable, Updateable
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15f + 0.075f, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.2, 0.0), new Vector3(0.15, 0.207, 0.06), Color.interactable));
 	}
 	
@@ -34,13 +33,13 @@ public class CompSwitch extends Component implements Powerable, Updateable
 	
 	//### Non-Static ###
 	
+	private final Blot output;
+	
 	public CompSwitch(CompContainer parent)
 	{
 		super(parent);
-		outputBlot = blots.get(0);
+		output = blots.get(0);
 	}
-
-	private Blot outputBlot;
 	
 	private boolean powered;
 	
@@ -62,14 +61,14 @@ public class CompSwitch extends Component implements Powerable, Updateable
 		//Default state is off. Only update on ON.
 		if(powered)
 		{
-			outputBlot.forceUpdateON();
+			output.forceUpdateON();
 		}
 	}
 	
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		outputBlot.getCluster().update(simulation); //Just forward the problem to the cluster.
+		output.getCluster().update(simulation); //Just forward the problem to the cluster.
 	}
 	
 	@Override

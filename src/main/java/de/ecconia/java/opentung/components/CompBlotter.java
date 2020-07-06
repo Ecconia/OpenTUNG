@@ -22,8 +22,8 @@ public class CompBlotter extends Component implements Powerable, Updateable
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.0, +0.15 +0.15), new Vector3(0.09, 0.09, 0.30), Direction.ZNeg));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 -0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.0, +0.15 + 0.15), new Vector3(0.09, 0.09, 0.30), Direction.ZNeg));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
 	}
 	
 	@Override
@@ -34,15 +34,15 @@ public class CompBlotter extends Component implements Powerable, Updateable
 	
 	//### Non-Static ###
 	
+	private final Peg input;
+	private final Blot output;
+	
 	public CompBlotter(CompContainer parent)
 	{
 		super(parent);
-		inputPeg = pegs.get(0);
-		outputBlot = blots.get(0);
+		input = pegs.get(0);
+		output = blots.get(0);
 	}
-
-	private Peg inputPeg;
-	private Blot outputBlot;
 	
 	private boolean powered;
 	
@@ -64,18 +64,18 @@ public class CompBlotter extends Component implements Powerable, Updateable
 		//Default state is off. Only update on ON.
 		if(powered)
 		{
-			outputBlot.forceUpdateON();
+			output.forceUpdateON();
 		}
 	}
 	
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		boolean input = inputPeg.getCluster().isActive();
+		boolean input = this.input.getCluster().isActive();
 		if(powered != input)
 		{
 			powered = input;
-			simulation.mightHaveChanged(outputBlot.getCluster());
+			simulation.updateNextStage(output.getCluster());
 		}
 	}
 }
