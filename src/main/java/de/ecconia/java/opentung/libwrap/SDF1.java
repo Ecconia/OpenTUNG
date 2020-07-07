@@ -116,7 +116,7 @@ public class SDF1
 	private static Point empty = new Point(9999, 9999);
 	private static Point inside = new Point(0, 0);
 	
-	public static void start(BufferedImage image)
+	public static BufferedImage start(BufferedImage image)
 	{
 		int width = image.getWidth();
 		int height = image.getHeight();
@@ -173,5 +173,7 @@ public class SDF1
 				image.setRGB(x, y, c << 24 | c << 16 | c << 8 | c);
 			}
 		}
+		
+		return image;
 	}
 }

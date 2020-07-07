@@ -20,14 +20,14 @@ void main()
 	vec4 baseColor = getTextureAt(tTextureCoords);
 	
 	bool OUTLINE = false;
-	float OUTLINEMINVALUE0 = 0.5 - 0.01;
-	float OUTLINEMAXVALUE1 = 0.5 + 0.01;
+	float OUTLINEMINVALUE0 = 0.5 - 0.1;
+	float OUTLINEMAXVALUE1 = 0.5 + 0.1;
 	vec4 OUTLINECOLOR = vec4(0, 1, 1, 1);
 	
 	//Dunno how to get these guys working properly.
 	bool SOFTEDGES = false;
-	float SOFTEDGEMIN = 0.5 - 0.01;
-	float SOFTEDGEMAX = 0.5 + 0.01;
+	float SOFTEDGEMIN = 0.4;
+	float SOFTEDGEMAX = 0.45;
 	
 //	bool OUTERGLOW = false;
 //	vec2 GLOWUVOFFSET = vec2(0.0, 0.0);
@@ -73,5 +73,11 @@ void main()
 //		baseColor = mix(glowc, baseColor, mskUsed); //Where is mskUsed coming from?
 //	}
 	
+//	if(baseColor.a > 0)
+//	{
+//		baseColor.a = 1;
+//	}
+	//float c = texture(textureVar, tTextureCoords).r;
+	//outColor = vec4(c,c,c,1);
 	outColor = baseColor;
 }

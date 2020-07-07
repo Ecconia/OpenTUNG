@@ -17,7 +17,7 @@ public class LabelTextureWrapper
 	public LabelTextureWrapper(BufferedImage image)
 	{
 		{
-			SDF1.start(image);
+			image = SDF1.start(image);
 			
 //			if(image.getWidth() != 256)
 //			{
