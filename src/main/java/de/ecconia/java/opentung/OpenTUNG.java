@@ -42,7 +42,7 @@ public class OpenTUNG
 		{
 			System.out.println("LWJGL version: " + Version.getVersion());
 			
-			SWindowWrapper window = new SWindowWrapper(500, 500, "OpenTUNG FPS: ? | TPS: ? | UPS/Load: ?");
+			SWindowWrapper window = new SWindowWrapper(500, 500, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ?");
 			inputHandler = new InputProcessor(window.getID());
 			
 			Thread graphicsThread = new Thread(() -> {
@@ -87,7 +87,7 @@ public class OpenTUNG
 						if(now - past > 1000)
 						{
 							past = now;
-							window.setTitle("OpenTUNG FPS: " + finishedRenderings + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | UPS/Load: " + boardUniverse.getSimulation().getLoad());
+							window.setTitle("OpenTUNG FPS: " + finishedRenderings + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad());
 							finishedRenderings = 0;
 						}
 						
