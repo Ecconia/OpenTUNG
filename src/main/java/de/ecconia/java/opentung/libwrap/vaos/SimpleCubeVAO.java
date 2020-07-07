@@ -12,14 +12,14 @@ public class SimpleCubeVAO extends GenericVAO
 	public static SimpleCubeVAO generateCube()
 	{
 		return new SimpleCubeVAO(new float[]{
-				-1, -1, -1, //0 - R B N
-				+1, -1, -1, //1 - L B N
-				+1, +1, -1, //2 - L T N
-				-1, +1, -1, //3 - R T N
-				-1, -1, +1, //4 - R B F
-				+1, -1, +1, //5 - L B F
-				+1, +1, +1, //6 - L T F
-				-1, +1, +1, //7 - R T F
+				+1, -1, -1, //0 - R B N
+				-1, -1, -1, //1 - L B N
+				-1, +1, -1, //2 - L T N
+				+1, +1, -1, //3 - R T N
+				+1, -1, +1, //4 - R B F
+				-1, -1, +1, //5 - L B F
+				-1, +1, +1, //6 - L T F
+				+1, +1, +1, //7 - R T F
 		}, new short[]{
 				//Near:
 				1, 0, 3,
