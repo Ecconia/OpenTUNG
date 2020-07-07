@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.imageio.ImageIO;
 
 public class LabelToolkit
@@ -55,6 +56,11 @@ public class LabelToolkit
 	
 	public void startProcessing(BlockingQueue<GPUTask> gpuTasks, List<CompLabel> labelsToRender)
 	{
+		if(labelsToRender.isEmpty())
+		{
+			return;
+		}
+		
 		LabelTextureWrapper loading;
 		try
 		{
@@ -82,40 +88,86 @@ public class LabelToolkit
 			list.add(label);
 		}
 		
-		Thread labelThread = new Thread(() -> {
-			List<Map.Entry<LabelContainer, List<CompLabel>>> daList = new ArrayList<>(map.entrySet());
-			for(int i = 0; i < daList.size(); i++)
+		int threadCount = Runtime.getRuntime().availableProcessors();
+		//Leave two unused threads, for other and self-usage. Wire-Linking and graphic threads are running too.
+		threadCount -= 2;
+		if(map.size() < 20 || threadCount < 2) //Dunno if 20 is fine.
+		{
+			Thread labelThread = new Thread(() -> {
+				List<Map.Entry<LabelContainer, List<CompLabel>>> daList = new ArrayList<>(map.entrySet());
+				for(int i = 0; i < daList.size(); i++)
+				{
+					Map.Entry<LabelContainer, List<CompLabel>> entry = daList.get(i);
+					processEntry(gpuTasks, entry);
+					if(i % 100 == 0)
+					{
+						System.out.println("Generated " + (i + 1) + "/" + map.size() + " labels.");
+					}
+				}
+				System.out.println("Finished generating labels.");
+			}, "LabelThread");
+			System.out.println("Starting to generate " + map.size() + " labels.");
+			labelThread.setDaemon(true);
+			labelThread.start();
+		}
+		else
+		{
+			LinkedBlockingQueue<Map.Entry<LabelContainer, List<CompLabel>>> queue = new LinkedBlockingQueue<>();
+			try
 			{
-				Map.Entry<LabelContainer, List<CompLabel>> entry = daList.get(i);
-				LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize);
-				try
+				for(Map.Entry<LabelContainer, List<CompLabel>> entry : map.entrySet())
 				{
-					gpuTasks.put((unused) -> {
-						texture.upload();
-					});
-				}
-				catch(InterruptedException e)
-				{
-					//Should never happen.
-					e.printStackTrace();
-					return;
-				}
-
-				for(CompLabel label : entry.getValue())
-				{
-					label.setTexture(texture);
-				}
-
-				if(i % 100 == 0)
-				{
-					System.out.println("Generated " + (i + 1) + "/" + map.size() + " labels.");
+					queue.put(entry);
 				}
 			}
-			System.out.println("Finished generating labels.");
-		}, "LabelThread");
-		System.out.println("Starting to generate " + map.size() + " labels.");
-		labelThread.setDaemon(true);
-		labelThread.start();
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+				return; //Abort, should not happen.
+			}
+			
+			if(threadCount > map.size())
+			{
+				//Wow over 20 threads :O :O
+				threadCount = map.size(); //Safety first.
+			}
+			System.out.println("Rendering labels with " + threadCount + " threads.");
+			for(int i = 0; i < threadCount; i++)
+			{
+				Thread t = new Thread(() -> {
+					Map.Entry<LabelContainer, List<CompLabel>> entry;
+					while((entry = queue.poll()) != null)
+					{
+						processEntry(gpuTasks, entry);
+					}
+					System.out.println(Thread.currentThread().getName() + " has finished.");
+				}, "LabelRenderThread#" + i);
+				t.setDaemon(true);
+				t.start();
+			}
+		}
+	}
+	
+	private void processEntry(BlockingQueue<GPUTask> gpuTasks, Map.Entry<LabelContainer, List<CompLabel>> entry)
+	{
+		LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize);
+		try
+		{
+			gpuTasks.put((unused) -> {
+				texture.upload();
+			});
+		}
+		catch(InterruptedException e)
+		{
+			//Should never happen.
+			e.printStackTrace();
+			return;
+		}
+		
+		for(CompLabel label : entry.getValue())
+		{
+			label.setTexture(texture);
+		}
 	}
 	
 	private static class LabelContainer
