@@ -172,6 +172,12 @@ public class RenderPlane3D implements RenderPlane
 		wireStartPoint = null;
 	}
 	
+	public void componentPlaceSelection(ModelHolder model)
+	{
+	}
+	
+	//Setup and stuff:
+	
 	@Override
 	public void setup()
 	{

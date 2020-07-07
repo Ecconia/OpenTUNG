@@ -30,6 +30,10 @@ public interface Controller
 	
 	//Special:
 	
+	default void scrolled(double xoffset, double yoffset)
+	{
+	}
+	
 	default void unfocus()
 	{
 	}

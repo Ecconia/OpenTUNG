@@ -107,6 +107,11 @@ public class InputProcessor implements Controller
 		activeController.keyUp(key, scancode, mods);
 	}
 	
+	public void mouseScrolled(double xScroll, double yScroll)
+	{
+		activeController.scrolled(xScroll, yScroll);
+	}
+	
 	public void focusChanged(boolean state)
 	{
 		if(!state)

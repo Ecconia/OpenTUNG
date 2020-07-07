@@ -10,7 +10,7 @@ import de.ecconia.java.opentung.math.Vector3;
 
 public class CompPanelLabel extends CompLabel
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{

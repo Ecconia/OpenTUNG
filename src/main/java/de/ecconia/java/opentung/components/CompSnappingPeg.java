@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CompSnappingPeg extends Component
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{

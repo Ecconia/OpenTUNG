@@ -16,7 +16,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 
 public class CompPanelButton extends Component implements Powerable, Updateable, Holdable
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{

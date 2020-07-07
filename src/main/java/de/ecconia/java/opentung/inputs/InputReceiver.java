@@ -43,6 +43,10 @@ public class InputReceiver
 			processor.focusChanged(state);
 		});
 		
+		GLFW.glfwSetScrollCallback(windowID, (windowIDC, xoffset, yoffset) -> {
+			processor.mouseScrolled(xoffset, yoffset);
+		});
+		
 		inputThread = Thread.currentThread();
 	}
 	

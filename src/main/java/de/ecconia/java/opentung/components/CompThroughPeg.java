@@ -14,7 +14,7 @@ import de.ecconia.java.opentung.simulation.Wire;
 
 public class CompThroughPeg extends Component
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{

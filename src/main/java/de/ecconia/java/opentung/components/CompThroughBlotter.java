@@ -16,7 +16,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 
 public class CompThroughBlotter extends Component implements Powerable, Updateable
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{

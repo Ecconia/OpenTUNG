@@ -3,8 +3,10 @@ package de.ecconia.java.opentung.inputs;
 import de.ecconia.java.opentung.Camera;
 import de.ecconia.java.opentung.RenderPlane3D;
 import de.ecconia.java.opentung.Settings;
+import de.ecconia.java.opentung.UglyComponentAwareness;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import org.lwjgl.glfw.GLFW;
 
@@ -53,6 +55,10 @@ public class Controller3D implements Controller
 		{
 			checkMouseRight(false);
 		}
+		else if(type == InputProcessor.MOUSE_MIDDLE)
+		{
+			//TODO: Select component.
+		}
 	}
 	
 	@Override
@@ -66,6 +72,20 @@ public class Controller3D implements Controller
 		{
 			checkMouseRight(true);
 		}
+		else if(type == InputProcessor.MOUSE_MIDDLE)
+		{
+			//TODO: Select component.
+		}
+	}
+	
+	@Override
+	public void scrolled(double xScroll, double yScroll)
+	{
+		int yAmount = (int) Math.floor(yScroll);
+		if(yAmount != 0)
+		{
+			scrollY(yAmount);
+		}
 	}
 	
 	@Override
@@ -74,6 +94,10 @@ public class Controller3D implements Controller
 		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
 			switchToInterface();
+		}
+		else if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
+		{
+			numberPressed(keyIndex - GLFW.GLFW_KEY_0);
 		}
 	}
 	
@@ -304,5 +328,51 @@ public class Controller3D implements Controller
 			mouseRightConnectorMode = true;
 			renderPlane3D.rightDragOnConnector((Connector) mouseRightDownOn);
 		}
+	}
+	
+	//Middle-Mouse & Wheel:
+	
+	private static final int MAX = UglyComponentAwareness.MAX;
+	private int selectedModelIndex = 0;
+	
+	private void scrollY(int val)
+	{
+		selectedModelIndex += val;
+		
+		while(selectedModelIndex < 0)
+		{
+			selectedModelIndex += MAX + 1;
+		}
+		while(selectedModelIndex > MAX)
+		{
+			selectedModelIndex -= MAX + 1;
+		}
+		
+		indexUpdated();
+	}
+	
+	private void numberPressed(int index)
+	{
+		//Fix keyboard layout alignment.
+		if(--index < 0)
+		{
+			index = 9;
+		}
+		
+		boolean control = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
+		control |= GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+		if(control)
+		{
+			index += 10;
+		}
+		
+		selectedModelIndex = index;
+		indexUpdated();
+	}
+	
+	private void indexUpdated()
+	{
+		ModelHolder model = UglyComponentAwareness.getModelByIndex(selectedModelIndex);
+		renderPlane3D.componentPlaceSelection(model);
 	}
 }

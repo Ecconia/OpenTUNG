@@ -12,7 +12,7 @@ import de.ecconia.java.opentung.math.Vector3;
 
 public class CompLabel extends Component
 {
-	private static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelHolder();
 	
 	static
 	{
