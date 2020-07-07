@@ -87,4 +87,15 @@ public class Color
 	{
 		return new Vector3(r / 255.0, g / 255.0, b / 255.0);
 	}
+	
+	public float[] asArray()
+	{
+		Vector3 v = asVector();
+		return new float[] {
+				(float) v.getX(),
+				(float) v.getY(),
+				(float) v.getZ(),
+				1.0f
+		};
+	}
 }

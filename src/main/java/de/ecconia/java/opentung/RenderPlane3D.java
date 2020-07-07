@@ -13,6 +13,7 @@ import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
@@ -100,10 +101,11 @@ public class RenderPlane3D implements RenderPlane
 	
 	private Vector3 placementPosition;
 	
-	//Mouse handling:
+	//Input handling:
 	
 	private Controller3D controller;
-	private Connector wireStartPoint;
+	private Connector wireStartPoint; //Selected by dragging from a connector.
+	private ModelHolder modelToPlace; //Selected via the 0..9 keys or mouse-wheel.
 	
 	public Part getCursorObject()
 	{
@@ -175,6 +177,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void componentPlaceSelection(ModelHolder model)
 	{
+		modelToPlace = model;
 	}
 	
 	//Setup and stuff:
@@ -473,15 +476,23 @@ public class RenderPlane3D implements RenderPlane
 		//TODO: Set from a more appropriate place!
 		placementPosition = draw;
 		
-		lineShader.use();
-		lineShader.setUniform(1, view);
-		GL30.glLineWidth(5f);
-		Matrix model = new Matrix();
-		model.identity();
-		model.translate((float) draw.getX(), (float) draw.getY(), (float) draw.getZ());
-		labelShader.setUniform(2, model.getMat());
-		crossyIndicator.use();
-		crossyIndicator.draw();
+		if(modelToPlace == null)
+		{
+			lineShader.use();
+			lineShader.setUniform(1, view);
+			GL30.glLineWidth(5f);
+			Matrix model = new Matrix();
+			model.identity();
+			model.translate((float) draw.getX(), (float) draw.getY(), (float) draw.getZ());
+			labelShader.setUniform(2, model.getMat());
+			crossyIndicator.use();
+			crossyIndicator.draw();
+		}
+		else
+		{
+			//Temporary subtract half a board from the placement position, only works on Y+
+			World3DHelper.drawModel(justShape, cubeVAO, modelToPlace, placementPosition.subtract(new Vector3(0, 0.075, 0)), Quaternion.angleAxis(0, Vector3.yp), view);
+		}
 	}
 	
 	private void drawDynamic(float[] view)

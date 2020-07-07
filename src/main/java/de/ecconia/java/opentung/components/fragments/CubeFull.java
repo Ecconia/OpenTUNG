@@ -168,4 +168,14 @@ public class CubeFull extends Meshable
 		indices[offsetI + 4] = (index + 2);
 		indices[offsetI + 5] = (index + 3);
 	}
+	
+	public float[] getColorArray()
+	{
+		return new float[] {
+				(float) color.getX(),
+				(float) color.getY(),
+				(float) color.getZ(),
+				1.0f
+		};
+	}
 }
