@@ -64,6 +64,7 @@ public class RenderPlane3D implements RenderPlane
 	private SimpleCubeVAO cubeVAO;
 	private TextureWrapper boardTexture;
 	private LineVAO crossyIndicator;
+	private LineVAO axisIndicator;
 	
 	private final InputProcessor inputHandler;
 	
@@ -276,6 +277,7 @@ public class RenderPlane3D implements RenderPlane
 		justShape = new ShaderProgram("justShape");
 		cubeVAO = SimpleCubeVAO.generateCube();
 		crossyIndicator = LineVAO.generateCrossyIndicator();
+		axisIndicator = LineVAO.generateAxisIndicator();
 		sdfShader = new ShaderProgram("sdfLabel");
 		
 		camera = new Camera();
@@ -333,19 +335,28 @@ public class RenderPlane3D implements RenderPlane
 			drawWireToBePlaced(view);
 			drawHighlight(view);
 			
+			lineShader.use();
+			lineShader.setUniform(1, view);
+			Matrix model = new Matrix();
 			if(Settings.drawComponentPositionIndicator)
 			{
-				lineShader.use();
-				lineShader.setUniform(1, view);
-				Matrix model = new Matrix();
 				for(Component comp : board.getComponentsToRender())
 				{
 					model.identity();
 					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-					labelShader.setUniform(2, model.getMat());
+					lineShader.setUniform(2, model.getMat());
 					crossyIndicator.use();
 					crossyIndicator.draw();
 				}
+			}
+			if(Settings.drawWorldAxisIndicator)
+			{
+				model.identity();
+				Vector3 position = new Vector3(0, 10, 0);
+				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+				lineShader.setUniform(2, model.getMat());
+				axisIndicator.use();
+				axisIndicator.draw();
 			}
 		}
 		

@@ -64,6 +64,7 @@ public class Settings
 	
 	//Used for some debugging every now and then.
 	public static boolean drawComponentPositionIndicator = false;
+	public static boolean drawWorldAxisIndicator = false;
 	
 	//Canvas background color
 	public static float backgroundColorR = 1f / 255f * 54f;
