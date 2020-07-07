@@ -22,12 +22,12 @@ void main()
 	bool OUTLINE = false;
 	float OUTLINEMINVALUE0 = 0.5 - 0.1;
 	float OUTLINEMAXVALUE1 = 0.5 + 0.1;
-	vec4 OUTLINECOLOR = vec4(0, 1, 1, 1);
+	vec4 OUTLINECOLOR = vec4(1, 1, 0, 1);
 	
 	//Dunno how to get these guys working properly.
-	bool SOFTEDGES = false;
+	bool SOFTEDGES = true;
 	float SOFTEDGEMIN = 0.4;
-	float SOFTEDGEMAX = 0.45;
+	float SOFTEDGEMAX = 0.5;
 	
 //	bool OUTERGLOW = false;
 //	vec2 GLOWUVOFFSET = vec2(0.0, 0.0);
@@ -77,6 +77,14 @@ void main()
 //	{
 //		baseColor.a = 1;
 //	}
+	if(distAlphaMask >= 0.485)
+	{
+		baseColor.a = 1.0;
+	}
+	else
+	{
+		 baseColor.a = 0.0;
+	}
 	//float c = texture(textureVar, tTextureCoords).r;
 	//outColor = vec4(c,c,c,1);
 	outColor = baseColor;

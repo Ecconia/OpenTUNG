@@ -1,18 +1,19 @@
 package de.ecconia.java.opentung.libwrap;
 
+import de.ecconia.java.opentung.Settings;
 import java.awt.image.BufferedImage;
 
 public class SDF2
 {
 	public static BufferedImage start(BufferedImage image)
 	{
-		double spread = 10;
-		double downscale = 1;
+		double spread = 25;
 		
 		int width = image.getWidth();
 		int height = image.getHeight();
 		
-		// var height = pixels.length/stride/width
+		double downscale = (double) width / (double) Settings.labelSDFTexturePixelResolution; //Uff but yes.
+		
 		Field fieldBitmap = new Field(width, height);
 		
 		int x, y;

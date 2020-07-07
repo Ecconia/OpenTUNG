@@ -83,5 +83,8 @@ public class Settings
 	
 	//Label-Textures will be generate with this resolution², you may increase this.
 	//The labels get generated in background, so you might see more "Loading..." textures.
-	public static int labelTexturePixelResolution = 300;
+	public static int labelTexturePixelResolution = 1024;
+	//The resolution uploaded to the GPU. Be sure that the label resolution can be divided by the SDF resolution.
+	//Hint: You might break the loading-texture, its 1024²
+	public static int labelSDFTexturePixelResolution = 256;
 }
