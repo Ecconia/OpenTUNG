@@ -28,6 +28,7 @@ import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
+import de.ecconia.java.opentung.libwrap.vaos.VisualShapeVAO;
 import de.ecconia.java.opentung.math.MathHelper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
@@ -49,14 +50,17 @@ public class RenderPlane3D implements RenderPlane
 	private long lastCycle;
 	
 	private ShaderProgram lineShader;
-	private ShaderProgram inYaFace;
-	private ShaderProgram sdfShader;
-	private InYaFaceVAO inYaFaceVAO;
-	private ShaderProgram justShape;
-	private SimpleCubeVAO cubeVAO;
-	private TextureWrapper boardTexture;
 	private LineVAO crossyIndicator;
 	private LineVAO axisIndicator;
+	private ShaderProgram justShape;
+	private SimpleCubeVAO cubeVAO;
+	private ShaderProgram visualShapeShader;
+	private VisualShapeVAO visualShape;
+	private ShaderProgram inYaFace;
+	private InYaFaceVAO inYaFaceVAO;
+	private ShaderProgram sdfShader;
+	
+	private TextureWrapper boardTexture;
 	
 	private final InputProcessor inputHandler;
 	
@@ -254,13 +258,15 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		lineShader = new ShaderProgram("lineShader");
+		crossyIndicator = LineVAO.generateCrossyIndicator();
+		axisIndicator = LineVAO.generateAxisIndicator();
+		justShape = new ShaderProgram("justShape");
+		cubeVAO = SimpleCubeVAO.generateCube();
+		visualShapeShader = new ShaderProgram("visualShape");
+		visualShape = VisualShapeVAO.generateCube();
 		
 		inYaFace = new ShaderProgram("outline/inYaFacePlane");
 		inYaFaceVAO = InYaFaceVAO.generateInYaFacePlane();
-		justShape = new ShaderProgram("justShape");
-		cubeVAO = SimpleCubeVAO.generateCube();
-		crossyIndicator = LineVAO.generateCrossyIndicator();
-		axisIndicator = LineVAO.generateAxisIndicator();
 		sdfShader = new ShaderProgram("sdfLabel");
 		
 		camera = new Camera();
@@ -491,7 +497,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			Vector3 rotatedBoardNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, rotatedBoardNormal);
-			World3DHelper.drawModel(justShape, cubeVAO, modelToPlace, placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), compRotation, view);
+			World3DHelper.drawModel(visualShapeShader, visualShape, modelToPlace, placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), compRotation, view);
 		}
 	}
 	
@@ -710,6 +716,8 @@ public class RenderPlane3D implements RenderPlane
 		colorMesh.updateProjection(projection);
 		textureMesh.updateProjection(projection);
 		
+		visualShapeShader.use();
+		visualShapeShader.setUniform(0, projection);
 		sdfShader.use();
 		sdfShader.setUniform(0, projection);
 		lineShader.use();

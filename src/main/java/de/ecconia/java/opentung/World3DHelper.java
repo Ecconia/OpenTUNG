@@ -48,7 +48,6 @@ public class World3DHelper
 	{
 		justShape.use();
 		justShape.setUniform(1, view);
-		justShape.setUniformV4(3, new float[] {0,1,0,1});
 		Matrix matrix = new Matrix();
 		Matrix rotation = new Matrix(quaternion.createMatrix());
 		Vector3 placementOffset = model.getPlacementOffset();
