@@ -136,8 +136,8 @@ public class CubeOpenRotated extends CubeFull
 	protected void genVertex(float[] vertices, ModelHolder.IntHolder offsetV,
 	                         Quaternion localRotation, Vector3 placementOffset, Vector3 globalPos, Quaternion componentRotation, Vector3 oPos, Vector3 normal, Vector3 color, MeshTypeThing type)
 	{
-		Vector3 compoentPosition = localRotation.multiply(oPos);
-		Vector3 position = componentRotation.inverse().multiply(compoentPosition.add(placementOffset)).add(globalPos);
+		Vector3 componentPosition = localRotation.multiply(oPos);
+		Vector3 position = componentRotation.inverse().multiply(componentPosition.add(placementOffset)).add(globalPos);
 		
 		//Position
 		vertices[offsetV.getAndInc()] = (float) position.getX();

@@ -2,6 +2,7 @@ package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
@@ -84,7 +85,12 @@ public class World3DHelper
 		matrix.identity();
 		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 		matrix.multiply(rotation);
-		Vector3 cubePosition = cube.getPosition().add(placementOffset);
+		matrix.translate((float) placementOffset.getX(), (float) placementOffset.getY(), (float) placementOffset.getZ());
+		if(cube instanceof CubeOpenRotated)
+		{
+			matrix.multiply(new Matrix(((CubeOpenRotated) cube).getRotation().inverse().createMatrix()));
+		}
+		Vector3 cubePosition = cube.getPosition();
 		matrix.translate((float) cubePosition.getX(), (float) cubePosition.getY(), (float) cubePosition.getZ());
 		Vector3 size = cube.getSize();
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
@@ -107,7 +113,12 @@ public class World3DHelper
 		{
 			size = cube.getMapper().getMappedSize(size, part);
 		}
-		position = cube.getPosition().add(placementOffset);
+		matrix.translate((float) placementOffset.getX(), (float) placementOffset.getY(), (float) placementOffset.getZ());
+		if(cube instanceof CubeOpenRotated)
+		{
+			matrix.multiply(new Matrix(((CubeOpenRotated) cube).getRotation().inverse().createMatrix()));
+		}
+		position = cube.getPosition();
 		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
 		justShape.setUniform(2, matrix.getMat());
