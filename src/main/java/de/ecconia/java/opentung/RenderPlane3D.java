@@ -48,17 +48,7 @@ public class RenderPlane3D implements RenderPlane
 	private Camera camera;
 	private long lastCycle;
 	
-	private ShaderProgram faceShader;
 	private ShaderProgram lineShader;
-	private ShaderProgram outlineComponentShader;
-	private ShaderProgram wireShader;
-	private ShaderProgram labelShader;
-	private ShaderProgram dynamicBoardShader;
-	private ShaderProgram raycastComponentShader;
-	private ShaderProgram raycastBoardShader;
-	private ShaderProgram raycastWireShader;
-	private ShaderProgram outlineWireShader;
-	private ShaderProgram outlineBoardShader;
 	private ShaderProgram inYaFace;
 	private ShaderProgram sdfShader;
 	private InYaFaceVAO inYaFaceVAO;
@@ -263,19 +253,8 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
-		faceShader = new ShaderProgram("basicShader");
 		lineShader = new ShaderProgram("lineShader");
-		dynamicBoardShader = new ShaderProgram("dynamicBoardShader");
-		wireShader = new ShaderProgram("wireShader");
-		labelShader = new ShaderProgram("labelShader");
 		
-		raycastComponentShader = new ShaderProgram("raycast/raycastComponent");
-		raycastBoardShader = new ShaderProgram("raycast/raycastBoard");
-		raycastWireShader = new ShaderProgram("raycast/raycastWire");
-		
-		outlineComponentShader = new ShaderProgram("outline/outlineComponent");
-		outlineWireShader = new ShaderProgram("outline/outlineWire");
-		outlineBoardShader = new ShaderProgram("outline/outlineBoard");
 		inYaFace = new ShaderProgram("outline/inYaFacePlane");
 		inYaFaceVAO = InYaFaceVAO.generateInYaFacePlane();
 		justShape = new ShaderProgram("justShape");
@@ -381,7 +360,7 @@ public class RenderPlane3D implements RenderPlane
 		Matrix model = new Matrix();
 		model.identity();
 		model.translate((float) startingPos.getX(), (float) startingPos.getY(), (float) startingPos.getZ());
-		labelShader.setUniform(2, model.getMat());
+		lineShader.setUniform(2, model.getMat());
 		crossyIndicator.use();
 		crossyIndicator.draw();
 		
@@ -504,7 +483,7 @@ public class RenderPlane3D implements RenderPlane
 			Matrix model = new Matrix();
 			model.identity();
 			model.translate((float) draw.getX(), (float) draw.getY(), (float) draw.getZ());
-			labelShader.setUniform(2, model.getMat());
+			lineShader.setUniform(2, model.getMat());
 			crossyIndicator.use();
 			crossyIndicator.draw();
 		}
@@ -733,28 +712,8 @@ public class RenderPlane3D implements RenderPlane
 		
 		sdfShader.use();
 		sdfShader.setUniform(0, projection);
-		faceShader.use();
-		faceShader.setUniform(0, projection);
 		lineShader.use();
 		lineShader.setUniform(0, projection);
-		outlineComponentShader.use();
-		outlineComponentShader.setUniform(0, projection);
-		wireShader.use();
-		wireShader.setUniform(0, projection);
-		labelShader.use();
-		labelShader.setUniform(0, projection);
-		dynamicBoardShader.use();
-		dynamicBoardShader.setUniform(0, projection);
-		raycastComponentShader.use();
-		raycastComponentShader.setUniform(0, projection);
-		raycastBoardShader.use();
-		raycastBoardShader.setUniform(0, projection);
-		raycastWireShader.use();
-		raycastWireShader.setUniform(0, projection);
-		outlineWireShader.use();
-		outlineWireShader.setUniform(0, projection);
-		outlineBoardShader.use();
-		outlineBoardShader.setUniform(0, projection);
 		justShape.use();
 		justShape.setUniform(0, projection);
 	}

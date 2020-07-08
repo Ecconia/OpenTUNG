@@ -19,7 +19,7 @@ public class RayCastMesh
 	
 	public RayCastMesh(List<CompBoard> boards, List<CompWireRaw> wires, List<Component> components)
 	{
-		this.raycastShader = new ShaderProgram("raycast/meshRaycast");
+		this.raycastShader = new ShaderProgram("mesh/meshRaycast");
 		
 		int verticesAmount = boards.size() * 6 * 4 * (3 + 3);
 		int indicesAmount = boards.size() * 6 * 2 * 3;
