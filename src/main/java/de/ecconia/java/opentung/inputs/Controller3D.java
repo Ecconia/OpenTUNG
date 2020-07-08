@@ -99,6 +99,17 @@ public class Controller3D implements Controller
 		{
 			numberPressed(keyIndex - GLFW.GLFW_KEY_0);
 		}
+		else if(keyIndex == GLFW.GLFW_KEY_R)
+		{
+			if((mods & GLFW.GLFW_MOD_CONTROL) != 0)
+			{
+				renderPlane3D.rotatePlacement(45);
+			}
+			else
+			{
+				renderPlane3D.rotatePlacement(90);
+			}
+		}
 	}
 	
 	@Override

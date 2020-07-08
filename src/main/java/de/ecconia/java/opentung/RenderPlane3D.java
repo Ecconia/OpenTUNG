@@ -101,6 +101,7 @@ public class RenderPlane3D implements RenderPlane
 	private Controller3D controller;
 	private Connector wireStartPoint; //Selected by dragging from a connector.
 	private ModelHolder modelToPlace; //Selected via the 0..9 keys or mouse-wheel.
+	private int placementRotation;
 	
 	public Part getCursorObject()
 	{
@@ -173,6 +174,15 @@ public class RenderPlane3D implements RenderPlane
 	public void componentPlaceSelection(ModelHolder model)
 	{
 		modelToPlace = model;
+	}
+	
+	public void rotatePlacement(int degrees)
+	{
+		placementRotation += degrees;
+		if(placementRotation >= 360)
+		{
+			placementRotation -= 360;
+		}
 	}
 	
 	//Setup and stuff:
@@ -533,8 +543,9 @@ public class RenderPlane3D implements RenderPlane
 		else
 		{
 			Vector3 rotatedBoardNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
+			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, rotatedBoardNormal);
-			World3DHelper.drawModel(visualShapeShader, visualShape, modelToPlace, placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), compRotation, view);
+			World3DHelper.drawModel(visualShapeShader, visualShape, modelToPlace, placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), modelRotation.multiply(compRotation), view);
 		}
 	}
 	
