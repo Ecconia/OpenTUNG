@@ -477,7 +477,44 @@ public class RenderPlane3D implements RenderPlane
 			normalGlobal = normalLocal;
 		}
 		
-		Vector3 draw = cameraPosition.add(cameraRay.multiply(distanceGlobal));
+		boolean isSide = normalGlobal.getY() == 0;
+		Vector3 collisionPointBoardSpace = cameraPositionBoardSpace.add(cameraRayBoardSpace.multiply(distanceGlobal));
+		if(isSide)
+		{
+			double x = collisionPointBoardSpace.getX();
+			double z = collisionPointBoardSpace.getZ();
+			if(normalGlobal.getX() == 0)
+			{
+				double xHalf = board.getX() * 0.15;
+				double xcp = x + xHalf;
+				int xSteps = (int) (xcp / 0.3);
+				x = (xSteps) * 0.3 - xHalf + 0.15;
+			}
+			else
+			{
+				double zHalf = board.getZ() * 0.15;
+				double zcp = z + zHalf;
+				int zSteps = (int) (zcp / 0.3);
+				z = zSteps * 0.3 - zHalf + 0.15;
+			}
+			
+			collisionPointBoardSpace = new Vector3(x, 0, z);
+		}
+		else
+		{
+			double xHalf = board.getX() * 0.15;
+			double zHalf = board.getZ() * 0.15;
+			
+			double xcp = collisionPointBoardSpace.getX() + xHalf;
+			double zcp = collisionPointBoardSpace.getZ() + zHalf;
+			
+			int xSteps = (int) (xcp / 0.3);
+			int zSteps = (int) (zcp / 0.3);
+			
+			collisionPointBoardSpace = new Vector3(xSteps * 0.3 + 0.15 - xHalf, collisionPointBoardSpace.getY(), zSteps * 0.3 + 0.15 - zHalf);
+		}
+		
+		Vector3 draw = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
 		//TODO: Set from a more appropriate place!
 		placementPosition = draw;
 		
