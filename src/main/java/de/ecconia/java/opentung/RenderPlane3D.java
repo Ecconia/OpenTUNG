@@ -28,6 +28,7 @@ import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
+import de.ecconia.java.opentung.math.MathHelper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -389,17 +390,7 @@ public class RenderPlane3D implements RenderPlane
 			//Draw wire between placementPosition and startingPos:
 			Vector3 direction = placementPosition.subtract(startingPos).divide(2);
 			double distance = direction.length();
-			
-			Quaternion rotation;
-			if(direction.getX() == 0 && direction.getY() == 0)
-			{
-				rotation = Quaternion.angleAxis(0, Vector3.yp);
-			}
-			else
-			{
-				double angle = Math.toDegrees(Math.acos(Vector3.zp.dot(direction.normalize())));
-				rotation = Quaternion.angleAxis(-angle, Vector3.zp.cross(direction).normalize());
-			}
+			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 			
 			model.identity();
 			Vector3 position = startingPos.add(direction);
@@ -448,31 +439,60 @@ public class RenderPlane3D implements RenderPlane
 		
 		Vector3 cameraPositionBoardSpace = rotation.multiply(cameraPosition.subtract(position)); //Convert the camera position, in the board space.
 		
-		boolean biggerX = cameraPositionBoardSpace.getX() > 0;
-		boolean biggerY = cameraPositionBoardSpace.getY() > 0;
-		boolean biggerZ = cameraPositionBoardSpace.getZ() > 0;
+		double distanceLocalMin = (size.getX() - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
+		double distanceLocalMax = ((-size.getX()) - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
+		double distanceGlobal;
+		Vector3 normalGlobal;
+		if(distanceLocalMin < distanceLocalMax)
+		{
+			distanceGlobal = distanceLocalMin;
+			normalGlobal = Vector3.xp;
+		}
+		else
+		{
+			distanceGlobal = distanceLocalMax;
+			normalGlobal = Vector3.xn;
+		}
 		
-//		Vector3 probePosition = Vector3.zero;
-//		probePosition = probePosition.addX(biggerX ? size.getX() : -size.getX());
-//		probePosition = probePosition.addY(biggerY ? size.getY() : -size.getY());
-//		probePosition = probePosition.addZ(biggerZ ? size.getZ() : -size.getZ());
+		distanceLocalMin = (size.getY() - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
+		distanceLocalMax = ((-size.getY()) - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
+		double distanceLocal;
+		Vector3 normalLocal;
+		if(distanceLocalMin < distanceLocalMax)
+		{
+			distanceLocal = distanceLocalMin;
+			normalLocal = Vector3.yp;
+		}
+		else
+		{
+			distanceLocal = distanceLocalMax;
+			normalLocal = Vector3.yn;
+		}
+		if(distanceGlobal < distanceLocal)
+		{
+			distanceGlobal = distanceLocal;
+			normalGlobal = normalLocal;
+		}
 		
-		double txMin = (size.getX() - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
-		double txMax = ((-size.getX()) - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
-		double tMin = Math.min(txMin, txMax);
-//		double tMax = Math.max(txMin, txMax);
+		distanceLocalMin = (size.getZ() - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
+		distanceLocalMax = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
+		if(distanceLocalMin < distanceLocalMax)
+		{
+			distanceLocal = distanceLocalMin;
+			normalLocal = Vector3.zp;
+		}
+		else
+		{
+			distanceLocal = distanceLocalMax;
+			normalLocal = Vector3.zn;
+		}
+		if(distanceGlobal < distanceLocal)
+		{
+			distanceGlobal = distanceLocal;
+			normalGlobal = normalLocal;
+		}
 		
-		double tyMin = (size.getY() - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
-		double tyMax = ((-size.getY()) - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
-		tMin = Math.max(tMin, Math.min(tyMin, tyMax));
-//		tMax = Math.min(tMin, Math.max(tyMin, tyMax));
-		
-		double tzMin = (size.getZ() - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
-		double tzMax = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
-		tMin = Math.max(tMin, Math.min(tzMin, tzMax));
-//		tMax = Math.min(tMin, Math.max(tzMin, tzMax));
-		
-		Vector3 draw = cameraPosition.add(cameraRay.multiply(tMin));
+		Vector3 draw = cameraPosition.add(cameraRay.multiply(distanceGlobal));
 		//TODO: Set from a more appropriate place!
 		placementPosition = draw;
 		
@@ -490,8 +510,9 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else
 		{
-			//Temporary subtract half a board from the placement position, only works on Y+
-			World3DHelper.drawModel(justShape, cubeVAO, modelToPlace, placementPosition.subtract(new Vector3(0, 0.075, 0)), Quaternion.angleAxis(0, Vector3.yp), view);
+			Vector3 rotatedBoardNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, rotatedBoardNormal);
+			World3DHelper.drawModel(justShape, cubeVAO, modelToPlace, placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), compRotation, view);
 		}
 	}
 	
