@@ -95,6 +95,8 @@ public class RenderPlane3D implements RenderPlane
 	//Other:
 	
 	private Vector3 placementPosition;
+	private Vector3 placementNormal;
+	private CompBoard placementBoard;
 	
 	//Input handling:
 	
@@ -183,6 +185,17 @@ public class RenderPlane3D implements RenderPlane
 		{
 			placementRotation -= 360;
 		}
+	}
+	
+	public boolean attemptPlacement()
+	{
+		if(placementPosition != null && currentPlaceable != null)
+		{
+			System.out.println("Place.");
+			return true;
+		}
+		
+		return false;
 	}
 	
 	//Setup and stuff:
@@ -310,100 +323,11 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("Done.");
 	}
 	
-	@Override
-	public void render()
-	{
-		while(!gpuTasks.isEmpty())
-		{
-			gpuTasks.poll().execute(this);
-		}
-		
-		camera.lockLocation();
-		controller.doFrameCycle();
-		
-		float[] view = camera.getMatrix();
-		if(Settings.doRaycasting)
-		{
-			raycast(view);
-		}
-		if(Settings.drawWorld)
-		{
-			drawDynamic(view);
-			drawPlacementPosition(view); //Must be called before drawWireToBePlaced, currently!!!
-			highlightCluster(view);
-			drawWireToBePlaced(view);
-			drawHighlight(view);
-			
-			lineShader.use();
-			lineShader.setUniform(1, view);
-			Matrix model = new Matrix();
-			if(Settings.drawComponentPositionIndicator)
-			{
-				for(Component comp : board.getComponentsToRender())
-				{
-					model.identity();
-					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-					lineShader.setUniform(2, model.getMat());
-					crossyIndicator.use();
-					crossyIndicator.draw();
-				}
-			}
-			if(Settings.drawWorldAxisIndicator)
-			{
-				model.identity();
-				Vector3 position = new Vector3(0, 10, 0);
-				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-				lineShader.setUniform(2, model.getMat());
-				axisIndicator.use();
-				axisIndicator.draw();
-			}
-		}
-		
-		placementPosition = null; //TODO: Remove reset.
-	}
-	
-	private void drawWireToBePlaced(float[] view)
-	{
-		if(wireStartPoint == null)
-		{
-			return;
-		}
-		
-		Vector3 startingPos = wireStartPoint.getConnectionPoint();
-		
-		lineShader.use();
-		lineShader.setUniform(1, view);
-		Matrix model = new Matrix();
-		model.identity();
-		model.translate((float) startingPos.getX(), (float) startingPos.getY(), (float) startingPos.getZ());
-		lineShader.setUniform(2, model.getMat());
-		crossyIndicator.use();
-		crossyIndicator.draw();
-		
-		if(placementPosition != null)
-		{
-			//Draw wire between placementPosition and startingPos:
-			Vector3 direction = placementPosition.subtract(startingPos).divide(2);
-			double distance = direction.length();
-			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-			
-			model.identity();
-			Vector3 position = startingPos.add(direction);
-			model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-			model.multiply(new Matrix(rotation.createMatrix()));
-			Vector3 size = new Vector3(0.025, 0.01, distance);
-			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-			justShape.setUniform(2, model.getMat());
-			
-			cubeVAO.use();
-			cubeVAO.draw();
-		}
-	}
-	
-	private void drawPlacementPosition(float[] view)
+	public void calculatePlacementPosition()
 	{
 		if(currentlySelectedIndex == 0)
 		{
+			placementPosition = null;
 			return;
 		}
 		
@@ -411,6 +335,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(!(part instanceof CompBoard))
 		{
+			placementPosition = null; //Only place on boards.
 			return;
 		}
 		
@@ -524,9 +449,107 @@ public class RenderPlane3D implements RenderPlane
 			collisionPointBoardSpace = new Vector3(xSteps * 0.3 + 0.15 - xHalf, collisionPointBoardSpace.getY(), zSteps * 0.3 + 0.15 - zHalf);
 		}
 		
-		Vector3 draw = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
-		//TODO: Set from a more appropriate place!
-		placementPosition = draw;
+		placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
+		placementNormal = normalGlobal;
+		placementBoard = board;
+	}
+	
+	@Override
+	public void render()
+	{
+		calculatePlacementPosition();
+		
+		while(!gpuTasks.isEmpty())
+		{
+			gpuTasks.poll().execute(this);
+		}
+		
+		camera.lockLocation();
+		controller.doFrameCycle();
+		
+		float[] view = camera.getMatrix();
+		if(Settings.doRaycasting)
+		{
+			raycast(view);
+		}
+		if(Settings.drawWorld)
+		{
+			drawDynamic(view);
+			drawPlacementPosition(view); //Must be called before drawWireToBePlaced, currently!!!
+			highlightCluster(view);
+			drawWireToBePlaced(view);
+			drawHighlight(view);
+			
+			lineShader.use();
+			lineShader.setUniform(1, view);
+			Matrix model = new Matrix();
+			if(Settings.drawComponentPositionIndicator)
+			{
+				for(Component comp : board.getComponentsToRender())
+				{
+					model.identity();
+					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
+					lineShader.setUniform(2, model.getMat());
+					crossyIndicator.use();
+					crossyIndicator.draw();
+				}
+			}
+			if(Settings.drawWorldAxisIndicator)
+			{
+				model.identity();
+				Vector3 position = new Vector3(0, 10, 0);
+				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+				lineShader.setUniform(2, model.getMat());
+				axisIndicator.use();
+				axisIndicator.draw();
+			}
+		}
+	}
+	
+	private void drawWireToBePlaced(float[] view)
+	{
+		if(wireStartPoint == null)
+		{
+			return;
+		}
+		
+		Vector3 startingPos = wireStartPoint.getConnectionPoint();
+		
+		lineShader.use();
+		lineShader.setUniform(1, view);
+		Matrix model = new Matrix();
+		model.identity();
+		model.translate((float) startingPos.getX(), (float) startingPos.getY(), (float) startingPos.getZ());
+		lineShader.setUniform(2, model.getMat());
+		crossyIndicator.use();
+		crossyIndicator.draw();
+		
+		if(placementPosition != null)
+		{
+			//Draw wire between placementPosition and startingPos:
+			Vector3 direction = placementPosition.subtract(startingPos).divide(2);
+			double distance = direction.length();
+			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+			
+			model.identity();
+			Vector3 position = startingPos.add(direction);
+			model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			model.multiply(new Matrix(rotation.createMatrix()));
+			Vector3 size = new Vector3(0.025, 0.01, distance);
+			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+			justShape.setUniform(2, model.getMat());
+			
+			cubeVAO.use();
+			cubeVAO.draw();
+		}
+	}
+	
+	private void drawPlacementPosition(float[] view)
+	{
+		if(placementPosition == null)
+		{
+			return;
+		}
 		
 		if(currentPlaceable == null)
 		{
@@ -535,14 +558,14 @@ public class RenderPlane3D implements RenderPlane
 			GL30.glLineWidth(5f);
 			Matrix model = new Matrix();
 			model.identity();
-			model.translate((float) draw.getX(), (float) draw.getY(), (float) draw.getZ());
+			model.translate((float) placementPosition.getX(), (float) placementPosition.getY(), (float) placementPosition.getZ());
 			lineShader.setUniform(2, model.getMat());
 			crossyIndicator.use();
 			crossyIndicator.draw();
 		}
 		else
 		{
-			Vector3 rotatedBoardNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
+			Vector3 rotatedBoardNormal = placementBoard.getRotation().inverse().multiply(placementNormal).normalize(); //Safety normalization.
 			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, rotatedBoardNormal);
 			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), modelRotation.multiply(compRotation), view);
