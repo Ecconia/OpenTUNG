@@ -10,7 +10,7 @@ import de.ecconia.java.opentung.math.Vector3;
 public class CompPeg extends Component
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, CompPeg::new);
 	
 	static
 	{

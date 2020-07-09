@@ -513,4 +513,9 @@ public class BoardUniverse
 	{
 		return brokenWires;
 	}
+	
+	public int getNewClusterID()
+	{
+		return nextClusterID++;
+	}
 }

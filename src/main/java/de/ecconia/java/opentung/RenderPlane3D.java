@@ -13,7 +13,6 @@ import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
-import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
@@ -34,6 +33,8 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.HiddenWire;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
+import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -189,9 +190,38 @@ public class RenderPlane3D implements RenderPlane
 	
 	public boolean attemptPlacement()
 	{
+		//TODO: Ugly, not thread-safe enough for my taste. Might even cause bugs. So eventually it has to be changed.
 		if(placementPosition != null && currentPlaceable != null)
 		{
-			System.out.println("Place.");
+			Component newComponent = currentPlaceable.instance(placementBoard);
+			newComponent.setPosition(placementPosition);
+			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			newComponent.setRotation(compRotation.multiply(rotation));
+			
+			//TODO: Update bounds and stuff
+			board.getComponentsToRender().add(newComponent);
+			placementBoard.addChild(newComponent);
+			
+			for(Peg peg : newComponent.getPegs())
+			{
+				peg.setCluster(new InheritingCluster(board.getNewClusterID()));
+			}
+			for(Blot blot : newComponent.getBlots())
+			{
+				blot.setCluster(new SourceCluster(board.getNewClusterID(), blot));
+			}
+			
+			try
+			{
+				gpuTasks.put((ignored) -> {
+					refreshComponentMeshes();
+				});
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
 			return true;
 		}
 		
@@ -303,7 +333,7 @@ public class RenderPlane3D implements RenderPlane
 			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
 			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
-			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation(), true);
+			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getSimulation(), true);
 			colorMesh = new ColorMesh(board.getComponentsToRender(), board.getSimulation());
 			System.out.println("Done.");
 		}
@@ -316,10 +346,20 @@ public class RenderPlane3D implements RenderPlane
 	public void refreshPostWorldLoad()
 	{
 		System.out.println("Update:");
-		conductorMesh.unload();
-		conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getClusters(), board.getSimulation(), false);
-		conductorMesh.updateProjection(latestProjectionMat);
+		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
+		for(Cluster cluster : board.getClusters())
+		{
+			cluster.updateState(board.getSimulation());
+		}
 		board.getSimulation().start();
+		System.out.println("Done.");
+	}
+	
+	public void refreshComponentMeshes()
+	{
+		System.out.println("Update:");
+		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
+		solidMesh.update(board.getComponentsToRender());
 		System.out.println("Done.");
 	}
 	
@@ -413,6 +453,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		boolean isSide = normalGlobal.getY() == 0;
+		int sign = normalGlobal.oneNegative() ? -1 : 1;
 		Vector3 collisionPointBoardSpace = cameraPositionBoardSpace.add(cameraRayBoardSpace.multiply(distanceGlobal));
 		if(isSide)
 		{
@@ -424,6 +465,7 @@ public class RenderPlane3D implements RenderPlane
 				double xcp = x + xHalf;
 				int xSteps = (int) (xcp / 0.3);
 				x = (xSteps) * 0.3 - xHalf + 0.15;
+				z -= sign * 0.075;
 			}
 			else
 			{
@@ -431,6 +473,7 @@ public class RenderPlane3D implements RenderPlane
 				double zcp = z + zHalf;
 				int zSteps = (int) (zcp / 0.3);
 				z = zSteps * 0.3 - zHalf + 0.15;
+				x -= sign * 0.075;
 			}
 			
 			collisionPointBoardSpace = new Vector3(x, 0, z);
@@ -446,11 +489,11 @@ public class RenderPlane3D implements RenderPlane
 			int xSteps = (int) (xcp / 0.3);
 			int zSteps = (int) (zcp / 0.3);
 			
-			collisionPointBoardSpace = new Vector3(xSteps * 0.3 + 0.15 - xHalf, collisionPointBoardSpace.getY(), zSteps * 0.3 + 0.15 - zHalf);
+			collisionPointBoardSpace = new Vector3(xSteps * 0.3 + 0.15 - xHalf, 0, zSteps * 0.3 + 0.15 - zHalf);
 		}
 		
 		placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
-		placementNormal = normalGlobal;
+		placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
 		placementBoard = board;
 	}
 	
@@ -558,17 +601,17 @@ public class RenderPlane3D implements RenderPlane
 			GL30.glLineWidth(5f);
 			Matrix model = new Matrix();
 			model.identity();
-			model.translate((float) placementPosition.getX(), (float) placementPosition.getY(), (float) placementPosition.getZ());
+			Vector3 datPos = placementPosition.add(placementNormal.multiply(0.075));
+			model.translate((float) datPos.getX(), (float) datPos.getY(), (float) datPos.getZ());
 			lineShader.setUniform(2, model.getMat());
 			crossyIndicator.use();
 			crossyIndicator.draw();
 		}
 		else
 		{
-			Vector3 rotatedBoardNormal = placementBoard.getRotation().inverse().multiply(placementNormal).normalize(); //Safety normalization.
 			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, rotatedBoardNormal);
-			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), modelRotation.multiply(compRotation), view);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementPosition, modelRotation.multiply(compRotation), view);
 		}
 	}
 	

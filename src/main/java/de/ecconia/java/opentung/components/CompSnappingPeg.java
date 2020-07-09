@@ -14,7 +14,7 @@ import java.util.List;
 public class CompSnappingPeg extends Component
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, CompSnappingPeg::new);
 	
 	static
 	{

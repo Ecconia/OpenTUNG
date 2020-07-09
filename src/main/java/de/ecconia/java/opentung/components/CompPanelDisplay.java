@@ -17,7 +17,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompPanelDisplay extends Component implements Updateable, Colorable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, CompPanelDisplay::new);
 	
 	static
 	{

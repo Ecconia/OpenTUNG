@@ -11,15 +11,25 @@ import org.lwjgl.opengl.GL30;
 public class SolidMesh
 {
 	private final ShaderProgram solidMeshShader;
-	private final GenericVAO vao;
+	private GenericVAO vao;
 	
 	public SolidMesh(List<Component> components)
 	{
 		this.solidMeshShader = new ShaderProgram("mesh/meshSolid");
 		
+		update(components);
+	}
+	
+	public void update(List<Component> componentsToRender)
+	{
+		if(vao != null)
+		{
+			vao.unload();
+		}
+		
 		int verticesAmount = 0;
 		int indicesAmount = 0;
-		for(Component component : components)
+		for(Component component : componentsToRender)
 		{
 			verticesAmount += component.getWholeMeshEntryVCount(MeshTypeThing.Solid);
 			indicesAmount += component.getWholeMeshEntryICount(MeshTypeThing.Solid);
@@ -31,7 +41,7 @@ public class SolidMesh
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
-		for(Component comp : components)
+		for(Component comp : componentsToRender)
 		{
 			comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Solid);
 		}

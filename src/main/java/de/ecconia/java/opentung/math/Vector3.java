@@ -185,4 +185,9 @@ public class Vector3
 	{
 		return Objects.hash(x, y, z);
 	}
+	
+	public boolean oneNegative()
+	{
+		return x < 0 || y < 0 ||  z < 0;
+	}
 }

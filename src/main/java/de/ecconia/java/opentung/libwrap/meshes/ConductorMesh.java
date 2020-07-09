@@ -9,7 +9,6 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
-import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.Clusterable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import java.util.Arrays;
@@ -19,20 +18,39 @@ import org.lwjgl.opengl.GL30;
 public class ConductorMesh
 {
 	private final ShaderProgram solidMeshShader;
-	private final GenericVAO vao;
+	
+	private GenericVAO vao;
 	
 	//TODO: Apply check, that the ID's never get over the size below *32
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
 	private final int[] falseDataArray = new int[1016 * 4];
 	
-	public ConductorMesh(List<Component> components, List<CompWireRaw> wires, List<Cluster> clusters, SimulationManager simulation, boolean maybeClusterless)
+	public ConductorMesh(List<Component> componentsToRender, List<CompWireRaw> wiresToRender, SimulationManager simulation, boolean maybeClusterless)
 	{
 		this.solidMeshShader = new ShaderProgram("mesh/meshConductor");
 		simulation.setConnectorMeshStates(falseDataArray);
 		
-		int verticesAmount = wires.size() * 4 * 4 * (3 + 3);
-		int indicesAmount = wires.size() * 4 * (2 * 3);
-		for(Component component : components)
+		update(componentsToRender, wiresToRender, maybeClusterless);
+		
+		//By clusters:
+		Arrays.fill(falseDataArray, 0);
+	}
+	
+	public void update(List<Component> componentsToRender, List<CompWireRaw> wiresToRender)
+	{
+		update(componentsToRender, wiresToRender, false);
+	}
+	
+	public void update(List<Component> componentsToRender, List<CompWireRaw> wiresToRender, boolean maybeClusterless)
+	{
+		if(vao != null)
+		{
+			vao.unload();
+		}
+		
+		int verticesAmount = wiresToRender.size() * 4 * 4 * (3 + 3);
+		int indicesAmount = wiresToRender.size() * 4 * (2 * 3);
+		for(Component component : componentsToRender)
 		{
 			for(Peg peg : component.getPegs())
 			{
@@ -54,7 +72,7 @@ public class ConductorMesh
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
-		for(CompWireRaw wire : wires)
+		for(CompWireRaw wire : wiresToRender)
 		{
 			wire.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Conductor);
 			//TODO: Ungeneric:
@@ -65,7 +83,7 @@ public class ConductorMesh
 				clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 			}
 		}
-		for(Component comp : components)
+		for(Component comp : componentsToRender)
 		{
 			if(comp instanceof CompSnappingPeg)
 			{
@@ -93,13 +111,6 @@ public class ConductorMesh
 		}
 		
 		vao = new ConductorMeshVAO(vertices, indices, clusterIDs);
-		
-		//By clusters:
-		Arrays.fill(falseDataArray, 0);
-		for(Cluster cluster : clusters)
-		{
-			setStateByID(cluster.getId(), cluster.isActive());
-		}
 	}
 	
 	private int getClusterID(Clusterable clusterable, boolean maybeClusterless)
@@ -118,21 +129,6 @@ public class ConductorMesh
 		}
 	}
 	
-	private void setStateByID(int i, boolean active)
-	{
-		int index = i / 32;
-		int offset = i % 32;
-		int mask = (1 << offset);
-		
-		int value = falseDataArray[index];
-		value = value & ~mask;
-		if(active)
-		{
-			value |= mask;
-		}
-		falseDataArray[index] = value;
-	}
-	
 	public void draw(float[] view)
 	{
 		solidMeshShader.use();
@@ -147,11 +143,6 @@ public class ConductorMesh
 	{
 		solidMeshShader.use();
 		solidMeshShader.setUniform(0, projection);
-	}
-	
-	public void unload()
-	{
-		vao.unload();
 	}
 	
 	private static class ConductorMeshVAO extends LargeGenericVAO

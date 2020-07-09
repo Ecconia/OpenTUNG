@@ -19,7 +19,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompDelayer extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, CompDelayer::new);
 	
 	static
 	{

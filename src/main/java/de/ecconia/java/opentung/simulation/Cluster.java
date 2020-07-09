@@ -58,4 +58,9 @@ public abstract class Cluster implements Updateable
 	{
 		return connectors;
 	}
+	
+	public void updateState(SimulationManager simulation)
+	{
+		simulation.changeState(id, isActive());
+	}
 }
