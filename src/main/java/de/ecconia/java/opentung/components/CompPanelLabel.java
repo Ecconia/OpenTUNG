@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Direction;
@@ -11,6 +12,7 @@ import de.ecconia.java.opentung.math.Vector3;
 public class CompPanelLabel extends CompLabel
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder);
 	
 	static
 	{
@@ -28,6 +30,12 @@ public class CompPanelLabel extends CompLabel
 	public ModelHolder getModelHolder()
 	{
 		return modelHolder;
+	}
+	
+	@Override
+	public PlaceableInfo getInfo()
+	{
+		return info;
 	}
 	
 	//### Non-Static ###

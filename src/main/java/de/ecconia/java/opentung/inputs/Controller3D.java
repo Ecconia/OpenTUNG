@@ -1,15 +1,16 @@
 package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.Camera;
+import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.RenderPlane3D;
 import de.ecconia.java.opentung.Settings;
 import de.ecconia.java.opentung.UglyComponentAwareness;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.Holdable;
-import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import org.lwjgl.glfw.GLFW;
 
+//TODO: Let both mouse buttons abort pending click, for placement e.g.
 public class Controller3D implements Controller
 {
 	private final RenderPlane3D renderPlane3D;
@@ -55,10 +56,6 @@ public class Controller3D implements Controller
 		{
 			checkMouseRight(false);
 		}
-		else if(type == InputProcessor.MOUSE_MIDDLE)
-		{
-			//TODO: Select component.
-		}
 	}
 	
 	@Override
@@ -74,7 +71,7 @@ public class Controller3D implements Controller
 		}
 		else if(type == InputProcessor.MOUSE_MIDDLE)
 		{
-			//TODO: Select component.
+			middleMouseDown();
 		}
 	}
 	
@@ -383,7 +380,47 @@ public class Controller3D implements Controller
 	
 	private void indexUpdated()
 	{
-		ModelHolder model = UglyComponentAwareness.getModelByIndex(selectedModelIndex);
-		renderPlane3D.componentPlaceSelection(model);
+		PlaceableInfo placeable = UglyComponentAwareness.getModelByIndex(selectedModelIndex);
+		renderPlane3D.componentPlaceSelection(placeable);
+	}
+	
+	private void middleMouseDown()
+	{
+		Part part = renderPlane3D.getCursorObject();
+		if(part instanceof Connector)
+		{
+			part = part.getParent();
+		}
+		if(part == null)
+		{
+			if(selectedModelIndex != 0)
+			{
+				selectedModelIndex = 0;
+				renderPlane3D.componentPlaceSelection(null);
+			}
+		}
+		else
+		{
+			//Call to here required, to init the UglyComponentAwareness class.
+			PlaceableInfo info = UglyComponentAwareness.getPlaceableInfoFrom(part);
+			if(info == null)
+			{
+				if(selectedModelIndex != 0)
+				{
+					selectedModelIndex = 0;
+					renderPlane3D.componentPlaceSelection(null);
+				}
+			}
+			else
+			{
+				int index = info.getIndex();
+				if(selectedModelIndex != index)
+				{
+					selectedModelIndex = index;
+					//TODO: Apply rotation from copied component.
+					renderPlane3D.componentPlaceSelection(info);
+				}
+			}
+		}
 	}
 }

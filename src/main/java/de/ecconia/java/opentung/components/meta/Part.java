@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components.meta;
 
+import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
@@ -18,6 +19,11 @@ public abstract class Part
 	public Part(Component parent)
 	{
 		this.parent = parent;
+	}
+	
+	public PlaceableInfo getInfo()
+	{
+		return null;
 	}
 	
 	//Meshable section:

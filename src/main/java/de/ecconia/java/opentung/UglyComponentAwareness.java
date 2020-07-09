@@ -19,58 +19,58 @@ import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSwitch;
 import de.ecconia.java.opentung.components.CompThroughBlotter;
 import de.ecconia.java.opentung.components.CompThroughPeg;
-import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.components.meta.Part;
 
 public class UglyComponentAwareness
 {
-	public static final int MAX = 19;
+	private static PlaceableInfo[] placeableInfos = new PlaceableInfo[]{
+			null,
+			CompPeg.info,
+			CompInverter.info,
+			CompBlotter.info,
+			CompDelayer.info,
+			CompSwitch.info,
+			CompButton.info,
+			CompPanelSwitch.info,
+			CompPanelButton.info,
+			CompNoisemaker.info,
+			CompMount.info,
+			CompSnappingPeg.info,
+			CompThroughBlotter.info,
+			CompThroughPeg.info,
+			CompDisplay.info,
+			CompPanelDisplay.info,
+			CompColorDisplay.info,
+			CompPanelColorDisplay.info,
+			CompLabel.info,
+			CompPanelLabel.info,
+	};
 	
-	public static ModelHolder getModelByIndex(int id)
+	public static final int MAX = placeableInfos.length - 1;
+	
+	public static PlaceableInfo getModelByIndex(int id)
 	{
-		switch(id)
+		if(id > MAX)
 		{
-			case 0:
-				return null;
-			case 1:
-				return CompPeg.modelHolder;
-			case 2:
-				return CompInverter.modelHolder;
-			case 3:
-				return CompBlotter.modelHolder;
-			case 4:
-				return CompDelayer.modelHolder;
-			case 5:
-				return CompSwitch.modelHolder;
-			case 6:
-				return CompButton.modelHolder;
-			case 7:
-				return CompPanelSwitch.modelHolder;
-			case 8:
-				return CompPanelButton.modelHolder;
-			case 9:
-				return CompNoisemaker.modelHolder;
-			case 10:
-				return CompMount.modelHolder;
-			case 11:
-				return CompSnappingPeg.modelHolder;
-			case 12:
-				return CompThroughBlotter.modelHolder;
-			case 13:
-				return CompThroughPeg.modelHolder;
-			case 14:
-				return CompDisplay.modelHolder;
-			case 15:
-				return CompPanelDisplay.modelHolder;
-			case 16:
-				return CompColorDisplay.modelHolder;
-			case 17:
-				return CompPanelColorDisplay.modelHolder;
-			case 18:
-				return CompLabel.modelHolder;
-			case 19:
-				return CompPanelLabel.modelHolder;
+			return null;
 		}
-		
-		return null;
+		else
+		{
+			return placeableInfos[id];
+		}
+	}
+	
+	static
+	{
+		//More ugly code:
+		for(int i = 1; i <= MAX; i++)
+		{
+			placeableInfos[i].setIndex(i);
+		}
+	}
+	
+	public static PlaceableInfo getPlaceableInfoFrom(Part part)
+	{
+		return part.getInfo();
 	}
 }

@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
@@ -18,6 +19,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompDelayer extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder);
 	
 	static
 	{
@@ -31,6 +33,12 @@ public class CompDelayer extends Component implements Powerable, Updateable
 	public ModelHolder getModelHolder()
 	{
 		return modelHolder;
+	}
+	
+	@Override
+	public PlaceableInfo getInfo()
+	{
+		return info;
 	}
 	
 	//### Non-Static ###

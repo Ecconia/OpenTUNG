@@ -100,7 +100,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	private Controller3D controller;
 	private Connector wireStartPoint; //Selected by dragging from a connector.
-	private ModelHolder modelToPlace; //Selected via the 0..9 keys or mouse-wheel.
+	private PlaceableInfo currentPlaceable; //Selected via the 0..9 keys or mouse-wheel.
 	private int placementRotation;
 	
 	public Part getCursorObject()
@@ -171,9 +171,9 @@ public class RenderPlane3D implements RenderPlane
 		wireStartPoint = null;
 	}
 	
-	public void componentPlaceSelection(ModelHolder model)
+	public void componentPlaceSelection(PlaceableInfo placeable)
 	{
-		modelToPlace = model;
+		currentPlaceable = placeable;
 	}
 	
 	public void rotatePlacement(int degrees)
@@ -528,7 +528,7 @@ public class RenderPlane3D implements RenderPlane
 		//TODO: Set from a more appropriate place!
 		placementPosition = draw;
 		
-		if(modelToPlace == null)
+		if(currentPlaceable == null)
 		{
 			lineShader.use();
 			lineShader.setUniform(1, view);
@@ -545,7 +545,7 @@ public class RenderPlane3D implements RenderPlane
 			Vector3 rotatedBoardNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
 			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, rotatedBoardNormal);
-			World3DHelper.drawModel(visualShapeShader, visualShape, modelToPlace, placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), modelRotation.multiply(compRotation), view);
+			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementPosition.subtract(rotatedBoardNormal.multiply(0.075)), modelRotation.multiply(compRotation), view);
 		}
 	}
 	
