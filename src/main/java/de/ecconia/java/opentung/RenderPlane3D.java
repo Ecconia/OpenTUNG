@@ -593,7 +593,7 @@ public class RenderPlane3D implements RenderPlane
 		if(placementPosition != null)
 		{
 			//Draw wire between placementPosition and startingPos:
-			Vector3 direction = placementPosition.subtract(startingPos).divide(2);
+			Vector3 direction = placementPosition.add(placementNormal.multiply(0.075)).subtract(startingPos).divide(2);
 			double distance = direction.length();
 			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 			
@@ -603,7 +603,11 @@ public class RenderPlane3D implements RenderPlane
 			model.multiply(new Matrix(rotation.createMatrix()));
 			Vector3 size = new Vector3(0.025, 0.01, distance);
 			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+			
+			justShape.use();
+			justShape.setUniform(1, view);
 			justShape.setUniform(2, model.getMat());
+			justShape.setUniformV4(3, new float[] {1.0f, 0.0f, 1.0f, 1.0f});
 			
 			cubeVAO.use();
 			cubeVAO.draw();
