@@ -590,10 +590,25 @@ public class RenderPlane3D implements RenderPlane
 		crossyIndicator.use();
 		crossyIndicator.draw();
 		
-		if(placementPosition != null)
+		Vector3 toPos = placementPosition;
+		if(toPos == null)
+		{
+			Part currentlyLookingAt = getCursorObject();
+			if(currentlyLookingAt instanceof Connector)
+			{
+				toPos = ((Connector) currentlyLookingAt).getConnectionPoint();
+			}
+		}
+		else
+		{
+			//Fix offset.
+			toPos = toPos.add(placementNormal.multiply(0.075));
+		}
+		
+		if(toPos != null)
 		{
 			//Draw wire between placementPosition and startingPos:
-			Vector3 direction = placementPosition.add(placementNormal.multiply(0.075)).subtract(startingPos).divide(2);
+			Vector3 direction = toPos.subtract(startingPos).divide(2);
 			double distance = direction.length();
 			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 			
