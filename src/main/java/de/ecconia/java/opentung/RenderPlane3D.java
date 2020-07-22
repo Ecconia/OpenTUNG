@@ -98,6 +98,7 @@ public class RenderPlane3D implements RenderPlane
 	private Vector3 placementPosition;
 	private Vector3 placementNormal;
 	private CompBoard placementBoard;
+	private int rayID = 1;
 	
 	//Input handling:
 	
@@ -194,6 +195,28 @@ public class RenderPlane3D implements RenderPlane
 		if(placementPosition != null && currentPlaceable != null)
 		{
 			Component newComponent = currentPlaceable.instance(placementBoard);
+			{
+				int newIDsAmount = 1 + newComponent.getPegs().size() + newComponent.getBlots().size();
+				Part[] idLookupClone = new Part[idLookup.length + newIDsAmount];
+				System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
+				idLookup = idLookupClone;
+				
+				newComponent.setRayCastID(rayID);
+				idLookup[rayID] = newComponent;
+				rayID++;
+				for(Peg peg : newComponent.getPegs())
+				{
+					peg.setRayCastID(rayID);
+					idLookup[rayID] = peg;
+					rayID++;
+				}
+				for(Blot blot : newComponent.getBlots())
+				{
+					blot.setRayCastID(rayID);
+					idLookup[rayID] = blot;
+					rayID++;
+				}
+			}
 			newComponent.setPosition(placementPosition);
 			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
@@ -277,35 +300,34 @@ public class RenderPlane3D implements RenderPlane
 			}
 			idLookup = new Part[amount];
 			
-			int id = 1;
 			for(Component comp : board.getBoardsToRender())
 			{
-				comp.setRayCastID(id);
-				idLookup[id] = comp;
-				id++;
+				comp.setRayCastID(rayID);
+				idLookup[rayID] = comp;
+				rayID++;
 			}
 			for(Component comp : board.getWiresToRender())
 			{
-				comp.setRayCastID(id);
-				idLookup[id] = comp;
-				id++;
+				comp.setRayCastID(rayID);
+				idLookup[rayID] = comp;
+				rayID++;
 			}
 			for(Component comp : board.getComponentsToRender())
 			{
-				comp.setRayCastID(id);
-				idLookup[id] = comp;
-				id++;
+				comp.setRayCastID(rayID);
+				idLookup[rayID] = comp;
+				rayID++;
 				for(Peg peg : comp.getPegs())
 				{
-					peg.setRayCastID(id);
-					idLookup[id] = peg;
-					id++;
+					peg.setRayCastID(rayID);
+					idLookup[rayID] = peg;
+					rayID++;
 				}
 				for(Blot blot : comp.getBlots())
 				{
-					blot.setRayCastID(id);
-					idLookup[id] = blot;
-					id++;
+					blot.setRayCastID(rayID);
+					idLookup[rayID] = blot;
+					rayID++;
 				}
 			}
 		}
@@ -360,6 +382,7 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		solidMesh.update(board.getComponentsToRender());
+		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 		System.out.println("Done.");
 	}
 	

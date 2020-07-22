@@ -15,11 +15,21 @@ import org.lwjgl.opengl.GL30;
 public class RayCastMesh
 {
 	private final ShaderProgram raycastShader;
-	private final GenericVAO vao;
+	private GenericVAO vao;
 	
 	public RayCastMesh(List<CompBoard> boards, List<CompWireRaw> wires, List<Component> components)
 	{
 		this.raycastShader = new ShaderProgram("mesh/meshRaycast");
+		
+		update(boards, wires, components);
+	}
+	
+	public void update(List<CompBoard> boards, List<CompWireRaw> wires, List<Component> components)
+	{
+		if(vao != null)
+		{
+			vao.unload();
+		}
 		
 		int verticesAmount = boards.size() * 6 * 4 * (3 + 3);
 		int indicesAmount = boards.size() * 6 * 2 * 3;
