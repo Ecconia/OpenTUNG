@@ -103,6 +103,7 @@ public class RenderPlane3D implements RenderPlane
 	private Vector3 placementNormal;
 	private CompBoard placementBoard;
 	private int rayID = 1;
+	private boolean fullyLoaded;
 	
 	//Input handling:
 	
@@ -178,6 +179,12 @@ public class RenderPlane3D implements RenderPlane
 	{
 		Connector from = wireStartPoint;
 		wireStartPoint = null;
+		
+		if(!fullyLoaded)
+		{
+			return;
+		}
+		
 		if(connector != null)
 		{
 			Connector to = connector;
@@ -277,6 +284,11 @@ public class RenderPlane3D implements RenderPlane
 	
 	public boolean attemptPlacement()
 	{
+		if(!fullyLoaded)
+		{
+			return false;
+		}
+		
 		//TODO: Ugly, not thread-safe enough for my taste. Might even cause bugs. So eventually it has to be changed.
 		if(placementPosition != null && currentPlaceable != null)
 		{
@@ -479,6 +491,7 @@ public class RenderPlane3D implements RenderPlane
 			cluster.updateState(board.getSimulation());
 		}
 		board.getSimulation().start();
+		fullyLoaded = true;
 		System.out.println("Done.");
 	}
 	
