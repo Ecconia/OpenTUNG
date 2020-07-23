@@ -35,6 +35,7 @@ import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
+import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -310,11 +311,20 @@ public class RenderPlane3D implements RenderPlane
 			
 			for(Peg peg : newComponent.getPegs())
 			{
-				peg.setCluster(new InheritingCluster(board.getNewClusterID()));
+				Cluster cluster = new InheritingCluster(board.getNewClusterID());
+				cluster.addConnector(peg);
+				peg.setCluster(cluster);
 			}
 			for(Blot blot : newComponent.getBlots())
 			{
-				blot.setCluster(new SourceCluster(board.getNewClusterID(), blot));
+				Cluster cluster = new SourceCluster(board.getNewClusterID(), blot);
+				cluster.addConnector(blot);
+				blot.setCluster(cluster);
+			}
+			
+			if(newComponent instanceof Updateable)
+			{
+				board.getSimulation().updateNextTickThreadSafe((Updateable) newComponent);
 			}
 			
 			try
