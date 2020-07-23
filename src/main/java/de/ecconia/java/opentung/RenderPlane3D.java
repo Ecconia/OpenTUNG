@@ -172,7 +172,89 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void rightDragOnConnectorStop(Connector connector)
 	{
+		Connector from = wireStartPoint;
 		wireStartPoint = null;
+		if(connector != null)
+		{
+			Connector to = connector;
+			
+			boolean fromBlot = from instanceof Blot;
+			boolean toBlot = to instanceof Blot;
+			if(fromBlot && toBlot)
+			{
+				System.out.println("Blot-Blot connections not allowed.");
+				return;
+			}
+			
+			for(Wire wire : from.getWires())
+			{
+				if(wire.getOtherSide(from) == to)
+				{
+					System.out.println("Already connected.");
+					return;
+				}
+			}
+			
+			Cluster wireCluster;
+			
+			if(fromBlot != toBlot)
+			{
+				//Inheriting
+				Connector blotConnector = fromBlot ? from : to;
+				Connector pegConnector = fromBlot ? to : from;
+				
+				wireCluster = blotConnector.getCluster();
+			}
+			else // Peg + Peg
+			{
+				//Merging
+				wireCluster = from.getCluster();
+			}
+			
+			//Add wire:
+			{
+				CompWireRaw newWire = new CompWireRaw(null); //TODO: What is the parent?
+				newWire.setConnectorA(from);
+				newWire.setConnectorB(to);
+				from.addWire(newWire);
+				to.addWire(newWire);
+				newWire.setCluster(wireCluster);
+				
+				Vector3 fromPos = from.getConnectionPoint();
+				Vector3 toPos = to.getConnectionPoint();
+				
+				//Pos + Rot
+				Vector3 direction = fromPos.subtract(toPos).divide(2);
+				double distance = direction.length();
+				Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+				Vector3 position = toPos.add(direction);
+				newWire.setRotation(rotation);
+				newWire.setPosition(position);
+				newWire.setLength((float) distance * 2f);
+				
+				//RayCast
+				Part[] idLookupClone = new Part[idLookup.length + 1];
+				System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
+				idLookup = idLookupClone;
+				newWire.setRayCastID(rayID);
+				idLookup[rayID] = newWire;
+				rayID++;
+				
+				//Add it
+				board.getWiresToRender().add(newWire);
+			}
+			
+			try
+			{
+				gpuTasks.put((ignored) -> {
+					refreshWireMeshes();
+				});
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void componentPlaceSelection(PlaceableInfo placeable)
@@ -382,6 +464,14 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		solidMesh.update(board.getComponentsToRender());
+		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
+		System.out.println("Done.");
+	}
+	
+	public void refreshWireMeshes()
+	{
+		System.out.println("Update:");
+		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 		System.out.println("Done.");
 	}
