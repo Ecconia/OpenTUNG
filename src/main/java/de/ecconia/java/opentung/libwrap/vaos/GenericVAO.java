@@ -1,10 +1,13 @@
 package de.ecconia.java.opentung.libwrap.vaos;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.lwjgl.opengl.GL30;
 
 public abstract class GenericVAO
 {
 	private final int vaoID;
+	protected final List<Integer> deleteLater = new ArrayList<>();
 	protected final int amount;
 	
 	protected GenericVAO(float[] vertices, int[] indices, Object... extra)
@@ -28,6 +31,9 @@ public abstract class GenericVAO
 		
 		//Cleanup:
 		GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, 0);
+		
+		deleteLater.add(vboID);
+		deleteLater.add(eabID);
 	}
 	
 	protected void uploadMoreData(Object... extra)
@@ -70,5 +76,10 @@ public abstract class GenericVAO
 	public void unload()
 	{
 		GL30.glDeleteVertexArrays(vaoID);
+		
+		for(Integer i : deleteLater)
+		{
+			GL30.glDeleteBuffers(i);
+		}
 	}
 }

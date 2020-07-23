@@ -117,6 +117,7 @@ public class ColorMesh
 		{
 			System.out.println(getClass().getSimpleName() + " E: " + ((int[]) extra[0]).length);
 			int vboID = GL30.glGenBuffers();
+			deleteLater.add(vboID);
 			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
 			GL30.glBufferData(GL30.GL_ARRAY_BUFFER, (int[]) extra[0], GL30.GL_STATIC_DRAW);
 			//ColorID:
