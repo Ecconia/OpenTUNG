@@ -29,6 +29,11 @@ public class CubeOpenRotated extends CubeFull
 		return rotation;
 	}
 	
+	public Direction getDirection()
+	{
+		return direction;
+	}
+	
 	@Override
 	public int getFacesCount()
 	{

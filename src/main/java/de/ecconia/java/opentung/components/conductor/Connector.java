@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.components.conductor;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
+import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -121,7 +122,24 @@ public abstract class Connector extends Part implements Clusterable
 	{
 		//TODO: VERY ungeneric, to be fixed!!!
 		Vector3 connectionOffset;
-		if(model instanceof CubeOpen)
+		if(model instanceof CubeOpenRotated)
+		{
+			Vector3 directionV = ((CubeOpenRotated) model).getDirection().asVector();
+			connectionOffset = new Vector3(
+					directionV.getX() * model.getSize().getX(),
+					directionV.getY() * model.getSize().getY(),
+					directionV.getZ() * model.getSize().getZ()).multiply(-0.8);
+			
+			Quaternion rotation = ((CubeOpenRotated) model).getRotation();
+			
+			return getPosition()
+					.add(getParent().getRotation().inverse().multiply(
+							rotation.multiply(
+									getModel().getPosition()
+											.add(connectionOffset))
+									.add(getParent().getModelHolder().getPlacementOffset())));
+		}
+		else if(model instanceof CubeOpen)
 		{
 			Vector3 directionV = ((CubeOpen) model).getDirection().asVector();
 			connectionOffset = new Vector3(
