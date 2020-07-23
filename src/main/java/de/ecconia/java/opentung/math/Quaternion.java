@@ -103,9 +103,9 @@ public class Quaternion
 		return m;
 	}
 	
-	public float getLength()
+	public double getLength()
 	{
-		return (float) Math.sqrt(a * a + v.lengthSqared());
+		return Math.sqrt(a * a + v.lengthSqared());
 	}
 	
 	@Override

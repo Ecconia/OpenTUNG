@@ -72,7 +72,23 @@ public class Vector3
 	
 	public Vector3 normalize()
 	{
-		return divide(length());
+		Vector3 v = divide(length());
+		v = new Vector3(round(v.getX()), round(v.getY()), round(v.getZ()));
+		return v;
+	}
+	
+	private static double round(double in)
+	{
+		//TODO: This is quite ugly, but the only thing which currently helps (quick and dirty workaround).
+		double delta = 0.000000000000001D;
+		if(in < delta && in > -delta)
+		{
+			return 0;
+		}
+		else
+		{
+			return in;
+		}
 	}
 	
 	public Vector3 invert()
