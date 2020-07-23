@@ -318,7 +318,7 @@ public class RenderPlane3D implements RenderPlane
 			newComponent.setPosition(placementPosition);
 			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
-			newComponent.setRotation(compRotation.multiply(rotation));
+			newComponent.setRotation(rotation.multiply(compRotation));
 			
 			//TODO: Update bounds and stuff
 			board.getComponentsToRender().add(newComponent);
