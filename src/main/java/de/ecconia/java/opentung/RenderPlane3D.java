@@ -325,22 +325,14 @@ public class RenderPlane3D implements RenderPlane
 				blot.setCluster(cluster);
 			}
 			
-			boolean hasColorable = newComponent instanceof Colorable;
-			if(hasColorable)
+			//TODO: Replace section with initDefault()
+			if(newComponent instanceof CompDisplay)
 			{
-				//TODO: Replace section with initDefault()
-				if(newComponent instanceof CompDisplay)
-				{
-					((CompDisplay) newComponent).setColorRaw(Color.displayYellow);
-				}
-				else if(newComponent instanceof CompPanelDisplay)
-				{
-					((CompPanelDisplay) newComponent).setColorRaw(Color.displayYellow);
-				}
-				else
-				{
-					throw new RuntimeException("Unknown colorable component: " + newComponent.getClass().getSimpleName());
-				}
+				((CompDisplay) newComponent).setColorRaw(Color.displayYellow);
+			}
+			else if(newComponent instanceof CompPanelDisplay)
+			{
+				((CompPanelDisplay) newComponent).setColorRaw(Color.displayYellow);
 			}
 			
 			if(newComponent instanceof Updateable)
@@ -351,7 +343,7 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
-					refreshComponentMeshes(hasColorable);
+					refreshComponentMeshes(newComponent instanceof Colorable);
 				});
 			}
 			catch(InterruptedException e)
