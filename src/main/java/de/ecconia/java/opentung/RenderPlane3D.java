@@ -681,15 +681,6 @@ public class RenderPlane3D implements RenderPlane
 		
 		Vector3 startingPos = wireStartPoint.getConnectionPoint();
 		
-		lineShader.use();
-		lineShader.setUniform(1, view);
-		Matrix model = new Matrix();
-		model.identity();
-		model.translate((float) startingPos.getX(), (float) startingPos.getY(), (float) startingPos.getZ());
-		lineShader.setUniform(2, model.getMat());
-		crossyIndicator.use();
-		crossyIndicator.draw();
-		
 		Vector3 toPos = placementPosition;
 		if(toPos == null)
 		{
@@ -712,7 +703,7 @@ public class RenderPlane3D implements RenderPlane
 			double distance = direction.length();
 			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 			
-			model.identity();
+			Matrix model = new Matrix();
 			Vector3 position = startingPos.add(direction);
 			model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 			model.multiply(new Matrix(rotation.createMatrix()));
