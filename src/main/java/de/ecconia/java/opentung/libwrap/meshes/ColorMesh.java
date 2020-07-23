@@ -16,7 +16,7 @@ import org.lwjgl.opengl.GL30;
 public class ColorMesh
 {
 	private final ShaderProgram colorMeshShader;
-	private final GenericVAO vao;
+	private GenericVAO vao;
 	
 	//TODO: Apply check, that the ID's never get over the size below *32
 	//TODO: Apply check, that the amount of array positions gets generated automatically.
@@ -26,6 +26,19 @@ public class ColorMesh
 	{
 		this.colorMeshShader = new ShaderProgram("mesh/meshColor");
 		simulation.setColorMeshStates(falseDataArray);
+		
+		update(components);
+		
+		Color color = Color.displayOff;
+		Arrays.fill(falseDataArray, color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 0xff);
+	}
+	
+	public void update(List<Component> components)
+	{
+		if(vao != null)
+		{
+			vao.unload();
+		}
 		
 		int nextColorID = 0;
 		
@@ -64,6 +77,7 @@ public class ColorMesh
 				CubeFull cube = (CubeFull) comp.getModelHolder().getColorables().get(i);
 				
 				int colorID = nextColorID++;
+				//TODO: Support more color elements
 				((Colorable) comp).setColorID(i, colorID);
 				for(int j = 0; j < cube.getFacesCount() * 4; j++)
 				{
@@ -73,9 +87,6 @@ public class ColorMesh
 		}
 		
 		vao = new ColorMeshVAO(vertices, indices, colorIDs);
-		
-		Color color = Color.displayOff;
-		Arrays.fill(falseDataArray, color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 0xff);
 	}
 	
 	public void draw(float[] view)

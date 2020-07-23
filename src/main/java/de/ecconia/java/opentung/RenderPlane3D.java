@@ -1,7 +1,9 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -10,7 +12,9 @@ import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -37,7 +41,6 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -322,6 +325,24 @@ public class RenderPlane3D implements RenderPlane
 				blot.setCluster(cluster);
 			}
 			
+			boolean hasColorable = newComponent instanceof Colorable;
+			if(hasColorable)
+			{
+				//TODO: Replace section with initDefault()
+				if(newComponent instanceof CompDisplay)
+				{
+					((CompDisplay) newComponent).setColorRaw(Color.displayYellow);
+				}
+				else if(newComponent instanceof CompPanelDisplay)
+				{
+					((CompPanelDisplay) newComponent).setColorRaw(Color.displayYellow);
+				}
+				else
+				{
+					throw new RuntimeException("Unknown colorable component: " + newComponent.getClass().getSimpleName());
+				}
+			}
+			
 			if(newComponent instanceof Updateable)
 			{
 				board.getSimulation().updateNextTickThreadSafe((Updateable) newComponent);
@@ -330,7 +351,7 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
-					refreshComponentMeshes();
+					refreshComponentMeshes(hasColorable);
 				});
 			}
 			catch(InterruptedException e)
@@ -352,9 +373,9 @@ public class RenderPlane3D implements RenderPlane
 			int side = 16;
 			BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = image.createGraphics();
-			g.setColor(Color.white);
+			g.setColor(java.awt.Color.white);
 			g.fillRect(0, 0, side - 1, side - 1);
-			g.setColor(new Color(0x777777));
+			g.setColor(new java.awt.Color(0x777777));
 			g.drawRect(0, 0, side - 1, side - 1);
 			g.dispose();
 			boardTexture = new TextureWrapper(image);
@@ -469,12 +490,16 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("Done.");
 	}
 	
-	public void refreshComponentMeshes()
+	public void refreshComponentMeshes(boolean hasColorable)
 	{
 		System.out.println("Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		solidMesh.update(board.getComponentsToRender());
 		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
+		if(hasColorable)
+		{
+			colorMesh.update(board.getComponentsToRender());
+		}
 		System.out.println("Done.");
 	}
 	
