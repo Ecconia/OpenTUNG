@@ -8,6 +8,8 @@ import java.util.List;
 public class SimulationManager extends Thread
 {
 	//TODO: Replace with custom lists:
+	private List<UpdateJob> updateJobNextTickThreadSafe = new ArrayList<>();
+	private List<UpdateJob> updateJobThisTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateNextTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateThisTickThreadSafe = new ArrayList<>();
 	private List<Updateable> updateNextTick = new ArrayList<>();
@@ -100,6 +102,14 @@ public class SimulationManager extends Thread
 		}
 	}
 	
+	public void updateJobNextTickThreadSafe(UpdateJob updateJob)
+	{
+		synchronized(this)
+		{
+			updateJobNextTickThreadSafe.add(updateJob);
+		}
+	}
+	
 	public void updateNextTick(Updateable updateable)
 	{
 		updateNextTick.add(updateable);
@@ -108,6 +118,11 @@ public class SimulationManager extends Thread
 	public void updateNextStage(Cluster cluster)
 	{
 		updateClusterNextStage.add(cluster);
+	}
+	
+	public void updateThisStage(Cluster cluster)
+	{
+		updateClusterThisStage.add(cluster);
 	}
 	
 	private void doTick()
@@ -146,6 +161,23 @@ public class SimulationManager extends Thread
 			List<Cluster> tmp = updateClusterThisStage;
 			updateClusterThisStage = updateClusterNextStage;
 			updateClusterNextStage = tmp;
+		}
+		
+		if(!updateJobNextTickThreadSafe.isEmpty())
+		{
+			synchronized(this)
+			{
+				List<UpdateJob> tmp = updateJobThisTickThreadSafe;
+				updateJobThisTickThreadSafe = updateJobNextTickThreadSafe;
+				updateJobNextTickThreadSafe = tmp;
+				//TBI: The clearing could be done in the synchronized section of the input/graphic thread.
+				//TBI: Alternatively overwrite the class and let clear only reset the pointer.
+				updateJobNextTickThreadSafe.clear();
+			}
+			for(UpdateJob updateJob : updateJobThisTickThreadSafe)
+			{
+				updateJob.update(this);
+			}
 		}
 		
 		//Source clusters:
@@ -198,5 +230,10 @@ public class SimulationManager extends Thread
 	public void setColor(int colorID, Color color)
 	{
 		colorMeshStates[colorID] = color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 255;
+	}
+	
+	public interface UpdateJob
+	{
+		void update(SimulationManager simulation);
 	}
 }

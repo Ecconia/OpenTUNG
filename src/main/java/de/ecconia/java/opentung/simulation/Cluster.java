@@ -63,4 +63,14 @@ public abstract class Cluster implements Updateable
 	{
 		simulation.changeState(id, isActive());
 	}
+	
+	public void remove(Connector current)
+	{
+		connectors.remove(current);
+	}
+	
+	public void remove(Wire wire)
+	{
+		wires.remove(wire);
+	}
 }

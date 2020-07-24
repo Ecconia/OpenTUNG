@@ -68,4 +68,9 @@ public class SourceCluster extends Cluster
 	{
 		return "cs" + getId();
 	}
+	
+	public void removeDrain(InheritingCluster drain)
+	{
+		drains.remove(drain);
+	}
 }

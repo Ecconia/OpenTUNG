@@ -26,6 +26,11 @@ public class InheritingCluster extends Cluster
 		sources.add(cluster);
 	}
 	
+	public List<SourceCluster> getSources()
+	{
+		return sources;
+	}
+	
 	public void forceUpdateON()
 	{
 		activeSources++;

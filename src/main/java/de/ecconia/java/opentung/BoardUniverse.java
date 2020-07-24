@@ -198,7 +198,7 @@ public class BoardUniverse
 	
 	private void createBlottyCluster(Blot blot)
 	{
-		//Precondition: No blob can have a cluster at this point.
+		//Precondition: No blot can have a cluster at this point.
 		Cluster cluster = new SourceCluster(nextClusterID++, blot);
 		clusters.add(cluster);
 		cluster.addConnector(blot);
@@ -517,5 +517,10 @@ public class BoardUniverse
 	public int getNewClusterID()
 	{
 		return nextClusterID++;
+	}
+	
+	public void deleteCluster(int id)
+	{
+		//TODO: Remember ID for resuage, its a slot in a shader to be used.
 	}
 }

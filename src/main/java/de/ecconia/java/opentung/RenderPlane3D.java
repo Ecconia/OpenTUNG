@@ -41,6 +41,7 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
+import de.ecconia.java.opentung.simulation.WireHelper;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -189,14 +190,6 @@ public class RenderPlane3D implements RenderPlane
 		{
 			Connector to = connector;
 			
-			boolean fromBlot = from instanceof Blot;
-			boolean toBlot = to instanceof Blot;
-			if(fromBlot && toBlot)
-			{
-				System.out.println("Blot-Blot connections not allowed.");
-				return;
-			}
-			
 			for(Wire wire : from.getWires())
 			{
 				if(wire.getOtherSide(from) == to)
@@ -206,30 +199,11 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
-			Cluster wireCluster;
-			
-			if(fromBlot != toBlot)
-			{
-				//Inheriting
-				Connector blotConnector = fromBlot ? from : to;
-				Connector pegConnector = fromBlot ? to : from;
-				
-				wireCluster = blotConnector.getCluster();
-			}
-			else // Peg + Peg
-			{
-				//Merging
-				wireCluster = from.getCluster();
-			}
-			
 			//Add wire:
+			CompWireRaw newWire;
 			{
-				CompWireRaw newWire = new CompWireRaw(null); //TODO: What is the parent?
-				newWire.setConnectorA(from);
-				newWire.setConnectorB(to);
-				from.addWire(newWire);
-				to.addWire(newWire);
-				newWire.setCluster(wireCluster);
+				//TODO: Use both connectors to figure out the parent - for now not required but later on.
+				newWire = new CompWireRaw(null);
 				
 				Vector3 fromPos = from.getConnectionPoint();
 				Vector3 toPos = to.getConnectionPoint();
@@ -250,21 +224,29 @@ public class RenderPlane3D implements RenderPlane
 				newWire.setRayCastID(rayID);
 				idLookup[rayID] = newWire;
 				rayID++;
-				
-				//Add it
-				board.getWiresToRender().add(newWire);
 			}
 			
-			try
-			{
-				gpuTasks.put((ignored) -> {
-					refreshWireMeshes();
-				});
-			}
-			catch(InterruptedException e)
-			{
-				e.printStackTrace();
-			}
+			Cluster wireCluster;
+			
+			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				//Places the wires and updates clusters as needed. Also finishes the wire linking.
+				WireHelper.placeWire(simulation, board, from, to, newWire);
+				
+				//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
+				try
+				{
+					gpuTasks.put((ignored) -> {
+						//Add the wire to the mesh sources
+						board.getWiresToRender().add(newWire);
+						
+						refreshWireMeshes();
+					});
+				}
+				catch(InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+			});
 		}
 	}
 	
