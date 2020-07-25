@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class WireHelper
+public class ClusterHelper
 {
 	private static final int SourceBlot = 0;
 	private static final int SourceActive = 1;

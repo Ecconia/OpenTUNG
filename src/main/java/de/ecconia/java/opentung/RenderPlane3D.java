@@ -41,7 +41,7 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
-import de.ecconia.java.opentung.simulation.WireHelper;
+import de.ecconia.java.opentung.simulation.ClusterHelper;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -230,7 +230,7 @@ public class RenderPlane3D implements RenderPlane
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				//Places the wires and updates clusters as needed. Also finishes the wire linking.
-				WireHelper.placeWire(simulation, board, from, to, newWire);
+				ClusterHelper.placeWire(simulation, board, from, to, newWire);
 				
 				//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
 				try
