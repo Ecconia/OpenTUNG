@@ -2,7 +2,7 @@
 
 OpenTUNG is basically a WIP clone of "The Ultimate Nerd Game" written in Java.
 
-Started by @Ecconia
+Started and maintained by @Ecconia
 
 ## Kilometer-marks
 
@@ -29,7 +29,7 @@ Sadly it comes with a bunch of negative factors.\
 If you have bad hardware like @Ecconia and run the game on Linux, you might experience the game to only run on 15FPS (or less) as well as having it use 20GB of RAM. The game runs properly, until you start to build very big things, like memories.\
 Additional depending on version and OS you have a bunch of bugs which sometimes make building difficult.\
 There is a modding framework, but that does not support the latest version, the modding-supported version has a horrible bug on Linux.\
-So for @Ecconia that means "no mods", which makes placing many wires a tedious task.\
+So for @Ecconia that means "no mods", which makes placing many wires a tedious task.
 
 In a nutshell, this project aims to provide a version of TUNG which does not have any of the old bugs and even comes with more features and performance.\
 This is nevertheless a Work-In-Progress project which has yet to arrive at the level of TUNG. Some things are better already, some are not even implemented. Things like the nice landscape will however never make it into OpenTUNG.
@@ -90,4 +90,4 @@ You may always contact developers and users there, if you wish to improve someth
 
 If you want to collaborate, you should check out that discord.
 
-TUNG/LogicWorld also have a [Discord-Server](https://discord.gg/C5Qkk53), if you don't know what this game is about, check out these first.
+TUNG/LogicWorld also have a [Discord-Server](https://discord.gg/C5Qkk53), if you don't know what this game is about, check out that one first.
