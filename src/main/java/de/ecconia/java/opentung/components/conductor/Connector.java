@@ -12,6 +12,9 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.Clusterable;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
+import de.ecconia.java.opentung.simulation.SimulationManager;
+import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,5 +161,18 @@ public abstract class Connector extends Part implements Clusterable
 	public void remove(Wire wire)
 	{
 		wires.remove(wire);
+	}
+	
+	@Override
+	public void leftClicked(SimulationManager simulation)
+	{
+		if(cluster instanceof SourceCluster)
+		{
+			System.out.println("Source#" + cluster.getId() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
+		}
+		else
+		{
+			System.out.println("Drain#" + cluster.getId() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
+		}
 	}
 }

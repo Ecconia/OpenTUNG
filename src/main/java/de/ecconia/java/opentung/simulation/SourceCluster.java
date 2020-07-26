@@ -73,4 +73,9 @@ public class SourceCluster extends Cluster
 	{
 		drains.remove(drain);
 	}
+	
+	public List<InheritingCluster> getDrains()
+	{
+		return drains;
+	}
 }
