@@ -340,6 +340,7 @@ public class ClusterHelper
 			SourceCluster blotCluster = (SourceCluster) blot.getCluster();
 			Peg other = (Peg) (aIsBlot ? b : a);
 			
+			blotCluster.remove(wireToDelete);
 			blot.remove(wireToDelete);
 			other.remove(wireToDelete);
 			
@@ -383,6 +384,7 @@ public class ClusterHelper
 		{
 			SourceCluster cluster = (SourceCluster) a.getCluster();
 			//Remove wire before tracing.
+			cluster.remove(wireToDelete);
 			a.remove(wireToDelete);
 			b.remove(wireToDelete);
 			//Split both and handle both independently:
@@ -431,6 +433,7 @@ public class ClusterHelper
 		{
 			InheritingCluster cluster = (InheritingCluster) a.getCluster();
 			//Remove wire before tracing.
+			cluster.remove(wireToDelete);
 			a.remove(wireToDelete);
 			b.remove(wireToDelete);
 			//Split both and handle both independently:
@@ -551,6 +554,7 @@ public class ClusterHelper
 	public static void removePeg(BoardUniverse board, SimulationManager simulation, Peg peg)
 	{
 		Cluster cluster = peg.getCluster();
+		cluster.remove(peg);
 		if(cluster instanceof SourceCluster)
 		{
 			//Note: Only one single Blot in this cluster. Find and handle appropriately.
@@ -562,6 +566,7 @@ public class ClusterHelper
 			{
 				Connector otherSide = wire.getOtherSide(peg);
 				otherSide.remove(wire);
+				source.remove(wire);
 				
 				if(otherSide instanceof Blot)
 				{
@@ -573,9 +578,6 @@ public class ClusterHelper
 			{
 				for(Wire wire : peg.getWires())
 				{
-					//The direct wires need to be removed manually. All others get removed by splitting them off.
-					cluster.remove(wire);
-					
 					//Must be Peg and same cluster.
 					Connector otherSide = wire.getOtherSide(peg);
 					if(otherSide instanceof Blot)
@@ -643,6 +645,7 @@ public class ClusterHelper
 				{
 					Connector otherSide = wire.getOtherSide(peg);
 					otherSide.remove(wire);
+					drain.remove(wire);
 				}
 				
 				for(Wire wire : peg.getWires())
@@ -667,6 +670,7 @@ public class ClusterHelper
 				{
 					Connector otherSide = wire.getOtherSide(peg);
 					otherSide.remove(wire);
+					wire.getCluster().remove(wire); //Might be a different cluster.
 				}
 				
 				for(Wire wire : peg.getWires())
@@ -718,11 +722,14 @@ public class ClusterHelper
 		
 		for(Wire blotWire : blot.getWires())
 		{
+			sourceCluster.remove(blotWire);
+			
 			Connector otherSide = blotWire.getOtherSide(blot);
 			if(otherSide.getCluster() == null)
 			{
 				//Has been splitted off before, just remove it.
 				otherSide.remove(blotWire); //Remove the wire-connection from the other side.
+				continue;
 			}
 			
 			if(otherSide.getCluster() == sourceCluster)
