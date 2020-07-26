@@ -263,12 +263,17 @@ public class ClusterHelper
 		//Split B off its Blot, make it a new cluster C, let C have A and B as source
 		InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
 		newCluster.addSource(sourceBlotCluster);
-		newCluster.addSource(sourceActiveCluster);
 		sourceBlotCluster.addDrain(newCluster);
-		sourceActiveCluster.addDrain(newCluster);
 		
 		Prototype splitted = splitNonSourcePartFromCluster(sourceActive);
 		splitted.mergeInto(newCluster);
+		
+		//We want to store these guys multiple times, for each wire-connection.
+		for(Wire sourceWire : splitted.getBlotWires())
+		{
+			newCluster.addSource(sourceActiveCluster);
+			sourceActiveCluster.addDrain(newCluster);
+		}
 		
 		//Update C according to its sources
 		if(sourceBlotCluster.isActive())
@@ -336,10 +341,10 @@ public class ClusterHelper
 			Peg other = (Peg) (aIsBlot ? b : a);
 			
 			blot.remove(wireToDelete);
+			other.remove(wireToDelete);
 			
 			if(other.getCluster() instanceof SourceCluster)
 			{
-				other.remove(wireToDelete);
 				Prototype split = splitNonSourcePartFromCluster(other);
 				
 				if(split.getBlotWires().isEmpty())
@@ -362,7 +367,8 @@ public class ClusterHelper
 			{
 				InheritingCluster otherCluster = (InheritingCluster) other.getCluster();
 				otherCluster.remove(blotCluster);
-				other.remove(wireToDelete);
+				blotCluster.remove(otherCluster);
+				
 				if(blotCluster.isActive())
 				{
 					otherCluster.oneOut(simulation);
@@ -424,7 +430,6 @@ public class ClusterHelper
 		//Both remaining wires can only belong to the same Drain Cluster.
 		{
 			InheritingCluster cluster = (InheritingCluster) a.getCluster();
-			board.deleteCluster(cluster.getId());
 			//Remove wire before tracing.
 			a.remove(wireToDelete);
 			b.remove(wireToDelete);
@@ -436,71 +441,108 @@ public class ClusterHelper
 				splitA.mergeInto(cluster); //Restore/Undo
 				return; //We are done here.
 			}
+			board.deleteCluster(cluster.getId());
 			
-			//Creating new cluster for A side:
-			InheritingCluster aCluster = new InheritingCluster(board.getNewClusterID());
-			splitA.mergeInto(aCluster);
-			if(splitA.getBlotWires().isEmpty())
+			if(splitA.getBlotWires().size() == 1)
 			{
-				//Can't have any sources now, must be off.
-				if(cluster.isActive())
+				Wire sourceWire = splitA.getBlotWires().get(0);
+				Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+				SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+				
+				source.remove(cluster);
+				splitA.mergeInto(source);
+				
+				if(source.isActive() != cluster.isActive())
 				{
 					splitA.scheduleUpdateable(simulation);
 				}
 			}
 			else
 			{
-				for(Wire sourceWire : splitA.getBlotWires())
+				//Creating new cluster for A side:
+				InheritingCluster aCluster = new InheritingCluster(board.getNewClusterID());
+				splitA.mergeInto(aCluster);
+				if(splitA.getBlotWires().isEmpty())
 				{
-					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
-					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
-					
-					source.remove(cluster);
-					source.addDrain(aCluster);
-					if(source.isActive())
+					//Can't have any sources now, must be off.
+					if(cluster.isActive())
 					{
-						aCluster.oneIn(simulation);
+						splitA.scheduleUpdateable(simulation);
 					}
 				}
-				
-				if(aCluster.isActive() != cluster.isActive())
+				else
 				{
-					//The state of the cluster is different now, update.
-					splitA.scheduleUpdateable(simulation);
+					for(Wire sourceWire : splitA.getBlotWires())
+					{
+						Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+						SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+						
+						source.remove(cluster);
+						source.addDrain(aCluster);
+						aCluster.addSource(source);
+						if(source.isActive())
+						{
+							aCluster.oneIn(simulation);
+						}
+					}
+					
+					if(aCluster.isActive() != cluster.isActive())
+					{
+						//The state of the cluster is different now, update.
+						splitA.scheduleUpdateable(simulation);
+					}
 				}
 			}
 			
 			Prototype splitB = splitNonSourcePartFromCluster(b);
-			//Creating new cluster for B side:
-			InheritingCluster bCluster = new InheritingCluster(board.getNewClusterID());
-			splitB.mergeInto(bCluster);
-			if(splitB.getBlotWires().isEmpty())
+			if(splitB.getBlotWires().size() == 1)
 			{
-				//Can't have any sources now, must be off.
-				if(cluster.isActive())
+				Wire sourceWire = splitB.getBlotWires().get(0);
+				Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+				SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+				
+				source.remove(cluster);
+				splitB.mergeInto(source);
+				
+				if(source.isActive() != cluster.isActive())
 				{
 					splitB.scheduleUpdateable(simulation);
 				}
 			}
 			else
 			{
-				for(Wire sourceWire : splitB.getBlotWires())
+				//Creating new cluster for B side:
+				InheritingCluster bCluster = new InheritingCluster(board.getNewClusterID());
+				splitB.mergeInto(bCluster);
+				if(splitB.getBlotWires().isEmpty())
 				{
-					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
-					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
-					
-					source.remove(cluster);
-					source.addDrain(bCluster);
-					if(source.isActive())
+					//Can't have any sources now, must be off.
+					if(cluster.isActive())
 					{
-						bCluster.oneIn(simulation);
+						splitB.scheduleUpdateable(simulation);
 					}
 				}
-				
-				if(aCluster.isActive() != cluster.isActive())
+				else
 				{
-					//The state of the cluster is different now, update.
-					splitB.scheduleUpdateable(simulation);
+					for(Wire sourceWire : splitB.getBlotWires())
+					{
+						Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+						SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+						
+						source.remove(cluster);
+						source.addDrain(bCluster);
+						bCluster.addSource(source);
+						if(source.isActive())
+						{
+							bCluster.oneIn(simulation);
+						}
+					}
+					
+					if(bCluster.isActive() != cluster.isActive())
+					{
+						//The state of the cluster is different now, update.
+						splitB.scheduleUpdateable(simulation);
+					}
 				}
 			}
 		}
