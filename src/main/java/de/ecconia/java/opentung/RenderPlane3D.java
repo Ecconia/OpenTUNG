@@ -15,6 +15,7 @@ import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Colorable;
+import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -348,6 +349,71 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		return false;
+	}
+	
+	public void delete(Part toBeDeleted)
+	{
+		if(toBeDeleted instanceof Connector)
+		{
+			toBeDeleted = toBeDeleted.getParent();
+		}
+		
+		if(toBeDeleted instanceof CompContainer)
+		{
+			System.out.println("Cannot delete containers yet.");
+		}
+		else if(toBeDeleted instanceof CompWireRaw)
+		{
+			final CompWireRaw wireToDelete = (CompWireRaw) toBeDeleted;
+			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				if(wireToDelete.getParent() != null)
+				{
+					((CompContainer) wireToDelete.getParent()).remove(wireToDelete);
+				}
+				
+				ClusterHelper.removeWire(board, simulation, wireToDelete);
+				
+				gpuTasks.add((unused) -> {
+					board.getWiresToRender().remove(wireToDelete);
+					refreshWireMeshes();
+				});
+			});
+		}
+		else if(toBeDeleted instanceof Component)
+		{
+			final Component component = (Component) toBeDeleted;
+			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				if(component.getParent() != null)
+				{
+					((CompContainer) component.getParent()).remove(component);
+				}
+				
+				List<Wire> wiresToRemove = new ArrayList<>();
+				for(Blot blot : component.getBlots())
+				{
+					ClusterHelper.removeBlot(board, simulation, blot);
+					wiresToRemove.addAll(blot.getWires());
+				}
+				for(Peg peg : component.getPegs())
+				{
+					ClusterHelper.removePeg(board, simulation, peg);
+					wiresToRemove.addAll(peg.getWires());
+				}
+				
+				gpuTasks.add((unused) -> {
+					board.getComponentsToRender().remove(component);
+					for(Wire wire : wiresToRemove)
+					{
+						board.getWiresToRender().remove(wire);
+					}
+					refreshComponentMeshes(component instanceof Colorable);
+				});
+			});
+		}
+		else
+		{
+			System.out.println("Unknown part to delete: " + toBeDeleted.getClass().getSimpleName());
+		}
 	}
 	
 	//Setup and stuff:

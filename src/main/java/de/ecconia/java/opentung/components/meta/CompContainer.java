@@ -146,4 +146,10 @@ public abstract class CompContainer extends Component
 		
 		return foundConnector;
 	}
+	
+	public void remove(Component component)
+	{
+		children.remove(component);
+		//TODO: recalculate bounds, if needed.
+	}
 }

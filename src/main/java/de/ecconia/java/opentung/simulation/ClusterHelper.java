@@ -2,7 +2,9 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.BoardUniverse;
 import de.ecconia.java.opentung.components.conductor.Blot;
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +15,8 @@ public class ClusterHelper
 	private static final int SourceActive = 1;
 	private static final int DrainOFF = 2;
 	private static final int DrainActive = 3;
+	
+	//Wire Placement:
 	
 	public static void placeWire(SimulationManager simulation, BoardUniverse board, Connector connectorA, Connector connectorB, Wire newWire)
 	{
@@ -144,7 +148,7 @@ public class ClusterHelper
 		//Merge A and B
 		for(SourceCluster source : drainActive1Cluster.getSources())
 		{
-			source.removeDrain(drainActive1Cluster);
+			source.remove(drainActive1Cluster);
 			source.addDrain(drainActive2Cluster);
 			drainActive2Cluster.addSource(source);
 			if(source.isActive())
@@ -316,6 +320,395 @@ public class ClusterHelper
 		return sourceCluster;
 	}
 	
+	//Removal:
+	
+	public static void removeWire(BoardUniverse board, SimulationManager simulation, CompWireRaw wireToDelete)
+	{
+		Connector a = wireToDelete.getConnectorA();
+		Connector b = wireToDelete.getConnectorB();
+		
+		//If one side is a blot, the other side can be a Source/Drain cluster. Both cases are handled here:
+		boolean aIsBlot = a instanceof Blot;
+		if(aIsBlot || (b instanceof Blot))
+		{
+			Blot blot = (Blot) (aIsBlot ? a : b);
+			SourceCluster blotCluster = (SourceCluster) blot.getCluster();
+			Peg other = (Peg) (aIsBlot ? b : a);
+			
+			blot.remove(wireToDelete);
+			
+			if(other.getCluster() instanceof SourceCluster)
+			{
+				other.remove(wireToDelete);
+				Prototype split = splitNonSourcePartFromCluster(other);
+				
+				if(split.getBlotWires().isEmpty())
+				{
+					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					split.mergeInto(newCluster);
+					//Can't have any sources now, cause we are about to delete the only source.
+					if(blotCluster.isActive())
+					{
+						split.scheduleUpdateable(simulation);
+					}
+				}
+				else
+				{
+					//There are more connections to the blot, thus just restore the split.
+					split.mergeInto(blotCluster);
+				}
+			}
+			else
+			{
+				InheritingCluster otherCluster = (InheritingCluster) other.getCluster();
+				otherCluster.remove(blotCluster);
+				other.remove(wireToDelete);
+				if(blotCluster.isActive())
+				{
+					otherCluster.oneOut(simulation);
+				}
+			}
+			
+			return;
+		}
+		
+		//If one side is a Source cluster, the other side must be the same cluster! That case is handled here:
+		if(a.getCluster() instanceof SourceCluster)
+		{
+			SourceCluster cluster = (SourceCluster) a.getCluster();
+			//Remove wire before tracing.
+			a.remove(wireToDelete);
+			b.remove(wireToDelete);
+			//Split both and handle both independently:
+			Prototype splitA = splitNonSourcePartFromCluster(a);
+			boolean bSideHasNoCluster = b.getCluster() == null;
+			if(splitA.getBlotWires().isEmpty())
+			{
+				InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+				splitA.mergeInto(newCluster);
+				//Can't have any sources now, cause we are about to delete the only source.
+				if(cluster.isActive())
+				{
+					splitA.scheduleUpdateable(simulation);
+				}
+			}
+			else
+			{
+				//There are more connections to the origin, thus just restore the split.
+				splitA.mergeInto(cluster);
+			}
+			//If the B side has no cluster anymore, it must have been splitted off while splitting off the A side. Both are still the same cluster and still connected, no further action needed.
+			if(!bSideHasNoCluster)
+			{
+				Prototype splitB = splitNonSourcePartFromCluster(b);
+				if(splitB.getBlotWires().isEmpty())
+				{
+					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					splitB.mergeInto(newCluster);
+					//Can't have any sources now, cause we are about to delete the only source.
+					if(cluster.isActive())
+					{
+						splitB.scheduleUpdateable(simulation);
+					}
+				}
+				else
+				{
+					//There are more connections to the origin, thus just restore the split.
+					splitB.mergeInto(cluster);
+				}
+			}
+			
+			return;
+		}
+		
+		//Both remaining wires can only belong to the same Drain Cluster.
+		{
+			InheritingCluster cluster = (InheritingCluster) a.getCluster();
+			board.deleteCluster(cluster.getId());
+			//Remove wire before tracing.
+			a.remove(wireToDelete);
+			b.remove(wireToDelete);
+			//Split both and handle both independently:
+			Prototype splitA = splitNonSourcePartFromCluster(a);
+			if(b.getCluster() == null)
+			{
+				//Both are in the same split, thus no changes have to be made.
+				splitA.mergeInto(cluster); //Restore/Undo
+				return; //We are done here.
+			}
+			
+			//Creating new cluster for A side:
+			InheritingCluster aCluster = new InheritingCluster(board.getNewClusterID());
+			splitA.mergeInto(aCluster);
+			if(splitA.getBlotWires().isEmpty())
+			{
+				//Can't have any sources now, must be off.
+				if(cluster.isActive())
+				{
+					splitA.scheduleUpdateable(simulation);
+				}
+			}
+			else
+			{
+				for(Wire sourceWire : splitA.getBlotWires())
+				{
+					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+					
+					source.remove(cluster);
+					source.addDrain(aCluster);
+					if(source.isActive())
+					{
+						aCluster.oneIn(simulation);
+					}
+				}
+				
+				if(aCluster.isActive() != cluster.isActive())
+				{
+					//The state of the cluster is different now, update.
+					splitA.scheduleUpdateable(simulation);
+				}
+			}
+			
+			Prototype splitB = splitNonSourcePartFromCluster(b);
+			//Creating new cluster for B side:
+			InheritingCluster bCluster = new InheritingCluster(board.getNewClusterID());
+			splitB.mergeInto(bCluster);
+			if(splitB.getBlotWires().isEmpty())
+			{
+				//Can't have any sources now, must be off.
+				if(cluster.isActive())
+				{
+					splitB.scheduleUpdateable(simulation);
+				}
+			}
+			else
+			{
+				for(Wire sourceWire : splitB.getBlotWires())
+				{
+					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+					
+					source.remove(cluster);
+					source.addDrain(bCluster);
+					if(source.isActive())
+					{
+						bCluster.oneIn(simulation);
+					}
+				}
+				
+				if(aCluster.isActive() != cluster.isActive())
+				{
+					//The state of the cluster is different now, update.
+					splitB.scheduleUpdateable(simulation);
+				}
+			}
+		}
+	}
+	
+	public static void removePeg(BoardUniverse board, SimulationManager simulation, Peg peg)
+	{
+		Cluster cluster = peg.getCluster();
+		if(cluster instanceof SourceCluster)
+		{
+			//Note: Only one single Blot in this cluster. Find and handle appropriately.
+			SourceCluster source = (SourceCluster) cluster;
+			
+			//First remove all the wires which could lead to this peg, so that later traces will never pass it.
+			boolean directSourceFound = false;
+			for(Wire wire : peg.getWires())
+			{
+				Connector otherSide = wire.getOtherSide(peg);
+				otherSide.remove(wire);
+				
+				if(otherSide instanceof Blot)
+				{
+					directSourceFound = true;
+				}
+			}
+			
+			if(directSourceFound)
+			{
+				for(Wire wire : peg.getWires())
+				{
+					//The direct wires need to be removed manually. All others get removed by splitting them off.
+					cluster.remove(wire);
+					
+					//Must be Peg and same cluster.
+					Connector otherSide = wire.getOtherSide(peg);
+					if(otherSide.getCluster() != source)
+					{
+						//Already handled.
+						continue;
+					}
+					
+					Prototype split = splitNonSourcePartFromCluster(otherSide); //There can't be any sources anymore.
+					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					split.mergeInto(newCluster);
+				}
+			}
+			else
+			{
+				List<Prototype> toReset = new ArrayList<>();
+				for(Wire wire : peg.getWires())
+				{
+					Connector otherSide = wire.getOtherSide(peg);
+					if(otherSide.getCluster() != source)
+					{
+						//Already handled and not other SourceCluster.
+						continue;
+					}
+					
+					Prototype split = splitNonSourcePartFromCluster(otherSide);
+					
+					if(split.getBlotWires().isEmpty())
+					{
+						//New and off section:
+						InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+						split.mergeInto(newCluster);
+						
+						if(source.isActive())
+						{
+							split.scheduleUpdateable(simulation);
+						}
+					}
+					else
+					{
+						//Still part of the original source-cluster
+						toReset.add(split); //Add, so that it won't be scanned another time.
+					}
+				}
+				
+				for(Prototype split : toReset)
+				{
+					split.mergeInto(source);
+				}
+			}
+		}
+		else
+		{
+			InheritingCluster drain = (InheritingCluster) cluster;
+			board.deleteCluster(drain.getId());
+			
+			if(drain.getSources().isEmpty())
+			{
+				//First remove all the wires which could lead to this peg, so that later traces will never pass it.
+				for(Wire wire : peg.getWires())
+				{
+					Connector otherSide = wire.getOtherSide(peg);
+					otherSide.remove(wire);
+				}
+				
+				for(Wire wire : peg.getWires())
+				{
+					//Must be Peg and same cluster.
+					Connector otherSide = wire.getOtherSide(peg);
+					if(otherSide.getCluster() != drain)
+					{
+						//Already handled.
+						continue;
+					}
+					
+					Prototype split = splitNonSourcePartFromCluster(otherSide);
+					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					split.mergeInto(newCluster);
+				}
+			}
+			else
+			{
+				//First remove all the wires which could lead to this peg, so that later traces will never pass it.
+				for(Wire wire : peg.getWires())
+				{
+					Connector otherSide = wire.getOtherSide(peg);
+					otherSide.remove(wire);
+				}
+				
+				for(Wire wire : peg.getWires())
+				{
+					Connector otherSide = wire.getOtherSide(peg);
+					if(otherSide instanceof Blot)
+					{
+						//Detected a direct source, remove:
+						((SourceCluster) otherSide.getCluster()).remove(drain);
+						continue;
+					}
+					if(otherSide.getCluster() != drain)
+					{
+						//Already handled and not other SourceCluster.
+						continue;
+					}
+					
+					Prototype split = splitNonSourcePartFromCluster(otherSide);
+					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					split.mergeInto(newCluster);
+					
+					for(Wire sourceWire : split.getBlotWires())
+					{
+						Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+						SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+						
+						source.remove(drain);
+						source.addDrain(newCluster);
+						if(source.isActive())
+						{
+							newCluster.oneIn(simulation);
+						}
+					}
+					
+					if(newCluster.isActive() != cluster.isActive())
+					{
+						//The state of the cluster is different now, update.
+						split.scheduleUpdateable(simulation);
+					}
+				}
+			}
+		}
+	}
+	
+	public static void removeBlot(BoardUniverse board, SimulationManager simulation, Blot blot)
+	{
+		SourceCluster sourceCluster = (SourceCluster) blot.getCluster();
+		board.deleteCluster(sourceCluster.getId());
+		
+		for(Wire blotWire : blot.getWires())
+		{
+			Connector otherSide = blotWire.getOtherSide(blot);
+			if(otherSide.getCluster() == null)
+			{
+				//Has been splitted off before, just remove it.
+				otherSide.remove(blotWire); //Remove the wire-connection from the other side.
+			}
+			
+			if(otherSide.getCluster() == sourceCluster)
+			{
+				otherSide.remove(blotWire);
+				Prototype split = splitNonSourcePartFromCluster(otherSide);
+				
+				InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+				split.mergeInto(newCluster);
+				//Can't have any sources now, cause we are about to delete the only source.
+				if(sourceCluster.isActive())
+				{
+					split.scheduleUpdateable(simulation);
+				}
+			}
+			else
+			{
+				InheritingCluster otherSideCluster = (InheritingCluster) otherSide.getCluster();
+				
+				otherSideCluster.remove(sourceCluster);
+				otherSide.remove(blotWire); //Remove the wire-connection from the other side.
+				//No need to remove from source cluster.
+				if(sourceCluster.isActive())
+				{
+					otherSideCluster.oneOut(simulation);
+				}
+			}
+		}
+	}
+	
+	//Other:
+	
 	//Preconditions:
 	// - All parts have a cluster
 	// - startpoint is not a Blot
@@ -358,6 +751,10 @@ public class ClusterHelper
 						connectors.add(otherSide);
 					}
 				}
+				else
+				{
+					prototype.addBlotWire(wire);
+				}
 			}
 		}
 		
@@ -377,6 +774,7 @@ public class ClusterHelper
 	{
 		private final List<Wire> wires = new ArrayList<>();
 		private final List<Connector> connectors = new ArrayList<>();
+		private final List<Wire> blotWires = new ArrayList<>();
 		
 		public Prototype()
 		{
@@ -440,6 +838,16 @@ public class ClusterHelper
 					simulation.updateNextTick((Updateable) connector.getParent());
 				}
 			}
+		}
+		
+		public void addBlotWire(Wire wire)
+		{
+			blotWires.add(wire);
+		}
+		
+		public List<Wire> getBlotWires()
+		{
+			return blotWires;
 		}
 	}
 	

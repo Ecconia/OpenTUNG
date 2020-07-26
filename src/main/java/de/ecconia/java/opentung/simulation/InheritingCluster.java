@@ -66,4 +66,9 @@ public class InheritingCluster extends Cluster
 	{
 		return "ci" + getId();
 	}
+	
+	public void remove(SourceCluster sourceCluster)
+	{
+		sources.remove(sourceCluster);
+	}
 }

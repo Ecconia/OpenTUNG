@@ -154,4 +154,9 @@ public abstract class Connector extends Part implements Clusterable
 		
 		return getPosition().add(getParent().getRotation().inverse().multiply(getModel().getPosition().add(connectionOffset).add(getParent().getModelHolder().getPlacementOffset())));
 	}
+	
+	public void remove(Wire wire)
+	{
+		wires.remove(wire);
+	}
 }

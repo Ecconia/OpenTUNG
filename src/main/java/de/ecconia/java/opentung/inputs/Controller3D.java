@@ -107,6 +107,14 @@ public class Controller3D implements Controller
 				renderPlane3D.rotatePlacement(90);
 			}
 		}
+		else if(keyIndex == GLFW.GLFW_KEY_T)
+		{
+			Part toBeDeleted = renderPlane3D.getCursorObject();
+			if(toBeDeleted != null)
+			{
+				renderPlane3D.delete(toBeDeleted);
+			}
+		}
 	}
 	
 	@Override
