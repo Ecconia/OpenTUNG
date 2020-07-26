@@ -536,6 +536,10 @@ public class ClusterHelper
 					
 					//Must be Peg and same cluster.
 					Connector otherSide = wire.getOtherSide(peg);
+					if(otherSide instanceof Blot)
+					{
+						continue; //Nothing to do here, skip.
+					}
 					if(otherSide.getCluster() != source)
 					{
 						//Already handled.
