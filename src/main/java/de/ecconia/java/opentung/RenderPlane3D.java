@@ -191,6 +191,12 @@ public class RenderPlane3D implements RenderPlane
 		{
 			Connector to = connector;
 			
+			if(from instanceof Blot && to instanceof Blot)
+			{
+				System.out.println("Blot-Blot connections are not allowed, cause pointless.");
+				return;
+			}
+			
 			for(Wire wire : from.getWires())
 			{
 				if(wire.getOtherSide(from) == to)

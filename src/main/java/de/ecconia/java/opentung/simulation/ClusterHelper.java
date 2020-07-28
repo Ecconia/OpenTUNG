@@ -725,17 +725,22 @@ public class ClusterHelper
 			sourceCluster.remove(blotWire);
 			
 			Connector otherSide = blotWire.getOtherSide(blot);
+			otherSide.remove(blotWire); //Remove the wire-connection from the other side.
 			if(otherSide.getCluster() == null)
 			{
 				//Has been splitted off before, just remove it.
-				otherSide.remove(blotWire); //Remove the wire-connection from the other side.
 				continue;
 			}
 			
-			if(otherSide.getCluster() == sourceCluster)
+			if(otherSide.getCluster() instanceof SourceCluster) //otherSide.getCluster() == sourceCluster
 			{
-				otherSide.remove(blotWire);
+				//Same cluster, split off.
 				Prototype split = splitNonSourcePartFromCluster(otherSide);
+				
+				if(!split.getBlotWires().isEmpty())
+				{
+					System.out.println("WARNING: Corrupted cluster network. SourceCluster with more than one Source.");
+				}
 				
 				InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
 				split.mergeInto(newCluster);
@@ -748,13 +753,30 @@ public class ClusterHelper
 			else
 			{
 				InheritingCluster otherSideCluster = (InheritingCluster) otherSide.getCluster();
-				
 				otherSideCluster.remove(sourceCluster);
-				otherSide.remove(blotWire); //Remove the wire-connection from the other side.
-				//No need to remove from source cluster.
-				if(sourceCluster.isActive())
+				
+				if(otherSideCluster.getSources().size() == 1)
 				{
-					otherSideCluster.oneOut(simulation);
+					Prototype split = splitNonSourcePartFromCluster(otherSide);
+					Wire sourceWire = split.getBlotWires().get(0);
+					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+					
+					split.mergeInto(source);
+					source.remove(otherSideCluster);
+					
+					if(source.isActive() != otherSideCluster.isActive())
+					{
+						split.scheduleUpdateable(simulation);
+					}
+				}
+				else
+				{
+					//No need to remove from source cluster.
+					if(sourceCluster.isActive())
+					{
+						otherSideCluster.oneOut(simulation);
+					}
 				}
 			}
 		}
