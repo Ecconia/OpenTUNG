@@ -365,6 +365,12 @@ public class RenderPlane3D implements RenderPlane
 		else if(toBeDeleted instanceof CompWireRaw)
 		{
 			final CompWireRaw wireToDelete = (CompWireRaw) toBeDeleted;
+			if(clusterToHighlight == wireToDelete.getCluster())
+			{
+				clusterToHighlight = null;
+				connectorsToHighlight = new ArrayList<>();
+			}
+			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				if(wireToDelete.getParent() != null)
 				{
@@ -382,6 +388,23 @@ public class RenderPlane3D implements RenderPlane
 		else if(toBeDeleted instanceof Component)
 		{
 			final Component component = (Component) toBeDeleted;
+			for(Blot blot : component.getBlots())
+			{
+				if(clusterToHighlight == blot.getCluster())
+				{
+					clusterToHighlight = null;
+					connectorsToHighlight = new ArrayList<>();
+				}
+			}
+			for(Peg peg : component.getPegs())
+			{
+				if(clusterToHighlight == peg.getCluster())
+				{
+					clusterToHighlight = null;
+					connectorsToHighlight = new ArrayList<>();
+				}
+			}
+			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				if(component.getParent() != null)
 				{
