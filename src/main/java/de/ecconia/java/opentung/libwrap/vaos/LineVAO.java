@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.libwrap.vaos;
 
 import de.ecconia.java.opentung.MinMaxBox;
+import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.opengl.GL30;
 
 public class LineVAO extends GenericVAO
@@ -45,13 +46,16 @@ public class LineVAO extends GenericVAO
 	
 	public static LineVAO generateCrossyIndicator()
 	{
+		float r = Settings.placementIndicatorColorR;
+		float g = Settings.placementIndicatorColorG;
+		float b = Settings.placementIndicatorColorB;
 		return new LineVAO(new float[]{
-				-0.3f, +0.0f, +0.0f, 0.2f, 0.2f, 1.0f,
-				+0.3f, +0.0f, +0.0f, 0.2f, 0.2f, 1.0f,
-				+0.0f, -0.3f, +0.0f, 0.2f, 0.2f, 1.0f,
-				+0.0f, +0.3f, +0.0f, 0.2f, 0.2f, 1.0f,
-				+0.0f, +0.0f, -0.3f, 0.2f, 0.2f, 1.0f,
-				+0.0f, +0.0f, +0.3f, 0.2f, 0.2f, 1.0f,
+				-0.3f, +0.0f, +0.0f, r, g, b,
+				+0.3f, +0.0f, +0.0f, r, g, b,
+				+0.0f, -0.3f, +0.0f, r, g, b,
+				+0.0f, +0.3f, +0.0f, r, g, b,
+				+0.0f, +0.0f, -0.3f, r, g, b,
+				+0.0f, +0.0f, +0.3f, r, g, b,
 		}, new short[]{
 				0, 1,
 				2, 3,

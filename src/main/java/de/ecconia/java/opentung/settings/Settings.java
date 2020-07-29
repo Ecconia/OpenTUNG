@@ -86,6 +86,14 @@ public class Settings
 	@SettingInfo(key = "settings.graphic.highlight.clusterColor.a")
 	public static float highlightClusterColorA = 0.6f;
 	
+	@SettingsSectionStart(key = "settings.graphic.placementIndicator.color", comment = "Color placement indicator, only updates on startup.")
+	@SettingInfo(key = "settings.graphic.placementIndicator.color.r")
+	public static float placementIndicatorColorR = 0.2f;
+	@SettingInfo(key = "settings.graphic.placementIndicator.color.g")
+	public static float placementIndicatorColorG = 0.2f;
+	@SettingInfo(key = "settings.graphic.placementIndicator.color.b")
+	public static float placementIndicatorColorB = 1.0f;
+	
 	@SettingInfo(key = "settings.graphic.drawToggles.world", comment = "Skip drawing the world.")
 	public static boolean drawWorld = true;
 	@SettingInfo(key = "settings.graphic.drawToggles.boards", comment = "Gives a nice see-thru to turn them off.")
