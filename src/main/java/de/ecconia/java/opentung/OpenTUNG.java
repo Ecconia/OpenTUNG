@@ -4,20 +4,27 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
+import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.SettingsIO;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Dimension;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
+	private static final File dataFolder = new File("OpenTUNG");
+	
 	private static InputProcessor inputHandler;
 	
 	private static RenderPlane2D interactables;
@@ -28,15 +35,30 @@ public class OpenTUNG
 	
 	public static void main(String[] args)
 	{
-		new SettingsIO(new File("settings.txt"), Settings.class);
-		
-		parseArguments(args);
-		
 		//Catch if any thread shuts down unexpectedly. Print on output stream to get the exact time.
 		Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> {
-			System.out.println("Thread " + t.getName() + " crashed.");
+			String threadCrashMessage = "Thread " + t.getName() + " crashed.";
+			System.out.println(threadCrashMessage);
 			e.printStackTrace(System.out);
+			JOptionPane.showMessageDialog(null, new JLabel(threadCrashMessage + "\nSee console for stacktrace, please report it."));
 		});
+		
+		try
+		{
+			System.out.println("Using data folder at: " + dataFolder.getCanonicalPath());
+			Files.createDirectories(dataFolder.toPath());
+		}
+		catch(IOException e)
+		{
+			throw new RuntimeException("Could not create data folder.", e);
+		}
+		
+		//Create DataFolderWatcher, used for generic callbacks on file change.
+		DataFolderWatcher watcher = new DataFolderWatcher(dataFolder);
+		//Create the initial Settings loader, it uses the watcher to keep the settings up to date.
+		new SettingsIO(new File(dataFolder, "settings.txt"), watcher, Settings.class);
+		
+		parseArguments(args);
 		
 		CompBoard board = TungBoardLoader.importTungBoard(boardFile);
 		boardUniverse = new BoardUniverse(board);
@@ -147,7 +169,7 @@ public class OpenTUNG
 		String downloadLink = "https://cdn.discordapp.com/attachments/428658408510455810/725623552161611786/16Bit-Parallel-CLA-ALU-6-ticks.tungboard";
 		String messageLink = "https://discordapp.com/channels/401255675264761866/428658408510455810/725623552358875208";
 		
-		File boardFolder = new File("boards");
+		File boardFolder = new File(dataFolder, "boards");
 		if(!boardFolder.exists() || !boardFolder.isDirectory())
 		{
 			System.out.println("Please create folder " + boardFolder.getAbsolutePath() + " and insert a .tungboard file.");
