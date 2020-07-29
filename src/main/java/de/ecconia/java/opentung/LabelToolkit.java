@@ -2,6 +2,7 @@ package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
+import de.ecconia.java.opentung.settings.Settings;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;

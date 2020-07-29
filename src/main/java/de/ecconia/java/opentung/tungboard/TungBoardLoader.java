@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.tungboard;
 
-import de.ecconia.java.opentung.Settings;
+import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;

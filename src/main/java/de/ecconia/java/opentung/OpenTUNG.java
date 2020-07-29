@@ -4,6 +4,8 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
+import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.settings.SettingsIO;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Dimension;
 import java.io.File;
@@ -26,6 +28,8 @@ public class OpenTUNG
 	
 	public static void main(String[] args)
 	{
+		new SettingsIO(new File("settings.txt"), Settings.class);
+		
 		parseArguments(args);
 		
 		//Catch if any thread shuts down unexpectedly. Print on output stream to get the exact time.

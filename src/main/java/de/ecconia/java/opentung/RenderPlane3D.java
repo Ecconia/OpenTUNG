@@ -36,6 +36,7 @@ import de.ecconia.java.opentung.libwrap.vaos.VisualShapeVAO;
 import de.ecconia.java.opentung.math.MathHelper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
