@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.crapinterface;
+package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.libwrap.ColorVec;
 import de.ecconia.java.opentung.libwrap.Matrix;

@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.crapinterface;
+package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.RenderPlane;
 import de.ecconia.java.opentung.inputs.Controller2D;

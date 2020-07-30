@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import org.lwjgl.glfw.GLFW;
 
 public class Controller2D implements Controller
