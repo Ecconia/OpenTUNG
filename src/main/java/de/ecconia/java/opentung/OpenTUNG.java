@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.crapinterface.RenderPlane2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import de.ecconia.java.opentung.settings.Settings;
