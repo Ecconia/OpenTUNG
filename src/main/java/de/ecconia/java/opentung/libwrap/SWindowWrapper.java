@@ -1,12 +1,21 @@
 package de.ecconia.java.opentung.libwrap;
 
+import java.awt.Dimension;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.util.concurrent.atomic.AtomicReference;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-
-import java.awt.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class SWindowWrapper
 {
@@ -40,9 +49,56 @@ public class SWindowWrapper
 			throw new RuntimeException("Failed to create the GLFW window");
 		}
 		
+		try
+		{
+			try(MemoryStack stack = MemoryStack.stackPush())
+			{
+				int size = 1024;
+				ByteBuffer pixels = imageResourcesToBuffer("Logo" + size + ".png", size * size);
+				System.out.println(pixels.limit());
+				
+				IntBuffer w = stack.mallocInt(1);
+				IntBuffer h = stack.mallocInt(1);
+				IntBuffer comp = stack.mallocInt(1);
+				ByteBuffer icon = STBImage.stbi_load_from_memory(pixels, w, h, comp, 4);
+				GLFW.glfwSetWindowIcon(windowID, GLFWImage.mallocStack(1, stack)
+						.width(w.get(0))
+						.height(h.get(0))
+						.pixels(icon)
+				);
+				STBImage.stbi_image_free(icon);
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Could not set window icon:");
+			e.printStackTrace(System.out);
+		}
+		
 		GLFW.glfwSetWindowSizeCallback(windowID, (window, width2, height2) -> {
 			dim.set(new Dimension(width2, height2));
 		});
+	}
+	
+	public static ByteBuffer imageResourcesToBuffer(String resource, int bufferSize) throws IOException
+	{
+		try(InputStream source = SWindowWrapper.class.getClassLoader().getResourceAsStream(resource);
+		    ReadableByteChannel rbc = Channels.newChannel(source))
+		{
+			//Max size:
+			ByteBuffer buffer = BufferUtils.createByteBuffer(bufferSize * 4);
+			while(true)
+			{
+				int amountRead = rbc.read(buffer);
+				if(amountRead == -1)
+				{
+					break;
+				}
+			}
+			
+			buffer.flip();
+			return buffer;
+		}
 	}
 	
 	public void setVsync(boolean state)
