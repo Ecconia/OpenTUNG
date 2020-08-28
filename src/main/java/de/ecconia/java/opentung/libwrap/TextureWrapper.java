@@ -49,4 +49,9 @@ public class TextureWrapper
 		GL30.glBindTexture(GL30.GL_TEXTURE_2D, id);
 		//GL30.glUniform1i(location, GL30.GL_TEXTURE0 + index);
 	}
+	
+	public void unload()
+	{
+		GL30.glDeleteTextures(id);
+	}
 }

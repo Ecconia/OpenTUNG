@@ -126,4 +126,7 @@ public class Settings
 	public static int labelTexturePixelResolution = 1024;
 	@SettingInfo(key = "settings.graphic.text.labelSDFTexturePixelResolution", comment = "The resolution uploaded to the GPU. Be sure that the label resolution can be divided by the SDF resolution.\nHint: You might break the loading-texture, its 1024²")
 	public static int labelSDFTexturePixelResolution = 256;
+	
+	@SettingInfo(key = "settings.graphic.gui.component.icon.resolution", comment = "The resolution of component icons.")
+	public static int componentIconResolution = 200;
 }

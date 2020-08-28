@@ -3,12 +3,16 @@ package de.ecconia.java.opentung;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import java.awt.image.BufferedImage;
 
 public class PlaceableInfo
 {
 	private final ModelHolder model;
 	private final CompGenerator generator;
 	private final String name;
+	//TODO: Prefer texture atlas for icons. Less CPU work.
+	private TextureWrapper iconTexture;
 	
 	private int index;
 	
@@ -22,6 +26,21 @@ public class PlaceableInfo
 	public String getName()
 	{
 		return name;
+	}
+	
+	public void updateIconTexture(BufferedImage image)
+	{
+		if(iconTexture != null)
+		{
+			iconTexture.unload();
+		}
+		
+		iconTexture = new TextureWrapper(image);
+	}
+	
+	public TextureWrapper getIconTexture()
+	{
+		return iconTexture;
 	}
 	
 	public ModelHolder getModel()

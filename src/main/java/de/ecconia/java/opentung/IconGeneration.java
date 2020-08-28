@@ -29,6 +29,7 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.VisualShapeVAO;
 import de.ecconia.java.opentung.math.Vector2;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,9 +62,7 @@ public class IconGeneration
 	
 	public static void render(ShaderProgram shader, VisualShapeVAO visualShape)
 	{
-		//TODO: Set canvas to 200² and prepare/restore
-		
-		int side = 200;
+		int side = Settings.componentIconResolution;
 		
 		GL30.glViewport(0, 0, side, side);
 		GL30.glClearColor(1, 1, 0, 1);
@@ -291,14 +290,7 @@ public class IconGeneration
 				}
 			}
 			
-//			try
-//			{
-//				ImageIO.write(image, "PNG", new File(info.getName() + ".png"));
-//			}
-//			catch(IOException e)
-//			{
-//				e.printStackTrace();
-//			}
+			info.updateIconTexture(image);
 		}
 	}
 }

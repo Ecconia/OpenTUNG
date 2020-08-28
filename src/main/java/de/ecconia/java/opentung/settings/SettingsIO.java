@@ -151,7 +151,7 @@ public class SettingsIO
 		String fullKey = key + node.getKey();
 		if(node.getField() != null && !node.isVisited())
 		{
-			System.out.println("[Settings] " + Ansi.red + "WARNING: Setting " + Ansi.r + fullKey + Ansi.red + " is not present in settings file." + Ansi.r);
+			System.out.println("[Settings] " + Ansi.red + "WARNING: Setting " + Ansi.r + fullKey + Ansi.red + " is not present in settings file. Default value: " + Ansi.r + node.getDefaultValue());
 		}
 		else
 		{
