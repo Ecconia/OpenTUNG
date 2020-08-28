@@ -555,6 +555,20 @@ public class RenderPlane3D implements RenderPlane
 			System.out.println("Done.");
 		}
 		
+		gpuTasks.add(new GPUTask()
+		{
+			@Override
+			public void execute(RenderPlane3D world3D)
+			{
+				IconGeneration.render(visualShapeShader, visualShape);
+				
+				//Restore the projection matrix of this shader, since it got abused.
+				visualShapeShader.setUniform(0, latestProjectionMat);
+				//Restore viewport:
+				GL30.glViewport(0, 0, width, height);
+			}
+		});
+		
 		System.out.println("Label amount: " + board.getLabelsToRender().size());
 		System.out.println("Wire amount: " + board.getWiresToRender().size());
 		lastCycle = System.currentTimeMillis();

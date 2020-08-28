@@ -204,6 +204,15 @@ public class Vector3
 	
 	public boolean oneNegative()
 	{
-		return x < 0 || y < 0 ||  z < 0;
+		return x < 0 || y < 0 || z < 0;
+	}
+	
+	public Vector3 multiply(Vector3 that)
+	{
+		return new Vector3(
+				this.x * that.x,
+				this.y * that.y,
+				this.z * that.z
+		);
 	}
 }
