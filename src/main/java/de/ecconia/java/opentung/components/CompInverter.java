@@ -24,8 +24,8 @@ public class CompInverter extends Component implements Powerable, Updateable
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15 + 0.075, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, +0.15 + 0.12, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, +0.15 + 0.12, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg, Color.circuitOFF));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos, Color.circuitON));
 	}
 	
 	@Override

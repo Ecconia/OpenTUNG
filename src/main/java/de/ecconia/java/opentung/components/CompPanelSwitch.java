@@ -25,7 +25,7 @@ public class CompPanelSwitch extends Component implements Powerable, Updateable
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.2, 0.0), new Vector3(0.15, 0.207, 0.06), Color.interactable));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.05, 0.0), new Vector3(0.3, 0.1, 0.3), Color.material));
 		modelHolder.addSolid(new CubeOpen(new Vector3(0.0, -0.125, 0.0), new Vector3(0.2, 0.25, 0.2), Direction.YPos, Color.material));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, -0.31, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YPos));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, -0.31, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YPos, Color.circuitOFF));
 	}
 	
 	@Override

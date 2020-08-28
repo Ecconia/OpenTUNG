@@ -16,7 +16,8 @@ public class CubeBoard extends CubeFull
 	
 	public CubeBoard(Vector3 position, Vector3 size, ModelMapper mapper)
 	{
-		super(position, size, null, mapper);
+		//TBI: Temporarily set color:
+		super(position, size, Color.boardDefault, mapper);
 	}
 	
 	@Override

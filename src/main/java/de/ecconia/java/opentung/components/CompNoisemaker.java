@@ -23,7 +23,7 @@ public class CompNoisemaker extends Component implements Updateable, Colorable
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.075, 0.0));
 		modelHolder.addColorable(new CubeFull(new Vector3(0.0, 0.36 + 0.3, 0.0), new Vector3(0.24, 0.6, 0.24), Color.noisemakerOFF));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.18, 0.0), new Vector3(0.1, 0.36, 0.1), Direction.YPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.18, 0.0), new Vector3(0.1, 0.36, 0.1), Direction.YPos, Color.circuitOFF));
 	}
 	
 	@Override

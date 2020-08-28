@@ -23,9 +23,9 @@ public class CompThroughBlotter extends Component implements Powerable, Updateab
 	static
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.0, 0.0));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.1625 + 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg));
+		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.1625 + 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg, Color.circuitOFF));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.2, 0.325, 0.2), Color.material));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.1625 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos));
+		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, -0.1625 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF));
 	}
 	
 	@Override
