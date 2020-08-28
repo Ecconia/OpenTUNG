@@ -1,5 +1,8 @@
 package de.ecconia.java.opentung.libwrap;
 
+import de.ecconia.java.opentung.math.Vector2;
+import de.ecconia.java.opentung.math.Vector3;
+
 public class Matrix
 {
 	private float[] mat = new float[16];
@@ -135,6 +138,30 @@ public class Matrix
 		return m;
 	}
 	
+	public void orthoMatrix(int width, int height)
+	{
+		float aspect = (float) height / (float) width;
+		mat[0 + 0 * 4] = aspect;
+		mat[1 + 0 * 4] = 0.0f;
+		mat[2 + 0 * 4] = 0.0f;
+		mat[3 + 0 * 4] = 0.0f;
+		
+		mat[0 + 1 * 4] = 0.0f;
+		mat[1 + 1 * 4] = 1.0f;
+		mat[2 + 1 * 4] = 0.0f;
+		mat[3 + 1 * 4] = 0.0f;
+		
+		mat[0 + 2 * 4] = 0.0f;
+		mat[1 + 2 * 4] = 0.0f;
+		mat[2 + 2 * 4] = 1.0f;
+		mat[3 + 2 * 4] = 0.0f;
+		
+		mat[0 + 3 * 4] = 0.0f;
+		mat[1 + 3 * 4] = 0.0f;
+		mat[2 + 3 * 4] = 0.0f;
+		mat[3 + 3 * 4] = 1.0f;
+	}
+	
 	public void interfaceMatrix(int width, int height)
 	{
 		mat[0 + 0 * 4] = 2.0f / width;
@@ -161,5 +188,27 @@ public class Matrix
 	public void multiply(Matrix matrix)
 	{
 		StolenFloatUtils.multMatrix(mat, matrix.getMat());
+	}
+	
+	public Vector2 getMapped(Vector3 modelPos)
+	{
+		//Performs multiplication with vector, but only considers the X result.
+		
+		/*
+			Multiplication: x: 0
+							y: 1
+							z: 2
+					   vT   w: 3
+			x: 0  4  8 12
+			y: 1  5  9 13
+			z: 2  6 10 14
+			w: 3  7 11 15
+		 */
+		
+		//TBI: Handle 0? Or confident...
+		double w = mat[3] * modelPos.getX() + mat[7] * modelPos.getY() + mat[11] * modelPos.getZ() + mat[15];
+		return new Vector2(
+				(mat[0] * modelPos.getX() + mat[4] * modelPos.getY() + mat[8] * modelPos.getZ() + mat[12]) / w,
+				(mat[1] * modelPos.getX() + mat[5] * modelPos.getY() + mat[9] * modelPos.getZ() + mat[13]) / w);
 	}
 }
