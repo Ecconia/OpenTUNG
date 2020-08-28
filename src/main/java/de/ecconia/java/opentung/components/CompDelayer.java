@@ -25,8 +25,9 @@ public class CompDelayer extends Component implements Powerable, Updateable
 	{
 		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0));
 		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addPeg(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xp), new Vector3(0.0, 0.3, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg));
-		modelHolder.addBlot(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xn), new Vector3(0.0, 0.15 + 0.06, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg));
+		//TODO: Positions of the rotated components is more or less wrong.
+		modelHolder.addPeg(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xp), new Vector3(0.0, 0.285, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg));
+		modelHolder.addBlot(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xn), new Vector3(0.0, 0.195, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg));
 	}
 	
 	@Override
