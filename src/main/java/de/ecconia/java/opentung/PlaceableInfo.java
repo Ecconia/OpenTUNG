@@ -8,13 +8,20 @@ public class PlaceableInfo
 {
 	private final ModelHolder model;
 	private final CompGenerator generator;
+	private final String name;
 	
 	private int index;
 	
-	public PlaceableInfo(ModelHolder model, CompGenerator generator)
+	public PlaceableInfo(ModelHolder model, String name, CompGenerator generator)
 	{
 		this.model = model;
 		this.generator = generator;
+		this.name = name;
+	}
+	
+	public String getName()
+	{
+		return name;
 	}
 	
 	public ModelHolder getModel()

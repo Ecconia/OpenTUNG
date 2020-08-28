@@ -18,7 +18,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompButton extends Component implements Powerable, Updateable, Holdable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, CompButton::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Button", CompButton::new);
 	
 	static
 	{

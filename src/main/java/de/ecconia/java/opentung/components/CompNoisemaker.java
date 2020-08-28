@@ -17,7 +17,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompNoisemaker extends Component implements Updateable, Colorable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, CompNoisemaker::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Noisemaker", CompNoisemaker::new);
 	
 	static
 	{
