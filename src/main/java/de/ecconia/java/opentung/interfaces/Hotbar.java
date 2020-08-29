@@ -22,10 +22,12 @@ public class Hotbar
 	private final List<PlaceableInfo> slots = new ArrayList<>();
 	private int active = 0;
 	
+	private static final float side = 100;
+	private static final float padding = 20f;
+	
 	//Tmp data:
-	float[] xOffsets;
-	float side = 100;
-	float offsetY;
+	private float[] xOffsets;
+	private float yOffset;
 	
 	public Hotbar(RenderPlane2D plane, SharedData sharedData)
 	{
@@ -46,14 +48,12 @@ public class Hotbar
 		if(slotCount != 0)
 		{
 			float scale = Settings.guiScale;
-			float padding = 20f;
-			NanoVG.nnvgScale(plane.vg, scale, scale);
 			NVGColor hotbarBG = NanoVG.nvgRGBAf(0.8f, 0.8f, 0.8f, 0.3f, NVGColor.create());
 			NVGColor hotbarOutline = NanoVG.nvgRGBf(0.2f, 0.2f, 0.2f, NVGColor.create());
 			NVGColor hotbarOutlineActive = NanoVG.nvgRGBf(1.0f, 1.0f, 1.0f, NVGColor.create());
 			NanoVG.nvgStrokeWidth(plane.vg, 3);
 			float middle = plane.realWidth(scale) / 2f;
-			offsetY = plane.realHeight(scale) - 60;
+			yOffset = plane.realHeight(scale) - 60; //Magic value offset.
 			
 			xOffsets = new float[slotCount];
 			xOffsets[0] = middle
@@ -64,11 +64,11 @@ public class Hotbar
 				xOffsets[0] += (side + padding) / 2f;
 			}
 			
-			Shapes.drawBox(plane.vg, xOffsets[0], offsetY, side, side, hotbarBG, active == 0 ? hotbarOutlineActive : hotbarOutline);
+			Shapes.drawBox(plane.vg, xOffsets[0], yOffset, side, side, hotbarBG, active == 0 ? hotbarOutlineActive : hotbarOutline);
 			for(int i = 1; i < slotCount; i++)
 			{
 				xOffsets[i] = xOffsets[i - 1] + side + padding;
-				Shapes.drawBox(plane.vg, xOffsets[i], offsetY, side, side, hotbarBG, active == i ? hotbarOutlineActive : hotbarOutline);
+				Shapes.drawBox(plane.vg, xOffsets[i], yOffset, side, side, hotbarBG, active == i ? hotbarOutlineActive : hotbarOutline);
 			}
 		}
 	}
@@ -95,7 +95,7 @@ public class Hotbar
 				
 				float xOffset = xOffsets[i];
 				//Offset:
-				iconShader.setUniformV2(2, new float[]{xOffset * scale, offsetY * scale});
+				iconShader.setUniformV2(2, new float[]{xOffset * scale, yOffset * scale});
 				iconPlane.draw();
 			}
 		}

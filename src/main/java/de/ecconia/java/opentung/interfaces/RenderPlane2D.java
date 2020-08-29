@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL30;
@@ -44,6 +45,7 @@ public class RenderPlane2D implements RenderPlane
 	private Point indicator;
 	
 	private Hotbar hotbar;
+	private ComponentList componentList;
 	
 	public long vg;
 	private int width, height;
@@ -52,6 +54,7 @@ public class RenderPlane2D implements RenderPlane
 	{
 		inputHandler.setController(new Controller2D(this));
 		hotbar = new Hotbar(this, sharedData);
+		componentList = new ComponentList(this, hotbar);
 	}
 	
 	@Override
@@ -83,13 +86,17 @@ public class RenderPlane2D implements RenderPlane
 		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 		//TODO: "DPI"
 		NanoVG.nvgBeginFrame(vg, width, height, 1);
+		float scale = Settings.guiScale;
+		NanoVG.nnvgScale(vg, scale, scale);
 		hotbar.draw();
+		componentList.draw();
 		NanoVG.nvgEndFrame(vg);
 		
 		//Restore everything, cause dunno.
 		OpenTUNG.setOpenGLMode();
 		
 		hotbar.drawIcons(componentIconShader, iconPlane);
+		componentList.drawIcons(componentIconShader, iconPlane);
 	}
 	
 	@Override
