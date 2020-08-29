@@ -1,13 +1,11 @@
 package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.Camera;
-import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.RenderPlane3D;
-import de.ecconia.java.opentung.settings.Settings;
-import de.ecconia.java.opentung.UglyComponentAwareness;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
+import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.glfw.GLFW;
 
 //TODO: Let both mouse buttons abort pending click, for placement e.g.
@@ -354,23 +352,9 @@ public class Controller3D implements Controller
 	
 	//Middle-Mouse & Wheel:
 	
-	private static final int MAX = UglyComponentAwareness.MAX;
-	private int selectedModelIndex = 0;
-	
 	private void scrollY(int val)
 	{
-		selectedModelIndex += val;
-		
-		while(selectedModelIndex < 0)
-		{
-			selectedModelIndex += MAX + 1;
-		}
-		while(selectedModelIndex > MAX)
-		{
-			selectedModelIndex -= MAX + 1;
-		}
-		
-		indexUpdated();
+		inputProcessor.get2DController().forwardScrollingToHotbar(val);
 	}
 	
 	private void numberPressed(int index)
@@ -388,14 +372,7 @@ public class Controller3D implements Controller
 			index += 10;
 		}
 		
-		selectedModelIndex = index;
-		indexUpdated();
-	}
-	
-	private void indexUpdated()
-	{
-		PlaceableInfo placeable = UglyComponentAwareness.getModelByIndex(selectedModelIndex);
-		renderPlane3D.componentPlaceSelection(placeable);
+		inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
 	}
 	
 	private void middleMouseDown()
@@ -405,36 +382,14 @@ public class Controller3D implements Controller
 		{
 			part = part.getParent();
 		}
+		
 		if(part == null)
 		{
-			if(selectedModelIndex != 0)
-			{
-				selectedModelIndex = 0;
-				renderPlane3D.componentPlaceSelection(null);
-			}
+			inputProcessor.get2DController().forwardInfoToHotbar(null);
 		}
 		else
 		{
-			//Call to here required, to init the UglyComponentAwareness class.
-			PlaceableInfo info = UglyComponentAwareness.getPlaceableInfoFrom(part);
-			if(info == null)
-			{
-				if(selectedModelIndex != 0)
-				{
-					selectedModelIndex = 0;
-					renderPlane3D.componentPlaceSelection(null);
-				}
-			}
-			else
-			{
-				int index = info.getIndex();
-				if(selectedModelIndex != index)
-				{
-					selectedModelIndex = index;
-					//TODO: Apply rotation from copied component.
-					renderPlane3D.componentPlaceSelection(info);
-				}
-			}
+			inputProcessor.get2DController().forwardInfoToHotbar(part.getInfo());
 		}
 	}
 }

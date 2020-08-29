@@ -1,10 +1,15 @@
 package de.ecconia.java.opentung.interfaces;
 
+import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.RenderPlane;
+import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import org.lwjgl.nanovg.NanoVG;
+import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL30;
 
 public class RenderPlane2D implements RenderPlane
@@ -12,18 +17,58 @@ public class RenderPlane2D implements RenderPlane
 	private final Matrix projectionMatrix = new Matrix();
 	
 	private ShaderProgram interfaceShader;
+	private ShaderProgram componentIconShader;
+	
+	private final GenericVAO iconPlane = new GenericVAO(new float[]{
+			-1, -1, 0, 0, // L T
+			-1, +1, 0, 1, // L B
+			+1, -1, 1, 0, // R T
+			+1, +1, 1, 1, // R B
+	}, new short[]{
+			0, 1, 2,
+			1, 3, 2,
+	})
+	{
+		@Override
+		protected void init()
+		{
+			//Position:
+			GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 0);
+			GL30.glEnableVertexAttribArray(0);
+			//TextureCoord:
+			GL30.glVertexAttribPointer(1, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 2 * Float.BYTES);
+			GL30.glEnableVertexAttribArray(1);
+		}
+	};
 	
 	private Point indicator;
 	
-	public RenderPlane2D(InputProcessor inputHandler)
+	private Hotbar hotbar;
+	
+	public long vg;
+	private int width, height;
+	
+	public RenderPlane2D(InputProcessor inputHandler, SharedData sharedData)
 	{
 		inputHandler.setController(new Controller2D(this));
+		hotbar = new Hotbar(this, sharedData);
 	}
 	
 	@Override
 	public void setup()
 	{
+		if(vg == 0)
+		{
+			//NanoVGGL3.NVG_ANTIALIAS |
+			vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_STENCIL_STROKES);
+			if(vg == 0)
+			{
+				throw new RuntimeException("Could not init NanoVG");
+			}
+		}
+		
 		interfaceShader = new ShaderProgram("interfaceShader");
+		componentIconShader = new ShaderProgram("interfaces/componentIconShader");
 	}
 	
 	@Override
@@ -33,14 +78,32 @@ public class RenderPlane2D implements RenderPlane
 		Matrix mat = new Matrix();
 		interfaceShader.setUniform(1, mat.getMat());
 		indicator.draw();
+		
+		//Draw interfaces:
+		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
+		//TODO: "DPI"
+		NanoVG.nvgBeginFrame(vg, width, height, 1);
+		hotbar.draw();
+		NanoVG.nvgEndFrame(vg);
+		
+		//Restore everything, cause dunno.
+		OpenTUNG.setOpenGLMode();
+		
+		hotbar.drawIcons(componentIconShader, iconPlane);
 	}
 	
 	@Override
 	public void newSize(int width, int height)
 	{
+		this.width = width;
+		this.height = height;
+		
 		projectionMatrix.interfaceMatrix(width, height);
+		float[] pM = projectionMatrix.getMat();
+		componentIconShader.use();
+		componentIconShader.setUniform(0, pM);
 		interfaceShader.use();
-		interfaceShader.setUniform(0, projectionMatrix.getMat());
+		interfaceShader.setUniform(0, pM);
 		if(indicator != null)
 		{
 			indicator.unload();
@@ -48,19 +111,35 @@ public class RenderPlane2D implements RenderPlane
 		indicator = new Point(width / 2, height / 2);
 	}
 	
+	public float realWidth(float scale)
+	{
+		return width / scale;
+	}
+	
+	public float realHeight(float scale)
+	{
+		return height / scale;
+	}
+	
+	public Hotbar getHotbar()
+	{
+		return hotbar;
+	}
+	
 	private static class Point
 	{
 		private final int vaoID;
+		private final int vboID;
 		
 		public Point(int centerX, int centerY)
 		{
 			vaoID = GL30.glGenVertexArrays();
-			int vboID = GL30.glGenBuffers();
+			vboID = GL30.glGenBuffers();
 			
 			GL30.glBindVertexArray(vaoID);
 			
 			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
-			GL30.glBufferData(GL30.GL_ARRAY_BUFFER, new float[]{centerX, centerY, 1, 1, 1}, GL30.GL_STATIC_DRAW);
+			GL30.glBufferData(GL30.GL_ARRAY_BUFFER, new float[]{centerX, centerY, 1, 1, 0}, GL30.GL_STATIC_DRAW);
 			
 			//Position:
 			GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 5 * Float.BYTES, 0);
@@ -82,6 +161,7 @@ public class RenderPlane2D implements RenderPlane
 		
 		public void unload()
 		{
+			GL30.glDeleteBuffers(vboID);
 			GL30.glDeleteVertexArrays(vaoID);
 		}
 	}

@@ -241,6 +241,19 @@ public class OpenTUNG
 	{
 		setBackgroundColor();
 		
+		setOpenGLMode();
+		
+		SharedData sharedData = new SharedData();
+		interactables = new RenderPlane2D(inputHandler, sharedData);
+		interactables.setup();
+		interactables.newSize(500, 500);
+		worldView = new RenderPlane3D(inputHandler, boardUniverse, sharedData);
+		worldView.setup();
+		worldView.newSize(500, 500);
+	}
+	
+	public static void setOpenGLMode()
+	{
 		GL30.glEnable(GL30.GL_CULL_FACE);
 		GL30.glFrontFace(GL30.GL_CCW);
 		GL30.glCullFace(GL30.GL_BACK);
@@ -258,13 +271,6 @@ public class OpenTUNG
 		GL30.glStencilMask(0x11);
 		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
 		GL30.glStencilMask(0x00);
-		
-		interactables = new RenderPlane2D(inputHandler);
-		interactables.setup();
-		interactables.newSize(500, 500);
-		worldView = new RenderPlane3D(inputHandler, boardUniverse);
-		worldView.setup();
-		worldView.newSize(500, 500);
 	}
 	
 	private static void render()

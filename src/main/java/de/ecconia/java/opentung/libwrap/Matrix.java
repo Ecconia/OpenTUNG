@@ -164,6 +164,7 @@ public class Matrix
 	
 	public void interfaceMatrix(int width, int height)
 	{
+		//Maps 0 to pixels to -1 to 1 for width and height. 0 is at top left.
 		mat[0 + 0 * 4] = 2.0f / width;
 		mat[1 + 0 * 4] = 0.0f;
 		mat[2 + 0 * 4] = 0.0f;

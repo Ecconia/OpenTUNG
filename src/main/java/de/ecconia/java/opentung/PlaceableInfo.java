@@ -14,8 +14,6 @@ public class PlaceableInfo
 	//TODO: Prefer texture atlas for icons. Less CPU work.
 	private TextureWrapper iconTexture;
 	
-	private int index;
-	
 	public PlaceableInfo(ModelHolder model, String name, CompGenerator generator)
 	{
 		this.model = model;
@@ -35,7 +33,7 @@ public class PlaceableInfo
 			iconTexture.unload();
 		}
 		
-		iconTexture = new TextureWrapper(image);
+		iconTexture = new TextureWrapper(image, true);
 	}
 	
 	public TextureWrapper getIconTexture()
@@ -46,16 +44,6 @@ public class PlaceableInfo
 	public ModelHolder getModel()
 	{
 		return model;
-	}
-	
-	public void setIndex(int index)
-	{
-		this.index = index;
-	}
-	
-	public int getIndex()
-	{
-		return index;
 	}
 	
 	public Component instance(CompContainer container)

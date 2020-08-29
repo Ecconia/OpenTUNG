@@ -147,6 +147,11 @@ public class InputProcessor implements Controller
 		receiver.setIntervalMode(false);
 	}
 	
+	public Controller2D get2DController()
+	{
+		return controller2D;
+	}
+	
 	//Controller commands:
 	
 	public void issueShutdown()

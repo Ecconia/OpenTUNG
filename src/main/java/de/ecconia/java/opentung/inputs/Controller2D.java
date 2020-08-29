@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
+import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import org.lwjgl.glfw.GLFW;
 
@@ -39,5 +40,20 @@ public class Controller2D implements Controller
 			//TODO: Add setting for this behavior:
 			inputProcessor.issueShutdown();
 		}
+	}
+	
+	public void forwardScrollingToHotbar(int val)
+	{
+		renderPlane2D.getHotbar().scrollInput(val);
+	}
+	
+	public void forwardNumberIndexToHotbar(int index)
+	{
+		renderPlane2D.getHotbar().numberInput(index);
+	}
+	
+	public void forwardInfoToHotbar(PlaceableInfo info)
+	{
+		renderPlane2D.getHotbar().setInfo(info);
 	}
 }

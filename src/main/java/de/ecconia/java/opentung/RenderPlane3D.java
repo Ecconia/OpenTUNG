@@ -38,12 +38,12 @@ import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
-import de.ecconia.java.opentung.simulation.ClusterHelper;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -81,6 +81,7 @@ public class RenderPlane3D implements RenderPlane
 	private final List<Vector3> wireEndsToRender = new ArrayList<>();
 	private final LabelToolkit labelToolkit = new LabelToolkit();
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
+	private final SharedData sharedData;
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
@@ -93,11 +94,12 @@ public class RenderPlane3D implements RenderPlane
 	private int height = 0;
 	private float[] latestProjectionMat;
 	
-	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board)
+	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board, SharedData sharedData)
 	{
 		this.board = board;
 		board.startFinalizeImport(gpuTasks);
 		this.inputHandler = inputHandler;
+		this.sharedData = sharedData;
 	}
 	
 	//Other:
@@ -112,7 +114,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	private Controller3D controller;
 	private Connector wireStartPoint; //Selected by dragging from a connector.
-	private PlaceableInfo currentPlaceable; //Selected via the 0..9 keys or mouse-wheel.
 	private int placementRotation;
 	
 	public Part getCursorObject()
@@ -258,11 +259,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
-	public void componentPlaceSelection(PlaceableInfo placeable)
-	{
-		currentPlaceable = placeable;
-	}
-	
 	public void rotatePlacement(int degrees)
 	{
 		placementRotation += degrees;
@@ -279,6 +275,7 @@ public class RenderPlane3D implements RenderPlane
 			return false;
 		}
 		
+		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		//TODO: Ugly, not thread-safe enough for my taste. Might even cause bugs. So eventually it has to be changed.
 		if(placementPosition != null && currentPlaceable != null)
 		{
@@ -835,7 +832,7 @@ public class RenderPlane3D implements RenderPlane
 			justShape.use();
 			justShape.setUniform(1, view);
 			justShape.setUniform(2, model.getMat());
-			justShape.setUniformV4(3, new float[] {1.0f, 0.0f, 1.0f, 1.0f});
+			justShape.setUniformV4(3, new float[]{1.0f, 0.0f, 1.0f, 1.0f});
 			
 			cubeVAO.use();
 			cubeVAO.draw();
@@ -849,8 +846,10 @@ public class RenderPlane3D implements RenderPlane
 			return;
 		}
 		
+		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		if(currentPlaceable == null)
 		{
+			//TODO: Switch to line shader with uniform color.
 			lineShader.use();
 			lineShader.setUniform(1, view);
 			GL30.glLineWidth(5f);
