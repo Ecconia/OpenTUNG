@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.List;
 import org.lwjgl.nanovg.NVGColor;
@@ -22,7 +23,6 @@ public class Hotbar
 	private int active = 0;
 	
 	//Tmp data:
-	float scale = 0.5f;
 	float[] xOffsets;
 	float side = 100;
 	float offsetY;
@@ -45,6 +45,7 @@ public class Hotbar
 		int slotCount = slots.size();
 		if(slotCount != 0)
 		{
+			float scale = Settings.guiScale;
 			float padding = 20f;
 			NanoVG.nnvgScale(plane.vg, scale, scale);
 			NVGColor hotbarBG = NanoVG.nvgRGBAf(0.8f, 0.8f, 0.8f, 0.3f, NVGColor.create());
@@ -79,6 +80,7 @@ public class Hotbar
 			return;
 		}
 		
+		float scale = Settings.guiScale;
 		iconShader.use();
 		//Size:
 		iconShader.setUniformV2(1, new float[]{(side / 2f - 5f) * scale, (side / 2f - 5f) * scale});

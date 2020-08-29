@@ -16,7 +16,7 @@ public class Settings
 	@SettingInfo(key = "settings.movement.speed.fly.fast", comment = "Speed when MOD key is pressed.")
 	public static float playerFastFlySpeed = 0.15f;
 	
-	@SettingInfo(key = "settings.input.mouse.longPressDuration", comment = "Time in ms, which interaction-presses will be considered long.\\nIf that is the case, one can cancel interactions, by not looking at the initial component.")
+	@SettingInfo(key = "settings.input.mouse.longPressDuration", comment = "Time in ms, which interaction-presses will be considered long.\nIf that is the case, one can cancel interactions, by not looking at the initial component.")
 	public static int longMousePressDuration = 1000;
 	
 	//### BOARD IMPORT ###
@@ -129,4 +129,7 @@ public class Settings
 	
 	@SettingInfo(key = "settings.graphic.gui.component.icon.resolution", comment = "The resolution of component icons.")
 	public static int componentIconResolution = 200;
+	
+	@SettingInfo(key = "settings.graphic.gui.global.scale", comment = "Factor for any size related number in the GUI.")
+	public static float guiScale = 0.5f;
 }
