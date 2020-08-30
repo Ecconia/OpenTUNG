@@ -65,6 +65,11 @@ public class ComponentList
 	private float[] offsetsX;
 	private float[] offsetsY;
 	
+	private float windowStartX;
+	private float windowStartY;
+	private float windowWidth;
+	private float windowHeight;
+	
 	public void draw()
 	{
 		int amount = placeableInfos.length;
@@ -84,16 +89,16 @@ public class ComponentList
 		
 		NanoVG.nvgBeginPath(nvg);
 		
-		float width = columns * (side + padding) + padding;
-		float height = rows * (side + padding) + padding;
-		float startX = (renderPlane2D.realWidth(scale) - width) / 2f;
-		float startY = (renderPlane2D.realHeight(scale) - height) / 2f;
+		windowWidth = columns * (side + padding) + padding;
+		windowHeight = rows * (side + padding) + padding;
+		windowStartX = (renderPlane2D.realWidth(scale) - windowWidth) / 2f;
+		windowStartY = (renderPlane2D.realHeight(scale) - windowHeight) / 2f;
 		
-		Shapes.drawBox(nvg, startX + width / 2f, startY + height / 2f, width, height, background, hotbarOutline);
+		Shapes.drawBox(nvg, windowStartX + windowWidth / 2f, windowStartY + windowHeight / 2f, windowWidth, windowHeight, background, hotbarOutline);
 		
 		int i = 0;
-		float offsetX = startX + padding + side / 2f;
-		float currentY = startY + padding + side / 2f;
+		float offsetX = windowStartX + padding + side / 2f;
+		float currentY = windowStartY + padding + side / 2f;
 		for(int y = 0; y < rows; y++)
 		{
 			float currentX = offsetX;
@@ -127,5 +132,13 @@ public class ComponentList
 			iconShader.setUniformV2(2, new float[]{x * scale, y * scale});
 			iconPlane.draw();
 		}
+	}
+	
+	public boolean checkMouseIn(int x, int y)
+	{
+		float scale = Settings.guiScale;
+		float sx = (float) x / scale;
+		float sy = (float) y / scale;
+		return windowStartX < sx && sx < (windowStartX + windowWidth) && windowStartY < sy && sy < (windowStartY + windowHeight);
 	}
 }

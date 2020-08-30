@@ -10,6 +10,8 @@ public class Controller2D implements Controller
 	
 	private InputProcessor inputProcessor;
 	
+	private boolean mouseOnGUI;
+	
 	public Controller2D(RenderPlane2D renderPlane2D)
 	{
 		this.renderPlane2D = renderPlane2D;
@@ -21,15 +23,40 @@ public class Controller2D implements Controller
 		this.inputProcessor = inputProcessor;
 	}
 	
-	//Currently there is no UI element, thus just give focus away on a click and exit on ESC.
+	@Override
+	public void mouseMove(int xAbs, int yAbs, int xRel, int yRel)
+	{
+	
+	}
+	
+	@Override
+	public void mouseDown(int mouseIndex, int x, int y)
+	{
+		if(mouseIndex == InputProcessor.MOUSE_LEFT)
+		{
+			if(renderPlane2D.leftMouseDownIn(x, y))
+			{
+				mouseOnGUI = true;
+			}
+		}
+	}
 	
 	@Override
 	public void mouseUp(int mouseIndex, int x, int y)
 	{
 		if(mouseIndex == InputProcessor.MOUSE_LEFT)
 		{
-			inputProcessor.switchTo3D();
+			if(!mouseOnGUI)
+			{
+				if(renderPlane2D.hasWindowOpen())
+				{
+					renderPlane2D.closeWindow();
+				}
+				inputProcessor.switchTo3D();
+			}
 		}
+		
+		mouseOnGUI = false;
 	}
 	
 	@Override
@@ -37,8 +64,17 @@ public class Controller2D implements Controller
 	{
 		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
-			//TODO: Add setting for this behavior:
-			inputProcessor.issueShutdown();
+			if(renderPlane2D.hasWindowOpen())
+			{
+				renderPlane2D.closeWindow();
+				mouseOnGUI = false; //Reset regardless.
+				inputProcessor.switchTo3D(); //If closed just go here.
+			}
+			else
+			{
+				//TODO: Add setting for this behavior:
+				inputProcessor.issueShutdown();
+			}
 		}
 	}
 	
@@ -55,5 +91,11 @@ public class Controller2D implements Controller
 	public void forwardInfoToHotbar(PlaceableInfo info)
 	{
 		renderPlane2D.getHotbar().setInfo(info);
+	}
+	
+	public void openComponentList()
+	{
+		inputProcessor.switchTo2D();
+		renderPlane2D.openComponentList();
 	}
 }

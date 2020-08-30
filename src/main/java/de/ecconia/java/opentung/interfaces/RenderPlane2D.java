@@ -47,6 +47,8 @@ public class RenderPlane2D implements RenderPlane
 	private Hotbar hotbar;
 	private ComponentList componentList;
 	
+	private boolean showComponentList;
+	
 	public long vg;
 	private int width, height;
 	
@@ -89,14 +91,20 @@ public class RenderPlane2D implements RenderPlane
 		float scale = Settings.guiScale;
 		NanoVG.nnvgScale(vg, scale, scale);
 		hotbar.draw();
-		componentList.draw();
+		if(showComponentList)
+		{
+			componentList.draw();
+		}
 		NanoVG.nvgEndFrame(vg);
 		
 		//Restore everything, cause dunno.
 		OpenTUNG.setOpenGLMode();
 		
 		hotbar.drawIcons(componentIconShader, iconPlane);
-		componentList.drawIcons(componentIconShader, iconPlane);
+		if(showComponentList)
+		{
+			componentList.drawIcons(componentIconShader, iconPlane);
+		}
 	}
 	
 	@Override
@@ -131,6 +139,34 @@ public class RenderPlane2D implements RenderPlane
 	public Hotbar getHotbar()
 	{
 		return hotbar;
+	}
+	
+	public void openComponentList()
+	{
+		showComponentList = true;
+	}
+	
+	public boolean hasWindowOpen()
+	{
+		return showComponentList;
+	}
+	
+	public void closeWindow()
+	{
+		//TODO: Handle other windows.
+		showComponentList = false;
+	}
+	
+	public boolean leftMouseDownIn(int x, int y)
+	{
+		if(!showComponentList)
+		{
+			return false;
+		}
+		else
+		{
+			return componentList.checkMouseIn(x, y);
+		}
 	}
 	
 	private static class Point
