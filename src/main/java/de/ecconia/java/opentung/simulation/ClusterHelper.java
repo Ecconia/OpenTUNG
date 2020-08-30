@@ -370,9 +370,30 @@ public class ClusterHelper
 				otherCluster.remove(blotCluster);
 				blotCluster.remove(otherCluster);
 				
-				if(blotCluster.isActive())
+				if(otherCluster.getSources().size() == 1)
 				{
-					otherCluster.oneOut(simulation);
+					Prototype split = splitNonSourcePartFromCluster(other);
+					Wire sourceWire = split.getBlotWires().get(0);
+					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+
+					split.mergeInto(source);
+					source.remove(otherCluster);
+
+					if(source.isActive() != otherCluster.isActive())
+					{
+						split.scheduleUpdateable(simulation);
+					}
+
+					board.deleteCluster(otherCluster.getId());
+				}
+				else
+				{
+					//No need to remove from source cluster.
+					if(blotCluster.isActive())
+					{
+						otherCluster.oneOut(simulation);
+					}
 				}
 			}
 			
