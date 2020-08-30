@@ -127,6 +127,23 @@ public class SimulationManager extends Thread
 	
 	private void doTick()
 	{
+		if(!updateJobNextTickThreadSafe.isEmpty())
+		{
+			synchronized(this)
+			{
+				List<UpdateJob> tmp = updateJobThisTickThreadSafe;
+				updateJobThisTickThreadSafe = updateJobNextTickThreadSafe;
+				updateJobNextTickThreadSafe = tmp;
+				//TBI: The clearing could be done in the synchronized section of the input/graphic thread.
+				//TBI: Alternatively overwrite the class and let clear only reset the pointer.
+				updateJobNextTickThreadSafe.clear();
+			}
+			for(UpdateJob updateJob : updateJobThisTickThreadSafe)
+			{
+				updateJob.update(this);
+			}
+		}
+		
 		{
 			List<Updateable> tmp = updateThisTick;
 			updateThisTick = updateNextTick;
@@ -161,23 +178,6 @@ public class SimulationManager extends Thread
 			List<Cluster> tmp = updateClusterThisStage;
 			updateClusterThisStage = updateClusterNextStage;
 			updateClusterNextStage = tmp;
-		}
-		
-		if(!updateJobNextTickThreadSafe.isEmpty())
-		{
-			synchronized(this)
-			{
-				List<UpdateJob> tmp = updateJobThisTickThreadSafe;
-				updateJobThisTickThreadSafe = updateJobNextTickThreadSafe;
-				updateJobNextTickThreadSafe = tmp;
-				//TBI: The clearing could be done in the synchronized section of the input/graphic thread.
-				//TBI: Alternatively overwrite the class and let clear only reset the pointer.
-				updateJobNextTickThreadSafe.clear();
-			}
-			for(UpdateJob updateJob : updateJobThisTickThreadSafe)
-			{
-				updateJob.update(this);
-			}
 		}
 		
 		//Source clusters:
