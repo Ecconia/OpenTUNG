@@ -662,7 +662,7 @@ public class ClusterHelper
 			if(drain.getSources().isEmpty())
 			{
 				//First remove all the wires which could lead to this peg, so that later traces will never pass it.
-				for(Wire wire : peg.getWires())
+				for(Wire wire : peg.getWires()) //TODO: Concurrent here!!!
 				{
 					Connector otherSide = wire.getOtherSide(peg);
 					otherSide.remove(wire);
@@ -710,26 +710,44 @@ public class ClusterHelper
 					}
 					
 					Prototype split = splitNonSourcePartFromCluster(otherSide);
-					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
-					split.mergeInto(newCluster);
 					
-					for(Wire sourceWire : split.getBlotWires())
+					if(split.getBlotWires().size() == 1)
 					{
+						Wire sourceWire = split.getBlotWires().get(0);
 						Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
 						SourceCluster source = (SourceCluster) sourceConnector.getCluster();
 						
+						split.mergeInto(source);
 						source.remove(drain);
-						source.addDrain(newCluster);
-						if(source.isActive())
+						
+						if(source.isActive() != drain.isActive())
 						{
-							newCluster.oneIn(simulation);
+							split.scheduleUpdateable(simulation);
 						}
 					}
-					
-					if(newCluster.isActive() != cluster.isActive())
+					else
 					{
-						//The state of the cluster is different now, update.
-						split.scheduleUpdateable(simulation);
+						InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+						split.mergeInto(newCluster);
+						
+						for(Wire sourceWire : split.getBlotWires())
+						{
+							Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
+							SourceCluster source = (SourceCluster) sourceConnector.getCluster();
+							
+							source.remove(drain);
+							source.addDrain(newCluster);
+							if(source.isActive())
+							{
+								newCluster.oneIn(simulation);
+							}
+						}
+						
+						if(newCluster.isActive() != cluster.isActive())
+						{
+							//The state of the cluster is different now, update.
+							split.scheduleUpdateable(simulation);
+						}
 					}
 				}
 			}
