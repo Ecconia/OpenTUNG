@@ -25,7 +25,7 @@ public class Hotbar
 	private static final float padding = 20f;
 	
 	//Graphic thread data:
-	private final PlaceableInfo[] r_slots = new PlaceableInfo[6];
+	private final PlaceableInfo[] r_slots = new PlaceableInfo[20];
 	private int r_count = 1; //How many slots are in use.
 	private int r_active; //Which slot is selected.
 	
