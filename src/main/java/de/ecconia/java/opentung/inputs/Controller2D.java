@@ -11,6 +11,7 @@ public class Controller2D implements Controller
 	private InputProcessor inputProcessor;
 	
 	private boolean mouseOnGUI;
+	private boolean leftMouseDown;
 	
 	public Controller2D(RenderPlane2D renderPlane2D)
 	{
@@ -26,7 +27,10 @@ public class Controller2D implements Controller
 	@Override
 	public void mouseMove(int xAbs, int yAbs, int xRel, int yRel)
 	{
-	
+		if(leftMouseDown)
+		{
+			renderPlane2D.mouseDragged(xAbs, yAbs);
+		}
 	}
 	
 	@Override
@@ -34,7 +38,8 @@ public class Controller2D implements Controller
 	{
 		if(mouseIndex == InputProcessor.MOUSE_LEFT)
 		{
-			if(renderPlane2D.leftMouseDownIn(x, y))
+			leftMouseDown = true;
+			if(renderPlane2D.leftMouseDown(x, y))
 			{
 				mouseOnGUI = true;
 			}
@@ -46,13 +51,21 @@ public class Controller2D implements Controller
 	{
 		if(mouseIndex == InputProcessor.MOUSE_LEFT)
 		{
+			leftMouseDown = false;
 			if(!mouseOnGUI)
 			{
-				if(renderPlane2D.hasWindowOpen())
+				if(!renderPlane2D.leftMouseUp(x, y))
 				{
-					renderPlane2D.closeWindow();
+					if(renderPlane2D.hasWindowOpen())
+					{
+						renderPlane2D.closeWindow();
+					}
+					inputProcessor.switchTo3D();
 				}
-				inputProcessor.switchTo3D();
+			}
+			else
+			{
+				renderPlane2D.leftMouseUp(x, y);
 			}
 		}
 		
@@ -76,6 +89,14 @@ public class Controller2D implements Controller
 				inputProcessor.issueShutdown();
 			}
 		}
+		else if(keyIndex == GLFW.GLFW_KEY_E)
+		{
+			if(!renderPlane2D.toggleComponentList())
+			{
+				mouseOnGUI = false; //Reset regardless.
+				inputProcessor.switchTo3D(); //If closed just go here.
+			}
+		}
 	}
 	
 	public void forwardScrollingToHotbar(int val)
@@ -90,12 +111,17 @@ public class Controller2D implements Controller
 	
 	public void forwardInfoToHotbar(PlaceableInfo info)
 	{
-		renderPlane2D.getHotbar().setInfo(info);
+		renderPlane2D.getHotbar().selectOrAdd(info);
 	}
 	
 	public void openComponentList()
 	{
 		inputProcessor.switchTo2D();
 		renderPlane2D.openComponentList();
+	}
+	
+	public void dropHotbarEntry()
+	{
+		renderPlane2D.getHotbar().dropHotbarEntry();
 	}
 }

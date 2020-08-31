@@ -53,9 +53,11 @@ public class ComponentList
 			CompPanelLabel.info,
 	};
 	private final RenderPlane2D renderPlane2D;
+	private final Hotbar hotbar;
 	
 	public ComponentList(RenderPlane2D renderPlane2D, Hotbar hotbar)
 	{
+		this.hotbar = hotbar;
 		this.renderPlane2D = renderPlane2D;
 	}
 	
@@ -69,6 +71,14 @@ public class ComponentList
 	private float windowStartY;
 	private float windowWidth;
 	private float windowHeight;
+	
+	private PlaceableInfo draggedElement;
+	private float mousePosX;
+	private float mousePosY;
+	
+	private boolean guiOperationOverwrite;
+	private Integer insertedAt;
+	private Integer extractedIsActive;
 	
 	public void draw()
 	{
@@ -132,13 +142,179 @@ public class ComponentList
 			iconShader.setUniformV2(2, new float[]{x * scale, y * scale});
 			iconPlane.draw();
 		}
+		
+		if(draggedElement != null)
+		{
+			draggedElement.getIconTexture().activate();
+			iconShader.setUniformV2(2, new float[]{mousePosX * scale, mousePosY * scale});
+			iconPlane.draw();
+		}
 	}
 	
-	public boolean checkMouseIn(int x, int y)
+	public boolean leftMouseDown(int x, int y)
 	{
 		float scale = Settings.guiScale;
 		float sx = (float) x / scale;
 		float sy = (float) y / scale;
-		return windowStartX < sx && sx < (windowStartX + windowWidth) && windowStartY < sy && sy < (windowStartY + windowHeight);
+		if(downInside(sx, sy))
+		{
+			float half = side / 2f;
+			Integer match = null;
+			for(int i = 0; i < placeableInfos.length; i++)
+			{
+				float xx = offsetsX[i];
+				float yy = offsetsY[i];
+				
+				float startX = xx - half;
+				float endX = xx + half;
+				float startY = yy - half;
+				float endY = yy + half;
+				
+				if(startX > sx || endX < sx || startY > sy || endY < sy)
+				{
+					continue;
+				}
+				
+				match = i;
+				break;
+			}
+			
+			if(match != null)
+			{
+				draggedElement = placeableInfos[match];
+				mousePosX = sx;
+				mousePosY = sy;
+			}
+			
+			return true;
+		}
+		else
+		{
+			Integer downOn = hotbar.downOnEntry(sx, sy);
+			if(downOn != null)
+			{
+				insertedAt = downOn;
+				int active = hotbar.getActive();
+				extractedIsActive = active == insertedAt ? active : null;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	
+	private boolean downInside(float x, float y)
+	{
+		return windowStartX < x && x < (windowStartX + windowWidth) && windowStartY < y && y < (windowStartY + windowHeight);
+	}
+	
+	public void abort()
+	{
+		if(insertedAt == null && extractedIsActive != null)
+		{
+			//Bad, now we have to fix.
+			hotbar.setActive(extractedIsActive);
+		}
+		
+		//Abort any component movement.
+		draggedElement = null;
+		insertedAt = null;
+		extractedIsActive = null;
+		guiOperationOverwrite = false;
+	}
+	
+	public boolean leftMouseUp(int x, int y)
+	{
+		float scale = Settings.guiScale;
+		float sx = (float) x / scale;
+		float sy = (float) y / scale;
+		
+		if(guiOperationOverwrite)
+		{
+			abort();
+			return true;
+		}
+		
+		abort();
+		return downInside(sx, sy);
+	}
+	
+	public void mouseDragged(int x, int y)
+	{
+		float scale = Settings.guiScale;
+		mousePosX = (float) x / scale;
+		mousePosY = (float) y / scale;
+		if(hotbar.onHotbar(mousePosY))
+		{
+			if(insertedAt != null)
+			{
+				//Probe if it got moved:
+				int newIndex = hotbar.neighbourIndexOf(mousePosX, insertedAt);
+				if(newIndex != insertedAt)
+				{
+					PlaceableInfo thing = hotbar.remove(insertedAt);
+					hotbar.insert(newIndex, thing);
+					insertedAt = newIndex;
+					if(extractedIsActive != null)
+					{
+						hotbar.setActive(insertedAt);
+					}
+				}
+			}
+			else
+			{
+				Integer hotbarIndex = hotbar.indexOf(mousePosX);
+				if(hotbarIndex != null)
+				{
+					//The cursor is still on the hotbar (Y-Level).
+					if(draggedElement != null)
+					{
+						//Something just entered the hotbar, add it.
+						hotbar.insert(hotbarIndex, draggedElement);
+						insertedAt = hotbarIndex;
+						if(extractedIsActive != null)
+						{
+							hotbar.setActive(insertedAt);
+						}
+						draggedElement = null;
+					}
+					else
+					{
+						guiOperationOverwrite = true; //Don't close the gui!
+						//Its air, add it!
+						hotbar.insert(hotbarIndex, null);
+						insertedAt = hotbarIndex;
+						if(extractedIsActive != null)
+						{
+							hotbar.setActive(insertedAt);
+						}
+					}
+				}
+				//else - hotbar full.
+			}
+		}
+		else
+		{
+			//Mouse is not on hotbar.
+			if(insertedAt != null)
+			{
+				//If there is something temporary inserted though:
+				draggedElement = hotbar.remove(insertedAt); //Take it out again.
+				//TODO: Maybe don't repeat this step over and over (its cheap though)
+				if(draggedElement == null && hotbar.hasNoAir())
+				{
+					//Uff grabbed last air, put right back!
+					hotbar.insert(insertedAt, null);
+					if(extractedIsActive != null)
+					{
+						hotbar.setActive(insertedAt);
+					}
+					return;
+				}
+				insertedAt = null;
+			}
+		}
 	}
 }

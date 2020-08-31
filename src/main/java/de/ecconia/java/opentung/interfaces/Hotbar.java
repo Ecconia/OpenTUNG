@@ -9,145 +9,392 @@ import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
-import java.util.ArrayList;
-import java.util.List;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
 public class Hotbar
 {
 	private final RenderPlane2D plane;
-	
 	private final SharedData sharedData;
-	private final List<PlaceableInfo> slots = new ArrayList<>();
-	private int active = 0;
+	
+	private static final NVGColor hotbarBG = NanoVG.nvgRGBAf(0.8f, 0.8f, 0.8f, 0.3f, NVGColor.create());
+	private static final NVGColor hotbarOutline = NanoVG.nvgRGBf(0.2f, 0.2f, 0.2f, NVGColor.create());
+	private static final NVGColor hotbarOutlineActive = NanoVG.nvgRGBf(1.0f, 1.0f, 1.0f, NVGColor.create());
 	
 	private static final float side = 100;
 	private static final float padding = 20f;
 	
-	//Tmp data:
-	private float[] xOffsets;
+	//Graphic thread data:
+	private final PlaceableInfo[] r_slots = new PlaceableInfo[6];
+	private int r_count = 1; //How many slots are in use.
+	private int r_active; //Which slot is selected.
+	
+	//The Offsets can be shared on both threads, it just acts as a flag and even if there is an issue, it would only be visual for 1 frame.
+	//Not for these values to change significantly, the window has to be resized, the scale adjusted. Unlikely to happen while dragging stuff.
 	private float yOffset;
+	private float xOffset;
 	
 	public Hotbar(RenderPlane2D plane, SharedData sharedData)
 	{
 		this.plane = plane;
 		this.sharedData = sharedData;
-		slots.add(null);
 		
-		slots.add(CompInverter.info);
-		slots.add(CompBlotter.info);
-		slots.add(CompDelayer.info);
-		slots.add(CompInverter.info);
-		slots.add(CompLabel.info);
+		//Default items, currently quite random:
+		i_slots[1] = CompInverter.info;
+		i_slots[2] = CompBlotter.info;
+		i_slots[3] = CompDelayer.info;
+		i_slots[4] = CompInverter.info;
+		i_slots[5] = CompLabel.info;
+		i_count = 6;
+	}
+	
+	private void recalcOffsets()
+	{
+		float scale = Settings.guiScale;
+		yOffset = plane.realHeight(scale) - 60; //Magic value offset.
+		
+		if(r_count != 0) //Should never happen. But well.
+		{
+			float middle = plane.realWidth(scale) / 2f;
+			//Count of fields by padding and side.
+			//Sub one padding, cause its too much at the outside.
+			//Sub one time side, cause one half of it is too much at both outsides.
+			float fullWidthFromCenterToCenter = (float) r_count * (side + padding) - padding - side;
+			//Subtract half of it, off the middle.
+			xOffset = middle - fullWidthFromCenterToCenter / 2f;
+		}
 	}
 	
 	public void draw()
 	{
-		int slotCount = slots.size();
-		if(slotCount != 0)
+		copyInputDataToRenderThread();
+		recalcOffsets();
+		
+		if(r_count != 0)
 		{
-			float scale = Settings.guiScale;
-			NVGColor hotbarBG = NanoVG.nvgRGBAf(0.8f, 0.8f, 0.8f, 0.3f, NVGColor.create());
-			NVGColor hotbarOutline = NanoVG.nvgRGBf(0.2f, 0.2f, 0.2f, NVGColor.create());
-			NVGColor hotbarOutlineActive = NanoVG.nvgRGBf(1.0f, 1.0f, 1.0f, NVGColor.create());
 			NanoVG.nvgStrokeWidth(plane.vg, 3);
-			float middle = plane.realWidth(scale) / 2f;
-			yOffset = plane.realHeight(scale) - 60; //Magic value offset.
 			
-			xOffsets = new float[slotCount];
-			xOffsets[0] = middle
-					- (float) (slotCount / 2) * side
-					- (float) (slotCount / 2) * padding;
-			if((slotCount & 1) == 0)
+			float x = xOffset;
+			Shapes.drawBox(plane.vg, x, yOffset, side, side, hotbarBG, r_active == 0 ? hotbarOutlineActive : hotbarOutline);
+			for(int i = 1; i < r_count; i++)
 			{
-				xOffsets[0] += (side + padding) / 2f;
-			}
-			
-			Shapes.drawBox(plane.vg, xOffsets[0], yOffset, side, side, hotbarBG, active == 0 ? hotbarOutlineActive : hotbarOutline);
-			for(int i = 1; i < slotCount; i++)
-			{
-				xOffsets[i] = xOffsets[i - 1] + side + padding;
-				Shapes.drawBox(plane.vg, xOffsets[i], yOffset, side, side, hotbarBG, active == i ? hotbarOutlineActive : hotbarOutline);
+				x += padding + side; //Use unscaled width.
+				Shapes.drawBox(plane.vg, x, yOffset, side, side, hotbarBG, r_active == i ? hotbarOutlineActive : hotbarOutline);
 			}
 		}
 	}
 	
 	public void drawIcons(ShaderProgram iconShader, GenericVAO iconPlane)
 	{
-		if(slots.isEmpty())
+		if(i_count == 0)
 		{
 			return;
 		}
 		
-		float scale = Settings.guiScale;
 		iconShader.use();
 		//Size:
+		float scale = Settings.guiScale;
 		iconShader.setUniformV2(1, new float[]{(side / 2f - 5f) * scale, (side / 2f - 5f) * scale});
 		
 		iconPlane.use();
-		for(int i = 0; i < slots.size(); i++)
+		
+		float width = (side + padding) * scale;
+		float x = xOffset * scale; //Scale to actual position.
+		for(int i = 0; i < r_count; i++)
 		{
-			PlaceableInfo info = slots.get(i);
+			PlaceableInfo info = r_slots[i];
 			if(info != null)
 			{
 				info.getIconTexture().activate();
 				
-				float xOffset = xOffsets[i];
 				//Offset:
-				iconShader.setUniformV2(2, new float[]{xOffset * scale, yOffset * scale});
+				iconShader.setUniformV2(2, new float[]{x, yOffset * scale});
 				iconPlane.draw();
 			}
+			
+			x += width;
 		}
 	}
+	
+	// ### Above is RENDER Thread ###
+	
+	private final PlaceableInfo[] i_slots = new PlaceableInfo[r_slots.length];
+	private int i_count = 1; //How many slots are in use.
+	private int i_active; //Which slot is selected.
+	
+	private void copyInputDataToRenderThread()
+	{
+		System.arraycopy(i_slots, 0, r_slots, 0, r_slots.length);
+		r_count = i_count;
+		r_active = i_active;
+	}
+	
+	// ### Below is INPUT Thread ###
 	
 	public void scrollInput(int val)
 	{
-		int max = slots.size() - 1;
-		active += val;
+		int max = i_count - 1;
+		int newActive = i_active;
+		newActive += val;
 		
-		while(active < 0)
+		while(newActive < 0)
 		{
-			active += max + 1;
+			newActive += max + 1;
 		}
-		while(active > max)
+		while(newActive > max)
 		{
-			active -= max + 1;
+			newActive -= max + 1;
 		}
+		
+		i_active = newActive;
 		
 		activeUpdated();
-	}
-	
-	private void activeUpdated()
-	{
-		sharedData.setCurrentPlaceable(slots.get(active));
 	}
 	
 	public void numberInput(int index)
 	{
-		if(index >= slots.size())
+		if(index >= i_count)
 		{
-			index = slots.size() - 1;
+			index = i_count - 1;
 		}
-		active = index;
+		i_active = index;
 		activeUpdated();
 	}
 	
-	public void setInfo(PlaceableInfo info)
+	public void selectOrAdd(PlaceableInfo info)
 	{
-		for(int i = 0; i < slots.size(); i++)
+		for(int i = 0; i < i_count; i++)
 		{
-			if(slots.get(i) == info)
+			if(i_slots[i] == info)
 			{
-				active = i;
+				i_active = i;
 				activeUpdated();
 				return;
 			}
 		}
 		
 		//Else append at end:
-		active = slots.size();
-		slots.add(info);
+		if(i_count == i_slots.length)
+		{
+			//Hotbar full.
+			return;
+		}
+		i_slots[i_count] = info;
+		i_count++;
+		i_active = i_count - 1;
 		activeUpdated();
+	}
+	
+	public void dropHotbarEntry()
+	{
+		//Special case, cause we never want the bar empty.
+		if(i_count == 1)
+		{
+			return;
+		}
+		
+		PlaceableInfo removed = i_slots[i_active];
+		i_count--;
+		for(int i = i_active; i < i_count; i++)
+		{
+			i_slots[i] = i_slots[i + 1];
+		}
+		
+		if(removed == null)
+		{
+			//check if there is one more...
+			for(int i = 0; i < i_count; i++)
+			{
+				if(i_slots[i] == null)
+				{
+					if(i_active >= i_count)
+					{
+						i_active = i_count - 1;
+					}
+					activeUpdated();
+					return;
+				}
+			}
+			
+			//TBI: Alternatively add the empty slot at the end again. Middle mouse click would have done that anyway.
+			//Add back, there should be at least 1 empty slot. For reasons.
+			for(int i = i_count - 1; i >= i_active; i--)
+			{
+				i_slots[i + 1] = i_slots[i];
+			}
+			i_count++;
+			i_slots[i_active] = null;
+		}
+		else
+		{
+			if(i_active >= i_count)
+			{
+				i_active = i_count - 1;
+			}
+			activeUpdated();
+		}
+	}
+	
+	private void activeUpdated()
+	{
+		sharedData.setCurrentPlaceable(i_slots[i_active]);
+	}
+	
+	public boolean onHotbar(float y)
+	{
+		return (yOffset - side / 2f) < y;
+	}
+	
+	public Integer indexOf(float x)
+	{
+		if(i_count == i_slots.length)
+		{
+			return null; //Is full, don't claim a free spot.
+		}
+		
+		float offset = xOffset;
+		for(int i = 0; i < i_count; i++)
+		{
+			if(x < offset)
+			{
+				return i;
+			}
+			offset += padding + side;
+		}
+		
+		return i_count;
+	}
+	
+	public int neighbourIndexOf(float x, int current)
+	{
+		float center = xOffset + current * (padding + side);
+		if(x > center)
+		{
+			//Subtract until at the exact middle between tiles, else it flickers when moving.
+			float distance = x - center - (side + padding) / 2f;
+			if(distance < 0)
+			{
+				//Still on the tile.
+				return current;
+			}
+			int steps = (int) (distance / (padding + side)) + 1;
+			int index = current + steps;
+			if(index >= i_count)
+			{
+				index = i_count - 1;
+			}
+			return index;
+		}
+		else
+		{
+			//Subtract until at the exact middle between tiles, else it flickers when moving.
+			float distance = center - x - (side + padding) / 2f;
+			if(distance < 0)
+			{
+				//Still on the tile.
+				return current;
+			}
+			int steps = (int) (distance / (padding + side)) + 1;
+			int index = current - steps;
+			if(index < 0)
+			{
+				index = 0;
+			}
+			return index;
+		}
+	}
+	
+	public void insert(Integer hotbarIndex, PlaceableInfo placeableInfo)
+	{
+		if(hotbarIndex == i_count)
+		{
+			i_slots[i_count] = placeableInfo;
+			i_count++;
+		}
+		else
+		{
+			for(int i = i_count; i > hotbarIndex; i--)
+			{
+				i_slots[i] = i_slots[i - 1];
+			}
+			i_slots[hotbarIndex] = placeableInfo;
+			i_count++;
+			if(i_active >= hotbarIndex)
+			{
+				i_active++;
+			}
+		}
+	}
+	
+	public PlaceableInfo remove(int removeIndex)
+	{
+		PlaceableInfo removed = i_slots[removeIndex];
+		i_count--;
+		for(int i = removeIndex; i < i_count; i++)
+		{
+			i_slots[i] = i_slots[i + 1];
+		}
+		if(removeIndex == i_active)
+		{
+			i_active = 20; //Remove active element, ComponentList knows what it does.
+		}
+		else if(i_active > removeIndex)
+		{
+			i_active--;
+		}
+		return removed;
+	}
+	
+	public Integer downOnEntry(float sx, float sy)
+	{
+		if((yOffset - side / 2f) < sy)
+		{
+			//In correct Y level.
+			float offset = xOffset - side / 2f;
+			if(sx < offset)
+			{
+				return null;
+			}
+			for(int i = 0; i < i_count; i++)
+			{
+				offset += side;
+				if(sx < offset)
+				{
+					return i;
+				}
+				offset += padding;
+				if(sx < offset)
+				{
+					return null;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public boolean hasNoAir()
+	{
+		for(int i = 0; i < i_count; i++)
+		{
+			if(i_slots[i] == null)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public void setActive(int index)
+	{
+		if(index >= i_count)
+		{
+			index = i_count - 1;
+		}
+		i_active = index;
+	}
+	
+	public int getActive()
+	{
+		return i_active;
 	}
 }

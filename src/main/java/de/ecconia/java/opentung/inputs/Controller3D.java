@@ -117,6 +117,10 @@ public class Controller3D implements Controller
 				renderPlane3D.delete(toBeDeleted);
 			}
 		}
+		else if(keyIndex == GLFW.GLFW_KEY_Q)
+		{
+			inputProcessor.get2DController().dropHotbarEntry();
+		}
 	}
 	
 	@Override

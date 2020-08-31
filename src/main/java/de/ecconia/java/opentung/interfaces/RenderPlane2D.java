@@ -91,7 +91,8 @@ public class RenderPlane2D implements RenderPlane
 		float scale = Settings.guiScale;
 		NanoVG.nnvgScale(vg, scale, scale);
 		hotbar.draw();
-		if(showComponentList)
+		boolean threadSafeShowList = showComponentList;
+		if(threadSafeShowList)
 		{
 			componentList.draw();
 		}
@@ -100,11 +101,13 @@ public class RenderPlane2D implements RenderPlane
 		//Restore everything, cause dunno.
 		OpenTUNG.setOpenGLMode();
 		
+		GL30.glDisable(GL30.GL_DEPTH_TEST);
 		hotbar.drawIcons(componentIconShader, iconPlane);
-		if(showComponentList)
+		if(threadSafeShowList)
 		{
 			componentList.drawIcons(componentIconShader, iconPlane);
 		}
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
 	@Override
@@ -157,7 +160,7 @@ public class RenderPlane2D implements RenderPlane
 		showComponentList = false;
 	}
 	
-	public boolean leftMouseDownIn(int x, int y)
+	public boolean leftMouseDown(int x, int y)
 	{
 		if(!showComponentList)
 		{
@@ -165,7 +168,41 @@ public class RenderPlane2D implements RenderPlane
 		}
 		else
 		{
-			return componentList.checkMouseIn(x, y);
+			return componentList.leftMouseDown(x, y);
+		}
+	}
+	
+	public boolean leftMouseUp(int x, int y)
+	{
+		if(showComponentList)
+		{
+			return componentList.leftMouseUp(x, y);
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	public boolean toggleComponentList()
+	{
+		if(showComponentList)
+		{
+			componentList.abort();
+			showComponentList = false;
+		}
+		else
+		{
+			showComponentList = true;
+		}
+		return showComponentList;
+	}
+	
+	public void mouseDragged(int xAbs, int yAbs)
+	{
+		if(showComponentList)
+		{
+			componentList.mouseDragged(xAbs, yAbs);
 		}
 	}
 	
