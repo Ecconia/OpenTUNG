@@ -306,22 +306,38 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
 			newComponent.setRotation(rotation.multiply(compRotation));
+			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
 			//TODO: Update bounds and stuff
 			board.getComponentsToRender().add(newComponent);
 			placementBoard.addChild(newComponent);
 			
-			for(Peg peg : newComponent.getPegs())
+			if(currentPlaceable == CompThroughPeg.info)
 			{
+				//TODO: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
 				Cluster cluster = new InheritingCluster(board.getNewClusterID());
-				cluster.addConnector(peg);
-				peg.setCluster(cluster);
+				Peg first = newComponent.getPegs().get(0);
+				Peg second = newComponent.getPegs().get(1);
+				cluster.addConnector(first);
+				first.setCluster(cluster);
+				cluster.addConnector(second);
+				second.setCluster(cluster);
+				cluster.addWire(first.getWires().get(0));
 			}
-			for(Blot blot : newComponent.getBlots())
+			else
 			{
-				Cluster cluster = new SourceCluster(board.getNewClusterID(), blot);
-				cluster.addConnector(blot);
-				blot.setCluster(cluster);
+				for(Peg peg : newComponent.getPegs())
+				{
+					Cluster cluster = new InheritingCluster(board.getNewClusterID());
+					cluster.addConnector(peg);
+					peg.setCluster(cluster);
+				}
+				for(Blot blot : newComponent.getBlots())
+				{
+					Cluster cluster = new SourceCluster(board.getNewClusterID(), blot);
+					cluster.addConnector(blot);
+					blot.setCluster(cluster);
+				}
 			}
 			
 			//TODO: Replace section with initDefault()
