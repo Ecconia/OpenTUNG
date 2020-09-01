@@ -51,14 +51,14 @@ public class World3DHelper
 		Matrix matrix = new Matrix();
 		Matrix rotation = new Matrix(quaternion.createMatrix());
 		Vector3 placementOffset = model.getPlacementOffset();
-		justShape.setUniformV4(3, Color.circuitOFF.asArray());
 		for(Meshable meshable : model.getPegModels())
 		{
+			justShape.setUniformV4(3, ((CubeFull) meshable).getColorArray());
 			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
-		justShape.setUniformV4(3, Color.circuitOFF.asArray());
 		for(Meshable meshable : model.getBlotModels())
 		{
+			justShape.setUniformV4(3, ((CubeFull) meshable).getColorArray());
 			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getColorables())
