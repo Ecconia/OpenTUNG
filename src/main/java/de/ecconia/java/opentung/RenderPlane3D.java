@@ -14,10 +14,13 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
+import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
@@ -87,7 +90,7 @@ public class RenderPlane3D implements RenderPlane
 	private final BoardUniverse board;
 	
 	private Part[] idLookup;
-	private int currentlySelectedIndex = 0;
+	private int currentlySelectedIndex = 0; //What the camera is currently looking at.
 	private Cluster clusterToHighlight;
 	private List<Connector> connectorsToHighlight = new ArrayList<>();
 	private int width = 0;
@@ -109,6 +112,9 @@ public class RenderPlane3D implements RenderPlane
 	private CompBoard placementBoard;
 	private int rayID = 1;
 	private boolean fullyLoaded;
+	
+	//Board specific values:
+	private boolean placeableBoardIslaying = true;
 	
 	//Input handling:
 	
@@ -146,6 +152,12 @@ public class RenderPlane3D implements RenderPlane
 	{
 		//TODO: Move this somewhere more generic.
 		Cluster cluster = null;
+		if(part instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info)
+		{
+			//Rightclicked while placing a board -> change layout:
+			placeableBoardIslaying = !placeableBoardIslaying;
+			return;
+		}
 		if(part instanceof CompWireRaw)
 		{
 			cluster = ((CompWireRaw) part).getCluster();
@@ -305,7 +317,13 @@ public class RenderPlane3D implements RenderPlane
 			newComponent.setPosition(placementPosition);
 			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
-			newComponent.setRotation(rotation.multiply(compRotation));
+			Quaternion finalRotation = rotation.multiply(compRotation);
+			if(currentPlaceable == CompBoard.info)
+			{
+				Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
+				finalRotation = boardAlignment.multiply(finalRotation);
+			}
+			newComponent.setRotation(finalRotation);
 			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
 			//TODO: Update bounds and stuff
@@ -629,8 +647,8 @@ public class RenderPlane3D implements RenderPlane
 			return;
 		}
 		
+		//If looking at a board
 		Part part = idLookup[currentlySelectedIndex];
-		
 		if(!(part instanceof CompBoard))
 		{
 			placementPosition = null; //Only place on boards.
@@ -753,6 +771,12 @@ public class RenderPlane3D implements RenderPlane
 		placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
 		placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
 		placementBoard = board;
+		
+		if(sharedData.getCurrentPlaceable() == CompBoard.info)
+		{
+			//Boards have their center within, thus the offset needs to be adjusted:
+			placementPosition = placementPosition.add(placementNormal.multiply(placeableBoardIslaying ? 0.15 : (0.15 + 0.075)));
+		}
 	}
 	
 	@Override
@@ -876,6 +900,29 @@ public class RenderPlane3D implements RenderPlane
 			lineShader.setUniform(2, model.getMat());
 			crossyIndicator.use();
 			crossyIndicator.draw();
+		}
+		else if(currentPlaceable == CompBoard.info)
+		{
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
+			Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
+			Quaternion finalRotation = boardAlignment.multiply(modelRotation).multiply(compRotation);
+			
+			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW.
+			Matrix matrix = new Matrix();
+			//Apply global position:
+			matrix.translate((float) placementPosition.getX(), (float) placementPosition.getY(), (float) placementPosition.getZ());
+			matrix.multiply(new Matrix(finalRotation.createMatrix())); //Apply global rotation.
+			//The cube is centered, no translation.
+			matrix.scale(0.15f, 0.075f, 0.15f); //Just use the right size from the start... At this point in code it always has that size.
+			//Set up shader with light-calcing
+			visualShapeShader.use();
+			visualShapeShader.setUniform(1, view);
+			visualShapeShader.setUniformV4(3, Color.boardDefault.asArray());
+			visualShapeShader.setUniform(2, matrix.getMat());
+			//Draw the default component TODO: Texture one.
+			visualShape.use();
+			visualShape.draw();
 		}
 		else
 		{
