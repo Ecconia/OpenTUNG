@@ -309,8 +309,6 @@ public class RenderPlane3D implements RenderPlane
 			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
 			//TODO: Update bounds and stuff
-			board.getComponentsToRender().add(newComponent);
-			placementBoard.addChild(newComponent);
 			
 			if(currentPlaceable == CompThroughPeg.info)
 			{
@@ -358,6 +356,8 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
+					board.getComponentsToRender().add(newComponent);
+					placementBoard.addChild(newComponent);
 					refreshComponentMeshes(newComponent instanceof Colorable);
 				});
 			}
