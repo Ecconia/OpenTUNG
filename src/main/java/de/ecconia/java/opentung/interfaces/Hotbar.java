@@ -237,7 +237,14 @@ public class Hotbar
 	
 	private void activeUpdated()
 	{
-		sharedData.setCurrentPlaceable(i_slots[i_active]);
+		if(i_active >= i_count)
+		{
+			sharedData.setCurrentPlaceable(null);
+		}
+		else
+		{
+			sharedData.setCurrentPlaceable(i_slots[i_active]);
+		}
 	}
 	
 	public boolean onHotbar(float y)
@@ -337,6 +344,7 @@ public class Hotbar
 		if(removeIndex == i_active)
 		{
 			i_active = 20; //Remove active element, ComponentList knows what it does.
+			activeUpdated();
 		}
 		else if(i_active > removeIndex)
 		{
@@ -391,6 +399,7 @@ public class Hotbar
 			index = i_count - 1;
 		}
 		i_active = index;
+		activeUpdated();
 	}
 	
 	public int getActive()
