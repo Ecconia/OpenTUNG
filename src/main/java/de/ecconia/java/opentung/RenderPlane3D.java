@@ -14,13 +14,10 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
-import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
-import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
@@ -328,6 +325,23 @@ public class RenderPlane3D implements RenderPlane
 			
 			//TODO: Update bounds and stuff
 			
+			if(currentPlaceable == CompBoard.info)
+			{
+				try
+				{
+					gpuTasks.put((ignored) -> {
+						board.getBoardsToRender().add((CompBoard) newComponent);
+						placementBoard.addChild(newComponent);
+						refreshBoardMeshes();
+					});
+				}
+				catch(InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+				return true; //Don't do all the other checks, obsolete.
+			}
+			
 			if(currentPlaceable == CompThroughPeg.info)
 			{
 				//TODO: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
@@ -398,7 +412,32 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(toBeDeleted instanceof CompContainer)
 		{
-			System.out.println("Cannot delete containers yet.");
+			CompContainer container = (CompContainer) toBeDeleted;
+			if(container.isEmpty())
+			{
+				//Asume containers are not logic components.
+				gpuTasks.add((unused) -> {
+					if(container.getParent() != null)
+					{
+						((CompContainer) container.getParent()).remove(container);
+					}
+					
+					if(container instanceof CompBoard)
+					{
+						board.getBoardsToRender().remove(container);
+						refreshBoardMeshes();
+					}
+					else
+					{
+						board.getComponentsToRender().remove(container);
+						refreshComponentMeshes(container instanceof Colorable);
+					}
+				});
+			}
+			else
+			{
+				System.out.println("Cannot delete containers with components yet.");
+			}
 		}
 		else if(toBeDeleted instanceof CompWireRaw)
 		{
@@ -635,6 +674,14 @@ public class RenderPlane3D implements RenderPlane
 	{
 		System.out.println("[MeshDebug] Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
+		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
+		System.out.println("[MeshDebug] Done.");
+	}
+	
+	private void refreshBoardMeshes()
+	{
+		System.out.println("[MeshDebug] Update:");
+		textureMesh.update(board.getBoardsToRender());
 		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 		System.out.println("[MeshDebug] Done.");
 	}

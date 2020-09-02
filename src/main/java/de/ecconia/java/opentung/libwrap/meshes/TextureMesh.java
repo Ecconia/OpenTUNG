@@ -13,28 +13,14 @@ public class TextureMesh
 {
 	private final TextureWrapper texture;
 	private final ShaderProgram textureShader;
-	private final GenericVAO vao;
+	private GenericVAO vao;
 	
 	public TextureMesh(TextureWrapper texture, List<CompBoard> boards)
 	{
 		this.texture = texture;
 		this.textureShader = new ShaderProgram("mesh/meshTexture");
 		
-		int verticesAmount = boards.size() * 6 * 4 * (3 + 3 + 2 + 3);
-		int indicesAmount = boards.size() * 6 * 2 * 3;
-		
-		float[] vertices = new float[verticesAmount];
-		int[] indices = new int[indicesAmount];
-		
-		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
-		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
-		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
-		for(CompBoard board : boards)
-		{
-			board.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Board);
-		}
-		
-		vao = new TexMeshVAO(vertices, indices);
+		update(boards);
 	}
 	
 	public void draw(float[] view)
@@ -51,6 +37,30 @@ public class TextureMesh
 	{
 		textureShader.use();
 		textureShader.setUniform(0, projection);
+	}
+	
+	public void update(List<CompBoard> boards)
+	{
+		if(vao != null)
+		{
+			vao.unload();
+		}
+		
+		int verticesAmount = boards.size() * 6 * 4 * (3 + 3 + 2 + 3);
+		int indicesAmount = boards.size() * 6 * 2 * 3;
+		
+		float[] vertices = new float[verticesAmount];
+		int[] indices = new int[indicesAmount];
+		
+		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
+		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
+		for(CompBoard board : boards)
+		{
+			board.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Board);
+		}
+		
+		vao = new TexMeshVAO(vertices, indices);
 	}
 	
 	private static class TexMeshVAO extends LargeGenericVAO

@@ -152,4 +152,9 @@ public abstract class CompContainer extends Component
 		children.remove(component);
 		//TODO: recalculate bounds, if needed.
 	}
+	
+	public boolean isEmpty()
+	{
+		return children.isEmpty();
+	}
 }
