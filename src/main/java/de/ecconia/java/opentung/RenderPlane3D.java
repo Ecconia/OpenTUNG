@@ -577,13 +577,13 @@ public class RenderPlane3D implements RenderPlane
 		
 		//Create meshes:
 		{
-			System.out.println("Starting mesh generation...");
+			System.out.println("[MeshDebug] Starting mesh generation...");
 			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
 			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
 			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getSimulation(), true);
 			colorMesh = new ColorMesh(board.getComponentsToRender(), board.getSimulation());
-			System.out.println("Done.");
+			System.out.println("[MeshDebug] Done.");
 		}
 		
 		gpuTasks.add(new GPUTask()
@@ -607,7 +607,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void refreshPostWorldLoad()
 	{
-		System.out.println("Update:");
+		System.out.println("[MeshDebug] Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		for(Cluster cluster : board.getClusters())
 		{
@@ -615,12 +615,12 @@ public class RenderPlane3D implements RenderPlane
 		}
 		board.getSimulation().start();
 		fullyLoaded = true;
-		System.out.println("Done.");
+		System.out.println("[MeshDebug] Done.");
 	}
 	
 	public void refreshComponentMeshes(boolean hasColorable)
 	{
-		System.out.println("Update:");
+		System.out.println("[MeshDebug] Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		solidMesh.update(board.getComponentsToRender());
 		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
@@ -628,15 +628,15 @@ public class RenderPlane3D implements RenderPlane
 		{
 			colorMesh.update(board.getComponentsToRender());
 		}
-		System.out.println("Done.");
+		System.out.println("[MeshDebug] Done.");
 	}
 	
 	public void refreshWireMeshes()
 	{
-		System.out.println("Update:");
+		System.out.println("[MeshDebug] Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
-		System.out.println("Done.");
+		System.out.println("[MeshDebug] Done.");
 	}
 	
 	public void calculatePlacementPosition()

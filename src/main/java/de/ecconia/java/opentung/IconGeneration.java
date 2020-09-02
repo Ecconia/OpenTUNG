@@ -70,7 +70,7 @@ public class IconGeneration
 		visualShape.use();
 		for(PlaceableInfo info : placeableInfos)
 		{
-			System.out.println("Rendering: " + info.getName());
+			System.out.println("[ComponentIconRenderer] " + info.getName());
 			
 			OpenTUNG.clear();
 			

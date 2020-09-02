@@ -102,12 +102,12 @@ public class LabelToolkit
 					processEntry(gpuTasks, entry);
 					if(i % 100 == 0)
 					{
-						System.out.println("Generated " + (i + 1) + "/" + map.size() + " labels.");
+						System.out.println("[LabelRenderer] Generated " + (i + 1) + "/" + map.size() + " labels.");
 					}
 				}
-				System.out.println("Finished generating labels.");
+				System.out.println("[LabelRenderer] Finished generating labels.");
 			}, "LabelThread");
-			System.out.println("Starting to generate " + map.size() + " labels.");
+			System.out.println("[LabelRenderer] Starting to generate " + map.size() + " labels.");
 			labelThread.setDaemon(true);
 			labelThread.start();
 		}
@@ -132,7 +132,7 @@ public class LabelToolkit
 				//Wow over 20 threads :O :O
 				threadCount = map.size(); //Safety first.
 			}
-			System.out.println("Rendering labels with " + threadCount + " threads.");
+			System.out.println("[LabelRenderer] Rendering labels with " + threadCount + " threads.");
 			for(int i = 0; i < threadCount; i++)
 			{
 				Thread t = new Thread(() -> {
@@ -141,7 +141,7 @@ public class LabelToolkit
 					{
 						processEntry(gpuTasks, entry);
 					}
-					System.out.println(Thread.currentThread().getName() + " has finished.");
+					System.out.println("[LabelRenderer] " + Thread.currentThread().getName() + " has finished.");
 				}, "LabelRenderThread#" + i);
 				t.setDaemon(true);
 				t.start();

@@ -155,7 +155,7 @@ public class ConductorMesh
 		@Override
 		protected void uploadMoreData(Object... extra)
 		{
-			System.out.println(getClass().getSimpleName() + " E: " + ((int[]) extra[0]).length);
+			System.out.println("[MeshDebug] " + getClass().getSimpleName() + " E: " + ((int[]) extra[0]).length);
 			int vboID = GL30.glGenBuffers();
 			deleteLater.add(vboID);
 			GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
