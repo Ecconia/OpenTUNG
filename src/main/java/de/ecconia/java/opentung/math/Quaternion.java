@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.math;
 
 public class Quaternion
 {
+	public static final Quaternion zero = Quaternion.angleAxis(0, Vector3.yp);
 	public static final Quaternion xp90 = Quaternion.angleAxis(90, Vector3.xp);
 	public static final Quaternion xp180 = Quaternion.angleAxis(180, Vector3.xp);
 	public static final Quaternion xp270 = Quaternion.angleAxis(270, Vector3.xp);

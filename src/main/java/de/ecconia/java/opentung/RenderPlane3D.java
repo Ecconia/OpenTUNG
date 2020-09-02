@@ -64,6 +64,7 @@ public class RenderPlane3D implements RenderPlane
 	private SimpleCubeVAO cubeVAO;
 	private ShaderProgram visualShapeShader;
 	private VisualShapeVAO visualShape;
+	private ShaderProgram placeableBoardShader;
 	private ShaderProgram inYaFace;
 	private InYaFaceVAO inYaFaceVAO;
 	private ShaderProgram sdfShader;
@@ -604,6 +605,7 @@ public class RenderPlane3D implements RenderPlane
 		cubeVAO = SimpleCubeVAO.generateCube();
 		visualShapeShader = new ShaderProgram("visualShape");
 		visualShape = VisualShapeVAO.generateCube();
+		placeableBoardShader = new ShaderProgram("placeableBoardShader");
 		
 		inYaFace = new ShaderProgram("outline/inYaFacePlane");
 		inYaFaceVAO = InYaFaceVAO.generateInYaFacePlane();
@@ -962,12 +964,14 @@ public class RenderPlane3D implements RenderPlane
 			matrix.multiply(new Matrix(finalRotation.createMatrix())); //Apply global rotation.
 			//The cube is centered, no translation.
 			matrix.scale(0.15f, 0.075f, 0.15f); //Just use the right size from the start... At this point in code it always has that size.
-			//Set up shader with light-calcing
-			visualShapeShader.use();
-			visualShapeShader.setUniform(1, view);
-			visualShapeShader.setUniformV4(3, Color.boardDefault.asArray());
-			visualShapeShader.setUniform(2, matrix.getMat());
-			//Draw the default component TODO: Texture one.
+			
+			//Draw the board:
+			boardTexture.activate();
+			placeableBoardShader.use();
+			placeableBoardShader.setUniform(1, view);
+			placeableBoardShader.setUniform(2, matrix.getMat());
+			placeableBoardShader.setUniformV2(3, new float[]{1, 1});
+			placeableBoardShader.setUniformV4(4, Color.boardDefault.asArray());
 			visualShape.use();
 			visualShape.draw();
 		}
@@ -1194,6 +1198,8 @@ public class RenderPlane3D implements RenderPlane
 		colorMesh.updateProjection(projection);
 		textureMesh.updateProjection(projection);
 		
+		placeableBoardShader.use();
+		placeableBoardShader.setUniform(0, projection);
 		visualShapeShader.use();
 		visualShapeShader.setUniform(0, projection);
 		sdfShader.use();
