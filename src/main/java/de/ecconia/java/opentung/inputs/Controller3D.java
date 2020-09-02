@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.Camera;
 import de.ecconia.java.opentung.RenderPlane3D;
+import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -207,6 +208,11 @@ public class Controller3D implements Controller
 	{
 		mouseLeftDown = System.currentTimeMillis();
 		mouseLeftDownOn = renderPlane3D.getCursorObject();
+		if(mouseLeftDownOn instanceof CompBoard)
+		{
+			//TODO: Proper abort of the placement mode, once started.
+			renderPlane3D.placementStart();
+		}
 	}
 	
 	private void mouseLeftUp()

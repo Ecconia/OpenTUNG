@@ -113,6 +113,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	//Board specific values:
 	private boolean placeableBoardIslaying = true;
+	private boolean boardIsBeingDragged = false;
 	
 	//Input handling:
 	
@@ -278,8 +279,20 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
+	public void placementStart()
+	{
+		if(placementPosition != null && sharedData.getCurrentPlaceable() == CompBoard.info)
+		{
+			//Start dragging until end.
+			boardIsBeingDragged = true;
+		}
+	}
+	
 	public boolean attemptPlacement()
 	{
+		boolean boardIsBeingDraggedCopy = boardIsBeingDragged;
+		boardIsBeingDragged = false; //Resets this boolean, if for a reason its not resetted - ugly.
+		
 		if(!fullyLoaded)
 		{
 			return false;
@@ -690,11 +703,18 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void calculatePlacementPosition()
 	{
+		if(boardIsBeingDragged)
+		{
+			return; //Don't change anything, the camera may look somewhere else in the meantime.
+		}
+		
 		if(currentlySelectedIndex == 0)
 		{
 			placementPosition = null;
 			return;
 		}
+		
+		//TODO: Also allow the tip of Mounts :)
 		
 		//If looking at a board
 		Part part = idLookup[currentlySelectedIndex];
@@ -957,20 +977,57 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
 			Quaternion finalRotation = boardAlignment.multiply(modelRotation).multiply(compRotation);
 			
+			int x = 1;
+			int z = 1;
+			Vector3 position = placementPosition;
+			if(boardIsBeingDragged)
+			{
+				//Adjust position and size according to camera.
+				
+				//Get camera position and ray and convert them into board space:
+				Vector3 cameraPosition = camera.getPosition();
+				Vector3 cameraRay = Vector3.zp;
+				cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+				cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
+				Vector3 cameraRayBoardSpace = finalRotation.multiply(cameraRay);
+				Vector3 cameraPositionBoardSpace = finalRotation.multiply(cameraPosition.subtract(position));
+				
+				//Get collision point with area Y=0:
+				double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
+				double cameraDistance = cameraRayBoardSpace.length();
+				Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
+				double dragDistance = distanceVector.length();
+//				if(dragDistance - cameraDistance > 5)
+//				{
+//					//TBI: Is this okay?
+//					distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 5);
+//				}
+				Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
+				if(distance >= 0)
+				{
+					//Y should be at 0 or very close to it - x and z can be used as are.
+//					System.out.println(collisionPoint + " " + distance);
+					x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
+					z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
+					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
+					position = position.add(finalRotation.inverse().multiply(roundedCollisionPoint));
+				}
+			}
+			
 			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW.
 			Matrix matrix = new Matrix();
 			//Apply global position:
-			matrix.translate((float) placementPosition.getX(), (float) placementPosition.getY(), (float) placementPosition.getZ());
+			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 			matrix.multiply(new Matrix(finalRotation.createMatrix())); //Apply global rotation.
 			//The cube is centered, no translation.
-			matrix.scale(0.15f, 0.075f, 0.15f); //Just use the right size from the start... At this point in code it always has that size.
+			matrix.scale((float) x * 0.15f, 0.075f, (float) z * 0.15f); //Just use the right size from the start... At this point in code it always has that size.
 			
 			//Draw the board:
 			boardTexture.activate();
 			placeableBoardShader.use();
 			placeableBoardShader.setUniform(1, view);
 			placeableBoardShader.setUniform(2, matrix.getMat());
-			placeableBoardShader.setUniformV2(3, new float[]{1, 1});
+			placeableBoardShader.setUniformV2(3, new float[]{x, z});
 			placeableBoardShader.setUniformV4(4, Color.boardDefault.asArray());
 			visualShape.use();
 			visualShape.draw();
