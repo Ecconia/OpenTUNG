@@ -302,7 +302,57 @@ public class RenderPlane3D implements RenderPlane
 		//TODO: Ugly, not thread-safe enough for my taste. Might even cause bugs. So eventually it has to be changed.
 		if(placementPosition != null && currentPlaceable != null)
 		{
-			Component newComponent = currentPlaceable.instance(placementBoard);
+			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
+			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			Quaternion finalRotation = rotation.multiply(compRotation);
+			if(isPlacingBoard)
+			{
+				Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
+				finalRotation = boardAlignment.multiply(finalRotation);
+			}
+			Vector3 position = placementPosition;
+			Component newComponent;
+			if(isPlacingBoard)
+			{
+				int x = 1;
+				int z = 1;
+				
+				//TODO: Using camera position on the non-render thread is not okay.
+				
+				//Get camera position and ray and convert them into board space:
+				Vector3 cameraPosition = camera.getPosition();
+				Vector3 cameraRay = Vector3.zp;
+				cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+				cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
+				Vector3 cameraRayBoardSpace = finalRotation.multiply(cameraRay);
+				Vector3 cameraPositionBoardSpace = finalRotation.multiply(cameraPosition.subtract(position));
+				
+				//Get collision point with area Y=0:
+				double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
+				double cameraDistance = cameraRayBoardSpace.length();
+				Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
+				double dragDistance = distanceVector.length();
+				if(dragDistance - cameraDistance > 20)
+				{
+					//TBI: Is this okay?
+					distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 20);
+				}
+				Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
+				if(distance >= 0)
+				{
+					//Y should be at 0 or very close to it - x and z can be used as are.
+					x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
+					z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
+					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
+					position = position.add(finalRotation.inverse().multiply(roundedCollisionPoint));
+				}
+				newComponent = new CompBoard(placementBoard, x, z);
+			}
+			else
+			{
+				newComponent = currentPlaceable.instance(placementBoard);
+			}
 			{
 				int newIDsAmount = 1 + newComponent.getPegs().size() + newComponent.getBlots().size();
 				Part[] idLookupClone = new Part[idLookup.length + newIDsAmount];
@@ -325,17 +375,8 @@ public class RenderPlane3D implements RenderPlane
 					rayID++;
 				}
 			}
-			newComponent.setPosition(placementPosition);
-			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
-			Quaternion finalRotation = rotation.multiply(compRotation);
-			if(currentPlaceable == CompBoard.info)
-			{
-				Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
-				finalRotation = boardAlignment.multiply(finalRotation);
-			}
 			newComponent.setRotation(finalRotation);
-			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
+			newComponent.setPosition(position);
 			
 			//TODO: Update bounds and stuff
 			
@@ -355,6 +396,8 @@ public class RenderPlane3D implements RenderPlane
 				}
 				return true; //Don't do all the other checks, obsolete.
 			}
+			
+			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
 			if(currentPlaceable == CompThroughPeg.info)
 			{
@@ -997,16 +1040,15 @@ public class RenderPlane3D implements RenderPlane
 				double cameraDistance = cameraRayBoardSpace.length();
 				Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
 				double dragDistance = distanceVector.length();
-//				if(dragDistance - cameraDistance > 5)
-//				{
-//					//TBI: Is this okay?
-//					distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 5);
-//				}
+				if(dragDistance - cameraDistance > 20)
+				{
+					//TBI: Is this okay?
+					distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 20);
+				}
 				Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
 				if(distance >= 0)
 				{
 					//Y should be at 0 or very close to it - x and z can be used as are.
-//					System.out.println(collisionPoint + " " + distance);
 					x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
 					z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
 					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));

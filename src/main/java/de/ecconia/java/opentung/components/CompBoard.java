@@ -20,8 +20,7 @@ public class CompBoard extends CompContainer
 		@Override
 		public Component generateComponent(CompContainer parent)
 		{
-			//TODO: Check/Fix once board placing gets added!
-			return new CompBoard(parent, 1, 1);
+			throw new RuntimeException("Board component cannot be instantiated like this!");
 		}
 	});
 	
