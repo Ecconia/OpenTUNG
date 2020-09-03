@@ -132,4 +132,6 @@ public class Settings
 	
 	@SettingInfo(key = "settings.graphic.gui.global.scale", comment = "Factor for any size related number in the GUI.")
 	public static float guiScale = 0.5f;
+	@SettingInfo(key = "settings.graphic.gui.global.scrollSwapped", comment = "Horizontal scroll direction, default (non-swapped): Scroll-UP -> Move-Right & Scroll-DOWN -> Move-Left\nIf this is different for your OS, please report it!")
+	public static boolean horizontalSwapped = false;
 }

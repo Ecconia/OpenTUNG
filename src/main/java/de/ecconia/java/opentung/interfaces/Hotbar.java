@@ -133,6 +133,10 @@ public class Hotbar
 	
 	public void scrollInput(int val)
 	{
+		if(Settings.horizontalSwapped)
+		{
+			val = -val;
+		}
 		int max = i_count - 1;
 		int newActive = i_active;
 		newActive += val;
