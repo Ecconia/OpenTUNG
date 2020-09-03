@@ -466,7 +466,7 @@ public class RenderPlane3D implements RenderPlane
 		return false;
 	}
 	
-	public void delete(final Part toBeDeleted)
+	public void delete(Part toBeDeleted)
 	{
 		if(toBeDeleted instanceof Connector)
 		{
@@ -534,9 +534,9 @@ public class RenderPlane3D implements RenderPlane
 				{
 					if(wire instanceof CompSnappingWire)
 					{
+						CompSnappingPeg sPeg = (CompSnappingPeg) toBeDeleted;
 						board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 							ClusterHelper.removeWire(board, simulation, wire);
-							CompSnappingPeg sPeg = (CompSnappingPeg) toBeDeleted;
 							sPeg.getPartner().setPartner(null);
 							sPeg.setPartner(null);
 							gpuTasks.add((unused) -> {
