@@ -44,6 +44,12 @@ public class CompBoard extends CompContainer
 		return modelHolder;
 	}
 	
+	@Override
+	public PlaceableInfo getInfo()
+	{
+		return info;
+	}
+	
 	//### Non-Static ###
 	
 	private Color color = Color.boardDefault;
