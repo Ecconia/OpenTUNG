@@ -2,10 +2,11 @@ package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.SharedData;
-import de.ecconia.java.opentung.components.CompBlotter;
-import de.ecconia.java.opentung.components.CompDelayer;
+import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompButton;
+import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
-import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
@@ -40,12 +41,15 @@ public class Hotbar
 		this.sharedData = sharedData;
 		
 		//Default items, currently quite random:
-		i_slots[1] = CompInverter.info;
-		i_slots[2] = CompBlotter.info;
-		i_slots[3] = CompDelayer.info;
-		i_slots[4] = CompInverter.info;
-		i_slots[5] = CompLabel.info;
+		i_slots[1] = CompBoard.info;
+		i_slots[2] = CompPeg.info;
+		i_slots[3] = CompInverter.info;
+		i_slots[4] = CompButton.info;
+		i_slots[5] = CompDisplay.info;
 		i_count = 6;
+		
+		//TODO: Load save hotbar, including active slot.
+		sharedData.setCurrentPlaceable(i_slots[i_active]); //Run this on start, the hotbar will eventually be custom.
 	}
 	
 	private void recalcOffsets()
