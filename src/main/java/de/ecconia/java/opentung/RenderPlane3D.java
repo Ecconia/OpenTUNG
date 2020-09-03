@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
+import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
@@ -465,7 +466,7 @@ public class RenderPlane3D implements RenderPlane
 		return false;
 	}
 	
-	public void delete(Part toBeDeleted)
+	public void delete(final Part toBeDeleted)
 	{
 		if(toBeDeleted instanceof Connector)
 		{
@@ -527,6 +528,25 @@ public class RenderPlane3D implements RenderPlane
 		else if(toBeDeleted instanceof Component)
 		{
 			final Component component = (Component) toBeDeleted;
+			if(toBeDeleted instanceof CompSnappingPeg)
+			{
+				for(Wire wire : component.getPegs().get(0).getWires())
+				{
+					if(wire instanceof CompSnappingWire)
+					{
+						board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+							ClusterHelper.removeWire(board, simulation, wire);
+							CompSnappingPeg sPeg = (CompSnappingPeg) toBeDeleted;
+							sPeg.getPartner().setPartner(null);
+							sPeg.setPartner(null);
+							gpuTasks.add((unused) -> {
+								board.getComponentsToRender().remove(wire);
+							});
+						});
+						break;
+					}
+				}
+			}
 			for(Blot blot : component.getBlots())
 			{
 				if(clusterToHighlight == blot.getCluster())

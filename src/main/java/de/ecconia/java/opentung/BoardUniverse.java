@@ -403,7 +403,7 @@ public class BoardUniverse
 		List<CompSnappingPeg> collector = new ArrayList<>();
 		for(CompSnappingPeg peg : snappingPegs)
 		{
-			if(peg.hasParner())
+			if(peg.hasPartner())
 			{
 				continue;
 			}
@@ -430,7 +430,7 @@ public class BoardUniverse
 				
 				if(other != null && maxDist < 0.21) //Leave some room for the 0.205 case for now...
 				{
-					if(other.hasParner())
+					if(other.hasPartner())
 					{
 						System.out.println("!!!! Some snapping peg already has a partner!");
 					}

@@ -2,7 +2,6 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.BoardUniverse;
 import de.ecconia.java.opentung.components.conductor.Blot;
-import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import java.util.ArrayList;
@@ -327,7 +326,7 @@ public class ClusterHelper
 	
 	//Removal:
 	
-	public static void removeWire(BoardUniverse board, SimulationManager simulation, CompWireRaw wireToDelete)
+	public static void removeWire(BoardUniverse board, SimulationManager simulation, Wire wireToDelete)
 	{
 		Connector a = wireToDelete.getConnectorA();
 		Connector b = wireToDelete.getConnectorB();
@@ -376,15 +375,15 @@ public class ClusterHelper
 					Wire sourceWire = split.getBlotWires().get(0);
 					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
 					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
-
+					
 					split.mergeInto(source);
 					source.remove(otherCluster);
-
+					
 					if(source.isActive() != otherCluster.isActive())
 					{
 						split.scheduleUpdateable(simulation);
 					}
-
+					
 					board.deleteCluster(otherCluster.getId());
 				}
 				else

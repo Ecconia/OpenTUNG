@@ -132,7 +132,7 @@ public class CompSnappingPeg extends Component
 		return partner;
 	}
 	
-	public boolean hasParner()
+	public boolean hasPartner()
 	{
 		return partner != null;
 	}
