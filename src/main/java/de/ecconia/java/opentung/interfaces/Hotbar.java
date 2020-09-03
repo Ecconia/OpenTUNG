@@ -180,8 +180,12 @@ public class Hotbar
 				return;
 			}
 		}
-		
-		//Else append at end:
+		justAdd(info);
+	}
+	
+	public void justAdd(PlaceableInfo info)
+	{
+		//Append at end:
 		if(i_count == i_slots.length)
 		{
 			//Hotbar full.

@@ -206,6 +206,14 @@ public class RenderPlane2D implements RenderPlane
 		}
 	}
 	
+	public void middleMouse(int x, int y)
+	{
+		if(showComponentList)
+		{
+			componentList.middleMouse(x, y);
+		}
+	}
+	
 	private static class Point
 	{
 		private final int vaoID;

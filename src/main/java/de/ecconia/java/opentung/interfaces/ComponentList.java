@@ -158,27 +158,7 @@ public class ComponentList
 		float sy = (float) y / scale;
 		if(downInside(sx, sy))
 		{
-			float half = side / 2f;
-			Integer match = null;
-			for(int i = 0; i < placeableInfos.length; i++)
-			{
-				float xx = offsetsX[i];
-				float yy = offsetsY[i];
-				
-				float startX = xx - half;
-				float endX = xx + half;
-				float startY = yy - half;
-				float endY = yy + half;
-				
-				if(startX > sx || endX < sx || startY > sy || endY < sy)
-				{
-					continue;
-				}
-				
-				match = i;
-				break;
-			}
-			
+			Integer match = indexOf(sx, sy);
 			if(match != null)
 			{
 				draggedElement = placeableInfos[match];
@@ -203,6 +183,32 @@ public class ComponentList
 				return false;
 			}
 		}
+	}
+	
+	private Integer indexOf(float x, float y)
+	{
+		float half = side / 2f;
+		Integer match = null;
+		for(int i = 0; i < placeableInfos.length; i++)
+		{
+			float xx = offsetsX[i];
+			float yy = offsetsY[i];
+			
+			float startX = xx - half;
+			float endX = xx + half;
+			float startY = yy - half;
+			float endY = yy + half;
+			
+			if(startX > x || endX < x || startY > y || endY < y)
+			{
+				continue;
+			}
+			
+			match = i;
+			break;
+		}
+		
+		return match;
 	}
 	
 	private boolean downInside(float x, float y)
@@ -314,6 +320,22 @@ public class ComponentList
 					return;
 				}
 				insertedAt = null;
+			}
+		}
+	}
+	
+	public void middleMouse(int x, int y)
+	{
+		float scale = Settings.guiScale;
+		float sx = (float) x / scale;
+		float sy = (float) y / scale;
+		if(downInside(sx, sy))
+		{
+			Integer match = indexOf(sx, sy);
+			if(match != null)
+			{
+				PlaceableInfo component = placeableInfos[match];
+				hotbar.justAdd(component);
 			}
 		}
 	}

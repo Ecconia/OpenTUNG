@@ -68,6 +68,10 @@ public class Controller2D implements Controller
 				renderPlane2D.leftMouseUp(x, y);
 			}
 		}
+		else if(mouseIndex == InputProcessor.MOUSE_MIDDLE)
+		{
+			renderPlane2D.middleMouse(x, y);
+		}
 		
 		mouseOnGUI = false;
 	}
