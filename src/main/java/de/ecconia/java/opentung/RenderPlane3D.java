@@ -293,6 +293,11 @@ public class RenderPlane3D implements RenderPlane
 		boolean boardIsBeingDraggedCopy = boardIsBeingDragged;
 		boardIsBeingDragged = false; //Resets this boolean, if for a reason its not resetted - ugly.
 		
+		if(wireStartPoint != null)
+		{
+			return false; //We are dragging a wire, don't place something!
+		}
+		
 		if(!fullyLoaded)
 		{
 			return false;
@@ -993,6 +998,10 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawPlacementPosition(float[] view)
 	{
+		if(wireStartPoint != null)
+		{
+			return; //Don't draw the placement, while dragging a wire - its annoying.
+		}
 		if(placementPosition == null)
 		{
 			return;
