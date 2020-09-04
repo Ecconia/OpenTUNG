@@ -43,24 +43,47 @@ public class BoardUniverse
 	//TODO: Switch to indexed data structure.
 	private final List<Cluster> clusters = new ArrayList<>();
 	
-	//Id's:
-	private final IDManager colorableIDs = new IDManager(0, 4065);
-	
-	public Integer getNewColorableID()
+	//### IDs ###
+	private final IDManager colorableIDs = new IDManager(0, 4065)
 	{
-		Integer index = colorableIDs.getNewID();
-		if(index == null)
+		@Override
+		public Integer getNewID()
 		{
-			System.out.println("[ID ISSUE!!!] Ran out of Color ID's, assiging null to the component this will lead to crashes!");
-			JOptionPane.showMessageDialog(null, "You can only have a maximum of 4065 color objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
+			Integer index = getNewIDInternal();
+			if(index == null)
+			{
+				System.out.println("[ID ISSUE!!!] Ran out of Color ID's, assigning null to the component this will lead to crashes!");
+				JOptionPane.showMessageDialog(null, "You can only have a maximum of 0xFFFFFF raycast objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
+			}
+			return index;
 		}
-		return index;
+	};
+	private final IDManager raycastIDs = new IDManager(1, 0x1000000)
+	{
+		@Override
+		public Integer getNewID()
+		{
+			Integer index = getNewIDInternal();
+			if(index == null)
+			{
+				System.out.println("[ID ISSUE!!!] Ran out of Raycast ID's, assigning null to the component this will lead to crashes!");
+				JOptionPane.showMessageDialog(null, "You can only have a maximum of 4065 color objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
+			}
+			return index;
+		}
+	};
+	
+	public IDManager getColorableIDs()
+	{
+		return colorableIDs;
 	}
 	
-	public void freeColorableID(int id)
+	public IDManager getRaycastIDs()
 	{
-		colorableIDs.freeID(id);
+		return raycastIDs;
 	}
+	
+	//### OTHER ##ä
 	
 	private final SimulationManager simulation = new SimulationManager();
 	

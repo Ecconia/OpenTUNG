@@ -3,7 +3,7 @@ package de.ecconia.java.opentung;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class IDManager
+public abstract class IDManager
 {
 	private final int max;
 	private final Queue<Integer> unusedIDs = new LinkedList<>();
@@ -16,7 +16,7 @@ public class IDManager
 		this.latest = initial;
 	}
 	
-	public Integer getNewID()
+	protected Integer getNewIDInternal()
 	{
 		Integer index = unusedIDs.poll();
 		if(index == null)
@@ -30,8 +30,15 @@ public class IDManager
 		return index;
 	}
 	
+	public abstract Integer getNewID();
+	
 	public void freeID(int id)
 	{
 		unusedIDs.add(id);
+	}
+	
+	public int getFreeIDs()
+	{
+		return unusedIDs.size();
 	}
 }

@@ -110,7 +110,6 @@ public class RenderPlane3D implements RenderPlane
 	private Vector3 placementPosition;
 	private Vector3 placementNormal;
 	private CompBoard placementBoard;
-	private int rayID = 1;
 	private boolean fullyLoaded;
 	
 	//Board specific values:
@@ -243,9 +242,17 @@ public class RenderPlane3D implements RenderPlane
 				Part[] idLookupClone = new Part[idLookup.length + 1];
 				System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
 				idLookup = idLookupClone;
+				if(board.getRaycastIDs().getFreeIDs() < 0)
+				{
+					expandLookupArray();
+				}
+				int rayID = board.getRaycastIDs().getNewID();
+				if(rayID >= idLookup.length)
+				{
+					expandLookupArray();
+				}
 				newWire.setRayCastID(rayID);
 				idLookup[rayID] = newWire;
-				rayID++;
 			}
 			
 			Cluster wireCluster;
@@ -360,26 +367,32 @@ public class RenderPlane3D implements RenderPlane
 			{
 				newComponent = currentPlaceable.instance(placementBoard);
 			}
+			//Raycast ID:
 			{
-				int newIDsAmount = 1 + newComponent.getPegs().size() + newComponent.getBlots().size();
-				Part[] idLookupClone = new Part[idLookup.length + newIDsAmount];
-				System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
-				idLookup = idLookupClone;
-				
+				int neededIDAmount = 1 + newComponent.getPegs().size() + newComponent.getBlots().size();
+				if(board.getRaycastIDs().getFreeIDs() < neededIDAmount)
+				{
+					expandLookupArray();
+				}
+				int rayID = board.getRaycastIDs().getNewID();
+				if((rayID + neededIDAmount - 1) < idLookup.length)
+				{
+					expandLookupArray();
+				}
+				//TODO: Breaks as soon as a component has over 999 conductors....
 				newComponent.setRayCastID(rayID);
 				idLookup[rayID] = newComponent;
-				rayID++;
 				for(Peg peg : newComponent.getPegs())
 				{
+					rayID = board.getRaycastIDs().getNewID();
 					peg.setRayCastID(rayID);
 					idLookup[rayID] = peg;
-					rayID++;
 				}
 				for(Blot blot : newComponent.getBlots())
 				{
+					rayID = board.getRaycastIDs().getNewID();
 					blot.setRayCastID(rayID);
 					idLookup[rayID] = blot;
-					rayID++;
 				}
 			}
 			newComponent.setRotation(finalRotation);
@@ -406,6 +419,7 @@ public class RenderPlane3D implements RenderPlane
 			
 			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
+			//TODO: Make generic
 			if(currentPlaceable == CompThroughPeg.info)
 			{
 				//TODO: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
@@ -439,7 +453,7 @@ public class RenderPlane3D implements RenderPlane
 				int colorablesCount = newComponent.getModelHolder().getColorables().size();
 				for(int i = 0; i < colorablesCount; i++)
 				{
-					((Colorable) newComponent).setColorID(i, board.getNewColorableID());
+					((Colorable) newComponent).setColorID(i, board.getColorableIDs().getNewID());
 				}
 			}
 			
@@ -464,6 +478,14 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		return false;
+	}
+	
+	private void expandLookupArray()
+	{
+		int newSize = idLookup.length + 1000;
+		Part[] idLookupClone = new Part[newSize];
+		System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
+		idLookup = idLookupClone;
 	}
 	
 	public void delete(Part toBeDeleted)
@@ -495,6 +517,7 @@ public class RenderPlane3D implements RenderPlane
 						board.getComponentsToRender().remove(container);
 						refreshComponentMeshes(container instanceof Colorable);
 					}
+					board.getRaycastIDs().freeID(container.getRayID());
 				});
 			}
 			else
@@ -522,6 +545,7 @@ public class RenderPlane3D implements RenderPlane
 				gpuTasks.add((unused) -> {
 					board.getWiresToRender().remove(wireToDelete);
 					refreshWireMeshes();
+					board.getRaycastIDs().freeID(wireToDelete.getRayID());
 				});
 			});
 		}
@@ -553,7 +577,7 @@ public class RenderPlane3D implements RenderPlane
 				int colorablesCount = component.getModelHolder().getColorables().size();
 				for(int i = 0; i < colorablesCount; i++)
 				{
-					board.freeColorableID(colorable.getColorID(i));
+					board.getColorableIDs().freeID(colorable.getColorID(i));
 				}
 			}
 			for(Blot blot : component.getBlots())
@@ -580,22 +604,30 @@ public class RenderPlane3D implements RenderPlane
 				}
 				
 				List<Wire> wiresToRemove = new ArrayList<>();
+				List<Integer> rayIDsToRemove = new ArrayList<>();
 				for(Blot blot : component.getBlots())
 				{
 					ClusterHelper.removeBlot(board, simulation, blot);
 					wiresToRemove.addAll(blot.getWires());
+					rayIDsToRemove.add(blot.getRayID());
 				}
 				for(Peg peg : component.getPegs())
 				{
 					ClusterHelper.removePeg(board, simulation, peg);
 					wiresToRemove.addAll(peg.getWires());
+					rayIDsToRemove.add(peg.getRayID());
 				}
+				rayIDsToRemove.add(component.getRayID());
 				
 				gpuTasks.add((unused) -> {
 					board.getComponentsToRender().remove(component);
 					for(Wire wire : wiresToRemove)
 					{
 						board.getWiresToRender().remove(wire);
+					}
+					for(Integer i : rayIDsToRemove)
+					{
+						board.getRaycastIDs().freeID(i);
 					}
 					refreshComponentMeshes(component instanceof Colorable);
 				});
@@ -645,6 +677,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		//Raycast IDs:
 		{
+			//Calculate the initial amount, cause the array has to be initialized:
 			int amount = board.getBoardsToRender().size() + board.getWiresToRender().size() + 1;
 			for(Component component : board.getComponentsToRender())
 			{
@@ -659,32 +692,32 @@ public class RenderPlane3D implements RenderPlane
 			
 			for(Component comp : board.getBoardsToRender())
 			{
+				int rayID = board.getRaycastIDs().getNewID();
 				comp.setRayCastID(rayID);
 				idLookup[rayID] = comp;
-				rayID++;
 			}
 			for(Component comp : board.getWiresToRender())
 			{
+				int rayID = board.getRaycastIDs().getNewID();
 				comp.setRayCastID(rayID);
 				idLookup[rayID] = comp;
-				rayID++;
 			}
 			for(Component comp : board.getComponentsToRender())
 			{
+				int rayID = board.getRaycastIDs().getNewID();
 				comp.setRayCastID(rayID);
 				idLookup[rayID] = comp;
-				rayID++;
 				for(Peg peg : comp.getPegs())
 				{
+					rayID = board.getRaycastIDs().getNewID();
 					peg.setRayCastID(rayID);
 					idLookup[rayID] = peg;
-					rayID++;
 				}
 				for(Blot blot : comp.getBlots())
 				{
+					rayID = board.getRaycastIDs().getNewID();
 					blot.setRayCastID(rayID);
 					idLookup[rayID] = blot;
-					rayID++;
 				}
 			}
 		}
@@ -702,7 +735,7 @@ public class RenderPlane3D implements RenderPlane
 				{
 					CubeFull cube = (CubeFull) comp.getModelHolder().getColorables().get(i);
 					
-					int colorID = board.getNewColorableID();
+					int colorID = board.getColorableIDs().getNewID();
 					((Colorable) comp).setColorID(i, colorID);
 				}
 			}

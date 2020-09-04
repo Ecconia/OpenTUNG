@@ -40,8 +40,6 @@ public class ColorMesh
 			vao.unload();
 		}
 		
-		int nextColorID = 0;
-		
 		int verticesAmount = 0;
 		int indicesAmount = 0;
 		for(Component component : components)
