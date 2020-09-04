@@ -27,6 +27,7 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.meshes.ColorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
+import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
@@ -433,14 +434,13 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
-			//TODO: Replace section with initDefault()
-			if(newComponent instanceof CompDisplay)
+			if(newComponent instanceof Colorable)
 			{
-				((CompDisplay) newComponent).setColorRaw(Color.displayYellow);
-			}
-			else if(newComponent instanceof CompPanelDisplay)
-			{
-				((CompPanelDisplay) newComponent).setColorRaw(Color.displayYellow);
+				int colorablesCount = newComponent.getModelHolder().getColorables().size();
+				for(int i = 0; i < colorablesCount; i++)
+				{
+					((Colorable) newComponent).setColorID(i, board.getNewColorableID());
+				}
 			}
 			
 			if(newComponent instanceof Updateable)
@@ -547,6 +547,15 @@ public class RenderPlane3D implements RenderPlane
 					}
 				}
 			}
+			else if(toBeDeleted instanceof Colorable)
+			{
+				Colorable colorable = (Colorable) toBeDeleted;
+				int colorablesCount = component.getModelHolder().getColorables().size();
+				for(int i = 0; i < colorablesCount; i++)
+				{
+					board.freeColorableID(colorable.getColorID(i));
+				}
+			}
 			for(Blot blot : component.getBlots())
 			{
 				if(clusterToHighlight == blot.getCluster())
@@ -634,6 +643,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
+		//Raycast IDs:
 		{
 			int amount = board.getBoardsToRender().size() + board.getWiresToRender().size() + 1;
 			for(Component component : board.getComponentsToRender())
@@ -675,6 +685,25 @@ public class RenderPlane3D implements RenderPlane
 					blot.setRayCastID(rayID);
 					idLookup[rayID] = blot;
 					rayID++;
+				}
+			}
+		}
+		//Colorable IDs:
+		{
+			for(Component comp : board.getComponentsToRender())
+			{
+				if(!(comp instanceof Colorable))
+				{
+					continue;
+				}
+				
+				int colorablesCount = comp.getModelHolder().getColorables().size();
+				for(int i = 0; i < colorablesCount; i++)
+				{
+					CubeFull cube = (CubeFull) comp.getModelHolder().getColorables().get(i);
+					
+					int colorID = board.getNewColorableID();
+					((Colorable) comp).setColorID(i, colorID);
 				}
 			}
 		}

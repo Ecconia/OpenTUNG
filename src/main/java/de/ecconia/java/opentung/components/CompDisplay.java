@@ -42,7 +42,7 @@ public class CompDisplay extends Component implements Updateable, Colorable
 	
 	private final Peg input;
 	
-	private Color colorRaw;
+	private Color colorRaw = Color.displayYellow;
 	
 	public CompDisplay(CompContainer parent)
 	{
@@ -73,5 +73,11 @@ public class CompDisplay extends Component implements Updateable, Colorable
 	public void setColorID(int id, int colorID)
 	{
 		this.colorID = colorID;
+	}
+	
+	@Override
+	public int getColorID(int id)
+	{
+		return colorID;
 	}
 }

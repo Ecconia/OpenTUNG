@@ -72,13 +72,12 @@ public class ColorMesh
 			
 			comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Display);
 			
-			for(int i = 0; i < comp.getModelHolder().getColorables().size(); i++)
+			int colorablesCount = comp.getModelHolder().getColorables().size();
+			for(int i = 0; i < colorablesCount; i++)
 			{
 				CubeFull cube = (CubeFull) comp.getModelHolder().getColorables().get(i);
 				
-				int colorID = nextColorID++;
-				//TODO: Support more color elements
-				((Colorable) comp).setColorID(i, colorID);
+				int colorID = ((Colorable) comp).getColorID(i);
 				for(int j = 0; j < cube.getFacesCount() * 4; j++)
 				{
 					colorIDs[colorIDIndex.getAndInc()] = colorID;

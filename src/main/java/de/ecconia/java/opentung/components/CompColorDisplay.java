@@ -82,4 +82,10 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 	{
 		this.colorID = colorID;
 	}
+	
+	@Override
+	public int getColorID(int id)
+	{
+		return colorID;
+	}
 }

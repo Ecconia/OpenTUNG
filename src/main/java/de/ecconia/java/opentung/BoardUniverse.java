@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import javax.swing.JOptionPane;
 
 public class BoardUniverse
 {
@@ -41,6 +42,25 @@ public class BoardUniverse
 	
 	//TODO: Switch to indexed data structure.
 	private final List<Cluster> clusters = new ArrayList<>();
+	
+	//Id's:
+	private final IDManager colorableIDs = new IDManager(0, 4065);
+	
+	public Integer getNewColorableID()
+	{
+		Integer index = colorableIDs.getNewID();
+		if(index == null)
+		{
+			System.out.println("[ID ISSUE!!!] Ran out of Color ID's, assiging null to the component this will lead to crashes!");
+			JOptionPane.showMessageDialog(null, "You can only have a maximum of 4065 color objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
+		}
+		return index;
+	}
+	
+	public void freeColorableID(int id)
+	{
+		colorableIDs.freeID(id);
+	}
 	
 	private final SimulationManager simulation = new SimulationManager();
 	
