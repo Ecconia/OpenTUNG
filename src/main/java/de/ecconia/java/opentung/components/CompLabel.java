@@ -98,5 +98,6 @@ public class CompLabel extends Component
 	public void unload()
 	{
 		texture.unload();
+		this.texture = null; //Reset texture.
 	}
 }
