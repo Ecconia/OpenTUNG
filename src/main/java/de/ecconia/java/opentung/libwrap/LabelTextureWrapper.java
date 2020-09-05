@@ -14,8 +14,11 @@ public class LabelTextureWrapper
 	
 	private int id;
 	
-	public LabelTextureWrapper(BufferedImage image)
+	private Integer usages;
+	
+	public LabelTextureWrapper(BufferedImage image, Integer usages)
 	{
+		this.usages = usages;
 		{
 			image = SDF2.start(image);
 			
@@ -68,5 +71,19 @@ public class LabelTextureWrapper
 		GL30.glGenerateMipmap(GL30.GL_TEXTURE_2D);
 		
 		buffer = null;
+	}
+	
+	public void unload()
+	{
+		if(usages != null)
+		{
+			usages--;
+			if(usages != 0)
+			{
+				return;
+			}
+		}
+		
+		GL30.glDeleteTextures(id);
 	}
 }

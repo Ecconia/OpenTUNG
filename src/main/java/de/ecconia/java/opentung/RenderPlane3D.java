@@ -629,6 +629,11 @@ public class RenderPlane3D implements RenderPlane
 					{
 						board.getRaycastIDs().freeID(i);
 					}
+					if(component instanceof CompLabel)
+					{
+						((CompLabel) component).unload();
+						board.getLabelsToRender().remove(component);
+					}
 					refreshComponentMeshes(component instanceof Colorable);
 				});
 			});

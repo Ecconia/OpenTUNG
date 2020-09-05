@@ -81,4 +81,22 @@ public class CompLabel extends Component
 	{
 		this.texture = texture;
 	}
+	
+	public void updateTexture(LabelTextureWrapper texture)
+	{
+		if(this.texture == null)
+		{
+			//Has already been removed by user!
+			//TODO: Do more properly. It might have not been uploaded at this point.
+			texture.unload();
+			return;
+		}
+		
+		this.texture = texture;
+	}
+	
+	public void unload()
+	{
+		texture.unload();
+	}
 }

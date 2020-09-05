@@ -19,7 +19,7 @@ import javax.imageio.ImageIO;
 
 public class LabelToolkit
 {
-	public static LabelTextureWrapper generateUploadTexture(String text, float textSize)
+	public static LabelTextureWrapper generateUploadTexture(String text, float textSize, int size)
 	{
 		String[] lines = text.split("\n");
 		
@@ -50,7 +50,7 @@ public class LabelToolkit
 		
 		g.dispose();
 		
-		return new LabelTextureWrapper(image);
+		return new LabelTextureWrapper(image, size);
 	}
 	
 	private Map<LabelContainer, List<CompLabel>> map = new HashMap<>();
@@ -66,7 +66,7 @@ public class LabelToolkit
 		try
 		{
 			BufferedImage image = ImageIO.read(LabelTextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
-			loading = new LabelTextureWrapper(image);
+			loading = new LabelTextureWrapper(image, null);
 			loading.upload();
 		}
 		catch(IOException e)
@@ -151,7 +151,7 @@ public class LabelToolkit
 	
 	private void processEntry(BlockingQueue<GPUTask> gpuTasks, Map.Entry<LabelContainer, List<CompLabel>> entry)
 	{
-		LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize);
+		LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize, entry.getValue().size());
 		try
 		{
 			gpuTasks.put((unused) -> {
@@ -167,7 +167,7 @@ public class LabelToolkit
 		
 		for(CompLabel label : entry.getValue())
 		{
-			label.setTexture(texture);
+			label.updateTexture(texture);
 		}
 	}
 	
