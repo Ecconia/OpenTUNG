@@ -8,7 +8,7 @@ import de.ecconia.java.opentung.components.fragments.TexturedFace;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.math.Vector3;
 
 public class CompLabel extends Component
@@ -45,7 +45,7 @@ public class CompLabel extends Component
 	private String text;
 	private float fontSize;
 	
-	private LabelTextureWrapper texture;
+	private TextureWrapper texture;
 	
 	public CompLabel(CompContainer parent)
 	{
@@ -77,12 +77,12 @@ public class CompLabel extends Component
 		texture.activate();
 	}
 	
-	public void setTexture(LabelTextureWrapper texture)
+	public void setTexture(TextureWrapper texture)
 	{
 		this.texture = texture;
 	}
 	
-	public void updateTexture(LabelTextureWrapper texture)
+	public void updateTexture(TextureWrapper texture)
 	{
 		if(this.texture == null)
 		{

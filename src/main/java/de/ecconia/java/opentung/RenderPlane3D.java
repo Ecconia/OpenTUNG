@@ -658,7 +658,7 @@ public class RenderPlane3D implements RenderPlane
 			g.setColor(new java.awt.Color(0x777777));
 			g.drawRect(0, 0, side - 1, side - 1);
 			g.dispose();
-			boardTexture = new TextureWrapper(image);
+			boardTexture = TextureWrapper.createBoardTexture(image);
 		}
 		
 		//TODO: Currently manually triggered, but to be optimized away.
@@ -1368,6 +1368,8 @@ public class RenderPlane3D implements RenderPlane
 			System.out.println("Looking at ???? (" + id + ")");
 			id = 0;
 		}
+		
+		GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 4);
 		
 		if(Settings.drawWorld)
 		{

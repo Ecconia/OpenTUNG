@@ -2,6 +2,7 @@ package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -19,7 +20,7 @@ import javax.imageio.ImageIO;
 
 public class LabelToolkit
 {
-	public static LabelTextureWrapper generateUploadTexture(String text, float textSize, int size)
+	public static TextureWrapper generateUploadTexture(String text, float textSize, int size)
 	{
 		String[] lines = text.split("\n");
 		
@@ -50,7 +51,7 @@ public class LabelToolkit
 		
 		g.dispose();
 		
-		return new LabelTextureWrapper(image, size);
+		return LabelTextureWrapper.createLabelTexture(image, size);
 	}
 	
 	private Map<LabelContainer, List<CompLabel>> map = new HashMap<>();
@@ -62,11 +63,11 @@ public class LabelToolkit
 			return;
 		}
 		
-		LabelTextureWrapper loading;
+		TextureWrapper loading;
 		try
 		{
-			BufferedImage image = ImageIO.read(LabelTextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
-			loading = new LabelTextureWrapper(image, null);
+			BufferedImage image = ImageIO.read(TextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
+			loading = LabelTextureWrapper.createLabelTexture(image, null);
 			loading.upload();
 		}
 		catch(IOException e)
@@ -151,7 +152,7 @@ public class LabelToolkit
 	
 	private void processEntry(BlockingQueue<GPUTask> gpuTasks, Map.Entry<LabelContainer, List<CompLabel>> entry)
 	{
-		LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize, entry.getValue().size());
+		TextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize, entry.getValue().size());
 		try
 		{
 			gpuTasks.put((unused) -> {

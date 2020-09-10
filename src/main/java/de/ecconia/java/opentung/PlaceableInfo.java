@@ -33,7 +33,7 @@ public class PlaceableInfo
 			iconTexture.unload();
 		}
 		
-		iconTexture = new TextureWrapper(image, true);
+		iconTexture = TextureWrapper.createComponentIconTexture(image);
 	}
 	
 	public TextureWrapper getIconTexture()
