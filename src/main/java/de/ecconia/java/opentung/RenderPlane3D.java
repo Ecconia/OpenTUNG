@@ -789,8 +789,8 @@ public class RenderPlane3D implements RenderPlane
 			}
 		});
 		
-		System.out.println("Label amount: " + board.getLabelsToRender().size());
-		System.out.println("Wire amount: " + board.getWiresToRender().size());
+		System.out.println("[Debug] Label amount: " + board.getLabelsToRender().size());
+		System.out.println("[Debug] Wire amount: " + board.getWiresToRender().size());
 		lastCycle = System.currentTimeMillis();
 	}
 	
@@ -986,8 +986,6 @@ public class RenderPlane3D implements RenderPlane
 	@Override
 	public void render()
 	{
-		calculatePlacementPosition();
-		
 		while(!gpuTasks.isEmpty())
 		{
 			gpuTasks.poll().execute(this);
@@ -996,6 +994,8 @@ public class RenderPlane3D implements RenderPlane
 		camera.lockLocation();
 		controller.doFrameCycle();
 		
+		calculatePlacementPosition();
+		
 		float[] view = camera.getMatrix();
 		if(Settings.doRaycasting)
 		{
@@ -1003,6 +1003,9 @@ public class RenderPlane3D implements RenderPlane
 		}
 		if(Settings.drawWorld)
 		{
+			OpenTUNG.setBackgroundColor();
+			OpenTUNG.clear();
+			
 			drawDynamic(view);
 			drawPlacementPosition(view); //Must be called before drawWireToBePlaced, currently!!!
 			highlightCluster(view);
@@ -1180,9 +1183,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawDynamic(float[] view)
 	{
-		OpenTUNG.setBackgroundColor();
-		OpenTUNG.clear();
-		
 		Matrix model = new Matrix();
 		
 		if(Settings.drawBoards)
