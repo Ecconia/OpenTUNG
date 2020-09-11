@@ -1355,7 +1355,6 @@ public class RenderPlane3D implements RenderPlane
 		
 		GL30.glFlush();
 		GL30.glFinish();
-		GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);
 		
 		float[] values = new float[3];
 		GL30.glReadPixels(0, 0, 1, 1, GL30.GL_RGB, GL30.GL_FLOAT, values);
@@ -1368,8 +1367,6 @@ public class RenderPlane3D implements RenderPlane
 			System.out.println("Looking at ???? (" + id + ")");
 			id = 0;
 		}
-		
-		GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 4);
 		
 		if(Settings.drawWorld)
 		{

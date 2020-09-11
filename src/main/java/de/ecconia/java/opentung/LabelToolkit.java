@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.settings.Settings;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,10 +25,13 @@ public class LabelToolkit
 	{
 		String[] lines = text.split("\n");
 		
+		//TODO: BUG. If rendering on 4096² with text: 'On'4.75 'Off'5.0 'PUU'4.0 then all letters crammed.
 		int side = Settings.labelTexturePixelResolution;
 		//Generate image:
 		BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		g.setColor(java.awt.Color.white);
 		g.fillRect(0, 0, side, side);
 		

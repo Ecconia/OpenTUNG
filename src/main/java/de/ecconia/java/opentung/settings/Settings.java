@@ -124,10 +124,10 @@ public class Settings
 	
 	@SettingInfo(key = "settings.graphic.text.labelTexturePixelResolution", comment = "Label-Textures will be generate with this resolution², you may increase this.\nThe labels get generated in background, so you might see more \"Loading...\" textures.")
 	public static int labelTexturePixelResolution = 1024;
-	@SettingInfo(key = "settings.graphic.text.labelSDFTexturePixelResolution", comment = "The resolution uploaded to the GPU. Be sure that the label resolution can be divided by the SDF resolution.\nHint: You might break the loading-texture, its 1024²")
+	@SettingInfo(key = "settings.graphic.text.labelSDFTexturePixelResolution", comment = "The resolution uploaded to the GPU. Be sure that the label resolution can be divided by the SDF resolution.\nHint: You might break the loading-texture, its 1024²\nMUST BE a multiple of 4!")
 	public static int labelSDFTexturePixelResolution = 256;
 	
-	@SettingInfo(key = "settings.graphic.gui.component.icon.resolution", comment = "The resolution of component icons.")
+	@SettingInfo(key = "settings.graphic.gui.component.icon.resolution", comment = "The resolution of component icons.\nMust be a multiple of 4!")
 	public static int componentIconResolution = 200;
 	
 	@SettingInfo(key = "settings.graphic.gui.global.scale", comment = "Factor for any size related number in the GUI.")

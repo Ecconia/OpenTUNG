@@ -44,9 +44,16 @@ public class TextureWrapper
 	protected int id;
 	private ByteBuffer buffer;
 	
+	public static TextureWrapper createFontAtlasTexture(BufferedImage image)
+	{
+		TextureWrapper texture = new TextureWrapper(image, ColorInput.Grayscale, GL30.GL_CLAMP_TO_EDGE, GL30.GL_LINEAR, GL30.GL_LINEAR);
+		texture.upload();
+		return texture;
+	}
+	
 	public static TextureWrapper createComponentIconTexture(BufferedImage image)
 	{
-		TextureWrapper texture = new TextureWrapper(image, ColorInput.RGBA, GL30.GL_CLAMP_TO_EDGE, GL30.GL_NEAREST, GL30.GL_LINEAR_MIPMAP_LINEAR);
+		TextureWrapper texture = new TextureWrapper(image, ColorInput.RGBA, GL30.GL_CLAMP_TO_EDGE, GL30.GL_NEAREST, GL30.GL_NEAREST);
 		texture.upload();
 		return texture;
 	}

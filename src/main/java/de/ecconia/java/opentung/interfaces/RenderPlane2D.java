@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.RenderPlane;
 import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
+import de.ecconia.java.opentung.libwrap.FloatShortArrays;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
@@ -19,6 +20,7 @@ public class RenderPlane2D implements RenderPlane
 	
 	private ShaderProgram interfaceShader;
 	private ShaderProgram componentIconShader;
+	private ShaderProgram labelShader;
 	
 	private final GenericVAO iconPlane = new GenericVAO(new float[]{
 			-1, -1, 0, 0, // L T
@@ -44,13 +46,17 @@ public class RenderPlane2D implements RenderPlane
 	
 	private Point indicator;
 	
-	private Hotbar hotbar;
-	private ComponentList componentList;
+	private final Hotbar hotbar;
+	private final ComponentList componentList;
 	
 	private boolean showComponentList;
 	
 	public long vg;
 	private int width, height;
+	
+	private final MeshText text = new MeshText();
+	//TODO: Remove update whatever:
+	private GenericVAO testText;
 	
 	public RenderPlane2D(InputProcessor inputHandler, SharedData sharedData)
 	{
@@ -74,6 +80,26 @@ public class RenderPlane2D implements RenderPlane
 		
 		interfaceShader = new ShaderProgram("interfaceShader");
 		componentIconShader = new ShaderProgram("interfaces/componentIconShader");
+		labelShader = new ShaderProgram("interfaces/labelShader");
+		
+		//TODO: Remove update whatever:
+		String textToRender = "Does it look awful? Lets test...";
+		text.addLetters(textToRender);
+		text.createAtlas();
+		FloatShortArrays stuff = text.fillArray(textToRender, 30, 250, 29);
+		testText = new GenericVAO(stuff.getFloats(), stuff.getShorts())
+		{
+			@Override
+			protected void init()
+			{
+				//Position:
+				GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 0);
+				GL30.glEnableVertexAttribArray(0);
+				//TextureCoord:
+				GL30.glVertexAttribPointer(1, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 2 * Float.BYTES);
+				GL30.glEnableVertexAttribArray(1);
+			}
+		};
 	}
 	
 	@Override
@@ -107,6 +133,13 @@ public class RenderPlane2D implements RenderPlane
 		{
 			componentList.drawIcons(componentIconShader, iconPlane);
 		}
+		
+		//TODO: Remove update whatever:
+		text.activate();
+		labelShader.use();
+		testText.use();
+		testText.draw();
+		
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
@@ -122,6 +155,8 @@ public class RenderPlane2D implements RenderPlane
 		componentIconShader.setUniform(0, pM);
 		interfaceShader.use();
 		interfaceShader.setUniform(0, pM);
+		labelShader.use();
+		labelShader.setUniform(0,pM);
 		if(indicator != null)
 		{
 			indicator.unload();
