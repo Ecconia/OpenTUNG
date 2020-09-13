@@ -27,10 +27,7 @@ public class Controller2D implements Controller
 	@Override
 	public void mouseMove(int xAbs, int yAbs, int xRel, int yRel)
 	{
-		if(leftMouseDown)
-		{
-			renderPlane2D.mouseDragged(xAbs, yAbs);
-		}
+		renderPlane2D.mouseMoved(xAbs, yAbs, leftMouseDown);
 	}
 	
 	@Override
@@ -58,7 +55,7 @@ public class Controller2D implements Controller
 				{
 					if(renderPlane2D.hasWindowOpen())
 					{
-						renderPlane2D.closeWindow();
+						renderPlane2D.closeWindows();
 					}
 					inputProcessor.switchTo3D();
 				}
@@ -83,14 +80,13 @@ public class Controller2D implements Controller
 		{
 			if(renderPlane2D.hasWindowOpen())
 			{
-				renderPlane2D.closeWindow();
+				renderPlane2D.closeWindows();
 				mouseOnGUI = false; //Reset regardless.
 				inputProcessor.switchTo3D(); //If closed just go here.
 			}
 			else
 			{
-				//TODO: Add setting for this behavior:
-				inputProcessor.issueShutdown();
+				openPauseMenu();
 			}
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_E)
@@ -122,6 +118,12 @@ public class Controller2D implements Controller
 	{
 		inputProcessor.switchTo2D();
 		renderPlane2D.openComponentList();
+	}
+	
+	public void openPauseMenu()
+	{
+		inputProcessor.switchTo2D();
+		renderPlane2D.openPauseMenu();
 	}
 	
 	public void dropHotbarEntry()

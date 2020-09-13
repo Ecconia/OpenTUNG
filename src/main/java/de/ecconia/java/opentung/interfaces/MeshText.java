@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.interfaces;
 
-import de.ecconia.java.opentung.libwrap.FloatShortArrays;
+import de.ecconia.java.opentung.libwrap.FloatShortArraysInt;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import java.awt.Color;
 import java.awt.Font;
@@ -135,7 +135,7 @@ public class MeshText
 		}
 	}
 	
-	public FloatShortArrays fillArray(String textToRender, int x, int y, int targetFontSize)
+	public FloatShortArraysInt fillArray(String textToRender, int targetFontSize)
 	{
 		//Collect letters:
 		ArrayList<LetterMeta> lettersUsed = new ArrayList<>(textToRender.length());
@@ -168,13 +168,13 @@ public class MeshText
 		float scale = (float) targetFontSize / (float) nHeight;
 		
 		float[] vertices = new float[visibleAmount * 16];
-		float xOffset = x;
+		float xOffset = 0;
 		int i = 0;
 		for(LetterMeta letter : lettersUsed)
 		{
 			if(letter.rendered != null)
 			{
-				float yOffset = y + ((float) letter.yOffset + (float) xHeight / 2f) * scale;
+				float yOffset = ((float) letter.yOffset + (float) xHeight / 2f) * scale;
 				float w = (float) letter.rendered.getWidth() * scale;
 				float h = (float) letter.rendered.getHeight() * scale;
 				Rectangle2D r = letter.textureBounds;
@@ -203,7 +203,7 @@ public class MeshText
 			xOffset += letter.lWidth * scale;
 		}
 		
-		return new FloatShortArrays(vertices, indices);
+		return new FloatShortArraysInt(vertices, indices, (int) xOffset);
 	}
 	
 	public void activate()

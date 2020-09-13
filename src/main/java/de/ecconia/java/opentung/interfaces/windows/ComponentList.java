@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.interfaces;
+package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.components.CompBlotter;
@@ -21,10 +21,12 @@ import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSwitch;
 import de.ecconia.java.opentung.components.CompThroughBlotter;
 import de.ecconia.java.opentung.components.CompThroughPeg;
+import de.ecconia.java.opentung.interfaces.GUIColors;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
+import de.ecconia.java.opentung.interfaces.Shapes;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
-import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
 public class ComponentList
@@ -93,10 +95,6 @@ public class ComponentList
 		
 		long nvg = renderPlane2D.vg;
 		
-		NVGColor background = NanoVG.nvgRGBAf(0.5f, 0.5f, 0.5f, 1.0f, NVGColor.create());
-		NVGColor hotbarBG = NanoVG.nvgRGBAf(0.8f, 0.8f, 0.8f, 0.3f, NVGColor.create());
-		NVGColor hotbarOutline = NanoVG.nvgRGBf(0.2f, 0.2f, 0.2f, NVGColor.create());
-		
 		NanoVG.nvgBeginPath(nvg);
 		
 		windowWidth = columns * (side + padding) + padding;
@@ -104,7 +102,7 @@ public class ComponentList
 		windowStartX = (renderPlane2D.realWidth(scale) - windowWidth) / 2f;
 		windowStartY = (renderPlane2D.realHeight(scale) - windowHeight) / 2f;
 		
-		Shapes.drawBox(nvg, windowStartX + windowWidth / 2f, windowStartY + windowHeight / 2f, windowWidth, windowHeight, background, hotbarOutline);
+		Shapes.drawBox(nvg, windowStartX + windowWidth / 2f, windowStartY + windowHeight / 2f, windowWidth, windowHeight, GUIColors.background, GUIColors.outline);
 		
 		int i = 0;
 		float offsetX = windowStartX + padding + side / 2f;
@@ -120,7 +118,7 @@ public class ComponentList
 				}
 				offsetsX[i] = currentX;
 				offsetsY[i++] = currentY;
-				Shapes.drawBox(nvg, currentX, currentY, side, side, hotbarBG, hotbarOutline);
+				Shapes.drawBox(nvg, currentX, currentY, side, side, GUIColors.background, GUIColors.outline);
 				currentX += side + padding;
 			}
 			currentY += side + padding;

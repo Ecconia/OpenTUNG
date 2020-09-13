@@ -5,11 +5,16 @@ import de.ecconia.java.opentung.RenderPlane;
 import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
-import de.ecconia.java.opentung.libwrap.FloatShortArrays;
+import de.ecconia.java.opentung.interfaces.windows.ComponentList;
+import de.ecconia.java.opentung.interfaces.windows.Hotbar;
+import de.ecconia.java.opentung.interfaces.windows.PauseMenu;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL30;
@@ -17,10 +22,13 @@ import org.lwjgl.opengl.GL30;
 public class RenderPlane2D implements RenderPlane
 {
 	private final Matrix projectionMatrix = new Matrix();
+	private final InputProcessor inputHandler;
 	
 	private ShaderProgram interfaceShader;
 	private ShaderProgram componentIconShader;
 	private ShaderProgram labelShader;
+	
+	private TextureWrapper logo;
 	
 	private final GenericVAO iconPlane = new GenericVAO(new float[]{
 			-1, -1, 0, 0, // L T
@@ -48,21 +56,26 @@ public class RenderPlane2D implements RenderPlane
 	
 	private final Hotbar hotbar;
 	private final ComponentList componentList;
+	private final PauseMenu pauseMenu;
 	
 	private boolean showComponentList;
+	private boolean showPauseMenu;
 	
 	public long vg;
 	private int width, height;
 	
-	private final MeshText text = new MeshText();
-	//TODO: Remove update whatever:
-	private GenericVAO testText;
+	private final MeshText text;
 	
 	public RenderPlane2D(InputProcessor inputHandler, SharedData sharedData)
 	{
+		this.inputHandler = inputHandler;
 		inputHandler.setController(new Controller2D(this));
+		
+		text = new MeshText();
+		//Windows:
 		hotbar = new Hotbar(this, sharedData);
 		componentList = new ComponentList(this, hotbar);
+		pauseMenu = new PauseMenu(this);
 	}
 	
 	@Override
@@ -78,28 +91,25 @@ public class RenderPlane2D implements RenderPlane
 			}
 		}
 		
+		try
+		{
+			BufferedImage image = ImageIO.read(this.getClass().getClassLoader().getResourceAsStream("Logo1024.png"));
+			logo = TextureWrapper.createLogoTexture(image);
+		}
+		catch(Exception e)
+		{
+			System.out.println("Could not load logo.");
+			e.printStackTrace(System.out);
+			System.exit(1);
+		}
+		
 		interfaceShader = new ShaderProgram("interfaceShader");
 		componentIconShader = new ShaderProgram("interfaces/componentIconShader");
 		labelShader = new ShaderProgram("interfaces/labelShader");
 		
-		//TODO: Remove update whatever:
-		String textToRender = "Does it look awful? Lets test...";
-		text.addLetters(textToRender);
 		text.createAtlas();
-		FloatShortArrays stuff = text.fillArray(textToRender, 30, 250, 29);
-		testText = new GenericVAO(stuff.getFloats(), stuff.getShorts())
-		{
-			@Override
-			protected void init()
-			{
-				//Position:
-				GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 0);
-				GL30.glEnableVertexAttribArray(0);
-				//TextureCoord:
-				GL30.glVertexAttribPointer(1, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 2 * Float.BYTES);
-				GL30.glEnableVertexAttribArray(1);
-			}
-		};
+		
+		pauseMenu.setup();
 	}
 	
 	@Override
@@ -117,10 +127,15 @@ public class RenderPlane2D implements RenderPlane
 		float scale = Settings.guiScale;
 		NanoVG.nnvgScale(vg, scale, scale);
 		hotbar.draw();
-		boolean threadSafeShowList = showComponentList;
-		if(threadSafeShowList)
+		boolean tsShowComponentList = showComponentList;
+		if(tsShowComponentList)
 		{
 			componentList.draw();
+		}
+		boolean tsShowPauseMenu = showPauseMenu;
+		if(tsShowPauseMenu)
+		{
+			pauseMenu.renderFrame();
 		}
 		NanoVG.nvgEndFrame(vg);
 		
@@ -129,16 +144,14 @@ public class RenderPlane2D implements RenderPlane
 		
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
 		hotbar.drawIcons(componentIconShader, iconPlane);
-		if(threadSafeShowList)
+		if(tsShowComponentList)
 		{
 			componentList.drawIcons(componentIconShader, iconPlane);
 		}
-		
-		//TODO: Remove update whatever:
-		text.activate();
-		labelShader.use();
-		testText.use();
-		testText.draw();
+		if(tsShowPauseMenu)
+		{
+			pauseMenu.renderDecor(componentIconShader, iconPlane);
+		}
 		
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
@@ -156,7 +169,7 @@ public class RenderPlane2D implements RenderPlane
 		interfaceShader.use();
 		interfaceShader.setUniform(0, pM);
 		labelShader.use();
-		labelShader.setUniform(0,pM);
+		labelShader.setUniform(0, pM);
 		if(indicator != null)
 		{
 			indicator.unload();
@@ -184,15 +197,24 @@ public class RenderPlane2D implements RenderPlane
 		showComponentList = true;
 	}
 	
-	public boolean hasWindowOpen()
+	public void openPauseMenu()
 	{
-		return showComponentList;
+		showPauseMenu = true;
 	}
 	
-	public void closeWindow()
+	public boolean hasWindowOpen()
 	{
-		//TODO: Handle other windows.
+		return showComponentList || showPauseMenu;
+	}
+	
+	public void closeWindows()
+	{
 		showComponentList = false;
+		if(showPauseMenu)
+		{
+			pauseMenu.close();
+		}
+		showPauseMenu = false;
 	}
 	
 	public boolean leftMouseDown(int x, int y)
@@ -212,6 +234,10 @@ public class RenderPlane2D implements RenderPlane
 		if(showComponentList)
 		{
 			return componentList.leftMouseUp(x, y);
+		}
+		else if(showPauseMenu)
+		{
+			return pauseMenu.leftMouseUp(x, y);
 		}
 		else
 		{
@@ -233,11 +259,18 @@ public class RenderPlane2D implements RenderPlane
 		return showComponentList;
 	}
 	
-	public void mouseDragged(int xAbs, int yAbs)
+	public void mouseMoved(int xAbs, int yAbs, boolean leftDown)
 	{
-		if(showComponentList)
+		if(showPauseMenu)
 		{
-			componentList.mouseDragged(xAbs, yAbs);
+			pauseMenu.mouseMoved(xAbs, yAbs);
+		}
+		else if(showComponentList)
+		{
+			if(leftDown)
+			{
+				componentList.mouseDragged(xAbs, yAbs);
+			}
 		}
 	}
 	
@@ -247,6 +280,26 @@ public class RenderPlane2D implements RenderPlane
 		{
 			componentList.middleMouse(x, y);
 		}
+	}
+	
+	public MeshText getText()
+	{
+		return text;
+	}
+	
+	public TextureWrapper getLogo()
+	{
+		return logo;
+	}
+	
+	public ShaderProgram getLabelShader()
+	{
+		return labelShader;
+	}
+	
+	public void issueShutdown()
+	{
+		inputHandler.issueShutdown();
 	}
 	
 	private static class Point

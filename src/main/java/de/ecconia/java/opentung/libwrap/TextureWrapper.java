@@ -44,6 +44,13 @@ public class TextureWrapper
 	protected int id;
 	private ByteBuffer buffer;
 	
+	public static TextureWrapper createLogoTexture(BufferedImage image)
+	{
+		TextureWrapper texture = new TextureWrapper(image, ColorInput.RGBA, GL30.GL_CLAMP_TO_EDGE, GL30.GL_LINEAR, GL30.GL_LINEAR);
+		texture.upload();
+		return texture;
+	}
+	
 	public static TextureWrapper createFontAtlasTexture(BufferedImage image)
 	{
 		TextureWrapper texture = new TextureWrapper(image, ColorInput.Grayscale, GL30.GL_CLAMP_TO_EDGE, GL30.GL_LINEAR, GL30.GL_LINEAR);
