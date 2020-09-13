@@ -23,6 +23,7 @@ public class RenderPlane2D implements RenderPlane
 {
 	private final Matrix projectionMatrix = new Matrix();
 	private final InputProcessor inputHandler;
+	private final SharedData sharedData;
 	
 	private ShaderProgram interfaceShader;
 	private ShaderProgram componentIconShader;
@@ -54,9 +55,9 @@ public class RenderPlane2D implements RenderPlane
 	
 	private Point indicator;
 	
-	private final Hotbar hotbar;
-	private final ComponentList componentList;
-	private final PauseMenu pauseMenu;
+	private Hotbar hotbar;
+	private ComponentList componentList;
+	private PauseMenu pauseMenu;
 	
 	private boolean showComponentList;
 	private boolean showPauseMenu;
@@ -68,14 +69,11 @@ public class RenderPlane2D implements RenderPlane
 	
 	public RenderPlane2D(InputProcessor inputHandler, SharedData sharedData)
 	{
+		this.sharedData = sharedData;
 		this.inputHandler = inputHandler;
 		inputHandler.setController(new Controller2D(this));
 		
 		text = new MeshText();
-		//Windows:
-		hotbar = new Hotbar(this, sharedData);
-		componentList = new ComponentList(this, hotbar);
-		pauseMenu = new PauseMenu(this);
 	}
 	
 	@Override
@@ -102,6 +100,13 @@ public class RenderPlane2D implements RenderPlane
 			e.printStackTrace(System.out);
 			System.exit(1);
 		}
+		
+		//Windows:
+		hotbar = new Hotbar(this, sharedData);
+		sharedData.getGpuTasks().add((unused) -> {
+			componentList = new ComponentList(this, hotbar);
+		});
+		pauseMenu = new PauseMenu(this);
 		
 		interfaceShader = new ShaderProgram("interfaceShader");
 		componentIconShader = new ShaderProgram("interfaces/componentIconShader");
@@ -270,6 +275,10 @@ public class RenderPlane2D implements RenderPlane
 			if(leftDown)
 			{
 				componentList.mouseDragged(xAbs, yAbs);
+			}
+			else
+			{
+				componentList.mouseMoved(xAbs, yAbs);
 			}
 		}
 	}

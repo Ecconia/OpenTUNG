@@ -10,7 +10,7 @@ public abstract class AbstractButton
 	
 	private boolean hovered;
 	
-	public AbstractButton(float relX, float relY, int width, int height)
+	public AbstractButton(float relX, float relY, float width, float height)
 	{
 		this.width = width;
 		this.height = height;

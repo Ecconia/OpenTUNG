@@ -244,12 +244,12 @@ public class OpenTUNG
 		setOpenGLMode();
 		
 		SharedData sharedData = new SharedData();
-		interactables = new RenderPlane2D(inputHandler, sharedData);
-		interactables.setup();
-		interactables.newSize(500, 500);
 		worldView = new RenderPlane3D(inputHandler, boardUniverse, sharedData);
+		interactables = new RenderPlane2D(inputHandler, sharedData);
 		worldView.setup();
+		interactables.setup();
 		worldView.newSize(500, 500);
+		interactables.newSize(500, 500);
 	}
 	
 	public static void setOpenGLMode()

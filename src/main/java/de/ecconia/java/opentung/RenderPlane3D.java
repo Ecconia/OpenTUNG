@@ -103,6 +103,7 @@ public class RenderPlane3D implements RenderPlane
 		board.startFinalizeImport(gpuTasks);
 		this.inputHandler = inputHandler;
 		this.sharedData = sharedData;
+		sharedData.setGPUTasks(gpuTasks);
 	}
 	
 	//Other:

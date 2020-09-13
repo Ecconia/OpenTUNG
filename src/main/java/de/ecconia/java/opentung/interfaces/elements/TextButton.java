@@ -12,7 +12,7 @@ public class TextButton extends AbstractButton
 	private final int textWidth;
 	private final GenericVAO textMesh;
 	
-	public TextButton(MeshText fontUnit, String text, float relX, float relY, int width, int height)
+	public TextButton(MeshText fontUnit, String text, float relX, float relY, float width, float height)
 	{
 		super(relX, relY, width, height);
 		
