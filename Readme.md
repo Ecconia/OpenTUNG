@@ -7,16 +7,18 @@ Started and maintained by @Ecconia
 ## Kilometer-marks
 
 Arrived at:
-- The game imports `.tungboard` files.
-- The game displays everything of the loaded TUNGBoard.
-- The game can simulate the whole board circuit.
+- OpenTUNG imports `.tungboard` files.
+- OpenTUNG displays everything of the loaded TUNGBoard.
+- OpenTUNG can simulate the whole board circuit.
+- It is possible to place and remove components and boards. Which also updates the simulation network.
 
 To arrive:
 - Add animated interaction with buttons/switches.
 - Give label-text a good formatting and graphic.
 - Add modification of the builds (collision checking), so that things can be placed or move at each other.
-- Update the simulation network when modified of it.
 - Improve the looks of the game, better light calculation pending.
+- Add advanced modification of boards and components, such as grabbing, stacking, copying, pasting and rotating.
+- Add fancy multi-wire placement.
 
 ## Why? (Story...)
 
@@ -77,17 +79,23 @@ Everyone is free to use this program/game/tool/simulator, if he/she doesn't hate
   - You mave move/copy/rename that file. It should work.
   - Double clicking it might also work, but you may miss information/instructions on terminal.
 
-## Settings:
+## Files & Folder:
 
-Although there are no proper settings yet, you can still change a lot of handy things in `src/main/java/de/ecconia/java/opentung/Settings.java`. Its just many values in one class. Edit to your hearts content.
-Don't forget to compile again, once you changed something.
+OpenTUNG creates a folder `OpenTUNG`, wherever you executed it. First output in terminal tells you the location of that folder.\
+In it you have to create a `boards` folder, please put any `.tungboard` file there. You can download them from the official LW discord (and some other sources).
+
+### Settings:
+
+In the OpenTUNG-Folder you will find a `settings.txt` file.\
+It contains a bunch of settings regards OpenTUNG, you can change the settings-file while OpenTUNG is running.
+It will automatically reload the content once you saved. Some settings only apply on start-up though.
 
 ## Collaborate/Contact
 
-This project has a [Discord-Server-OpenTUNG](https://discord.gg/C5Qkk53).
+This project has an [Discord-Server (OpenTUNG)](https://discord.gg/C5Qkk53).
 
-You may always contact developers and users there, if you wish to improve something, seek help or just to talk/discuss about this project.
+You may always contact developers and users there, if you wish to improve something, seek help or just to talk about/discuss this project.
 
 If you want to collaborate, you should check out that discord.
 
-TUNG/LogicWorld also have a [Discord-Server](https://discord.gg/C5Qkk53), if you don't know what this game is about, check out that one first.
+TUNG/LogicWorld also have a [Discord-Server (LogicWorld/TUNG)](https://discord.gg/C5Qkk53), if you don't know what this game is about, check out that one first.
