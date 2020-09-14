@@ -1,9 +1,7 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompLabel;
-import de.ecconia.java.opentung.components.CompPanelDisplay;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -27,7 +25,6 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.meshes.ColorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
-import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
@@ -52,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.lwjgl.opengl.GL30;
 
 public class RenderPlane3D implements RenderPlane
@@ -104,6 +102,26 @@ public class RenderPlane3D implements RenderPlane
 		this.inputHandler = inputHandler;
 		this.sharedData = sharedData;
 		sharedData.setGPUTasks(gpuTasks);
+		sharedData.setRenderPlane3D(this);
+	}
+	
+	public void prepareSaving(AtomicInteger pauseArrived)
+	{
+		board.getSimulation().pauseSimulation(pauseArrived);
+		gpuTasks.add((unused) -> {
+			currentlySelectedIndex = 0;
+			placementPosition = null;
+			placementNormal = null;
+			placementBoard = null;
+			boardIsBeingDragged = false;
+			wireStartPoint = null;
+			pauseArrived.incrementAndGet();
+		});
+	}
+	
+	public void postSave()
+	{
+		board.getSimulation().resumeSimulation();
 	}
 	
 	//Other:
@@ -995,13 +1013,12 @@ public class RenderPlane3D implements RenderPlane
 		camera.lockLocation();
 		controller.doFrameCycle();
 		
-		calculatePlacementPosition();
-		
 		float[] view = camera.getMatrix();
-		if(Settings.doRaycasting)
+		if(Settings.doRaycasting && !sharedData.isSaving())
 		{
 			raycast(view);
 		}
+		calculatePlacementPosition();
 		if(Settings.drawWorld)
 		{
 			OpenTUNG.setBackgroundColor();

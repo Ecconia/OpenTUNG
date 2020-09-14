@@ -108,11 +108,11 @@ public class PauseMenu
 			
 			if(buttonSave.inside(xx, yy))
 			{
-				System.out.println("TODO: Save");
+				save();
 			}
 			else if(buttonSaveAs.inside(xx, yy))
 			{
-				System.out.println("TODO: Save as");
+				save();
 			}
 			else if(buttonExit.inside(xx, yy))
 			{
@@ -123,6 +123,38 @@ public class PauseMenu
 		}
 		
 		return false;
+	}
+	
+	public void save()
+	{
+		if(!renderPlane2D.prepareSaving())
+		{
+			return;
+		}
+		
+		buttonSave.setDisabled(true);
+		buttonSaveAs.setDisabled(true);
+		
+		Thread saveThread = new Thread(() -> {
+			System.out.println("Saving...");
+			//TODO: Real save call.
+			try
+			{
+				Thread.sleep(5000);
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+			//Unlock
+			System.out.println("Done.");
+			
+			renderPlane2D.postSave();
+			buttonSave.setDisabled(false);
+			buttonSaveAs.setDisabled(false);
+		}, "SaveThread");
+		saveThread.setDaemon(false); //Yes it should finish saving first! Thus no daemon.
+		saveThread.start();
 	}
 	
 	private boolean downInside(float x, float y)

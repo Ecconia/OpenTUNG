@@ -14,6 +14,7 @@ import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
@@ -309,6 +310,37 @@ public class RenderPlane2D implements RenderPlane
 	public void issueShutdown()
 	{
 		inputHandler.issueShutdown();
+	}
+	
+	public boolean prepareSaving()
+	{
+		if(sharedData.isSaving())
+		{
+			return false;
+		}
+		sharedData.setSaving();
+		AtomicInteger pauseArrived = new AtomicInteger();
+		sharedData.getRenderPlane3D().prepareSaving(pauseArrived);
+		while(pauseArrived.get() != 2)
+		{
+			try
+			{
+				Thread.sleep(10);
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		//Arrived at pause state on all relevant threads.
+		return true;
+	}
+	
+	public void postSave()
+	{
+		sharedData.getRenderPlane3D().postSave();
+		sharedData.unsetSaving();
 	}
 	
 	private static class Point
