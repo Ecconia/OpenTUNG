@@ -9,6 +9,18 @@ public class SharedData
 	private boolean saving;
 	private RenderPlane3D renderPlane3D;
 	
+	private final BoardUniverse boardUniverse;
+	
+	public SharedData(BoardUniverse boardUniverse)
+	{
+		this.boardUniverse = boardUniverse;
+	}
+	
+	public BoardUniverse getBoardUniverse()
+	{
+		return boardUniverse;
+	}
+	
 	public PlaceableInfo getCurrentPlaceable()
 	{
 		return currentPlaceable;

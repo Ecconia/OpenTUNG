@@ -83,7 +83,7 @@ public class BoardUniverse
 		return raycastIDs;
 	}
 	
-	//### OTHER ##ä
+	//### OTHER ###
 	
 	private final SimulationManager simulation = new SimulationManager();
 	
@@ -528,6 +528,11 @@ public class BoardUniverse
 		}
 	}
 	
+	public CompBoard getRootBoard()
+	{
+		return rootBoard;
+	}
+	
 	public List<CompWireRaw> getWiresToRender()
 	{
 		return wiresToRender;
@@ -536,6 +541,11 @@ public class BoardUniverse
 	public List<Component> getComponentsToRender()
 	{
 		return componentsToRender;
+	}
+	
+	public List<CompSnappingWire> getSnappingWires()
+	{
+		return snappingWires;
 	}
 	
 	public List<CompLabel> getLabelsToRender()

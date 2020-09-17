@@ -9,15 +9,16 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
 
-public class CompPanelDisplay extends Component implements Updateable, Colorable
+public class CompPanelDisplay extends Component implements Updateable, Colorable, CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-PanelDisplay", CompPanelDisplay::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-PanelDisplay", "0.2.6", CompPanelDisplay.class, CompPanelDisplay::new);
 	
 	static
 	{
@@ -80,5 +81,17 @@ public class CompPanelDisplay extends Component implements Updateable, Colorable
 	public int getColorID(int id)
 	{
 		return colorID;
+	}
+	
+	//### Save/Load ###
+	
+	@Override
+	public byte[] getCustomData()
+	{
+		byte[] bytes = new byte[3];
+		bytes[0] = (byte) colorRaw.getR();
+		bytes[1] = (byte) colorRaw.getG();
+		bytes[2] = (byte) colorRaw.getB();
+		return bytes;
 	}
 }

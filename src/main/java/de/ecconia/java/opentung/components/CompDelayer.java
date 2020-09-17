@@ -9,17 +9,19 @@ import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.savefile.ByteLevelHelper;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
 
-public class CompDelayer extends Component implements Powerable, Updateable
+public class CompDelayer extends Component implements Powerable, Updateable, CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Delayer", CompDelayer::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Delayer", "0.2.6", CompDelayer.class, CompDelayer::new);
 	
 	static
 	{
@@ -116,5 +118,15 @@ public class CompDelayer extends Component implements Powerable, Updateable
 			powered = state;
 			simulation.updateNextStage(output.getCluster());
 		}
+	}
+	
+	//### Save/Load ###
+	
+	@Override
+	public byte[] getCustomData()
+	{
+		byte[] bytes = new byte[ByteLevelHelper.sizeOfUnsignedInt(delayCount)];
+		ByteLevelHelper.writeUnsignedInt(delayCount, bytes, 0);
+		return bytes;
 	}
 }

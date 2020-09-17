@@ -16,7 +16,7 @@ import de.ecconia.java.opentung.simulation.Wire;
 public class CompThroughPeg extends Component
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-ThroughPeg", CompThroughPeg::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-ThroughPeg", "0.2.6", CompThroughPeg.class, CompThroughPeg::new);
 	
 	static
 	{

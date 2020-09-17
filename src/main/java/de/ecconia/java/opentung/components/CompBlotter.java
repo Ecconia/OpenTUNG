@@ -18,7 +18,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompBlotter extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Blotter", CompBlotter::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Blotter", "0.2.6", CompBlotter.class, CompBlotter::new);
 	
 	static
 	{

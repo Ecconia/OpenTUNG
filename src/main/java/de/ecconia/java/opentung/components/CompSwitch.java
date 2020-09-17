@@ -17,7 +17,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompSwitch extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Switch", CompSwitch::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Switch", "0.2.6", CompSwitch.class, CompSwitch::new);
 	
 	static
 	{

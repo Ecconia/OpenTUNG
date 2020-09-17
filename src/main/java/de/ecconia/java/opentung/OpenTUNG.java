@@ -23,7 +23,7 @@ import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
-	private static final File dataFolder = new File("OpenTUNG");
+	public static final File dataFolder = new File("OpenTUNG");
 	
 	private static InputProcessor inputHandler;
 	
@@ -243,7 +243,7 @@ public class OpenTUNG
 		
 		setOpenGLMode();
 		
-		SharedData sharedData = new SharedData();
+		SharedData sharedData = new SharedData(boardUniverse);
 		worldView = new RenderPlane3D(inputHandler, boardUniverse, sharedData);
 		interactables = new RenderPlane2D(inputHandler, sharedData);
 		worldView.setup();

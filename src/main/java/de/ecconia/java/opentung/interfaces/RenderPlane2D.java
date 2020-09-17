@@ -12,6 +12,7 @@ import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.savefile.Saver;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -341,6 +342,11 @@ public class RenderPlane2D implements RenderPlane
 	{
 		sharedData.getRenderPlane3D().postSave();
 		sharedData.unsetSaving();
+	}
+	
+	public void performSave()
+	{
+		Saver.save(sharedData.getBoardUniverse());
 	}
 	
 	private static class Point

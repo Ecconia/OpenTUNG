@@ -152,4 +152,14 @@ public class Quaternion
 		double length = getLength();
 		return new Quaternion(a / length, v.multiply(1d / length));
 	}
+	
+	public Vector3 getV()
+	{
+		return v;
+	}
+	
+	public double getA()
+	{
+		return a;
+	}
 }

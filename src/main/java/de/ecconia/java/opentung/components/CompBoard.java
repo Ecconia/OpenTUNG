@@ -6,22 +6,18 @@ import de.ecconia.java.opentung.components.fragments.CubeBoard;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.ModelMapper;
 import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.savefile.ByteLevelHelper;
 
-public class CompBoard extends CompContainer
+public class CompBoard extends CompContainer implements CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Board", new PlaceableInfo.CompGenerator()
-	{
-		@Override
-		public Component generateComponent(CompContainer parent)
-		{
-			throw new RuntimeException("Board component cannot be instantiated like this!");
-		}
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Board", "0.2.6", CompBoard.class, parent -> {
+		throw new RuntimeException("Board component cannot be instantiated like this!");
 	});
 	
 	static
@@ -100,5 +96,22 @@ public class CompBoard extends CompContainer
 			color = new Color(r, g, b);
 		}
 		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
+	}
+	
+	//### Save/Load ###
+	
+	@Override
+	public byte[] getCustomData()
+	{
+		int first = ByteLevelHelper.sizeOfUnsignedInt(x);
+		int second = ByteLevelHelper.sizeOfUnsignedInt(z);
+		int byteAmount = first + second + 3;
+		byte[] bytes = new byte[byteAmount];
+		ByteLevelHelper.writeUnsignedInt(x, bytes, 0);
+		ByteLevelHelper.writeUnsignedInt(z, bytes, first);
+		bytes[second++] = (byte) color.getR();
+		bytes[second++] = (byte) color.getG();
+		bytes[second] = (byte) color.getB();
+		return bytes;
 	}
 }

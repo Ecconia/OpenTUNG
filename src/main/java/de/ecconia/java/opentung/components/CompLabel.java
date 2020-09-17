@@ -7,14 +7,17 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.fragments.TexturedFace;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.savefile.ByteLevelHelper;
+import java.nio.charset.StandardCharsets;
 
-public class CompLabel extends Component
+public class CompLabel extends Component implements CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Label", CompLabel::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Label", "0.2.6", CompLabel.class, CompLabel::new);
 	
 	static
 	{
@@ -99,5 +102,20 @@ public class CompLabel extends Component
 	{
 		texture.unload();
 		this.texture = null; //Reset texture.
+	}
+	
+	//### Save/Load ###
+	
+	@Override
+	public byte[] getCustomData()
+	{
+		byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
+		int textSize = textBytes.length;
+		int textOffset = ByteLevelHelper.sizeOfUnsignedInt(textSize) + 4;
+		byte[] bytes = new byte[textOffset + textSize];
+		ByteLevelHelper.writeFloat(fontSize, bytes, 0);
+		ByteLevelHelper.writeUnsignedInt(textSize, bytes, 4);
+		System.arraycopy(textBytes, 0, bytes, textOffset, textSize);
+		return bytes;
 	}
 }

@@ -137,17 +137,10 @@ public class PauseMenu
 		
 		Thread saveThread = new Thread(() -> {
 			System.out.println("Saving...");
-			//TODO: Real save call.
-			try
-			{
-				Thread.sleep(5000);
-			}
-			catch(InterruptedException e)
-			{
-				e.printStackTrace();
-			}
+			long startTime = System.currentTimeMillis();
+			renderPlane2D.performSave(); //TODO: Filepath...
 			//Unlock
-			System.out.println("Done.");
+			System.out.println("Done, took: " + (System.currentTimeMillis() - startTime) + "ms");
 			
 			renderPlane2D.postSave();
 			buttonSave.setDisabled(false);
