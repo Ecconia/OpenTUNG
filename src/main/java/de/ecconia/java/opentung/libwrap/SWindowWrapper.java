@@ -108,17 +108,12 @@ public class SWindowWrapper
 	
 	public void place()
 	{
-//		try(MemoryStack stack = MemoryStack.stackPush())
-//		{
-		//IntBuffer pWidth = stack.mallocInt(1);
-		//IntBuffer pHeight = stack.mallocInt(1);
-		//GLFW.glfwGetWindowSize(window, pWidth, pHeight);
-		GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-		//GLFW.glfwSetWindowPos(window, (vidmode.width() - width.get(0)) / 2, (vidmode.height() - pHeight.get(0)) / 2
-		GLFW.glfwSetWindowPos(windowID, (vidmode.width() - oWidth) / 2, (vidmode.height() - oHeight) / 2
-		);
-//		}
-		
+		long primaryMonitor = GLFW.glfwGetPrimaryMonitor();
+		GLFWVidMode vidmode = GLFW.glfwGetVideoMode(primaryMonitor);
+		int[] x = new int[1];
+		int[] y = new int[1];
+		GLFW.glfwGetMonitorPos(primaryMonitor, x, y);
+		GLFW.glfwSetWindowPos(windowID, x[0] + (vidmode.width() - oWidth) / 2, y[0] + (vidmode.height() - oHeight) / 2);
 		GLFW.glfwShowWindow(windowID);
 	}
 	

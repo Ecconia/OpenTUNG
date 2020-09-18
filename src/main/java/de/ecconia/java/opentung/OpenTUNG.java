@@ -25,6 +25,9 @@ public class OpenTUNG
 {
 	public static final File dataFolder = new File("OpenTUNG");
 	
+	private static final int initialWidth = 800;
+	private static final int initialHeight = 600;
+	
 	private static InputProcessor inputHandler;
 	
 	private static RenderPlane2D interactables;
@@ -68,7 +71,7 @@ public class OpenTUNG
 		{
 			System.out.println("LWJGL version: " + Version.getVersion());
 			
-			SWindowWrapper window = new SWindowWrapper(500, 500, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ?");
+			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ?");
 			inputHandler = new InputProcessor(window.getID());
 			
 			Thread graphicsThread = new Thread(() -> {
@@ -83,6 +86,11 @@ public class OpenTUNG
 					GL.createCapabilities();
 					System.out.println("OpenGL version: " + GL30.glGetString(GL30.GL_VERSION));
 					System.out.println("Amount of connection-groups per mesh: " + GL30.glGetInteger(GL30.GL_MAX_VERTEX_UNIFORM_COMPONENTS));
+					
+					//TODO: Add shader store.
+					//TODO: Load a placeholder texture here... Just the logo with some background.
+					//Run initially, to reduce weird visible crap.
+					window.update();
 					
 					init();
 					
@@ -248,8 +256,8 @@ public class OpenTUNG
 		interactables = new RenderPlane2D(inputHandler, sharedData);
 		worldView.setup();
 		interactables.setup();
-		worldView.newSize(500, 500);
-		interactables.newSize(500, 500);
+		worldView.newSize(initialWidth, initialHeight);
+		interactables.newSize(initialWidth, initialHeight);
 	}
 	
 	public static void setOpenGLMode()
