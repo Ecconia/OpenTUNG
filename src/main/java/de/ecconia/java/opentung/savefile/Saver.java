@@ -14,9 +14,8 @@ import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.Wire;
+import de.ecconia.java.opentung.util.io.ByteWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -127,70 +126,65 @@ public class Saver
 		
 		try
 		{
-			//TODO: For the sake of <your god(s) here>, add a buffer array.
-			FileOutputStream fos = new FileOutputStream(saveFile, false);
+			ByteWriter writer = new ByteWriter(saveFile);
 			//Write OpenTUNG header:
-			fos.write(CompactText.encode("OpenTUNG-Boards"));
+			writer.writeBytes(CompactText.encode("OpenTUNG-Boards")); //No length prefix, thus this unwrap.
 			//Write file-version:
-			fos.write(ByteLevelHelper.writeUnsignedInt(1));
+			writer.writeByte(1);
 			//Write counts of components and wires:
-			fos.write(ByteLevelHelper.writeUnsignedInt(components.size()));
-			fos.write(ByteLevelHelper.writeUnsignedInt(wires.size()));
+			writer.writeVariableInt(components.size());
+			writer.writeVariableInt(wires.size());
 			//Write component dictionary with: (see above):
-			fos.write(ByteLevelHelper.writeUnsignedInt(sortedDictionary.size()));
+			writer.writeVariableInt(sortedDictionary.size());
 			for(ComponentData data : sortedDictionary)
 			{
 				//Tag:
-				byte[] bytes = CompactText.encode(data.getTag());
-				fos.write(ByteLevelHelper.writeUnsignedInt(bytes.length));
-				fos.write(bytes);
+				writer.writeCompactString(data.getTag());
 				//Version:
-				bytes = CompactText.encode(data.getVersion());
-				fos.write(ByteLevelHelper.writeUnsignedInt(bytes.length));
-				fos.write(bytes);
+				writer.writeCompactString(data.getVersion());
 				//Pegs:
-				fos.write(ByteLevelHelper.writeUnsignedInt(data.getPegs()));
+				writer.writeVariableInt(data.getPegs());
 				//Blots:
-				fos.write(ByteLevelHelper.writeUnsignedInt(data.getBlots()));
+				writer.writeVariableInt(data.getBlots());
 				//CustomData:
-				fos.write(ByteLevelHelper.writeBoolean(data.hasCustomData()));
+				writer.writeBoolean(data.hasCustomData());
 				//Usages:
-				fos.write(ByteLevelHelper.writeUnsignedInt(data.getComponentCount()));
+				writer.writeVariableInt(data.getComponentCount());
 			}
 			//Write components with: type-id, position, direction, blots, custom-data
 			for(Component component : components)
 			{
 				ComponentData data = dictionary.get(component.getInfo());
 				int typeId = data.getId();
-				fos.write(ByteLevelHelper.writeUnsignedInt(typeId));
+				writer.writeVariableInt(typeId);
 				//Parent:
 				Component parent = component.getParent();
 				int parentID = parent == null ? 0 : componentIDs.get(parent);
-				fos.write(ByteLevelHelper.writeUnsignedInt(parentID));
+				writer.writeVariableInt(parentID);
 				//Position:
 				Vector3 position = component.getPosition();
-				fos.write(ByteLevelHelper.writeDouble(position.getX()));
-				fos.write(ByteLevelHelper.writeDouble(position.getY()));
-				fos.write(ByteLevelHelper.writeDouble(position.getZ()));
+				writer.writeDouble(position.getX());
+				writer.writeDouble(position.getY());
+				writer.writeDouble(position.getZ());
 				//Direction/Rotation:
 				Quaternion quaternion = component.getRotation();
 				Vector3 v = quaternion.getV();
 				double a = quaternion.getA();
-				fos.write(ByteLevelHelper.writeDouble(v.getX()));
-				fos.write(ByteLevelHelper.writeDouble(v.getY()));
-				fos.write(ByteLevelHelper.writeDouble(v.getZ()));
-				fos.write(ByteLevelHelper.writeDouble(a));
+				writer.writeDouble(v.getX());
+				writer.writeDouble(v.getY());
+				writer.writeDouble(v.getZ());
+				writer.writeDouble(a);
 				//Blots:
 				for(Blot blot : component.getBlots())
 				{
-					fos.write(ByteLevelHelper.writeBoolean(blot.getCluster().isActive()));
+					writer.writeBoolean(blot.getCluster().isActive());
 				}
 				//Custom-Data:
 				if(data.hasCustomData())
 				{
 					byte[] customData = ((CustomData) component).getCustomData();
-					fos.write(ByteLevelHelper.writeUnsignedInt(customData.length));
-					fos.write(customData);
+					writer.writeVariableInt(customData.length);
+					writer.writeBytes(customData);
 				}
 			}
 			//Write wires with: connector-id, connector-id, rotation
@@ -198,17 +192,17 @@ public class Saver
 			{
 				Connector c = wire.getConnectorA();
 				int id = connectorIDs.get(c);
-				fos.write(ByteLevelHelper.writeUnsignedInt(id));
+				writer.writeVariableInt(id);
 				c = wire.getConnectorB();
 				id = connectorIDs.get(c);
-				fos.write(ByteLevelHelper.writeUnsignedInt(id));
+				writer.writeVariableInt(id);
 			}
 			
-			fos.flush();
-			fos.close();
+			writer.close();
 		}
-		catch(IOException e)
+		catch(Exception e)
 		{
+			//TODO: Handle.
 			e.printStackTrace();
 		}
 	}
