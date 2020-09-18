@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.tungboard;
+package de.ecconia.java.opentung.util.io;
 
 import java.io.File;
 import java.io.FileNotFoundException;

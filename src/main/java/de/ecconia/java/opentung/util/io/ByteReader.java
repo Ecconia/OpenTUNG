@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.tungboard.netremoting;
+package de.ecconia.java.opentung.util.io;
 
 public class ByteReader
 {

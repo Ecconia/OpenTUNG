@@ -11,7 +11,7 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.savefile.ByteLevelHelper;
+import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 
 public class CompBoard extends CompContainer implements CustomData
 {

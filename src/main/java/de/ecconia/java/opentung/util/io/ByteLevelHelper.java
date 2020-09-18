@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.savefile;
+package de.ecconia.java.opentung.util.io;
 
 //Policy lowest byte first. (Little-Endian)
 public class ByteLevelHelper
