@@ -2,9 +2,9 @@ package de.ecconia.java.opentung.simulation;
 
 public interface Powerable
 {
-	void setPowered(boolean powered);
+	void setPowered(int port, boolean powered);
 	
-	boolean isPowered();
+	boolean isPowered(int port);
 	
 	void forceUpdateOutput();
 }

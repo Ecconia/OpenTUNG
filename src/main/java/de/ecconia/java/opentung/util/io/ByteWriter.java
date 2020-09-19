@@ -1,14 +1,16 @@
-package de.ecconia.java.opentung.tungboard;
+package de.ecconia.java.opentung.util.io;
 
+import de.ecconia.java.opentung.savefile.CompactText;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ByteWriter
 {
-	private final FileOutputStream fos;
+	private final OutputStream fos;
 	
 	public ByteWriter(File file)
 	{
@@ -22,13 +24,18 @@ public class ByteWriter
 		}
 	}
 	
+	public ByteWriter(OutputStream stream)
+	{
+		fos = stream;
+	}
+	
 	public void writeVariableInt(int value)
 	{
 		while(true)
 		{
 			int export = value & 0x7F;
 			value >>>= 7;
-			if(value > 0)
+			if(value != 0)
 			{
 				writeByte(export | 0x80);
 			}
@@ -52,6 +59,13 @@ public class ByteWriter
 		}
 	}
 	
+	public void writeCompactString(String text)
+	{
+		byte[] bytes = CompactText.encode(text);
+		writeVariableInt(bytes.length);
+		writeBytes(bytes);
+	}
+	
 	public void writeString(String value)
 	{
 		byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
@@ -69,6 +83,25 @@ public class ByteWriter
 		{
 			throw new RuntimeException(e);
 		}
+	}
+	
+	private void writeLong(long value)
+	{
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
+		value >>>= 8;
+		writeByte((int) (value & 0xFF));
 	}
 	
 	public void writeInt(int value)
@@ -96,13 +129,19 @@ public class ByteWriter
 	
 	public void writeFloat(float value)
 	{
-		writeInt(Float.floatToIntBits(value));
+		writeInt(Float.floatToRawIntBits(value));
+	}
+	
+	public void writeDouble(double value)
+	{
+		writeLong(Double.doubleToRawLongBits(value));
 	}
 	
 	public void close()
 	{
 		try
 		{
+			fos.flush();
 			fos.close();
 		}
 		catch(IOException e)

@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.NRFieldVarReferen
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
 
+import de.ecconia.java.opentung.util.io.ByteReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class NRParseBundle
 	
 	public String string()
 	{
-		return reader.readBytePrefixedString();
+		return reader.readLengthPrefixedString();
 	}
 	
 	public NRLibrary readLibraryAndResolve()

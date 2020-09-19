@@ -17,7 +17,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompSwitch extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Switch", CompSwitch::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Switch", "0.2.6", CompSwitch.class, CompSwitch::new);
 	
 	static
 	{
@@ -52,13 +52,13 @@ public class CompSwitch extends Component implements Powerable, Updateable
 	private boolean powered;
 	
 	@Override
-	public void setPowered(boolean powered)
+	public void setPowered(int index, boolean powered)
 	{
 		this.powered = powered;
 	}
 	
 	@Override
-	public boolean isPowered()
+	public boolean isPowered(int index)
 	{
 		return powered;
 	}

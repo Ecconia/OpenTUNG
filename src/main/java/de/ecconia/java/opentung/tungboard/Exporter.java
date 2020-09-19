@@ -27,6 +27,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 
+import de.ecconia.java.opentung.util.io.ByteWriter;
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;

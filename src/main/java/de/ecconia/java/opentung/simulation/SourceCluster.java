@@ -39,8 +39,7 @@ public class SourceCluster extends Cluster
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		//This quite the ugly call.
-		boolean sourceState = ((Powerable) source.getParent()).isPowered();
+		boolean sourceState = source.isPowered();
 		if(sourceState != active)
 		{
 			active = sourceState; //Change the internal memory state, for next update.

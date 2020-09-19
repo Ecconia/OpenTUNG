@@ -22,6 +22,8 @@ public class InputProcessor implements Controller
 	private Controller2D controller2D;
 	private Controller activeController = this;
 	
+	private Long escapeDown;
+	
 	public InputProcessor(long windowID)
 	{
 		this.windowID = windowID;
@@ -99,11 +101,25 @@ public class InputProcessor implements Controller
 	
 	public void keyPressed(int key, int scancode, int mods)
 	{
+		if(key == GLFW.GLFW_KEY_ESCAPE)
+		{
+			escapeDown = System.currentTimeMillis();
+		}
 		activeController.keyDown(key, scancode, mods);
 	}
 	
 	public void keyReleased(int key, int scancode, int mods)
 	{
+		if(key == GLFW.GLFW_KEY_ESCAPE)
+		{
+			//I cannot guarantee random updates by OS, thus this test.
+			if((System.currentTimeMillis() - escapeDown) > 1000)
+			{
+				issueShutdown();
+				return;
+			}
+			escapeDown = null;
+		}
 		activeController.keyUp(key, scancode, mods);
 	}
 	
@@ -122,6 +138,11 @@ public class InputProcessor implements Controller
 	
 	public void postEvents()
 	{
+		if(escapeDown != null && (System.currentTimeMillis() - escapeDown) > 1000)
+		{
+			issueShutdown();
+			return;
+		}
 		activeController.inputInterval();
 		
 		//Reset mouse movement, it should have been processed by now.

@@ -2,10 +2,12 @@ package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,14 +21,17 @@ import javax.imageio.ImageIO;
 
 public class LabelToolkit
 {
-	public static LabelTextureWrapper generateUploadTexture(String text, float textSize, int size)
+	public static TextureWrapper generateUploadTexture(String text, float textSize, int size)
 	{
 		String[] lines = text.split("\n");
 		
+		//TODO: BUG. If rendering on 4096² with text: 'On'4.75 'Off'5.0 'PUU'4.0 then all letters crammed.
 		int side = Settings.labelTexturePixelResolution;
 		//Generate image:
 		BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		g.setColor(java.awt.Color.white);
 		g.fillRect(0, 0, side, side);
 		
@@ -50,7 +55,7 @@ public class LabelToolkit
 		
 		g.dispose();
 		
-		return new LabelTextureWrapper(image, size);
+		return LabelTextureWrapper.createLabelTexture(image, size);
 	}
 	
 	private Map<LabelContainer, List<CompLabel>> map = new HashMap<>();
@@ -62,11 +67,11 @@ public class LabelToolkit
 			return;
 		}
 		
-		LabelTextureWrapper loading;
+		TextureWrapper loading;
 		try
 		{
-			BufferedImage image = ImageIO.read(LabelTextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
-			loading = new LabelTextureWrapper(image, null);
+			BufferedImage image = ImageIO.read(TextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
+			loading = LabelTextureWrapper.createLabelTexture(image, null);
 			loading.upload();
 		}
 		catch(IOException e)
@@ -151,7 +156,7 @@ public class LabelToolkit
 	
 	private void processEntry(BlockingQueue<GPUTask> gpuTasks, Map.Entry<LabelContainer, List<CompLabel>> entry)
 	{
-		LabelTextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize, entry.getValue().size());
+		TextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize, entry.getValue().size());
 		try
 		{
 			gpuTasks.put((unused) -> {

@@ -1,4 +1,6 @@
-package de.ecconia.java.opentung.tungboard.netremoting;
+package de.ecconia.java.opentung.util.io;
+
+import de.ecconia.java.opentung.savefile.CompactText;
 
 public class ByteReader
 {
@@ -10,32 +12,6 @@ public class ByteReader
 		this.data = data;
 	}
 	
-	//Big Endian
-	public String readCharsBE(int amount)
-	{
-		char[] chars = new char[amount];
-		
-		for(int i = 0; i < amount; i++)
-		{
-			chars[i] = (char) data[pointer++];
-		}
-		
-		return new String(chars);
-	}
-	
-	public String readCharsLE(int amount)
-	{
-		char[] chars = new char[amount];
-		
-		for(int i = amount - 1; i >= 0; i--)
-		{
-			chars[i] = (char) data[pointer++];
-		}
-		
-		return new String(chars);
-	}
-	
-	//Little Endian
 	public int readIntLE()
 	{
 		return readUnsignedByte() | readUnsignedByte() << 8 | readUnsignedByte() << 16 | readUnsignedByte() << 24;
@@ -61,29 +37,32 @@ public class ByteReader
 		return ((int) data[pointer++]) & 255;
 	}
 	
-	public int readIntVariable()
+	public int readVariableInt()
 	{
 		int tmp = 0;
 		int val = readUnsignedByte();
 		int amountRead = 1;
+		int shifts = 0;
 		
 		while(val >= 128)
 		{
-			tmp = tmp << 7;
-			tmp |= (val & 127);
+			tmp |= ((val & 0x7F) << shifts);
+			shifts += 7;
 			val = readUnsignedByte();
 			amountRead++;
 		}
-		
-		//0x FF FF FF FF
-		//0b 0000000 0|000000 00|00000 000|0000 0000
 		
 		if(amountRead > 5)
 		{
 			throw new RuntimeException("Read too much for variable int: " + amountRead);
 		}
 		
-		return (tmp << 7) | val;
+		return tmp | (val << shifts);
+	}
+	
+	public static void main(String... arguments)
+	{
+	
 	}
 	
 	public void skip(int size)
@@ -154,7 +133,7 @@ public class ByteReader
 		return value;
 	}
 	
-	public String readBytePrefixedString()
+	public String readLengthPrefixedString()
 	{
 		int byteAmount = variableInteger();
 		return new String(readBytes(byteAmount));
@@ -164,5 +143,45 @@ public class ByteReader
 	{
 		int value = readIntLE();
 		return Float.intBitsToFloat(value);
+	}
+	
+	public String readCompactString()
+	{
+		int byteAmount = readVariableInt();
+		return CompactText.decode(readBytes(byteAmount));
+	}
+	
+	public boolean readBoolean()
+	{
+		return readUnsignedByte() != 0;
+	}
+	
+	public double readDouble()
+	{
+		return Double.longBitsToDouble(readLongLE());
+	}
+	
+	public long readLongBE()
+	{
+		return (long) readUnsignedByte() << 56
+				| (long) readUnsignedByte() << 48
+				| (long) readUnsignedByte() << 40
+				| (long) readUnsignedByte() << 32
+				| (long) readUnsignedByte() << 24
+				| (long) readUnsignedByte() << 16
+				| (long) readUnsignedByte() << 8
+				| (long) readUnsignedByte();
+	}
+	
+	public long readLongLE()
+	{
+		return (long) readUnsignedByte()
+				| (long) readUnsignedByte() << 8
+				| (long) readUnsignedByte() << 16
+				| (long) readUnsignedByte() << 24
+				| (long) readUnsignedByte() << 32
+				| (long) readUnsignedByte() << 40
+				| (long) readUnsignedByte() << 48
+				| (long) readUnsignedByte() << 56;
 	}
 }

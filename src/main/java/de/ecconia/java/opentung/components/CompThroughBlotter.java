@@ -18,7 +18,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompThroughBlotter extends Component implements Powerable, Updateable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-ThroughBlotter", CompThroughBlotter::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-ThroughBlotter", "0.2.6", CompThroughBlotter.class, CompThroughBlotter::new);
 	
 	static
 	{
@@ -55,13 +55,13 @@ public class CompThroughBlotter extends Component implements Powerable, Updateab
 	private boolean powered;
 	
 	@Override
-	public void setPowered(boolean powered)
+	public void setPowered(int index, boolean powered)
 	{
 		this.powered = powered;
 	}
 	
 	@Override
-	public boolean isPowered()
+	public boolean isPowered(int index)
 	{
 		return powered;
 	}

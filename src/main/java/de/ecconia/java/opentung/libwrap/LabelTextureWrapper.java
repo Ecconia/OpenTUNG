@@ -1,27 +1,15 @@
 package de.ecconia.java.opentung.libwrap;
 
 import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 
-public class LabelTextureWrapper
+public class LabelTextureWrapper extends TextureWrapper
 {
-	private ByteBuffer buffer;
-	private final int width;
-	private final int height;
-	
-	private int id;
-	
-	private Integer usages;
-	
-	public LabelTextureWrapper(BufferedImage image, Integer usages)
+	public static TextureWrapper createLabelTexture(BufferedImage image, Integer usages)
 	{
-		this.usages = usages;
 		{
 			image = SDF2.start(image);
-			
+			//Scale image:
 //			if(image.getWidth() != 256)
 //			{
 //				BufferedImage imageScaled = new BufferedImage(256, 256, image.getType());
@@ -32,47 +20,19 @@ public class LabelTextureWrapper
 //				image = imageScaled;
 //			}
 		}
-		
-		width = image.getWidth();
-		height = image.getHeight();
-		int[] pixels = new int[width * height];
-		image.getRGB(0, 0, width, height, pixels, 0, width);
-		buffer = BufferUtils.createByteBuffer(width * height);
-		for(int y = 0; y < height; y++)
-		{
-			for(int x = 0; x < width; x++)
-			{
-				int pixel = pixels[y * width + x];
-				buffer.put((byte) (pixel & 0xFF));    // Alpha component
-			}
-		}
-		buffer.flip();
+		//Far = GL_LINEAR_MIPMAP_LINEAR <- Whatever was commented out.
+		return new LabelTextureWrapper(image, usages, ColorInput.Binary, GL30.GL_REPEAT, GL30.GL_LINEAR, GL30.GL_LINEAR);
 	}
 	
-	public void activate()
+	private Integer usages;
+	
+	private LabelTextureWrapper(BufferedImage image, Integer usages, ColorInput input, int wrapTypeGL, int nearFilterGL, int farFilterGL)
 	{
-		GL30.glBindTexture(GL30.GL_TEXTURE_2D, id);
+		super(image, input, wrapTypeGL, nearFilterGL, farFilterGL);
+		this.usages = usages;
 	}
 	
-	public void upload()
-	{
-		id = GL11.glGenTextures();
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL30.GL_REPEAT);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL30.GL_REPEAT);
-//		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-		//Anisotropic filtering: TODO: Check if available
-//		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, 2.5f);
-//		System.out.println(GL.getCapabilities().GL_EXT_texture_filter_anisotropic);
-		
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RED, width, height, 0, GL11.GL_RED, GL11.GL_UNSIGNED_BYTE, buffer);
-		GL30.glGenerateMipmap(GL30.GL_TEXTURE_2D);
-		
-		buffer = null;
-	}
-	
+	@Override
 	public void unload()
 	{
 		if(usages != null)

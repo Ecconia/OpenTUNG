@@ -9,15 +9,16 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
 
-public class CompDisplay extends Component implements Updateable, Colorable
+public class CompDisplay extends Component implements Updateable, Colorable, CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Display", CompDisplay::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Display", "0.2.6", CompDisplay.class, CompDisplay::new);
 	
 	static
 	{
@@ -79,5 +80,23 @@ public class CompDisplay extends Component implements Updateable, Colorable
 	public int getColorID(int id)
 	{
 		return colorID;
+	}
+	
+	//### Save/Load ###
+	
+	@Override
+	public byte[] getCustomData()
+	{
+		byte[] bytes = new byte[3];
+		bytes[0] = (byte) colorRaw.getR();
+		bytes[1] = (byte) colorRaw.getG();
+		bytes[2] = (byte) colorRaw.getB();
+		return bytes;
+	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		colorRaw = new Color((int) data[0] & 255, (int) data[1] & 255, (int) data[2] & 255);
 	}
 }

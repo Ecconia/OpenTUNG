@@ -18,7 +18,7 @@ import de.ecconia.java.opentung.simulation.Updateable;
 public class CompPanelButton extends Component implements Powerable, Updateable, Holdable
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-PanelButton", CompPanelButton::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-PanelButton", "0.2.6", CompPanelButton.class, CompPanelButton::new);
 	
 	static
 	{
@@ -54,13 +54,13 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 	private boolean powered;
 	
 	@Override
-	public void setPowered(boolean powered)
+	public void setPowered(int index, boolean powered)
 	{
 		this.powered = powered;
 	}
 	
 	@Override
-	public boolean isPowered()
+	public boolean isPowered(int index)
 	{
 		return powered;
 	}

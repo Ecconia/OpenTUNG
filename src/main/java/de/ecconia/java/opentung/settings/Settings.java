@@ -21,7 +21,7 @@ public class Settings
 	
 	//### BOARD IMPORT ###
 	
-	@SettingsSectionStart(key = "settings.initialLoading.boardRotation", comment = "The rotation of the root board, axis apply order: XZY")
+	@SettingsSectionStart(key = "settings.initialLoading.boardRotation", comment = "The rotation of the .tungboard root-board, axis apply order: XZY")
 	@SettingInfo(key = "settings.initialLoading.boardRotation.x")
 	public static float rootBoardAngleX = 180f;
 	@SettingInfo(key = "settings.initialLoading.boardRotation.y")
@@ -29,7 +29,7 @@ public class Settings
 	@SettingInfo(key = "settings.initialLoading.boardRotation.z")
 	public static float rootBoardAngleZ = 0f;
 	
-	@SettingsSectionStart(key = "settings.initialLoading.boardOffset", comment = "Where the center of the root board will be placed in the world:")
+	@SettingsSectionStart(key = "settings.initialLoading.boardOffset", comment = "Where the center of the .tungboard root-board will be placed in the world:")
 	@SettingInfo(key = "settings.initialLoading.boardOffset.x")
 	public static double rootBoardOffsetX = -16 * 0.3;
 	@SettingInfo(key = "settings.initialLoading.boardOffset.y")
@@ -41,7 +41,7 @@ public class Settings
 	@SettingInfo(key = "settings.initialLoading.playerSpawn.x")
 	public static float playerSpawnX = 0.0f;
 	@SettingInfo(key = "settings.initialLoading.playerSpawn.y")
-	public static float playerSpawnY = 0.0f;
+	public static float playerSpawnY = 0.6f;
 	@SettingInfo(key = "settings.initialLoading.playerSpawn.z")
 	public static float playerSpawnZ = 0.0f;
 	
@@ -124,10 +124,10 @@ public class Settings
 	
 	@SettingInfo(key = "settings.graphic.text.labelTexturePixelResolution", comment = "Label-Textures will be generate with this resolution², you may increase this.\nThe labels get generated in background, so you might see more \"Loading...\" textures.")
 	public static int labelTexturePixelResolution = 1024;
-	@SettingInfo(key = "settings.graphic.text.labelSDFTexturePixelResolution", comment = "The resolution uploaded to the GPU. Be sure that the label resolution can be divided by the SDF resolution.\nHint: You might break the loading-texture, its 1024²")
+	@SettingInfo(key = "settings.graphic.text.labelSDFTexturePixelResolution", comment = "The resolution uploaded to the GPU. Be sure that the label resolution can be divided by the SDF resolution.\nHint: You might break the loading-texture, its 1024²\nMUST BE a multiple of 4!")
 	public static int labelSDFTexturePixelResolution = 256;
 	
-	@SettingInfo(key = "settings.graphic.gui.component.icon.resolution", comment = "The resolution of component icons.")
+	@SettingInfo(key = "settings.graphic.gui.component.icon.resolution", comment = "The resolution of component icons.\nMust be a multiple of 4!")
 	public static int componentIconResolution = 200;
 	
 	@SettingInfo(key = "settings.graphic.gui.global.scale", comment = "Factor for any size related number in the GUI.")

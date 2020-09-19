@@ -9,15 +9,18 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
+import de.ecconia.java.opentung.util.io.ByteLevelHelper;
+import de.ecconia.java.opentung.util.io.ByteReader;
 
-public class CompNoisemaker extends Component implements Updateable, Colorable
+public class CompNoisemaker extends Component implements Updateable, Colorable, CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Noisemaker", CompNoisemaker::new);
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Noisemaker", "0.2.6", CompNoisemaker.class, CompNoisemaker::new);
 	
 	static
 	{
@@ -48,8 +51,11 @@ public class CompNoisemaker extends Component implements Updateable, Colorable
 		input = pegs.get(0);
 	}
 	
+	private float frequency;
+	
 	public void setFrequency(float frequency)
 	{
+		this.frequency = frequency;
 	}
 	
 	@Override
@@ -71,5 +77,22 @@ public class CompNoisemaker extends Component implements Updateable, Colorable
 	public int getColorID(int id)
 	{
 		return colorID;
+	}
+	
+	//### Save/Load ###
+	
+	@Override
+	public byte[] getCustomData()
+	{
+		byte[] bytes = new byte[4];
+		ByteLevelHelper.writeFloat(frequency, bytes, 0);
+		return bytes;
+	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		ByteReader reader = new ByteReader(data);
+		frequency = reader.readFloatLE();
 	}
 }

@@ -13,6 +13,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.savefile.BoardAndWires;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
@@ -22,6 +23,7 @@ import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -83,11 +85,17 @@ public class BoardUniverse
 		return raycastIDs;
 	}
 	
-	//### OTHER ##ä
+	//### OTHER ###
 	
 	private final SimulationManager simulation = new SimulationManager();
 	
 	private int nextClusterID = 0;
+	
+	public BoardUniverse(BoardAndWires bnw)
+	{
+		this(bnw.getBoard());
+		this.wiresToRender.addAll(Arrays.asList(bnw.getWires()));
+	}
 	
 	public BoardUniverse(CompBoard board)
 	{
@@ -113,6 +121,7 @@ public class BoardUniverse
 			System.out.println("[BoardImport] Linking wires.");
 			try
 			{
+				//TODO: Don't scan through components, if its not a tungboard file.
 				linkWires(rootBoard, rootBoard);
 			}
 			catch(Exception e)
@@ -528,6 +537,11 @@ public class BoardUniverse
 		}
 	}
 	
+	public CompBoard getRootBoard()
+	{
+		return rootBoard;
+	}
+	
 	public List<CompWireRaw> getWiresToRender()
 	{
 		return wiresToRender;
@@ -536,6 +550,11 @@ public class BoardUniverse
 	public List<Component> getComponentsToRender()
 	{
 		return componentsToRender;
+	}
+	
+	public List<CompSnappingWire> getSnappingWires()
+	{
+		return snappingWires;
 	}
 	
 	public List<CompLabel> getLabelsToRender()

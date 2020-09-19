@@ -172,7 +172,7 @@ public class TungBoardLoader
 			CompInverter inverter = new CompInverter(parent);
 			inverter.setPosition(globalPosition.add(rotatedFixPoint));
 			inverter.setRotation(globalRotation);
-			inverter.setPowered(((TungInverter) object).isOutputOn());
+			inverter.setPowered(0, ((TungInverter) object).isOutputOn());
 			
 			return inverter;
 		}
@@ -184,7 +184,7 @@ public class TungBoardLoader
 			CompBlotter blotter = new CompBlotter(parent);
 			blotter.setPosition(globalPosition.add(rotatedFixPoint));
 			blotter.setRotation(globalRotation);
-			blotter.setPowered(((TungBlotter) object).isOutputOn());
+			blotter.setPowered(0, ((TungBlotter) object).isOutputOn());
 			
 			return blotter;
 		}
@@ -273,7 +273,7 @@ public class TungBoardLoader
 			CompSwitch toggle = new CompSwitch(parent);
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
-			toggle.setPowered(((TungSwitch) object).isOn());
+			toggle.setPowered(0, ((TungSwitch) object).isOn());
 			
 			return toggle;
 		}
@@ -296,7 +296,7 @@ public class TungBoardLoader
 			CompPanelSwitch toggle = new CompPanelSwitch(parent);
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
-			toggle.setPowered(((TungPanelSwitch) object).isOn());
+			toggle.setPowered(0, ((TungPanelSwitch) object).isOn());
 			
 			return toggle;
 		}
@@ -321,7 +321,7 @@ public class TungBoardLoader
 			CompThroughBlotter blotter = new CompThroughBlotter(parent);
 			blotter.setPosition(globalPosition.add(rotatedFixPoint));
 			blotter.setRotation(globalRotation);
-			blotter.setPowered(((TungThroughBlotter) object).isOutputOn());
+			blotter.setPowered(0, ((TungThroughBlotter) object).isOutputOn());
 			
 			return blotter;
 		}
@@ -378,7 +378,7 @@ public class TungBoardLoader
 			CompDelayer toggle = new CompDelayer(parent);
 			toggle.setPosition(globalPosition.add(rotatedFixPoint));
 			toggle.setRotation(globalRotation);
-			toggle.setPowered(((TungDelayer) object).isOutputOn());
+			toggle.setPowered(0, ((TungDelayer) object).isOutputOn());
 			toggle.setDelayCount(((TungDelayer) object).getDelayCount());
 			
 			return toggle;

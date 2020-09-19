@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.interfaces;
+package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.SharedData;
@@ -7,6 +7,9 @@ import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompPeg;
+import de.ecconia.java.opentung.interfaces.GUIColors;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
+import de.ecconia.java.opentung.interfaces.Shapes;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
@@ -18,9 +21,9 @@ public class Hotbar
 	private final RenderPlane2D plane;
 	private final SharedData sharedData;
 	
-	private static final NVGColor hotbarBG = NanoVG.nvgRGBAf(0.8f, 0.8f, 0.8f, 0.3f, NVGColor.create());
-	private static final NVGColor hotbarOutline = NanoVG.nvgRGBf(0.2f, 0.2f, 0.2f, NVGColor.create());
-	private static final NVGColor hotbarOutlineActive = NanoVG.nvgRGBf(1.0f, 1.0f, 1.0f, NVGColor.create());
+	private static final NVGColor hotbarBG = GUIColors.background;
+	private static final NVGColor hotbarOutline = GUIColors.outline;
+	private static final NVGColor hotbarOutlineActive = GUIColors.outlineHighlighted;
 	
 	private static final float side = 100;
 	private static final float padding = 20f;

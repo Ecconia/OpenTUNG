@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.components.fragments.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimulationManager extends Thread
 {
@@ -23,6 +24,9 @@ public class SimulationManager extends Thread
 	private int tps;
 	private int ups;
 	private int upsCounter;
+	
+	private boolean paused;
+	private AtomicInteger pauseArrived;
 	
 	public SimulationManager()
 	{
@@ -51,42 +55,63 @@ public class SimulationManager extends Thread
 		
 		while(!Thread.currentThread().isInterrupted())
 		{
-			doTick();
-			
-			finishedTicks++;
-			long now = System.currentTimeMillis();
-			if(now - past > 1000)
+			if(paused)
 			{
-				past = now;
-				tps = finishedTicks;
-				finishedTicks = 0;
-				ups = upsCounter;
-				upsCounter = 0;
-			}
-			
-			if(Settings.targetTPS > 0)
-			{
-				targetSleep = 1000000000L / Settings.targetTPS;
-				if(targetSleep > 1000000)
+				if(pauseArrived != null)
 				{
-					try
-					{
-						Thread.sleep(targetSleep / 1000000);
-					}
-					catch(InterruptedException e)
-					{
-						break;
-					}
+					pauseArrived.incrementAndGet();
+					pauseArrived = null; //Remove reference to not trigger it again.
 				}
-				else
+				tps = 0;
+				ups = 0;
+				try
 				{
-					after = System.nanoTime();
-					long delta = after - before;
-					long targetTime = after + targetSleep - delta;
-					while(System.nanoTime() < targetTime)
+					Thread.sleep(500);
+				}
+				catch(InterruptedException e)
+				{
+					break; //Just break the while loop. May happen on exit while saving.
+				}
+			}
+			else
+			{
+				doTick();
+				
+				finishedTicks++;
+				long now = System.currentTimeMillis();
+				if(now - past > 1000)
+				{
+					past = now;
+					tps = finishedTicks;
+					finishedTicks = 0;
+					ups = upsCounter;
+					upsCounter = 0;
+				}
+				
+				if(Settings.targetTPS > 0)
+				{
+					targetSleep = 1000000000L / Settings.targetTPS;
+					if(targetSleep > 1000000)
 					{
+						try
+						{
+							Thread.sleep(targetSleep / 1000000);
+						}
+						catch(InterruptedException e)
+						{
+							break;
+						}
 					}
-					before = System.nanoTime();
+					else
+					{
+						after = System.nanoTime();
+						long delta = after - before;
+						long targetTime = after + targetSleep - delta;
+						while(System.nanoTime() < targetTime)
+						{
+						}
+						before = System.nanoTime();
+					}
 				}
 			}
 		}
@@ -230,6 +255,17 @@ public class SimulationManager extends Thread
 	public void setColor(int colorID, Color color)
 	{
 		colorMeshStates[colorID] = color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 255;
+	}
+	
+	public void pauseSimulation(AtomicInteger pauseArrived)
+	{
+		this.pauseArrived = pauseArrived;
+		paused = true;
+	}
+	
+	public void resumeSimulation()
+	{
+		paused = false;
 	}
 	
 	public interface UpdateJob
