@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung;
 
-import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
+import de.ecconia.java.opentung.savefile.Loader;
 import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.SettingsIO;
@@ -63,8 +63,14 @@ public class OpenTUNG
 		
 		parseArguments(args);
 		
-		CompBoard board = TungBoardLoader.importTungBoard(boardFile);
-		boardUniverse = new BoardUniverse(board);
+		if(boardFile.getName().endsWith(".opentung"))
+		{
+			boardUniverse = new BoardUniverse(Loader.load(boardFile));
+		}
+		else
+		{
+			boardUniverse = new BoardUniverse(TungBoardLoader.importTungBoard(boardFile));
+		}
 		
 		System.out.println("Starting GUI...");
 		try
@@ -194,14 +200,14 @@ public class OpenTUNG
 			if(args.length == 1)
 			{
 				String argument = args[0];
-				if(argument.endsWith(".tungboard"))
+				if(argument.endsWith(".tungboard") || argument.endsWith(".opentung"))
 				{
 					defaultBoardName = argument;
 					break out;
 				}
 			}
 			System.out.println("If you have multiple tungboard files in your 'boards' folder, only supply the filename of one.");
-			System.out.println(" It mustn't contain spaces and must end on '.tungboard'. You may not provide relative/absolute paths."); //Cause I am too lazy to add a command parsing framework or write one myself - rn.
+			System.out.println(" It mustn't contain spaces and must end on '.tungboard' or '.opentung'. You may not provide relative/absolute paths."); //Cause I am too lazy to add a command parsing framework or write one myself - rn.
 			System.out.println();
 			System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
 			System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
@@ -210,13 +216,13 @@ public class OpenTUNG
 		
 		if(defaultBoardName != null)
 		{
-			File tungboardFile = new File(boardFolder, defaultBoardName);
-			if(!tungboardFile.exists())
+			File boardFile = new File(boardFolder, defaultBoardName);
+			if(!boardFile.exists())
 			{
-				System.out.println("TungBoard file " + tungboardFile.getAbsolutePath() + " cannot be found.");
+				System.out.println("TungBoard/OpenTUNG file " + boardFile.getAbsolutePath() + " cannot be found.");
 				System.exit(1);
 			}
-			boardFile = tungboardFile;
+			OpenTUNG.boardFile = boardFile;
 		}
 		else
 		{

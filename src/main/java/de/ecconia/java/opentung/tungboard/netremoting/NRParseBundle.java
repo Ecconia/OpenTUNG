@@ -38,7 +38,7 @@ public class NRParseBundle
 	
 	public String string()
 	{
-		return reader.readBytePrefixedString();
+		return reader.readLengthPrefixedString();
 	}
 	
 	public NRLibrary readLibraryAndResolve()

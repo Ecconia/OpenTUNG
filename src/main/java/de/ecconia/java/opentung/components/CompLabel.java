@@ -12,6 +12,7 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
+import de.ecconia.java.opentung.util.io.ByteReader;
 import java.nio.charset.StandardCharsets;
 
 public class CompLabel extends Component implements CustomData
@@ -117,5 +118,13 @@ public class CompLabel extends Component implements CustomData
 		ByteLevelHelper.writeUnsignedInt(textSize, bytes, 4);
 		System.arraycopy(textBytes, 0, bytes, textOffset, textSize);
 		return bytes;
+	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		ByteReader reader = new ByteReader(data);
+		fontSize = reader.readFloatLE();
+		text = new String(reader.readBytes(reader.readVariableInt()), StandardCharsets.UTF_8);
 	}
 }

@@ -12,13 +12,12 @@ import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
+import de.ecconia.java.opentung.util.io.ByteReader;
 
 public class CompBoard extends CompContainer implements CustomData
 {
 	public static final ModelHolder modelHolder = new ModelHolder();
-	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Board", "0.2.6", CompBoard.class, parent -> {
-		throw new RuntimeException("Board component cannot be instantiated like this!");
-	});
+	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Board", "0.2.6", CompBoard.class, CompBoard::new);
 	
 	static
 	{
@@ -50,6 +49,11 @@ public class CompBoard extends CompContainer implements CustomData
 	
 	private Color color = Color.boardDefault;
 	private int x, z;
+	
+	public CompBoard(CompContainer parent)
+	{
+		super(parent);
+	}
 	
 	public CompBoard(CompContainer parent, int x, int z)
 	{
@@ -103,15 +107,24 @@ public class CompBoard extends CompContainer implements CustomData
 	@Override
 	public byte[] getCustomData()
 	{
-		int first = ByteLevelHelper.sizeOfUnsignedInt(x);
-		int second = ByteLevelHelper.sizeOfUnsignedInt(z);
-		int byteAmount = first + second + 3;
-		byte[] bytes = new byte[byteAmount];
-		ByteLevelHelper.writeUnsignedInt(x, bytes, 0);
-		ByteLevelHelper.writeUnsignedInt(z, bytes, first);
-		bytes[second++] = (byte) color.getR();
-		bytes[second++] = (byte) color.getG();
-		bytes[second] = (byte) color.getB();
+		byte[] bytes = new byte[4 + 4 + 3];
+		ByteLevelHelper.writeUncompressedInt(x, bytes, 0);
+		ByteLevelHelper.writeUncompressedInt(z, bytes, 4);
+		bytes[8] = (byte) color.getR();
+		bytes[9] = (byte) color.getG();
+		bytes[10] = (byte) color.getB();
 		return bytes;
+	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		ByteReader reader = new ByteReader(data);
+		x = reader.readIntLE();
+		z = reader.readIntLE();
+		int r = reader.readUnsignedByte();
+		int g = reader.readUnsignedByte();
+		int b = reader.readUnsignedByte();
+		color = new Color(r, g, b);
 	}
 }

@@ -17,6 +17,7 @@ import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
+import de.ecconia.java.opentung.util.io.ByteReader;
 
 public class CompDelayer extends Component implements Powerable, Updateable, CustomData
 {
@@ -128,5 +129,12 @@ public class CompDelayer extends Component implements Powerable, Updateable, Cus
 		byte[] bytes = new byte[ByteLevelHelper.sizeOfUnsignedInt(delayCount)];
 		ByteLevelHelper.writeUnsignedInt(delayCount, bytes, 0);
 		return bytes;
+	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		ByteReader reader = new ByteReader(data);
+		delayCount = reader.readVariableInt();
 	}
 }

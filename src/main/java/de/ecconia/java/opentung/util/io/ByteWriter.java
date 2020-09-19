@@ -5,11 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class ByteWriter
 {
-	private final FileOutputStream fos;
+	private final OutputStream fos;
 	
 	public ByteWriter(File file)
 	{
@@ -21,6 +22,11 @@ public class ByteWriter
 		{
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public ByteWriter(OutputStream stream)
+	{
+		fos = stream;
 	}
 	
 	public void writeVariableInt(int value)

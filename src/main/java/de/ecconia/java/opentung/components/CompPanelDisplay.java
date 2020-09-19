@@ -94,4 +94,10 @@ public class CompPanelDisplay extends Component implements Updateable, Colorable
 		bytes[2] = (byte) colorRaw.getB();
 		return bytes;
 	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		colorRaw = new Color((int) data[0] & 255, (int) data[1] & 255, (int) data[2] & 255);
+	}
 }

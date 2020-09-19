@@ -39,7 +39,6 @@ public class SourceCluster extends Cluster
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		//This quite the ugly call.
 		boolean sourceState = source.isPowered();
 		if(sourceState != active)
 		{

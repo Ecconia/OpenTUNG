@@ -98,4 +98,10 @@ public class Color
 				1.0f
 		};
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "(" + r + " " + g + " " + b + ")";
+	}
 }

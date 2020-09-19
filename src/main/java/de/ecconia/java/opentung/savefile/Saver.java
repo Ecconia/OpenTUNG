@@ -64,20 +64,20 @@ public class Saver
 		}
 		if(boardCount != expectedBoards)
 		{
-			System.out.println("BOARDS: " + boardCount + " / " + expectedBoards);
+			System.out.println("[OpenTUNG-Saver] BOARDS: " + boardCount + " / " + expectedBoards);
 		}
 		if(components.size() != componentAmount)
 		{
-			System.out.println("COMPONENTS: " + components.size() + " / " + componentAmount);
+			System.out.println("[OpenTUNG-Saver] COMPONENTS: " + components.size() + " / " + componentAmount);
 		}
 		else
 		{
-			System.out.println("Collected: " + components.size());
+			System.out.println("[OpenTUNG-Saver] Collected: " + components.size());
 		}
 		
 		Map<Component, Integer> componentIDs = new HashMap<>();
 		Map<Connector, Integer> connectorIDs = new HashMap<>();
-		Map<PlaceableInfo, ComponentData> dictionary = new HashMap<>();
+		Map<PlaceableInfo, DictionaryEntry> dictionary = new HashMap<>();
 		int componentID = 1;
 		int connectorID = 0;
 		int dictionaryID = 0;
@@ -85,10 +85,10 @@ public class Saver
 		{
 			componentIDs.put(component, componentID++);
 			PlaceableInfo info = component.getInfo();
-			ComponentData data = dictionary.get(info);
+			DictionaryEntry data = dictionary.get(info);
 			if(data == null)
 			{
-				data = new ComponentData(info, dictionaryID++);
+				data = new DictionaryEntry(info, dictionaryID++);
 				dictionary.put(info, data);
 			}
 			data.incrementCounter();
@@ -102,8 +102,11 @@ public class Saver
 			}
 		}
 		
-		List<ComponentData> sortedDictionary = dictionary.values().stream().sorted(Comparator.comparingInt(ComponentData::getId)).collect(Collectors.toList());
-		for(ComponentData data : sortedDictionary)
+		System.out.println("[OpenTUNG-Saver] Connector IDs: " + connectorID);
+		
+		System.out.println("[OpenTUNG-Saver] Dumping component dictionary:");
+		List<DictionaryEntry> sortedDictionary = dictionary.values().stream().sorted(Comparator.comparingInt(DictionaryEntry::getId)).collect(Collectors.toList());
+		for(DictionaryEntry data : sortedDictionary)
 		{
 			String id = String.valueOf(data.getId());
 			if(id.length() < 2)
@@ -136,7 +139,7 @@ public class Saver
 			writer.writeVariableInt(wires.size());
 			//Write component dictionary with: (see above):
 			writer.writeVariableInt(sortedDictionary.size());
-			for(ComponentData data : sortedDictionary)
+			for(DictionaryEntry data : sortedDictionary)
 			{
 				//Tag:
 				writer.writeCompactString(data.getTag());
@@ -154,7 +157,7 @@ public class Saver
 			//Write components with: type-id, position, direction, blots, custom-data
 			for(Component component : components)
 			{
-				ComponentData data = dictionary.get(component.getInfo());
+				DictionaryEntry data = dictionary.get(component.getInfo());
 				int typeId = data.getId();
 				writer.writeVariableInt(typeId);
 				//Parent:
@@ -204,74 +207,6 @@ public class Saver
 		{
 			//TODO: Handle.
 			e.printStackTrace();
-		}
-	}
-	
-	private static class ComponentData
-	{
-		private final int id;
-		private final String tag;
-		private final String version;
-		private final int pegs;
-		private final int blots;
-		private final boolean customData;
-		
-		private int componentCount;
-		
-		public ComponentData(PlaceableInfo info, int id)
-		{
-			this.id = id;
-			this.pegs = info.getModel().getPegModels().size();
-			this.blots = info.getModel().getBlotModels().size();
-			this.customData = info.hasCustomData();
-			this.version = info.getVersion();
-			
-			String tag = info.getName();
-			if(tag.startsWith("TUNG-"))
-			{
-				tag = "TUNG." + tag.substring(5);
-			}
-			this.tag = tag;
-		}
-		
-		public void incrementCounter()
-		{
-			componentCount++;
-		}
-		
-		public int getId()
-		{
-			return id;
-		}
-		
-		public String getTag()
-		{
-			return tag;
-		}
-		
-		public String getVersion()
-		{
-			return version;
-		}
-		
-		public int getComponentCount()
-		{
-			return componentCount;
-		}
-		
-		public int getPegs()
-		{
-			return pegs;
-		}
-		
-		public int getBlots()
-		{
-			return blots;
-		}
-		
-		public boolean hasCustomData()
-		{
-			return customData;
 		}
 	}
 }

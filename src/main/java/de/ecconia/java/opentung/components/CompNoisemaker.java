@@ -12,9 +12,10 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
+import de.ecconia.java.opentung.util.io.ByteLevelHelper;
+import de.ecconia.java.opentung.util.io.ByteReader;
 
 public class CompNoisemaker extends Component implements Updateable, Colorable, CustomData
 {
@@ -86,5 +87,12 @@ public class CompNoisemaker extends Component implements Updateable, Colorable, 
 		byte[] bytes = new byte[4];
 		ByteLevelHelper.writeFloat(frequency, bytes, 0);
 		return bytes;
+	}
+	
+	@Override
+	public void setCustomData(byte[] data)
+	{
+		ByteReader reader = new ByteReader(data);
+		frequency = reader.readFloatLE();
 	}
 }
