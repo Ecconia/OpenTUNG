@@ -54,13 +54,13 @@ public class CompPanelButton extends Component implements Powerable, Updateable,
 	private boolean powered;
 	
 	@Override
-	public void setPowered(boolean powered)
+	public void setPowered(int index, boolean powered)
 	{
 		this.powered = powered;
 	}
 	
 	@Override
-	public boolean isPowered()
+	public boolean isPowered(int index)
 	{
 		return powered;
 	}

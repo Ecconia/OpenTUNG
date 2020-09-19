@@ -30,9 +30,11 @@ public abstract class Component extends Part
 		{
 			pegs.add(new Peg(this, cube));
 		}
-		for(CubeFull cube : getModelHolder().getBlotModels())
+		List<CubeFull> blotModels = getModelHolder().getBlotModels();
+		for(int i = 0; i < blotModels.size(); i++)
 		{
-			blots.add(new Blot(this, cube));
+			CubeFull cube = blotModels.get(i);
+			blots.add(new Blot(this, i, cube));
 		}
 	}
 	
