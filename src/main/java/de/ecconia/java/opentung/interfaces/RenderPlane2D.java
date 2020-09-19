@@ -346,7 +346,12 @@ public class RenderPlane2D implements RenderPlane
 	
 	public void performSave()
 	{
-		Saver.save(sharedData.getBoardUniverse());
+		Saver.save(sharedData.getBoardUniverse(), sharedData.getCurrentBoardFile());
+	}
+	
+	public SharedData getSharedData()
+	{
+		return sharedData;
 	}
 	
 	private static class Point

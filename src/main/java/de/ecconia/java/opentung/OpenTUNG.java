@@ -11,6 +11,7 @@ import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.lwjgl.opengl.GL30;
 public class OpenTUNG
 {
 	public static final File dataFolder = new File("OpenTUNG");
+	public static final File boardFolder = new File(dataFolder, "boards");
 	
 	private static final int initialWidth = 800;
 	private static final int initialHeight = 600;
@@ -61,7 +63,15 @@ public class OpenTUNG
 		//Create the initial Settings loader, it uses the watcher to keep the settings up to date.
 		new SettingsIO(new File(dataFolder, "settings.txt"), watcher, Settings.class);
 		
-		parseArguments(args);
+		try
+		{
+			parseArguments(args);
+		}
+		catch(IOException e)
+		{
+			System.out.println("Issues accessing/using data folder, please report stacktrace.");
+			e.printStackTrace();
+		}
 		
 		if(boardFile.getName().endsWith(".opentung"))
 		{
@@ -77,7 +87,7 @@ public class OpenTUNG
 		{
 			System.out.println("LWJGL version: " + Version.getVersion());
 			
-			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ?");
+			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ? | " + boardFile.getName());
 			inputHandler = new InputProcessor(window.getID());
 			
 			Thread graphicsThread = new Thread(() -> {
@@ -98,7 +108,8 @@ public class OpenTUNG
 					//Run initially, to reduce weird visible crap.
 					window.update();
 					
-					init();
+					SharedData sharedData = new SharedData(boardUniverse, boardFile);
+					init(sharedData);
 					
 					long past = System.currentTimeMillis();
 					int finishedRenderings = 0;
@@ -127,7 +138,7 @@ public class OpenTUNG
 						if(now - past > 1000)
 						{
 							past = now;
-							window.setTitle("OpenTUNG FPS: " + finishedRenderings + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad());
+							window.setTitle("OpenTUNG FPS: " + finishedRenderings + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad() + " | " + sharedData.getCurrentBoardFile().getName());
 							finishedRenderings = 0;
 						}
 						
@@ -178,40 +189,36 @@ public class OpenTUNG
 		}
 	}
 	
-	private static void parseArguments(String[] args)
+	private static void parseArguments(String[] args) throws IOException
 	{
-		String downloadLink = "https://cdn.discordapp.com/attachments/428658408510455810/725623552161611786/16Bit-Parallel-CLA-ALU-6-ticks.tungboard";
-		String messageLink = "https://discordapp.com/channels/401255675264761866/428658408510455810/725623552358875208";
-		
-		File boardFolder = new File(dataFolder, "boards");
-		if(!boardFolder.exists() || !boardFolder.isDirectory())
+		if(!boardFolder.exists())
 		{
-			System.out.println("Please create folder " + boardFolder.getAbsolutePath() + " and insert a .tungboard file.");
-			System.out.println();
-			System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
-			System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
+			Files.createDirectory(boardFolder.toPath());
+		}
+		if(!boardFolder.isDirectory())
+		{
+			System.out.println("Could not create 'boards' folder inside data folder. Please remove board file: " + boardFolder.getAbsolutePath());
 			System.exit(1);
 		}
 		
 		String defaultBoardName = null;
-		out:
 		if(args.length != 0)
 		{
-			if(args.length == 1)
+			if(args.length != 1)
+			{
+				System.out.println("If you have multiple board files in your 'boards' folder, only supply the filename of one.");
+				System.out.println(" It mustn't contain spaces and must end on '.tungboard' or '.opentung'. You may not provide relative/absolute paths."); //Cause I am too lazy to add a command parsing framework or write one myself - rn.
+				System.out.println();
+				System.exit(1);
+			}
+			else
 			{
 				String argument = args[0];
 				if(argument.endsWith(".tungboard") || argument.endsWith(".opentung"))
 				{
 					defaultBoardName = argument;
-					break out;
 				}
 			}
-			System.out.println("If you have multiple tungboard files in your 'boards' folder, only supply the filename of one.");
-			System.out.println(" It mustn't contain spaces and must end on '.tungboard' or '.opentung'. You may not provide relative/absolute paths."); //Cause I am too lazy to add a command parsing framework or write one myself - rn.
-			System.out.println();
-			System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
-			System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
-			System.exit(1);
 		}
 		
 		if(defaultBoardName != null)
@@ -226,17 +233,18 @@ public class OpenTUNG
 		}
 		else
 		{
-			List<File> tungboardFiles = Arrays.stream(boardFolder.listFiles()).filter((File file) -> {
-				return file.getName().endsWith(".tungboard");
-			}).collect(Collectors.toList());
-			
+			List<File> tungboardFiles = Arrays.stream(boardFolder.listFiles())
+					.filter((File file) ->
+							file.getName().endsWith(".tungboard") | file.getName().endsWith(".opentung"))
+					.collect(Collectors.toList());
 			if(tungboardFiles.isEmpty())
 			{
-				System.out.println("No '.tungboard' file in the 'boards' folder, please insert one.");
-				System.out.println();
-				System.out.println("-> Recommended '.tungboard' file to use can be downloaded here: " + downloadLink);
-				System.out.println("-> If you want to confirm the source, use this link: " + messageLink);
-				System.exit(1);
+				String defaultFileName = "emptyBoard.opentung";
+				File target = new File(boardFolder, defaultFileName);
+				InputStream link = (OpenTUNG.class.getClassLoader().getResourceAsStream(defaultFileName));
+				Files.copy(link, target.getAbsoluteFile().toPath());
+				System.out.println("Created and using default board: " + defaultFileName);
+				boardFile = target;
 			}
 			else if(tungboardFiles.size() == 1)
 			{
@@ -244,20 +252,19 @@ public class OpenTUNG
 			}
 			else
 			{
-				System.out.println("Found more than one tungboard file in the 'boards' folder.");
-				System.out.println("Rename others or supply the filename of the desired '.tungboard' file as argument.");
+				System.out.println("Found more than one board file in the 'boards' folder.");
+				System.out.println("Rename others or supply the filename of the desired '.tungboard'/'.opentung' file as argument.");
 				System.exit(1);
 			}
 		}
 	}
 	
-	private static void init()
+	private static void init(SharedData sharedData)
 	{
 		setBackgroundColor();
 		
 		setOpenGLMode();
 		
-		SharedData sharedData = new SharedData(boardUniverse);
 		worldView = new RenderPlane3D(inputHandler, boardUniverse, sharedData);
 		interactables = new RenderPlane2D(inputHandler, sharedData);
 		worldView.setup();

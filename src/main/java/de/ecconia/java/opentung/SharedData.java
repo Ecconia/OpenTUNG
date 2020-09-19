@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung;
 
+import java.io.File;
 import java.util.concurrent.BlockingQueue;
 
 public class SharedData
@@ -8,11 +9,13 @@ public class SharedData
 	private BlockingQueue<GPUTask> gpuTasks;
 	private boolean saving;
 	private RenderPlane3D renderPlane3D;
+	private File currentBoardFile;
 	
 	private final BoardUniverse boardUniverse;
 	
-	public SharedData(BoardUniverse boardUniverse)
+	public SharedData(BoardUniverse boardUniverse, File boardFile)
 	{
+		this.currentBoardFile = boardFile;
 		this.boardUniverse = boardUniverse;
 	}
 	
@@ -64,5 +67,15 @@ public class SharedData
 	public void unsetSaving()
 	{
 		saving = false;
+	}
+	
+	public File getCurrentBoardFile()
+	{
+		return currentBoardFile;
+	}
+	
+	public void setCurrentBoardFile(File currentBoardFile)
+	{
+		this.currentBoardFile = currentBoardFile;
 	}
 }

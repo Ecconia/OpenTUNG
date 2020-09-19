@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
+import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.MeshText;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
@@ -8,6 +9,9 @@ import de.ecconia.java.opentung.interfaces.elements.TextButton;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
+import java.io.File;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import org.lwjgl.nanovg.NanoVG;
 
 public class PauseMenu
@@ -108,11 +112,11 @@ public class PauseMenu
 			
 			if(buttonSave.inside(xx, yy))
 			{
-				save();
+				save(false);
 			}
 			else if(buttonSaveAs.inside(xx, yy))
 			{
-				save();
+				save(true);
 			}
 			else if(buttonExit.inside(xx, yy))
 			{
@@ -125,23 +129,66 @@ public class PauseMenu
 		return false;
 	}
 	
-	public void save()
+	public void save(boolean chooser)
 	{
+		{
+			SharedData sd = renderPlane2D.getSharedData();
+			File currentSaveFile = sd.getCurrentBoardFile();
+			if(chooser)
+			{
+				JFileChooser fileChooser = new JFileChooser(currentSaveFile.getParentFile());
+				int result = fileChooser.showSaveDialog(null);
+				if(result != JFileChooser.APPROVE_OPTION)
+				{
+					return;
+				}
+				currentSaveFile = fileChooser.getSelectedFile();
+				int endingIndex = currentSaveFile.getName().lastIndexOf('.');
+				if(endingIndex < 0)
+				{
+					currentSaveFile = new File(currentSaveFile.getParent(), currentSaveFile.getName() + ".opentung");
+				}
+				else
+				{
+					String ending = currentSaveFile.getName().substring(endingIndex + 1);
+					if(!ending.equals("opentung"))
+					{
+						JOptionPane.showMessageDialog(null, "File-ending must be '.opentung', change or leave blank.", "Can only save .opentung files.", JOptionPane.ERROR_MESSAGE, null);
+						return;
+					}
+				}
+			}
+			else
+			{
+				int endingIndex = currentSaveFile.getName().lastIndexOf('.');
+				if(currentSaveFile.getName().substring(endingIndex + 1).equals("tungboard")) //Assumes file has always ending.
+				{
+					int result = JOptionPane.showOptionDialog(null, "You loaded a .tungboard file, save as .opentung file?", "Save as OpenTUNG-Save?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
+					if(result != JOptionPane.OK_OPTION)
+					{
+						return;
+					}
+					currentSaveFile = new File(currentSaveFile.getParent(), currentSaveFile.getName().substring(0, endingIndex + 1) + "opentung");
+				}
+			}
+			
+			sd.setCurrentBoardFile(currentSaveFile);
+		}
+		
+		//Lock
 		if(!renderPlane2D.prepareSaving())
 		{
 			return;
 		}
-		
 		buttonSave.setDisabled(true);
 		buttonSaveAs.setDisabled(true);
 		
 		Thread saveThread = new Thread(() -> {
 			System.out.println("Saving...");
 			long startTime = System.currentTimeMillis();
-			renderPlane2D.performSave(); //TODO: Filepath...
-			//Unlock
+			renderPlane2D.performSave();
 			System.out.println("Done, took: " + (System.currentTimeMillis() - startTime) + "ms");
-			
+			//Unlock:
 			renderPlane2D.postSave();
 			buttonSave.setDisabled(false);
 			buttonSaveAs.setDisabled(false);

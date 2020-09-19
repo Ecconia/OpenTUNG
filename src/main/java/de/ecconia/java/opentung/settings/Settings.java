@@ -21,7 +21,7 @@ public class Settings
 	
 	//### BOARD IMPORT ###
 	
-	@SettingsSectionStart(key = "settings.initialLoading.boardRotation", comment = "The rotation of the root board, axis apply order: XZY")
+	@SettingsSectionStart(key = "settings.initialLoading.boardRotation", comment = "The rotation of the .tungboard root-board, axis apply order: XZY")
 	@SettingInfo(key = "settings.initialLoading.boardRotation.x")
 	public static float rootBoardAngleX = 180f;
 	@SettingInfo(key = "settings.initialLoading.boardRotation.y")
@@ -29,7 +29,7 @@ public class Settings
 	@SettingInfo(key = "settings.initialLoading.boardRotation.z")
 	public static float rootBoardAngleZ = 0f;
 	
-	@SettingsSectionStart(key = "settings.initialLoading.boardOffset", comment = "Where the center of the root board will be placed in the world:")
+	@SettingsSectionStart(key = "settings.initialLoading.boardOffset", comment = "Where the center of the .tungboard root-board will be placed in the world:")
 	@SettingInfo(key = "settings.initialLoading.boardOffset.x")
 	public static double rootBoardOffsetX = -16 * 0.3;
 	@SettingInfo(key = "settings.initialLoading.boardOffset.y")
@@ -41,7 +41,7 @@ public class Settings
 	@SettingInfo(key = "settings.initialLoading.playerSpawn.x")
 	public static float playerSpawnX = 0.0f;
 	@SettingInfo(key = "settings.initialLoading.playerSpawn.y")
-	public static float playerSpawnY = 0.0f;
+	public static float playerSpawnY = 0.6f;
 	@SettingInfo(key = "settings.initialLoading.playerSpawn.z")
 	public static float playerSpawnZ = 0.0f;
 	

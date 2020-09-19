@@ -1,7 +1,6 @@
 package de.ecconia.java.opentung.savefile;
 
 import de.ecconia.java.opentung.BoardUniverse;
-import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Blot;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class Saver
 {
-	public static void save(BoardUniverse boardWrapper)
+	public static void save(BoardUniverse boardWrapper, File saveFile)
 	{
 		//Getting:
 		int componentAmount = boardWrapper.getBoardsToRender().size() + boardWrapper.getComponentsToRender().size() - boardWrapper.getSnappingWires().size();
@@ -123,9 +122,6 @@ public class Saver
 		}
 		
 		//TBI: Store blots data as separate section with bit-wise encoding?
-		
-		File saveFolder = new File(OpenTUNG.dataFolder, "boards");
-		File saveFile = new File(saveFolder, "testsave.opentung");
 		
 		try
 		{
