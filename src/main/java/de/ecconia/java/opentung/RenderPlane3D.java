@@ -192,16 +192,24 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(cluster != null)
 		{
-			if(clusterToHighlight == cluster)
+			Cluster fCluster = cluster;
+			gpuTasks.add(new GPUTask()
 			{
-				clusterToHighlight = null;
-				connectorsToHighlight = new ArrayList<>();
-			}
-			else
-			{
-				clusterToHighlight = cluster;
-				connectorsToHighlight = cluster.getConnectors();
-			}
+				@Override
+				public void execute(RenderPlane3D world3D)
+				{
+					if(clusterToHighlight == fCluster)
+					{
+								clusterToHighlight = null;
+								connectorsToHighlight = new ArrayList<>();
+					}
+					else
+					{
+						clusterToHighlight = fCluster;
+						connectorsToHighlight = fCluster.getConnectors();
+					}
+				}
+			});
 		}
 	}
 	
@@ -547,11 +555,6 @@ public class RenderPlane3D implements RenderPlane
 		else if(toBeDeleted instanceof CompWireRaw)
 		{
 			final CompWireRaw wireToDelete = (CompWireRaw) toBeDeleted;
-			if(clusterToHighlight == wireToDelete.getCluster())
-			{
-				clusterToHighlight = null;
-				connectorsToHighlight = new ArrayList<>();
-			}
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				if(wireToDelete.getParent() != null)
@@ -562,6 +565,11 @@ public class RenderPlane3D implements RenderPlane
 				ClusterHelper.removeWire(board, simulation, wireToDelete);
 				
 				gpuTasks.add((unused) -> {
+					if(clusterToHighlight == wireToDelete.getCluster())
+					{
+						clusterToHighlight = null;
+						connectorsToHighlight = new ArrayList<>();
+					}
 					board.getWiresToRender().remove(wireToDelete);
 					refreshWireMeshes();
 					board.getRaycastIDs().freeID(wireToDelete.getRayID());
@@ -599,22 +607,6 @@ public class RenderPlane3D implements RenderPlane
 					board.getColorableIDs().freeID(colorable.getColorID(i));
 				}
 			}
-			for(Blot blot : component.getBlots())
-			{
-				if(clusterToHighlight == blot.getCluster())
-				{
-					clusterToHighlight = null;
-					connectorsToHighlight = new ArrayList<>();
-				}
-			}
-			for(Peg peg : component.getPegs())
-			{
-				if(clusterToHighlight == peg.getCluster())
-				{
-					clusterToHighlight = null;
-					connectorsToHighlight = new ArrayList<>();
-				}
-			}
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				if(component.getParent() != null)
@@ -639,6 +631,22 @@ public class RenderPlane3D implements RenderPlane
 				rayIDsToRemove.add(component.getRayID());
 				
 				gpuTasks.add((unused) -> {
+					for(Blot blot : component.getBlots())
+					{
+						if(clusterToHighlight == blot.getCluster())
+						{
+							clusterToHighlight = null;
+							connectorsToHighlight = new ArrayList<>();
+						}
+					}
+					for(Peg peg : component.getPegs())
+					{
+						if(clusterToHighlight == peg.getCluster())
+						{
+							clusterToHighlight = null;
+							connectorsToHighlight = new ArrayList<>();
+						}
+					}
 					board.getComponentsToRender().remove(component);
 					for(Wire wire : wiresToRemove)
 					{
