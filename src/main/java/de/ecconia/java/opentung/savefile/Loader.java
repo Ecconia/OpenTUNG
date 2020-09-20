@@ -27,7 +27,7 @@ public class Loader
 	{
 		try
 		{
-			System.out.println("[OpenTUNG-Loading] Paring savefile: " + savefile.getAbsolutePath());
+			System.out.println("[OpenTUNG-Loading] Parsing savefile: " + savefile.getAbsolutePath());
 			byte[] data = Files.readAllBytes(savefile.toPath());
 			System.out.println("[OpenTUNG-Loading] Read savefile to memory.");
 			ByteReader reader = new ByteReader(data);

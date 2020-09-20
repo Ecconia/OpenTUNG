@@ -55,8 +55,6 @@ public class SWindowWrapper
 			{
 				int size = 1024;
 				ByteBuffer pixels = imageResourcesToBuffer("Logo" + size + ".png", size * size);
-				System.out.println(pixels.limit());
-				
 				IntBuffer w = stack.mallocInt(1);
 				IntBuffer h = stack.mallocInt(1);
 				IntBuffer comp = stack.mallocInt(1);
