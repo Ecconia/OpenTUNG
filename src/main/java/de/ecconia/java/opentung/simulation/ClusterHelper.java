@@ -736,6 +736,7 @@ public class ClusterHelper
 							
 							source.remove(drain);
 							source.addDrain(newCluster);
+							newCluster.addSource(source);
 							if(source.isActive())
 							{
 								newCluster.oneIn(simulation);
