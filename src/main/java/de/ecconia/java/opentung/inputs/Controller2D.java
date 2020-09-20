@@ -97,6 +97,10 @@ public class Controller2D implements Controller
 				inputProcessor.switchTo3D(); //If closed just go here.
 			}
 		}
+		else if(keyIndex == GLFW.GLFW_KEY_F1)
+		{
+			renderPlane2D.closeWindows();
+		}
 	}
 	
 	public void forwardScrollingToHotbar(int val)

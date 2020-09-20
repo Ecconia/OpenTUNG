@@ -89,17 +89,7 @@ public class Controller3D implements Controller
 	{
 		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
-			boolean isShift = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS;
-			if(isShift)
-			{
-				inputProcessor.switchTo2D();
-				checkMouseLeft(false);
-				checkMouseRight(false);
-			}
-			else
-			{
-				switchToInterface();
-			}
+			switchToInterface();
 		}
 		else if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
 		{
@@ -131,6 +121,12 @@ public class Controller3D implements Controller
 		else if(keyIndex == GLFW.GLFW_KEY_Q)
 		{
 			inputProcessor.get2DController().dropHotbarEntry();
+		}
+		else if(keyIndex == GLFW.GLFW_KEY_F1)
+		{
+			inputProcessor.switchTo2D();
+			checkMouseLeft(false);
+			checkMouseRight(false);
 		}
 	}
 	
