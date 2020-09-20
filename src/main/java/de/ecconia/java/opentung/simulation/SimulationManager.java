@@ -259,6 +259,12 @@ public class SimulationManager extends Thread
 	
 	public void pauseSimulation(AtomicInteger pauseArrived)
 	{
+		if(!this.isAlive())
+		{
+			System.out.println("Simulation thread crashed, saving anyway.");
+			pauseArrived.incrementAndGet();
+			return;
+		}
 		this.pauseArrived = pauseArrived;
 		paused = true;
 	}
