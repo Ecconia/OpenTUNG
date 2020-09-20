@@ -101,6 +101,11 @@ public class CompLabel extends Component implements CustomData
 	
 	public void unload()
 	{
+		if(texture == null)
+		{
+			System.out.println("[Debug] Texture of label is null, might be cause its placed without text.");
+			return;
+		}
 		texture.unload();
 		this.texture = null; //Reset texture.
 	}
