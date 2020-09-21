@@ -135,6 +135,10 @@ public class RenderPlane3D implements RenderPlane
 	private boolean placeableBoardIslaying = true;
 	private boolean boardIsBeingDragged = false;
 	
+	//Grabbing stuff:
+	private Component grabbedComponent;
+	private List<Wire> grabbedWires;
+	
 	//Input handling:
 	
 	private Controller3D controller;
@@ -148,6 +152,11 @@ public class RenderPlane3D implements RenderPlane
 			return null;
 		}
 		return idLookup[currentlySelectedIndex];
+	}
+	
+	public boolean isGrabbing()
+	{
+		return grabbedComponent != null;
 	}
 	
 	//Click events:
@@ -200,8 +209,8 @@ public class RenderPlane3D implements RenderPlane
 				{
 					if(clusterToHighlight == fCluster)
 					{
-								clusterToHighlight = null;
-								connectorsToHighlight = new ArrayList<>();
+						clusterToHighlight = null;
+						connectorsToHighlight = new ArrayList<>();
 					}
 					else
 					{
@@ -669,6 +678,156 @@ public class RenderPlane3D implements RenderPlane
 		{
 			System.out.println("Unknown part to delete: " + toBeDeleted.getClass().getSimpleName());
 		}
+	}
+	
+	public void grab(Component toBeGrabbed)
+	{
+		if(grabbedComponent != null || grabbedWires != null)
+		{
+			return;
+		}
+		System.out.println("Grabbing");
+		if(toBeGrabbed instanceof CompContainer)
+		{
+			System.out.println("Cannot grab container - yet.");
+			return;
+		}
+		if(toBeGrabbed instanceof Wire)
+		{
+			//We don't grab wires.
+			return;
+		}
+		//Remove the snapping wire fully. TODO: Restore snapping peg wire when aborting grabbing.
+		else if(toBeGrabbed instanceof CompSnappingPeg)
+		{
+			for(Wire wire : toBeGrabbed.getPegs().get(0).getWires())
+			{
+				if(wire instanceof CompSnappingWire)
+				{
+					CompSnappingPeg sPeg = (CompSnappingPeg) toBeGrabbed;
+					board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+						ClusterHelper.removeWire(board, simulation, wire);
+						sPeg.getPartner().setPartner(null);
+						sPeg.setPartner(null);
+						gpuTasks.add((unused) -> {
+							board.getComponentsToRender().remove(wire);
+							//No mesh updates, since by order one will happen soon anyway.
+						});
+					});
+					break;
+				}
+			}
+		}
+		else if(toBeGrabbed instanceof Colorable)
+		{
+			Colorable colorable = (Colorable) toBeGrabbed;
+			gpuTasks.add((unused) -> {
+				int colorablesCount = toBeGrabbed.getModelHolder().getColorables().size();
+				for(int i = 0; i < colorablesCount; i++)
+				{
+					board.getColorableIDs().freeID(colorable.getColorID(i));
+				}
+			});
+		}
+		
+		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
+			//Collect wires:
+			List<Wire> wires = new ArrayList<>();
+			for(Peg peg : toBeGrabbed.getPegs())
+			{
+				wires.addAll(peg.getWires());
+			}
+			for(Blot blot : toBeGrabbed.getBlots())
+			{
+				wires.addAll(blot.getWires());
+			}
+			
+			gpuTasks.add((unused2) -> {
+				for(Blot blot : toBeGrabbed.getBlots())
+				{
+					if(clusterToHighlight == blot.getCluster())
+					{
+						clusterToHighlight = null;
+						connectorsToHighlight = new ArrayList<>();
+					}
+				}
+				for(Peg peg : toBeGrabbed.getPegs())
+				{
+					if(clusterToHighlight == peg.getCluster())
+					{
+						clusterToHighlight = null;
+						connectorsToHighlight = new ArrayList<>();
+					}
+				}
+				if(toBeGrabbed instanceof CompLabel)
+				{
+					board.getLabelsToRender().remove(toBeGrabbed);
+				}
+				//Remove from meshes on render thread
+				board.getComponentsToRender().remove(toBeGrabbed);
+				board.getWiresToRender().removeAll(wires);
+				refreshComponentMeshes(toBeGrabbed instanceof Colorable);
+				//Create construct to store the grabbed content (to be drawn).
+				
+				grabbedComponent = toBeGrabbed;
+				grabbedWires = wires;
+			});
+		});
+		//Draw as highlight
+		//Right click to cancel
+		//Q to discard
+		//
+	}
+	
+	public void deleteGrabbed()
+	{
+		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
+			List<Wire> wireCopy = grabbedWires;
+			Component compCopy = grabbedComponent;
+			if(wireCopy == null || compCopy == null)
+			{
+				//Was aborted. But data is no longer valid.
+				return;
+			}
+			System.out.println("Delete grabbed.");
+			if(compCopy.getParent() != null)
+			{
+				((CompContainer) compCopy.getParent()).remove(compCopy);
+			}
+			List<Integer> rayIDsToRemove = new ArrayList<>();
+			for(Wire wire : wireCopy)
+			{
+				ClusterHelper.removeWire(board, board.getSimulation(), wire);
+				rayIDsToRemove.add(((CompWireRaw) wire).getRayID());
+			}
+			for(Peg peg : compCopy.getPegs())
+			{
+				ClusterHelper.removePeg(board, board.getSimulation(), peg);
+				rayIDsToRemove.add(peg.getRayID());
+			}
+			for(Blot blot : compCopy.getBlots())
+			{
+				ClusterHelper.removeBlot(board, board.getSimulation(), blot);
+				rayIDsToRemove.add(blot.getRayID());
+			}
+			
+			gpuTasks.add((unused2) -> {
+				grabbedWires = null;
+				grabbedComponent = null;
+				
+				for(Integer i : rayIDsToRemove)
+				{
+					board.getRaycastIDs().freeID(i);
+				}
+				if(compCopy instanceof CompLabel)
+				{
+					((CompLabel) compCopy).unload();
+				}
+				System.out.println("[MeshDebug] Update:");
+				conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
+				System.out.println("[MeshDebug] Done.");
+			});
+		});
 	}
 	
 	//Setup and stuff:
@@ -1253,6 +1412,10 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawHighlight(float[] view)
 	{
+		if(isGrabbing())
+		{
+			return;
+		}
 		if(currentlySelectedIndex == 0)
 		{
 			return;

@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.Camera;
 import de.ecconia.java.opentung.RenderPlane3D;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.settings.Settings;
@@ -120,7 +121,19 @@ public class Controller3D implements Controller
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_Q)
 		{
-			inputProcessor.get2DController().dropHotbarEntry();
+			if(renderPlane3D.isGrabbing())
+			{
+				renderPlane3D.deleteGrabbed();
+			}
+			else
+			{
+				inputProcessor.get2DController().dropHotbarEntry();
+			}
+		}
+		else if(keyIndex == GLFW.GLFW_KEY_F)
+		{
+			//Grab
+			grab();
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_F1)
 		{
@@ -134,6 +147,20 @@ public class Controller3D implements Controller
 	public void unfocus()
 	{
 		switchToInterface();
+	}
+	
+	private void grab()
+	{
+		Part part = renderPlane3D.getCursorObject();
+		if(part != null)
+		{
+			if(part instanceof Connector)
+			{
+				part = part.getParent();
+			}
+			
+			renderPlane3D.grab((Component) part);
+		}
 	}
 	
 	//Stuff:
