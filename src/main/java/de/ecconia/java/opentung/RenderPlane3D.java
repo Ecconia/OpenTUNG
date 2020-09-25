@@ -47,6 +47,7 @@ import de.ecconia.java.opentung.simulation.Wire;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -369,9 +370,72 @@ public class RenderPlane3D implements RenderPlane
 			return false;
 		}
 		
+		if(placementPosition == null)
+		{
+			return false;
+		}
+		
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
+		if(isGrabbing())
+		{
+			Vector3 newPosition = placementPosition;
+			Quaternion newRotation;
+			{
+				Quaternion originalGlobalRotation = grabbedComponent.getRotation();
+				Vector3 upVectorGlobal = Vector3.yp;
+				Vector3 upVectorLocal = originalGlobalRotation.multiply(upVectorGlobal);
+				Quaternion upVectorLocalRotation = MathHelper.rotationFromVectors(Vector3.yp, upVectorLocal);
+				Quaternion rotationLocal = upVectorLocalRotation.multiply(originalGlobalRotation);
+				Quaternion modelRotation = Quaternion.angleAxis(grabRotation, Vector3.yn);
+				Quaternion rotatedRotation = modelRotation.multiply(rotationLocal);
+				Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+				newRotation = rotatedRotation.multiply(compRotation);
+			}
+			
+			grabbedComponent.setPosition(newPosition);
+			grabbedComponent.setRotation(newRotation);
+			
+			for(Wire wire : grabbedWires)
+			{
+				if(wire instanceof HiddenWire)
+				{
+					continue;
+				}
+				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
+				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
+				
+				Vector3 direction = thisPos.subtract(thatPos).divide(2);
+				double distance = direction.length();
+				Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+				Vector3 position = thatPos.add(direction);
+				
+				CompWireRaw cwire = (CompWireRaw) wire;
+				cwire.setPosition(position);
+				cwire.setRotation(rotation);
+				cwire.setLength((float) distance * 2f);
+			}
+			
+			gpuTasks.add((unused) -> {
+				board.getComponentsToRender().add(grabbedComponent);
+				for(Wire wire : grabbedWires)
+				{
+					board.getWiresToRender().add((CompWireRaw) wire);
+				}
+				if(grabbedComponent instanceof CompLabel)
+				{
+					board.getLabelsToRender().add((CompLabel) grabbedComponent);
+				}
+				
+				refreshComponentMeshes(grabbedComponent instanceof Colorable);
+				
+				grabbedComponent = null;
+				grabbedWires = null;
+			});
+			
+			return true;
+		}
 		//TODO: Ugly, not thread-safe enough for my taste. Might even cause bugs. So eventually it has to be changed.
-		if(placementPosition != null && currentPlaceable != null)
+		else if(currentPlaceable != null)
 		{
 			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
 			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
@@ -759,11 +823,23 @@ public class RenderPlane3D implements RenderPlane
 			List<Wire> wires = new ArrayList<>();
 			for(Peg peg : toBeGrabbed.getPegs())
 			{
-				wires.addAll(peg.getWires());
+				for(Wire wire : peg.getWires())
+				{
+					if(wire instanceof CompWireRaw)
+					{
+						wires.add(wire);
+					}
+				}
 			}
 			for(Blot blot : toBeGrabbed.getBlots())
 			{
-				wires.addAll(blot.getWires());
+				for(Wire wire : blot.getWires())
+				{
+					if(wire instanceof CompWireRaw)
+					{
+						wires.add(wire);
+					}
+				}
 			}
 			
 			gpuTasks.add((unused2) -> {
@@ -798,10 +874,6 @@ public class RenderPlane3D implements RenderPlane
 				grabbedWires = wires;
 			});
 		});
-		//Draw as highlight
-		//Right click to cancel
-		//Q to discard
-		//
 	}
 	
 	public void deleteGrabbed()
@@ -852,6 +924,26 @@ public class RenderPlane3D implements RenderPlane
 				conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 				System.out.println("[MeshDebug] Done.");
 			});
+		});
+	}
+	
+	public void abortGrabbing()
+	{
+		gpuTasks.add((unused) -> {
+			board.getComponentsToRender().add(grabbedComponent);
+			for(Wire wire : grabbedWires)
+			{
+				board.getWiresToRender().add((CompWireRaw) wire);
+			}
+			if(grabbedComponent instanceof CompLabel)
+			{
+				board.getLabelsToRender().add((CompLabel) grabbedComponent);
+			}
+			
+			refreshComponentMeshes(grabbedComponent instanceof Colorable);
+			
+			grabbedComponent = null;
+			grabbedWires = null;
 		});
 	}
 	
@@ -1365,27 +1457,6 @@ public class RenderPlane3D implements RenderPlane
 				visualShapeShader.setUniform(2, m.getMat());
 				visualShapeShader.setUniformV4(3, (blot.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
 				visualShape.draw();
-				
-				if(!blot.getWires().isEmpty())
-				{
-					Vector3 thisPos = blot.getConnectionPoint();
-					for(Wire wire : blot.getWires())
-					{
-						Vector3 thatPos = wire.getOtherSide(blot).getConnectionPoint();
-						
-						Vector3 direction = thisPos.subtract(thatPos).divide(2);
-						double distance = direction.length();
-						Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-						Vector3 position = thatPos.add(direction);
-						
-						m.identity();
-						m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-						m.multiply(new Matrix(rotation.createMatrix()));
-						m.scale(0.025f, 0.01f, (float) distance);
-						visualShapeShader.setUniform(2, m.getMat());
-						visualShape.draw();
-					}
-				}
 			}
 			
 			for(Peg peg : grabbedComponent.getPegs())
@@ -1403,27 +1474,25 @@ public class RenderPlane3D implements RenderPlane
 				visualShapeShader.setUniform(2, m.getMat());
 				visualShapeShader.setUniformV4(3, (peg.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
 				visualShape.draw();
+			}
+			
+			for(Wire wire : grabbedWires)
+			{
+				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
+				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
 				
-				if(!peg.getWires().isEmpty())
-				{
-					Vector3 thisPos = peg.getConnectionPoint();
-					for(Wire wire : peg.getWires())
-					{
-						Vector3 thatPos = wire.getOtherSide(peg).getConnectionPoint();
-						
-						Vector3 direction = thisPos.subtract(thatPos).divide(2);
-						double distance = direction.length();
-						Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-						Vector3 position = thatPos.add(direction);
-						
-						m.identity();
-						m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-						m.multiply(new Matrix(rotation.createMatrix()));
-						m.scale(0.025f, 0.01f, (float) distance);
-						visualShapeShader.setUniform(2, m.getMat());
-						visualShape.draw();
-					}
-				}
+				Vector3 direction = thisPos.subtract(thatPos).divide(2);
+				double distance = direction.length();
+				Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+				Vector3 position = thatPos.add(direction);
+				
+				m.identity();
+				m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+				m.multiply(new Matrix(rotation.createMatrix()));
+				m.scale(0.025f, 0.01f, (float) distance);
+				visualShapeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visualShapeShader.setUniform(2, m.getMat());
+				visualShape.draw();
 			}
 			
 			List<Meshable> colorables = grabbedComponent.getModelHolder().getColorables();

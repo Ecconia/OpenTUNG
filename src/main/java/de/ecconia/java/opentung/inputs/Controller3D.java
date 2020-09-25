@@ -345,6 +345,15 @@ public class Controller3D implements Controller
 	
 	private void mouseRightUp()
 	{
+		if(renderPlane3D.isGrabbing())
+		{
+			renderPlane3D.abortGrabbing();
+			mouseRightDown = 0;
+			mouseRightDownOnConnector = false;
+			mouseRightConnectorMode = false;
+			return;
+		}
+		
 		Part mouseRightDownOn = renderPlane3D.getCursorObject();
 		if(mouseRightConnectorMode)
 		{
