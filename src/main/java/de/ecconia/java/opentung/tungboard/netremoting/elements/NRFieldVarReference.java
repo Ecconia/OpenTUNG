@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 import de.ecconia.java.opentung.tungboard.netremoting.NRFile;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 
 public class NRFieldVarReference extends NRObject
 {

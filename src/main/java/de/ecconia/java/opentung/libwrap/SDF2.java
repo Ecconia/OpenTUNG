@@ -58,8 +58,8 @@ public class SDF2
 		{
 			for(int x = 0; x < outWidth; ++x)
 			{
-				int  centerX = (int) Math.floor((double) x * downscale + downscale / 2D);
-				int  centerY = (int) Math.floor((double) y * downscale + downscale / 2D);
+				int centerX = (int) Math.floor((double) x * downscale + downscale / 2D);
+				int centerY = (int) Math.floor((double) y * downscale + downscale / 2D);
 				
 				double signedDistance = findSignedDistance(bitmap, width, height, centerX, centerY, spread);
 				

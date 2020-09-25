@@ -176,7 +176,7 @@ public class CubeFull extends Meshable
 	
 	public float[] getColorArray()
 	{
-		return new float[] {
+		return new float[]{
 				(float) color.getX(),
 				(float) color.getY(),
 				(float) color.getZ(),

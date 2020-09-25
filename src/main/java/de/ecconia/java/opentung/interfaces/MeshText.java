@@ -210,7 +210,7 @@ public class MeshText
 	{
 		atlas.activate();
 	}
-
+	
 	private class LetterMeta
 	{
 		private final char letter; //For debug messages.

@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.components.fragments.Color;
+import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -203,7 +203,7 @@ public class SettingsIO
 			{
 				return line;
 			}
-
+			
 			String content = line.replace('\t', ' ').trim();
 			
 			int separatorIndex = content.indexOf(':');
@@ -211,7 +211,7 @@ public class SettingsIO
 			{
 				throw new RuntimeException("Malformed settings file. No ':' in line with content: " + content);
 			}
-
+			
 			String key = parentKey + content.substring(0, separatorIndex);
 			String value = content.substring(separatorIndex + 1).trim();
 			

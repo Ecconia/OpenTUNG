@@ -166,15 +166,15 @@ public class Loader
 		{
 			int aID = reader.readVariableInt();
 			int bID = reader.readVariableInt();
-
+			
 			Connector a = connectors[aID];
 			Connector b = connectors[bID];
-
+			
 			CompWireRaw wire = new CompWireRaw(null);
-
+			
 			Vector3 fromPos = a.getConnectionPoint();
 			Vector3 toPos = b.getConnectionPoint();
-
+			
 			//Pos + Rot
 			Vector3 direction = fromPos.subtract(toPos).divide(2);
 			double distance = direction.length();
@@ -183,10 +183,10 @@ public class Loader
 			wire.setRotation(rotation);
 			wire.setPosition(position);
 			wire.setLength((float) distance * 2f);
-
+			
 			wire.setConnectorA(a);
 			wire.setConnectorB(b);
-
+			
 			wires[i] = wire;
 		}
 		

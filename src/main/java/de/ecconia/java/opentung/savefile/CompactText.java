@@ -140,6 +140,6 @@ public class CompactText
 			}
 		}
 		
-		return new String(decodedLetters, 0 , to);
+		return new String(decodedLetters, 0, to);
 	}
 }

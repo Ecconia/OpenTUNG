@@ -19,7 +19,7 @@ public class World3DHelper
 	{
 		justShape.use();
 		justShape.setUniform(1, view);
-		justShape.setUniformV4(3, new float[] {0,0,0,0});
+		justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		Vector3 placementOffset = component.getModelHolder().getPlacementOffset();
 		for(Meshable meshable : component.getModelHolder().getPegModels())

@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.tungboard.netremoting.elements;
 
-import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 import de.ecconia.java.opentung.tungboard.netremoting.NRFieldResolver;
+import de.ecconia.java.opentung.tungboard.netremoting.NRParseBundle;
 
 public class NRArray extends NRObject
 {

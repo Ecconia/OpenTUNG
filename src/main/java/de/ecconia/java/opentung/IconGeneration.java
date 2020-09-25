@@ -49,7 +49,7 @@ public class IconGeneration
 				meshes.addAll(infoModel.getPegModels());
 				meshes.addAll(infoModel.getBlotModels());
 				meshes.addAll(infoModel.getColorables());
-
+				
 				Matrix pv = new Matrix(); //pMatCopy
 				pv.orthoMatrix(side, side);
 				pv.multiply(viewMatrix);
@@ -105,7 +105,7 @@ public class IconGeneration
 						}
 					}
 				}
-
+				
 				double dx = Math.abs(maxX) + Math.abs(minX);
 				double dy = Math.abs(maxY) + Math.abs(minY);
 				

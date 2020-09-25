@@ -1,32 +1,31 @@
 package de.ecconia.java.opentung.tungboard;
 
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungButton;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungColorDisplay;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDelayer;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungInverter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungMount;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungNoisemaker;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelButton;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelColorDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelDisplay;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelLabel;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPanelSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
-import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSnappingPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungSwitch;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungThroughPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
-
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungAngles;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
+import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import de.ecconia.java.opentung.util.io.ByteWriter;
 import java.io.File;
 import java.util.HashMap;

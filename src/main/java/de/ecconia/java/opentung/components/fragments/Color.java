@@ -91,7 +91,7 @@ public class Color
 	public float[] asArray()
 	{
 		Vector3 v = asVector();
-		return new float[] {
+		return new float[]{
 				(float) v.getX(),
 				(float) v.getY(),
 				(float) v.getZ(),
