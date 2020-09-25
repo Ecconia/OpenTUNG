@@ -196,4 +196,9 @@ public class InputProcessor implements Controller
 			issueShutdown();
 		}
 	}
+	
+	public void updatePauseMenu()
+	{
+		controller2D.updatePauseMenu();
+	}
 }

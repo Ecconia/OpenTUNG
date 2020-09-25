@@ -130,6 +130,11 @@ public class Controller2D implements Controller
 		renderPlane2D.openPauseMenu();
 	}
 	
+	public void updatePauseMenu()
+	{
+		renderPlane2D.updatePauseMenu();
+	}
+	
 	public void dropHotbarEntry()
 	{
 		renderPlane2D.getHotbar().dropHotbarEntry();
