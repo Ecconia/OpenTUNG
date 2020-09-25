@@ -64,8 +64,7 @@ public class CompDisplay extends Component implements Updateable, Colorable, Cus
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		boolean on = input.getCluster().isActive();
-		simulation.setColor(colorID, on ? colorRaw : Color.displayOff);
+		simulation.setColor(colorID, getCurrentColor(0));
 	}
 	
 	private int colorID;
@@ -80,6 +79,13 @@ public class CompDisplay extends Component implements Updateable, Colorable, Cus
 	public int getColorID(int id)
 	{
 		return colorID;
+	}
+	
+	@Override
+	public Color getCurrentColor(int id)
+	{
+		boolean on = input.getCluster().isActive();
+		return on ? colorRaw : Color.displayOff;
 	}
 	
 	//### Save/Load ###

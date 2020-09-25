@@ -57,22 +57,7 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		int colorIndex = 0;
-		if(inputSmall.getCluster().isActive())
-		{
-			colorIndex |= 1;
-		}
-		if(inputMedium.getCluster().isActive())
-		{
-			colorIndex |= 2;
-		}
-		if(inputLong.getCluster().isActive())
-		{
-			colorIndex |= 4;
-		}
-		
-		Color color = Color.byColorDisplayIndex(colorIndex);
-		simulation.setColor(colorID, color);
+		simulation.setColor(colorID, getCurrentColor(0));
 	}
 	
 	private int colorID;
@@ -87,5 +72,25 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 	public int getColorID(int id)
 	{
 		return colorID;
+	}
+	
+	@Override
+	public Color getCurrentColor(int id)
+	{
+		int colorIndex = 0;
+		if(inputSmall.getCluster().isActive())
+		{
+			colorIndex |= 1;
+		}
+		if(inputMedium.getCluster().isActive())
+		{
+			colorIndex |= 2;
+		}
+		if(inputLong.getCluster().isActive())
+		{
+			colorIndex |= 4;
+		}
+		
+		return Color.byColorDisplayIndex(colorIndex);
 	}
 }

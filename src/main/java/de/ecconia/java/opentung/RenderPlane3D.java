@@ -13,6 +13,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
@@ -138,6 +139,7 @@ public class RenderPlane3D implements RenderPlane
 	//Grabbing stuff:
 	private Component grabbedComponent;
 	private List<Wire> grabbedWires;
+	private int grabRotation;
 	
 	//Input handling:
 	
@@ -317,10 +319,29 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void rotatePlacement(int degrees)
 	{
-		placementRotation += degrees;
-		if(placementRotation >= 360)
+		if(isGrabbing())
 		{
-			placementRotation -= 360;
+			grabRotation += degrees;
+			if(grabRotation >= 360)
+			{
+				grabRotation -= 360;
+			}
+			if(grabRotation <= 0)
+			{
+				grabRotation += 360;
+			}
+		}
+		else
+		{
+			placementRotation += degrees;
+			if(placementRotation >= 360)
+			{
+				placementRotation -= 360;
+			}
+			if(placementRotation <= 0)
+			{
+				placementRotation += 360;
+			}
 		}
 	}
 	
@@ -769,6 +790,7 @@ public class RenderPlane3D implements RenderPlane
 				refreshComponentMeshes(toBeGrabbed instanceof Colorable);
 				//Create construct to store the grabbed content (to be drawn).
 				
+				grabRotation = 0;
 				grabbedComponent = toBeGrabbed;
 				grabbedWires = wires;
 			});
@@ -1281,6 +1303,159 @@ public class RenderPlane3D implements RenderPlane
 		}
 		if(placementPosition == null)
 		{
+			return;
+		}
+		
+		if(isGrabbing())
+		{
+			Matrix m = new Matrix();
+			visualShapeShader.use();
+			visualShapeShader.setUniform(1, view);
+			visualShape.use();
+			
+			Quaternion originalGlobalRotation = grabbedComponent.getRotation();
+			Vector3 originalGlobalPosition = grabbedComponent.getPosition();
+			
+			Vector3 globalPosition = placementPosition;
+			grabbedComponent.setPosition(placementPosition);
+			
+			Vector3 upVectorGlobal = Vector3.yp;
+			Vector3 upVectorLocal = originalGlobalRotation.multiply(upVectorGlobal);
+			Quaternion upVectorLocalRotation = MathHelper.rotationFromVectors(Vector3.yp, upVectorLocal);
+			Quaternion rotationLocal = upVectorLocalRotation.multiply(originalGlobalRotation);
+			Quaternion modelRotation = Quaternion.angleAxis(grabRotation, Vector3.yn);
+			Quaternion rotatedRotation = modelRotation.multiply(rotationLocal);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			rotatedRotation = rotatedRotation.multiply(compRotation);
+			grabbedComponent.setRotation(rotatedRotation);
+			Matrix rotMat = new Matrix(rotatedRotation.createMatrix());
+			
+			for(Meshable meshable : grabbedComponent.getModelHolder().getSolid())
+			{
+				CubeFull c = (CubeFull) meshable;
+				m.identity();
+				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
+				m.multiply(rotMat);
+				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
+				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
+				Vector3 mPos = c.getPosition();
+				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
+				Vector3 size = c.getSize();
+				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformV4(3, c.getColorArray());
+				visualShape.draw();
+			}
+			
+			for(Blot blot : grabbedComponent.getBlots())
+			{
+				CubeFull c = blot.getModel();
+				m.identity();
+				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
+				m.multiply(rotMat);
+				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
+				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
+				Vector3 mPos = c.getPosition();
+				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
+				Vector3 size = c.getSize();
+				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformV4(3, (blot.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visualShape.draw();
+				
+				if(!blot.getWires().isEmpty())
+				{
+					Vector3 thisPos = blot.getConnectionPoint();
+					for(Wire wire : blot.getWires())
+					{
+						Vector3 thatPos = wire.getOtherSide(blot).getConnectionPoint();
+						
+						Vector3 direction = thisPos.subtract(thatPos).divide(2);
+						double distance = direction.length();
+						Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+						Vector3 position = thatPos.add(direction);
+						
+						m.identity();
+						m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+						m.multiply(new Matrix(rotation.createMatrix()));
+						m.scale(0.025f, 0.01f, (float) distance);
+						visualShapeShader.setUniform(2, m.getMat());
+						visualShape.draw();
+					}
+				}
+			}
+			
+			for(Peg peg : grabbedComponent.getPegs())
+			{
+				CubeFull c = peg.getModel();
+				m.identity();
+				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
+				m.multiply(rotMat);
+				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
+				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
+				Vector3 mPos = c.getPosition();
+				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
+				Vector3 size = c.getSize();
+				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformV4(3, (peg.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visualShape.draw();
+				
+				if(!peg.getWires().isEmpty())
+				{
+					Vector3 thisPos = peg.getConnectionPoint();
+					for(Wire wire : peg.getWires())
+					{
+						Vector3 thatPos = wire.getOtherSide(peg).getConnectionPoint();
+						
+						Vector3 direction = thisPos.subtract(thatPos).divide(2);
+						double distance = direction.length();
+						Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+						Vector3 position = thatPos.add(direction);
+						
+						m.identity();
+						m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+						m.multiply(new Matrix(rotation.createMatrix()));
+						m.scale(0.025f, 0.01f, (float) distance);
+						visualShapeShader.setUniform(2, m.getMat());
+						visualShape.draw();
+					}
+				}
+			}
+			
+			List<Meshable> colorables = grabbedComponent.getModelHolder().getColorables();
+			for(int i = 0; i < colorables.size(); i++)
+			{
+				CubeFull c = (CubeFull) colorables.get(i);
+				m.identity();
+				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
+				m.multiply(rotMat);
+				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
+				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
+				Vector3 mPos = c.getPosition();
+				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
+				Vector3 size = c.getSize();
+				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformV4(3, ((Colorable) grabbedComponent).getCurrentColor(i).asArray());
+				visualShape.draw();
+			}
+			
+			if(grabbedComponent instanceof CompLabel)
+			{
+				CompLabel label = (CompLabel) grabbedComponent;
+				sdfShader.use();
+				sdfShader.setUniform(1, view);
+				label.activate();
+				m.identity();
+				m.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
+				m.multiply(new Matrix(label.getRotation().createMatrix()));
+				sdfShader.setUniform(2, m.getMat());
+				label.getModelHolder().drawTextures();
+			}
+			
+			grabbedComponent.setPosition(originalGlobalPosition);
+			grabbedComponent.setRotation(originalGlobalRotation);
 			return;
 		}
 		

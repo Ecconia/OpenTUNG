@@ -61,8 +61,7 @@ public class CompNoisemaker extends Component implements Updateable, Colorable, 
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		boolean on = input.getCluster().isActive();
-		simulation.setColor(colorID, on ? Color.noisemakerON : Color.noisemakerOFF);
+		simulation.setColor(colorID, getCurrentColor(0));
 	}
 	
 	private int colorID;
@@ -77,6 +76,13 @@ public class CompNoisemaker extends Component implements Updateable, Colorable, 
 	public int getColorID(int id)
 	{
 		return colorID;
+	}
+	
+	@Override
+	public Color getCurrentColor(int id)
+	{
+		boolean on = input.getCluster().isActive();
+		return on ? Color.noisemakerON : Color.noisemakerOFF;
 	}
 	
 	//### Save/Load ###
