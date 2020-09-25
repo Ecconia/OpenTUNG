@@ -990,6 +990,8 @@ public class RenderPlane3D implements RenderPlane
 		}
 		board.getSimulation().start();
 		fullyLoaded = true;
+		sharedData.setSimulationLoaded(true);
+		inputHandler.updatePauseMenu();
 		System.out.println("[MeshDebug] Done.");
 	}
 	

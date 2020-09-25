@@ -69,6 +69,7 @@ public class RenderPlane2D implements RenderPlane
 	
 	private final MeshText text;
 	
+	//TODO: Key-Binding help text, toggled on F2
 	public RenderPlane2D(InputProcessor inputHandler, SharedData sharedData)
 	{
 		this.sharedData = sharedData;
@@ -204,9 +205,18 @@ public class RenderPlane2D implements RenderPlane
 		showComponentList = true;
 	}
 	
+	public void updatePauseMenu()
+	{
+		if(showPauseMenu)
+		{
+			pauseMenu.update(sharedData);
+		}
+	}
+	
 	public void openPauseMenu()
 	{
 		showPauseMenu = true;
+		pauseMenu.update(sharedData);
 	}
 	
 	public boolean hasWindowOpen()

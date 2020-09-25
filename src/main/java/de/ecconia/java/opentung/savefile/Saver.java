@@ -202,6 +202,7 @@ public class Saver
 		catch(Exception e)
 		{
 			//TODO: Handle.
+			System.out.println("Error while saving, please report. Continuing.");
 			e.printStackTrace();
 		}
 	}

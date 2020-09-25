@@ -42,6 +42,12 @@ public class PauseMenu
 		text.addLetters(labelTextExit);
 	}
 	
+	public void update(SharedData data)
+	{
+		buttonSave.setDisabled(!data.isSimulationLoaded());
+		buttonSaveAs.setDisabled(!data.isSimulationLoaded());
+	}
+	
 	public void setup()
 	{
 		MeshText fontUnit = renderPlane2D.getText();

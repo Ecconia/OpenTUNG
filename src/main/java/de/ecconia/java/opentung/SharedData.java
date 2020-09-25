@@ -10,6 +10,7 @@ public class SharedData
 	private boolean saving;
 	private RenderPlane3D renderPlane3D;
 	private File currentBoardFile;
+	private boolean simulationLoaded;
 	
 	private final BoardUniverse boardUniverse;
 	
@@ -77,5 +78,15 @@ public class SharedData
 	public void setCurrentBoardFile(File currentBoardFile)
 	{
 		this.currentBoardFile = currentBoardFile;
+	}
+	
+	public void setSimulationLoaded(boolean simulationLoaded)
+	{
+		this.simulationLoaded = simulationLoaded;
+	}
+	
+	public boolean isSimulationLoaded()
+	{
+		return simulationLoaded;
 	}
 }
