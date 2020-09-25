@@ -631,11 +631,13 @@ public class RenderPlane3D implements RenderPlane
 			else if(toBeDeleted instanceof Colorable)
 			{
 				Colorable colorable = (Colorable) toBeDeleted;
-				int colorablesCount = component.getModelHolder().getColorables().size();
-				for(int i = 0; i < colorablesCount; i++)
-				{
-					board.getColorableIDs().freeID(colorable.getColorID(i));
-				}
+				gpuTasks.add((unused) -> {
+					int colorablesCount = component.getModelHolder().getColorables().size();
+					for(int i = 0; i < colorablesCount; i++)
+					{
+						board.getColorableIDs().freeID(colorable.getColorID(i));
+					}
+				});
 			}
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
@@ -681,6 +683,7 @@ public class RenderPlane3D implements RenderPlane
 					for(Wire wire : wiresToRemove)
 					{
 						board.getWiresToRender().remove(wire);
+						board.getRaycastIDs().freeID(((CompWireRaw) wire).getRayID());
 					}
 					for(Integer i : rayIDsToRemove)
 					{
