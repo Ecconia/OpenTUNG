@@ -47,7 +47,6 @@ import de.ecconia.java.opentung.simulation.Wire;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -112,9 +111,7 @@ public class RenderPlane3D implements RenderPlane
 		board.getSimulation().pauseSimulation(pauseArrived);
 		gpuTasks.add((unused) -> {
 			currentlySelectedIndex = 0;
-			placementPosition = null;
-			placementNormal = null;
-			placementBoard = null;
+			placementData = null;
 			boardIsBeingDragged = false;
 			wireStartPoint = null;
 			pauseArrived.incrementAndGet();
@@ -128,14 +125,12 @@ public class RenderPlane3D implements RenderPlane
 	
 	//Other:
 	
-	private Vector3 placementPosition;
-	private Vector3 placementNormal;
-	private CompBoard placementBoard;
+	private PlacementData placementData; //Scope purely render, read by copy.
 	private boolean fullyLoaded;
 	
 	//Board specific values:
 	private boolean placeableBoardIslaying = true;
-	private boolean boardIsBeingDragged = false;
+	private boolean boardIsBeingDragged = false; //Scope input/(render), read on many places.
 	
 	//Grabbing stuff:
 	private Component grabbedComponent;
@@ -348,15 +343,16 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void placementStart()
 	{
-		if(placementPosition != null && sharedData.getCurrentPlaceable() == CompBoard.info)
+		if(placementData != null && sharedData.getCurrentPlaceable() == CompBoard.info)
 		{
 			//Start dragging until end.
-			boardIsBeingDragged = true;
+			boardIsBeingDragged = true; //It is unsure, if the last or new frames placement position will be used...
 		}
 	}
 	
 	public boolean attemptPlacement()
 	{
+		PlacementData placement = placementData;
 		boolean boardIsBeingDraggedCopy = boardIsBeingDragged;
 		boardIsBeingDragged = false; //Resets this boolean, if for a reason its not resetted - ugly.
 		
@@ -370,7 +366,7 @@ public class RenderPlane3D implements RenderPlane
 			return false;
 		}
 		
-		if(placementPosition == null)
+		if(placement == null)
 		{
 			return false;
 		}
@@ -378,7 +374,7 @@ public class RenderPlane3D implements RenderPlane
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		if(isGrabbing())
 		{
-			Vector3 newPosition = placementPosition;
+			Vector3 newPosition = placement.getPosition();
 			Quaternion newRotation;
 			{
 				Quaternion originalGlobalRotation = grabbedComponent.getRotation();
@@ -388,7 +384,7 @@ public class RenderPlane3D implements RenderPlane
 				Quaternion rotationLocal = upVectorLocalRotation.multiply(originalGlobalRotation);
 				Quaternion modelRotation = Quaternion.angleAxis(grabRotation, Vector3.yn);
 				Quaternion rotatedRotation = modelRotation.multiply(rotationLocal);
-				Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+				Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
 				newRotation = rotatedRotation.multiply(compRotation);
 			}
 			
@@ -439,14 +435,14 @@ public class RenderPlane3D implements RenderPlane
 		{
 			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
 			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
 			Quaternion finalRotation = rotation.multiply(compRotation);
 			if(isPlacingBoard)
 			{
 				Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
 				finalRotation = boardAlignment.multiply(finalRotation);
 			}
-			Vector3 position = placementPosition;
+			Vector3 position = placement.getPosition();
 			Component newComponent;
 			if(isPlacingBoard)
 			{
@@ -482,11 +478,11 @@ public class RenderPlane3D implements RenderPlane
 					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
 					position = position.add(finalRotation.inverse().multiply(roundedCollisionPoint));
 				}
-				newComponent = new CompBoard(placementBoard, x, z);
+				newComponent = new CompBoard(placement.getParentBoard(), x, z);
 			}
 			else
 			{
-				newComponent = currentPlaceable.instance(placementBoard);
+				newComponent = currentPlaceable.instance(placement.getParentBoard());
 			}
 			//Raycast ID:
 			{
@@ -527,7 +523,7 @@ public class RenderPlane3D implements RenderPlane
 				{
 					gpuTasks.put((ignored) -> {
 						board.getBoardsToRender().add((CompBoard) newComponent);
-						placementBoard.addChild(newComponent);
+						placement.getParentBoard().addChild(newComponent);
 						refreshBoardMeshes();
 					});
 				}
@@ -587,7 +583,7 @@ public class RenderPlane3D implements RenderPlane
 			{
 				gpuTasks.put((ignored) -> {
 					board.getComponentsToRender().add(newComponent);
-					placementBoard.addChild(newComponent);
+					placement.getParentBoard().addChild(newComponent);
 					refreshComponentMeshes(newComponent instanceof Colorable);
 				});
 			}
@@ -1156,7 +1152,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(currentlySelectedIndex == 0)
 		{
-			placementPosition = null;
+			placementData = null; //Nothing to place on.
 			return;
 		}
 		
@@ -1166,7 +1162,7 @@ public class RenderPlane3D implements RenderPlane
 		Part part = idLookup[currentlySelectedIndex];
 		if(!(part instanceof CompBoard))
 		{
-			placementPosition = null; //Only place on boards.
+			placementData = null; //Only place on boards.
 			return;
 		}
 		
@@ -1283,15 +1279,17 @@ public class RenderPlane3D implements RenderPlane
 			collisionPointBoardSpace = new Vector3(xSteps * 0.3 + 0.15 - xHalf, 0, zSteps * 0.3 + 0.15 - zHalf);
 		}
 		
-		placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
-		placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
-		placementBoard = board;
+		Vector3 placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
+		Vector3 placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
+		CompBoard placementBoard = board;
 		
 		if(sharedData.getCurrentPlaceable() == CompBoard.info)
 		{
 			//Boards have their center within, thus the offset needs to be adjusted:
 			placementPosition = placementPosition.add(placementNormal.multiply(placeableBoardIslaying ? 0.15 : (0.15 + 0.075)));
 		}
+		
+		placementData = new PlacementData(placementPosition, placementNormal, placementBoard);
 	}
 	
 	@Override
@@ -1357,7 +1355,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		Vector3 startingPos = wireStartPoint.getConnectionPoint();
 		
-		Vector3 toPos = placementPosition;
+		Vector3 toPos = placementData.getPosition();
 		if(toPos == null)
 		{
 			Part currentlyLookingAt = getCursorObject();
@@ -1369,7 +1367,7 @@ public class RenderPlane3D implements RenderPlane
 		else
 		{
 			//Fix offset.
-			toPos = toPos.add(placementNormal.multiply(0.075));
+			toPos = toPos.add(placementData.getNormal().multiply(0.075));
 		}
 		
 		if(toPos != null)
@@ -1402,7 +1400,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return; //Don't draw the placement, while dragging a wire - its annoying.
 		}
-		if(placementPosition == null)
+		if(placementData == null)
 		{
 			return;
 		}
@@ -1417,8 +1415,8 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion originalGlobalRotation = grabbedComponent.getRotation();
 			Vector3 originalGlobalPosition = grabbedComponent.getPosition();
 			
-			Vector3 globalPosition = placementPosition;
-			grabbedComponent.setPosition(placementPosition);
+			Vector3 globalPosition = placementData.getPosition();
+			grabbedComponent.setPosition(globalPosition);
 			
 			Vector3 upVectorGlobal = Vector3.yp;
 			Vector3 upVectorLocal = originalGlobalRotation.multiply(upVectorGlobal);
@@ -1426,7 +1424,7 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion rotationLocal = upVectorLocalRotation.multiply(originalGlobalRotation);
 			Quaternion modelRotation = Quaternion.angleAxis(grabRotation, Vector3.yn);
 			Quaternion rotatedRotation = modelRotation.multiply(rotationLocal);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
 			rotatedRotation = rotatedRotation.multiply(compRotation);
 			grabbedComponent.setRotation(rotatedRotation);
 			Matrix rotMat = new Matrix(rotatedRotation.createMatrix());
@@ -1546,7 +1544,7 @@ public class RenderPlane3D implements RenderPlane
 			GL30.glLineWidth(5f);
 			Matrix model = new Matrix();
 			model.identity();
-			Vector3 datPos = placementPosition.add(placementNormal.multiply(0.075));
+			Vector3 datPos = placementData.getPosition().add(placementData.getNormal().multiply(0.075));
 			model.translate((float) datPos.getX(), (float) datPos.getY(), (float) datPos.getZ());
 			lineShader.setUniform(2, model.getMat());
 			crossyIndicator.use();
@@ -1554,14 +1552,14 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else if(currentPlaceable == CompBoard.info)
 		{
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
 			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIslaying ? 0 : 90, Vector3.xn);
 			Quaternion finalRotation = boardAlignment.multiply(modelRotation).multiply(compRotation);
 			
 			int x = 1;
 			int z = 1;
-			Vector3 position = placementPosition;
+			Vector3 position = placementData.getPosition();
 			if(boardIsBeingDragged)
 			{
 				//Adjust position and size according to camera.
@@ -1616,8 +1614,8 @@ public class RenderPlane3D implements RenderPlane
 		else
 		{
 			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementNormal);
-			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementPosition, modelRotation.multiply(compRotation), view);
+			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
+			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementData.getPosition(), modelRotation.multiply(compRotation), view);
 		}
 	}
 	
@@ -1851,5 +1849,34 @@ public class RenderPlane3D implements RenderPlane
 	public Camera getCamera()
 	{
 		return camera;
+	}
+	
+	private static class PlacementData
+	{
+		private final Vector3 normal;
+		private final Vector3 position;
+		private final CompBoard parentBoard;
+		
+		public PlacementData(Vector3 position, Vector3 normal, CompBoard parentBoard)
+		{
+			this.normal = normal;
+			this.position = position;
+			this.parentBoard = parentBoard;
+		}
+		
+		public Vector3 getNormal()
+		{
+			return normal;
+		}
+		
+		public Vector3 getPosition()
+		{
+			return position;
+		}
+		
+		public CompBoard getParentBoard()
+		{
+			return parentBoard;
+		}
 	}
 }
