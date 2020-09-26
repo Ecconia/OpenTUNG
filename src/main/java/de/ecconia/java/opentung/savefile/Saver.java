@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import javax.swing.JOptionPane;
 
 public class Saver
 {
@@ -61,17 +62,25 @@ public class Saver
 				}
 			}
 		}
+		boolean broken = false;
 		if(boardCount != expectedBoards)
 		{
 			System.out.println("[OpenTUNG-Saver] BOARDS: " + boardCount + " / " + expectedBoards);
+			broken = true;
 		}
 		if(components.size() != componentAmount)
 		{
 			System.out.println("[OpenTUNG-Saver] COMPONENTS: " + components.size() + " / " + componentAmount);
+			broken = true;
 		}
 		else
 		{
 			System.out.println("[OpenTUNG-Saver] Collected: " + components.size());
+		}
+		if(broken)
+		{
+			saveFile = alternativeFile(saveFile);
+			JOptionPane.showMessageDialog(null, "The calculated component/board amount is not correct, please report this issue. Saving as " + saveFile.getName(), "Issue while saving...", JOptionPane.ERROR_MESSAGE);
 		}
 		
 		Map<Component, Integer> componentIDs = new HashMap<>();
@@ -205,5 +214,23 @@ public class Saver
 			System.out.println("Error while saving, please report. Continuing.");
 			e.printStackTrace();
 		}
+	}
+	
+	private static File alternativeFile(File original)
+	{
+		File parent = original.getParentFile();
+		String name = original.getName();
+		int ending = name.lastIndexOf('.');
+		//Assume always ending!!!
+		name = name.substring(0, ending) + "-";
+		
+		File newFile = new File(parent, name + ".opentung");
+		while(newFile.exists())
+		{
+			name += '-';
+			newFile = new File(parent, name + ".opentung");
+		}
+		
+		return newFile;
 	}
 }
