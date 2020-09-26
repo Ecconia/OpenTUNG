@@ -611,6 +611,10 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void delete(Part toBeDeleted)
 	{
+		if(isGrabbing())
+		{
+			return;
+		}
 		if(toBeDeleted instanceof Connector)
 		{
 			toBeDeleted = toBeDeleted.getParent();
@@ -770,11 +774,14 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void grab(Component toBeGrabbed)
 	{
+		if(wireStartPoint != null)
+		{
+			return; //We are dragging a wire, don't grab something!
+		}
 		if(grabbedComponent != null || grabbedWires != null)
 		{
 			return;
 		}
-		System.out.println("Grabbing");
 		if(toBeGrabbed instanceof CompContainer)
 		{
 			System.out.println("Cannot grab container - yet.");
@@ -886,7 +893,6 @@ public class RenderPlane3D implements RenderPlane
 				//Was aborted. But data is no longer valid.
 				return;
 			}
-			System.out.println("Delete grabbed.");
 			if(compCopy.getParent() != null)
 			{
 				((CompContainer) compCopy.getParent()).remove(compCopy);
