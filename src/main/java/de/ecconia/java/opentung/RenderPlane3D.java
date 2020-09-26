@@ -26,7 +26,6 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.meshes.ColorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
-import de.ecconia.java.opentung.libwrap.meshes.RayCastMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
@@ -75,7 +74,6 @@ public class RenderPlane3D implements RenderPlane
 	private final InputProcessor inputHandler;
 	
 	private TextureMesh textureMesh;
-	private RayCastMesh rayCastMesh;
 	private SolidMesh solidMesh;
 	private ConductorMesh conductorMesh;
 	private ColorMesh colorMesh;
@@ -88,8 +86,7 @@ public class RenderPlane3D implements RenderPlane
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
 	
-	private Part[] idLookup;
-	private int currentlySelectedIndex = 0; //What the camera is currently looking at.
+	private Part currentlySelected; //What the camera is currently looking at.
 	private Cluster clusterToHighlight;
 	private List<Connector> connectorsToHighlight = new ArrayList<>();
 	private int width = 0;
@@ -110,7 +107,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		board.getSimulation().pauseSimulation(pauseArrived);
 		gpuTasks.add((unused) -> {
-			currentlySelectedIndex = 0;
+			currentlySelected = null;
 			placementData = null;
 			boardIsBeingDragged = false;
 			wireStartPoint = null;
@@ -145,11 +142,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public Part getCursorObject()
 	{
-		if(currentlySelectedIndex <= 0)
-		{
-			return null;
-		}
-		return idLookup[currentlySelectedIndex];
+		return currentlySelected;
 	}
 	
 	public boolean isGrabbing()
@@ -271,22 +264,6 @@ public class RenderPlane3D implements RenderPlane
 				newWire.setRotation(rotation);
 				newWire.setPosition(position);
 				newWire.setLength((float) distance * 2f);
-				
-				//RayCast
-				Part[] idLookupClone = new Part[idLookup.length + 1];
-				System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
-				idLookup = idLookupClone;
-				if(board.getRaycastIDs().getFreeIDs() < 0)
-				{
-					expandLookupArray();
-				}
-				int rayID = board.getRaycastIDs().getNewID();
-				if(rayID >= idLookup.length)
-				{
-					expandLookupArray();
-				}
-				newWire.setRayCastID(rayID);
-				idLookup[rayID] = newWire;
 			}
 			
 			Cluster wireCluster;
@@ -484,34 +461,6 @@ public class RenderPlane3D implements RenderPlane
 			{
 				newComponent = currentPlaceable.instance(placement.getParentBoard());
 			}
-			//Raycast ID:
-			{
-				int neededIDAmount = 1 + newComponent.getPegs().size() + newComponent.getBlots().size();
-				if(board.getRaycastIDs().getFreeIDs() < neededIDAmount)
-				{
-					expandLookupArray();
-				}
-				int rayID = board.getRaycastIDs().getNewID();
-				if((rayID + neededIDAmount - 1) < idLookup.length)
-				{
-					expandLookupArray();
-				}
-				//TODO: Breaks as soon as a component has over 999 conductors....
-				newComponent.setRayCastID(rayID);
-				idLookup[rayID] = newComponent;
-				for(Peg peg : newComponent.getPegs())
-				{
-					rayID = board.getRaycastIDs().getNewID();
-					peg.setRayCastID(rayID);
-					idLookup[rayID] = peg;
-				}
-				for(Blot blot : newComponent.getBlots())
-				{
-					rayID = board.getRaycastIDs().getNewID();
-					blot.setRayCastID(rayID);
-					idLookup[rayID] = blot;
-				}
-			}
 			newComponent.setRotation(finalRotation);
 			newComponent.setPosition(position);
 			
@@ -597,14 +546,6 @@ public class RenderPlane3D implements RenderPlane
 		return false;
 	}
 	
-	private void expandLookupArray()
-	{
-		int newSize = idLookup.length + 1000;
-		Part[] idLookupClone = new Part[newSize];
-		System.arraycopy(idLookup, 0, idLookupClone, 0, idLookup.length);
-		idLookup = idLookupClone;
-	}
-	
 	public void delete(Part toBeDeleted)
 	{
 		if(isGrabbing())
@@ -638,7 +579,6 @@ public class RenderPlane3D implements RenderPlane
 						board.getComponentsToRender().remove(container);
 						refreshComponentMeshes(container instanceof Colorable);
 					}
-					board.getRaycastIDs().freeID(container.getRayID());
 				});
 			}
 			else
@@ -666,7 +606,6 @@ public class RenderPlane3D implements RenderPlane
 					}
 					board.getWiresToRender().remove(wireToDelete);
 					refreshWireMeshes();
-					board.getRaycastIDs().freeID(wireToDelete.getRayID());
 				});
 			});
 		}
@@ -711,20 +650,16 @@ public class RenderPlane3D implements RenderPlane
 				}
 				
 				List<Wire> wiresToRemove = new ArrayList<>();
-				List<Integer> rayIDsToRemove = new ArrayList<>();
 				for(Blot blot : component.getBlots())
 				{
 					ClusterHelper.removeBlot(board, simulation, blot);
 					wiresToRemove.addAll(blot.getWires());
-					rayIDsToRemove.add(blot.getRayID());
 				}
 				for(Peg peg : component.getPegs())
 				{
 					ClusterHelper.removePeg(board, simulation, peg);
 					wiresToRemove.addAll(peg.getWires());
-					rayIDsToRemove.add(peg.getRayID());
 				}
-				rayIDsToRemove.add(component.getRayID());
 				
 				gpuTasks.add((unused) -> {
 					for(Blot blot : component.getBlots())
@@ -747,11 +682,6 @@ public class RenderPlane3D implements RenderPlane
 					for(Wire wire : wiresToRemove)
 					{
 						board.getWiresToRender().remove(wire);
-						board.getRaycastIDs().freeID(((CompWireRaw) wire).getRayID());
-					}
-					for(Integer i : rayIDsToRemove)
-					{
-						board.getRaycastIDs().freeID(i);
 					}
 					if(component instanceof CompLabel)
 					{
@@ -893,31 +823,23 @@ public class RenderPlane3D implements RenderPlane
 			{
 				((CompContainer) compCopy.getParent()).remove(compCopy);
 			}
-			List<Integer> rayIDsToRemove = new ArrayList<>();
 			for(Wire wire : wireCopy)
 			{
 				ClusterHelper.removeWire(board, board.getSimulation(), wire);
-				rayIDsToRemove.add(((CompWireRaw) wire).getRayID());
 			}
 			for(Peg peg : compCopy.getPegs())
 			{
 				ClusterHelper.removePeg(board, board.getSimulation(), peg);
-				rayIDsToRemove.add(peg.getRayID());
 			}
 			for(Blot blot : compCopy.getBlots())
 			{
 				ClusterHelper.removeBlot(board, board.getSimulation(), blot);
-				rayIDsToRemove.add(blot.getRayID());
 			}
 			
 			gpuTasks.add((unused2) -> {
 				grabbedWires = null;
 				grabbedComponent = null;
 				
-				for(Integer i : rayIDsToRemove)
-				{
-					board.getRaycastIDs().freeID(i);
-				}
 				if(compCopy instanceof CompLabel)
 				{
 					((CompLabel) compCopy).unload();
@@ -985,52 +907,6 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
-		//Raycast IDs:
-		{
-			//Calculate the initial amount, cause the array has to be initialized:
-			int amount = board.getBoardsToRender().size() + board.getWiresToRender().size() + 1;
-			for(Component component : board.getComponentsToRender())
-			{
-				amount += 1 + component.getPegs().size() + component.getBlots().size();
-			}
-			System.out.println("Raycast ID amount: " + amount);
-			if((amount) > 0xFFFFFF)
-			{
-				throw new RuntimeException("Out of raycast IDs. Tell the dev to do fancy programming, so that this never happens again.");
-			}
-			idLookup = new Part[amount];
-			
-			for(Component comp : board.getBoardsToRender())
-			{
-				int rayID = board.getRaycastIDs().getNewID();
-				comp.setRayCastID(rayID);
-				idLookup[rayID] = comp;
-			}
-			for(Component comp : board.getWiresToRender())
-			{
-				int rayID = board.getRaycastIDs().getNewID();
-				comp.setRayCastID(rayID);
-				idLookup[rayID] = comp;
-			}
-			for(Component comp : board.getComponentsToRender())
-			{
-				int rayID = board.getRaycastIDs().getNewID();
-				comp.setRayCastID(rayID);
-				idLookup[rayID] = comp;
-				for(Peg peg : comp.getPegs())
-				{
-					rayID = board.getRaycastIDs().getNewID();
-					peg.setRayCastID(rayID);
-					idLookup[rayID] = peg;
-				}
-				for(Blot blot : comp.getBlots())
-				{
-					rayID = board.getRaycastIDs().getNewID();
-					blot.setRayCastID(rayID);
-					idLookup[rayID] = blot;
-				}
-			}
-		}
 		//Colorable IDs:
 		{
 			for(Component comp : board.getComponentsToRender())
@@ -1073,7 +949,6 @@ public class RenderPlane3D implements RenderPlane
 		{
 			System.out.println("[MeshDebug] Starting mesh generation...");
 			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
-			rayCastMesh = new RayCastMesh(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 			solidMesh = new SolidMesh(board.getComponentsToRender());
 			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getSimulation(), true);
 			colorMesh = new ColorMesh(board.getComponentsToRender(), board.getSimulation());
@@ -1119,7 +994,6 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("[MeshDebug] Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
 		solidMesh.update(board.getComponentsToRender());
-		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 		if(hasColorable)
 		{
 			colorMesh.update(board.getComponentsToRender());
@@ -1131,7 +1005,6 @@ public class RenderPlane3D implements RenderPlane
 	{
 		System.out.println("[MeshDebug] Update:");
 		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
-		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 		System.out.println("[MeshDebug] Done.");
 	}
 	
@@ -1139,7 +1012,6 @@ public class RenderPlane3D implements RenderPlane
 	{
 		System.out.println("[MeshDebug] Update:");
 		textureMesh.update(board.getBoardsToRender());
-		rayCastMesh.update(board.getBoardsToRender(), board.getWiresToRender(), board.getComponentsToRender());
 		System.out.println("[MeshDebug] Done.");
 	}
 	
@@ -1150,7 +1022,7 @@ public class RenderPlane3D implements RenderPlane
 			return; //Don't change anything, the camera may look somewhere else in the meantime.
 		}
 		
-		if(currentlySelectedIndex == 0)
+		if(currentlySelected == null)
 		{
 			placementData = null; //Nothing to place on.
 			return;
@@ -1159,7 +1031,7 @@ public class RenderPlane3D implements RenderPlane
 		//TODO: Also allow the tip of Mounts :)
 		
 		//If looking at a board
-		Part part = idLookup[currentlySelectedIndex];
+		Part part = currentlySelected;
 		if(!(part instanceof CompBoard))
 		{
 			placementData = null; //Only place on boards.
@@ -1306,7 +1178,10 @@ public class RenderPlane3D implements RenderPlane
 		float[] view = camera.getMatrix();
 		if(Settings.doRaycasting && !sharedData.isSaving())
 		{
-			raycast(view);
+//			long start = System.currentTimeMillis();
+			cpuRaycast();
+//			long duration = System.currentTimeMillis() - start;
+//			System.out.println("Raycast time: " + duration + "ms");
 		}
 		calculatePlacementPosition();
 		if(Settings.drawWorld)
@@ -1671,12 +1546,12 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return;
 		}
-		if(currentlySelectedIndex == 0)
+		if(currentlySelected == null)
 		{
 			return;
 		}
 		
-		Part part = idLookup[currentlySelectedIndex];
+		Part part = currentlySelected;
 		
 		boolean isBoard = part instanceof CompBoard;
 		boolean isWire = part instanceof CompWireRaw;
@@ -1784,40 +1659,526 @@ public class RenderPlane3D implements RenderPlane
 		GL30.glStencilMask(0x00);
 	}
 	
-	private void raycast(float[] view)
+	private void cpuRaycast()
 	{
-		Matrix model = new Matrix();
+		Vector3 cameraPosition = camera.getPosition();
+		Vector3 cameraRay = Vector3.zp;
+		cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+		cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
 		
-		if(Settings.drawWorld)
+		Part match = null;
+		double dist = Double.MAX_VALUE;
+		for(CompBoard board : board.getBoardsToRender())
 		{
-			GL30.glViewport(0, 0, 1, 1);
+			Quaternion boardRotation = board.getRotation();
+			Vector3 cameraPositionBoardSpace = boardRotation.multiply(cameraPosition.subtract(board.getPosition()));
+			Vector3 cameraRayBoardSpace = boardRotation.multiply(cameraRay);
+			CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
+			Vector3 size = shape.getSize();
+			if(shape.getMapper() != null)
+			{
+				size = shape.getMapper().getMappedSize(size, board);
+			}
+			
+			double xr = 1.0 / cameraRayBoardSpace.getX();
+			double yr = 1.0 / cameraRayBoardSpace.getY();
+			double zr = 1.0 / cameraRayBoardSpace.getZ();
+			
+			double xA = (size.getX() - cameraPositionBoardSpace.getX()) * xr;
+			double xB = ((-size.getX()) - cameraPositionBoardSpace.getX()) * xr;
+			double yA = (size.getY() - cameraPositionBoardSpace.getY()) * yr;
+			double yB = ((-size.getY()) - cameraPositionBoardSpace.getY()) * yr;
+			double zA = (size.getZ() - cameraPositionBoardSpace.getZ()) * zr;
+			double zB = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) * zr;
+			
+			double tMin;
+			double tMax;
+			{
+				if(xA < xB)
+				{
+					tMin = xA;
+					tMax = xB;
+				}
+				else
+				{
+					tMin = xB;
+					tMax = xA;
+				}
+				
+				double min = yA;
+				double max = yB;
+				if(min > max)
+				{
+					min = yB;
+					max = yA;
+				}
+				
+				if(min > tMin)
+				{
+					tMin = min;
+				}
+				if(max < tMax)
+				{
+					tMax = max;
+				}
+				
+				min = zA;
+				max = zB;
+				if(min > max)
+				{
+					min = zB;
+					max = zA;
+				}
+				
+				if(min > tMin)
+				{
+					tMin = min;
+				}
+				if(max < tMax)
+				{
+					tMax = max;
+				}
+			}
+			
+			if(tMax < 0)
+			{
+				continue; //Behind camera.
+			}
+			
+			if(tMin > tMax)
+			{
+				continue; //No collision.
+			}
+			
+			if(tMin < dist)
+			{
+				match = board;
+				dist = tMin;
+			}
 		}
-		GL30.glClearColor(0, 0, 0, 1);
-		OpenTUNG.clear();
 		
-		rayCastMesh.draw(view);
-		
-		GL30.glFlush();
-		GL30.glFinish();
-		
-		float[] values = new float[3];
-		GL30.glReadPixels(0, 0, 1, 1, GL30.GL_RGB, GL30.GL_FLOAT, values);
-//		float[] distance = new float[1];
-//		GL30.glReadPixels(width / 2, height / 2, 1, 1, GL30.GL_DEPTH_COMPONENT, GL30.GL_FLOAT, distance);
-		
-		int id = (int) (values[0] * 255f) + (int) (values[1] * 255f) * 256 + (int) (values[2] * 255f) * 256 * 256;
-		if(id > idLookup.length - 1)
+		for(CompWireRaw wire : board.getWiresToRender())
 		{
-			System.out.println("Looking at ???? (" + id + ")");
-			id = 0;
+			Quaternion boardRotation = wire.getRotation();
+			Vector3 cameraPositionBoardSpace = boardRotation.multiply(cameraPosition.subtract(wire.getPosition()));
+			Vector3 cameraRayBoardSpace = boardRotation.multiply(cameraRay);
+			CubeFull shape = (CubeFull) wire.getModelHolder().getConductors().get(0);
+			Vector3 size = shape.getSize();
+			if(shape.getMapper() != null)
+			{
+				size = shape.getMapper().getMappedSize(size, wire);
+			}
+			
+			double xr = 1.0 / cameraRayBoardSpace.getX();
+			double yr = 1.0 / cameraRayBoardSpace.getY();
+			double zr = 1.0 / cameraRayBoardSpace.getZ();
+			
+			double xA = (size.getX() - cameraPositionBoardSpace.getX()) * xr;
+			double xB = ((-size.getX()) - cameraPositionBoardSpace.getX()) * xr;
+			double yA = (size.getY() - cameraPositionBoardSpace.getY()) * yr;
+			double yB = ((-size.getY()) - cameraPositionBoardSpace.getY()) * yr;
+			double zA = (size.getZ() - cameraPositionBoardSpace.getZ()) * zr;
+			double zB = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) * zr;
+			
+			double tMin;
+			double tMax;
+			{
+				if(xA < xB)
+				{
+					tMin = xA;
+					tMax = xB;
+				}
+				else
+				{
+					tMin = xB;
+					tMax = xA;
+				}
+				
+				double min = yA;
+				double max = yB;
+				if(min > max)
+				{
+					min = yB;
+					max = yA;
+				}
+				
+				if(min > tMin)
+				{
+					tMin = min;
+				}
+				if(max < tMax)
+				{
+					tMax = max;
+				}
+				
+				min = zA;
+				max = zB;
+				if(min > max)
+				{
+					min = zB;
+					max = zA;
+				}
+				
+				if(min > tMin)
+				{
+					tMin = min;
+				}
+				if(max < tMax)
+				{
+					tMax = max;
+				}
+			}
+			
+			if(tMax < 0)
+			{
+				continue; //Behind camera.
+			}
+			
+			if(tMin > tMax)
+			{
+				continue; //No collision.
+			}
+			
+			if(tMin < dist)
+			{
+				match = wire;
+				dist = tMin;
+			}
 		}
 		
-		if(Settings.drawWorld)
+		for(Component component : board.getComponentsToRender())
 		{
-			GL30.glViewport(0, 0, this.width, this.height);
+			if(component instanceof CompSnappingWire)
+			{
+				continue;
+			}
+			
+			Quaternion boardRotation = component.getRotation();
+			Vector3 cameraPositionBoardSpace = boardRotation.multiply(cameraPosition.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
+			Vector3 cameraRayBoardSpace = boardRotation.multiply(cameraRay);
+			
+			double xr = 1.0 / cameraRayBoardSpace.getX();
+			double yr = 1.0 / cameraRayBoardSpace.getY();
+			double zr = 1.0 / cameraRayBoardSpace.getZ();
+			
+			for(Peg peg : component.getPegs())
+			{
+				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(peg.getModel().getPosition());
+				CubeFull shape = peg.getModel();
+				Vector3 size = shape.getSize();
+				
+				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
+				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
+				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
+				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
+				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
+				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
+				
+				double tMin;
+				double tMax;
+				{
+					if(xA < xB)
+					{
+						tMin = xA;
+						tMax = xB;
+					}
+					else
+					{
+						tMin = xB;
+						tMax = xA;
+					}
+					
+					double min = yA;
+					double max = yB;
+					if(min > max)
+					{
+						min = yB;
+						max = yA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+					
+					min = zA;
+					max = zB;
+					if(min > max)
+					{
+						min = zB;
+						max = zA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+				}
+				
+				if(tMax < 0)
+				{
+					continue; //Behind camera.
+				}
+				
+				if(tMin > tMax)
+				{
+					continue; //No collision.
+				}
+				
+				if(tMin < dist)
+				{
+					match = peg;
+					dist = tMin;
+				}
+			}
+			
+			for(Blot blot : component.getBlots())
+			{
+				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(blot.getModel().getPosition());
+				CubeFull shape = blot.getModel();
+				Vector3 size = shape.getSize();
+				
+				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
+				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
+				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
+				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
+				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
+				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
+				
+				double tMin;
+				double tMax;
+				{
+					if(xA < xB)
+					{
+						tMin = xA;
+						tMax = xB;
+					}
+					else
+					{
+						tMin = xB;
+						tMax = xA;
+					}
+					
+					double min = yA;
+					double max = yB;
+					if(min > max)
+					{
+						min = yB;
+						max = yA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+					
+					min = zA;
+					max = zB;
+					if(min > max)
+					{
+						min = zB;
+						max = zA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+				}
+				
+				if(tMax < 0)
+				{
+					continue; //Behind camera.
+				}
+				
+				if(tMin > tMax)
+				{
+					continue; //No collision.
+				}
+				
+				if(tMin < dist)
+				{
+					match = blot;
+					dist = tMin;
+				}
+			}
+			
+			for(Meshable meshable : component.getModelHolder().getSolid())
+			{
+				CubeFull shape = (CubeFull) meshable;
+				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
+				Vector3 size = shape.getSize();
+				
+				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
+				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
+				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
+				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
+				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
+				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
+				
+				double tMin;
+				double tMax;
+				{
+					if(xA < xB)
+					{
+						tMin = xA;
+						tMax = xB;
+					}
+					else
+					{
+						tMin = xB;
+						tMax = xA;
+					}
+					
+					double min = yA;
+					double max = yB;
+					if(min > max)
+					{
+						min = yB;
+						max = yA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+					
+					min = zA;
+					max = zB;
+					if(min > max)
+					{
+						min = zB;
+						max = zA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+				}
+				
+				if(tMax < 0)
+				{
+					continue; //Behind camera.
+				}
+				
+				if(tMin > tMax)
+				{
+					continue; //No collision.
+				}
+				
+				if(tMin < dist)
+				{
+					match = component;
+					dist = tMin;
+				}
+			}
+			
+			for(Meshable meshable : component.getModelHolder().getColorables())
+			{
+				CubeFull shape = (CubeFull) meshable;
+				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
+				Vector3 size = shape.getSize();
+				
+				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
+				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
+				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
+				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
+				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
+				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
+				
+				double tMin;
+				double tMax;
+				{
+					if(xA < xB)
+					{
+						tMin = xA;
+						tMax = xB;
+					}
+					else
+					{
+						tMin = xB;
+						tMax = xA;
+					}
+					
+					double min = yA;
+					double max = yB;
+					if(min > max)
+					{
+						min = yB;
+						max = yA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+					
+					min = zA;
+					max = zB;
+					if(min > max)
+					{
+						min = zB;
+						max = zA;
+					}
+					
+					if(min > tMin)
+					{
+						tMin = min;
+					}
+					if(max < tMax)
+					{
+						tMax = max;
+					}
+				}
+				
+				if(tMax < 0)
+				{
+					continue; //Behind camera.
+				}
+				
+				if(tMin > tMax)
+				{
+					continue; //No collision.
+				}
+				
+				if(tMin < dist)
+				{
+					match = component;
+					dist = tMin;
+				}
+			}
 		}
 		
-		currentlySelectedIndex = id;
+		currentlySelected = match;
 	}
 	
 	@Override
@@ -1830,7 +2191,6 @@ public class RenderPlane3D implements RenderPlane
 		float[] projection = p.getMat();
 		latestProjectionMat = projection;
 		
-		rayCastMesh.updateProjection(projection);
 		solidMesh.updateProjection(projection);
 		conductorMesh.updateProjection(projection);
 		colorMesh.updateProjection(projection);

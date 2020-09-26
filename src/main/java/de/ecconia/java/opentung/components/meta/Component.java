@@ -4,7 +4,6 @@ import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
-import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
@@ -172,26 +171,16 @@ public abstract class Component extends Part
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
 		{
-			Color color = null;
-			if(type.colorISID())
-			{
-				int id = getRayID();
-				int r = id & 0xFF;
-				int g = (id & 0xFF00) >> 8;
-				int b = (id & 0xFF0000) >> 16;
-				color = new Color(r, g, b);
-			}
-			
 			for(Meshable m : getModelHolder().getSolid())
 			{
-				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 			
 			if(type == MeshTypeThing.Raycast)
 			{
 				for(Meshable m : getModelHolder().getColorables())
 				{
-					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 			}
 		}

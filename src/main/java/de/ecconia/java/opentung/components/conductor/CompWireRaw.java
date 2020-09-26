@@ -85,16 +85,7 @@ public class CompWireRaw extends Component implements Wire
 		//TODO: This is super ungeneric, beware.
 		CubeFull shape = (CubeFull) getModelHolder().getConductors().get(0);
 		
-		Color color = Color.circuitON;
-		if(type.colorISID())
-		{
-			int id = getRayID();
-			int r = id & 0xFF;
-			int g = (id & 0xFF00) >> 8;
-			int b = (id & 0xFF0000) >> 16;
-			color = new Color(r, g, b);
-		}
-		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
+		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, Color.circuitON, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 	}
 	
 	// ### SIMULATION ###

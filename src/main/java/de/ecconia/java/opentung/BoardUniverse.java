@@ -60,29 +60,10 @@ public class BoardUniverse
 			return index;
 		}
 	};
-	private final IDManager raycastIDs = new IDManager(1, 0x1000000)
-	{
-		@Override
-		public Integer getNewID()
-		{
-			Integer index = getNewIDInternal();
-			if(index == null)
-			{
-				System.out.println("[ID ISSUE!!!] Ran out of Raycast ID's, assigning null to the component this will lead to crashes!");
-				JOptionPane.showMessageDialog(null, "You can only have a maximum of 4065 color objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
-			}
-			return index;
-		}
-	};
 	
 	public IDManager getColorableIDs()
 	{
 		return colorableIDs;
-	}
-	
-	public IDManager getRaycastIDs()
-	{
-		return raycastIDs;
 	}
 	
 	//### OTHER ###

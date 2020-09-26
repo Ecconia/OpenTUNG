@@ -14,7 +14,6 @@ public abstract class Part
 	
 	//Custom data:
 	private Component parent;
-	private int rayID;
 	
 	public Part(Component parent)
 	{
@@ -64,16 +63,6 @@ public abstract class Part
 	public Component getParent()
 	{
 		return parent;
-	}
-	
-	public void setRayCastID(int id)
-	{
-		this.rayID = id;
-	}
-	
-	public int getRayID()
-	{
-		return rayID;
 	}
 	
 	//Interaction:

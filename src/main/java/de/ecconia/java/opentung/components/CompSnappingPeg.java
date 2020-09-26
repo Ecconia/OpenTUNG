@@ -69,17 +69,8 @@ public class CompSnappingPeg extends Component
 	{
 		if(type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast)
 		{
-			Color color = null;
-			if(type.colorISID())
-			{
-				int id = getRayID();
-				int r = id & 0xFF;
-				int g = (id & 0xFF00) >> 8;
-				int b = (id & 0xFF0000) >> 16;
-				color = new Color(r, g, b);
-			}
 			//TODO: This is still ungeneric.
-			getModelHolder().getPegModels().get(0).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
+			getModelHolder().getPegModels().get(0).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
 		}
 	}
 	
