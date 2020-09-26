@@ -1355,9 +1355,10 @@ public class RenderPlane3D implements RenderPlane
 		
 		Vector3 startingPos = wireStartPoint.getConnectionPoint();
 		
-		Vector3 toPos = placementData.getPosition();
-		if(toPos == null)
+		Vector3 toPos;
+		if(placementData == null)
 		{
+			toPos = null;
 			Part currentlyLookingAt = getCursorObject();
 			if(currentlyLookingAt instanceof Connector)
 			{
@@ -1366,6 +1367,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else
 		{
+			toPos = placementData.getPosition();
 			//Fix offset.
 			toPos = toPos.add(placementData.getNormal().multiply(0.075));
 		}
