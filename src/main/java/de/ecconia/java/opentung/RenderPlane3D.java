@@ -1176,7 +1176,7 @@ public class RenderPlane3D implements RenderPlane
 		controller.doFrameCycle();
 		
 		float[] view = camera.getMatrix();
-		if(Settings.doRaycasting && !sharedData.isSaving())
+		if(Settings.doRaycasting && !sharedData.isSaving() && fullyLoaded)
 		{
 //			long start = System.currentTimeMillis();
 			cpuRaycast();
