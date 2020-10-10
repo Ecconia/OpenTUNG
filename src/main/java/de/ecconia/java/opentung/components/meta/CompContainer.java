@@ -13,6 +13,19 @@ public abstract class CompContainer extends Component
 	//Bounds:
 	protected MinMaxBox snappingPegBounds;
 	
+	private MinMaxBox bounds;
+	
+	@Override
+	public MinMaxBox getBounds()
+	{
+		if(bounds == null)
+		{
+			createBounds();
+		}
+		
+		return bounds;
+	}
+	
 	//Raw data:
 	private final List<Component> children = new ArrayList<>();
 	
@@ -151,6 +164,15 @@ public abstract class CompContainer extends Component
 	{
 		children.remove(component);
 		//TODO: recalculate bounds, if needed.
+	}
+	
+	public void createBounds()
+	{
+		bounds = new MinMaxBox(getOwnBounds());
+		for(Component child : children)
+		{
+			bounds.expand(child.getBounds());
+		}
 	}
 	
 	public boolean isEmpty()

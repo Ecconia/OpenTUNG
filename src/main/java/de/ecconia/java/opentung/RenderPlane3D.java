@@ -1702,103 +1702,22 @@ public class RenderPlane3D implements RenderPlane
 		GL30.glStencilMask(0x00);
 	}
 	
+	private Part match;
+	private double dist;
+	
 	private void cpuRaycast()
 	{
+		long totalStart = System.currentTimeMillis();
+		
 		Vector3 cameraPosition = camera.getPosition();
 		Vector3 cameraRay = Vector3.zp;
 		cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
 		cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
 		
-		Part match = null;
-		double dist = Double.MAX_VALUE;
-		for(CompBoard board : board.getBoardsToRender())
-		{
-			Quaternion boardRotation = board.getRotation();
-			Vector3 cameraPositionBoardSpace = boardRotation.multiply(cameraPosition.subtract(board.getPosition()));
-			Vector3 cameraRayBoardSpace = boardRotation.multiply(cameraRay);
-			CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
-			Vector3 size = shape.getSize();
-			if(shape.getMapper() != null)
-			{
-				size = shape.getMapper().getMappedSize(size, board);
-			}
-			
-			double xr = 1.0 / cameraRayBoardSpace.getX();
-			double yr = 1.0 / cameraRayBoardSpace.getY();
-			double zr = 1.0 / cameraRayBoardSpace.getZ();
-			
-			double xA = (size.getX() - cameraPositionBoardSpace.getX()) * xr;
-			double xB = ((-size.getX()) - cameraPositionBoardSpace.getX()) * xr;
-			double yA = (size.getY() - cameraPositionBoardSpace.getY()) * yr;
-			double yB = ((-size.getY()) - cameraPositionBoardSpace.getY()) * yr;
-			double zA = (size.getZ() - cameraPositionBoardSpace.getZ()) * zr;
-			double zB = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) * zr;
-			
-			double tMin;
-			double tMax;
-			{
-				if(xA < xB)
-				{
-					tMin = xA;
-					tMax = xB;
-				}
-				else
-				{
-					tMin = xB;
-					tMax = xA;
-				}
-				
-				double min = yA;
-				double max = yB;
-				if(min > max)
-				{
-					min = yB;
-					max = yA;
-				}
-				
-				if(min > tMin)
-				{
-					tMin = min;
-				}
-				if(max < tMax)
-				{
-					tMax = max;
-				}
-				
-				min = zA;
-				max = zB;
-				if(min > max)
-				{
-					min = zB;
-					max = zA;
-				}
-				
-				if(min > tMin)
-				{
-					tMin = min;
-				}
-				if(max < tMax)
-				{
-					tMax = max;
-				}
-			}
-			
-			if(tMax < 0)
-			{
-				continue; //Behind camera.
-			}
-			
-			if(tMin > tMax)
-			{
-				continue; //No collision.
-			}
-			
-			if(tMin < dist)
-			{
-				match = board;
-				dist = tMin;
-			}
-		}
+		match = null;
+		dist = Double.MAX_VALUE;
+		
+		long wireStart = System.currentTimeMillis();
 		
 		for(CompWireRaw wire : board.getWiresToRender())
 		{
@@ -1889,339 +1808,266 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
-		for(Component component : board.getComponentsToRender())
+		long restStart = System.currentTimeMillis();
+		long wireDuration = restStart - wireStart;
+		
+		focusProbe(board.getRootBoard(), cameraPosition, cameraRay);
+		
+		long restDuration = System.currentTimeMillis() - restStart;
+		
+		System.out.println("Raycast. Wire: " + wireDuration + "ms Rest: " + restDuration + "ms Total: " + (System.currentTimeMillis() - totalStart) + "ms");
+		
+		currentlySelected = match;
+	}
+	
+	private void focusProbe(Component component, Vector3 camPos, Vector3 camRay)
+	{
+		if(component instanceof CompSnappingWire)
 		{
-			if(component instanceof CompSnappingWire)
+			return;
+		}
+		
+		if(!component.getBounds().contains(camPos))
+		{
+			double distance = distance(component.getBounds(), camPos, camRay);
+			if(distance < 0 || distance >= dist)
+			{
+				return; //We already found something closer bye.
+			}
+		}
+		
+		//Normal or board:
+		testComponent(component, camPos, camRay);
+		if(component instanceof CompContainer)
+		{
+			//Test children:
+			for(Component child : ((CompContainer) component).getChildren())
+			{
+				focusProbe(child, camPos, camRay);
+			}
+		}
+	}
+	
+	private void testComponent(Component component, Vector3 camPos, Vector3 camRay)
+	{
+		Quaternion boardRotation = component.getRotation();
+		Vector3 cameraPositionBoardSpace = boardRotation.multiply(camPos.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
+		Vector3 cameraRayBoardSpace = boardRotation.multiply(camRay);
+		
+		//TODO: Rotated cubes... (Delayer)
+		
+		for(Peg peg : component.getPegs())
+		{
+			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(peg.getModel().getPosition());
+			CubeFull shape = peg.getModel();
+			Vector3 size = shape.getSize();
+			
+			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			if(distance < 0 || distance >= dist)
 			{
 				continue;
 			}
 			
-			Quaternion boardRotation = component.getRotation();
-			Vector3 cameraPositionBoardSpace = boardRotation.multiply(cameraPosition.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
-			Vector3 cameraRayBoardSpace = boardRotation.multiply(cameraRay);
+			match = peg;
+			dist = distance;
+		}
+		
+		for(Blot blot : component.getBlots())
+		{
+			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(blot.getModel().getPosition());
+			CubeFull shape = blot.getModel();
+			Vector3 size = shape.getSize();
 			
-			double xr = 1.0 / cameraRayBoardSpace.getX();
-			double yr = 1.0 / cameraRayBoardSpace.getY();
-			double zr = 1.0 / cameraRayBoardSpace.getZ();
-			
-			for(Peg peg : component.getPegs())
+			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			if(distance < 0 || distance >= dist)
 			{
-				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(peg.getModel().getPosition());
-				CubeFull shape = peg.getModel();
-				Vector3 size = shape.getSize();
-				
-				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
-				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
-				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
-				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
-				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
-				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
-				
-				double tMin;
-				double tMax;
-				{
-					if(xA < xB)
-					{
-						tMin = xA;
-						tMax = xB;
-					}
-					else
-					{
-						tMin = xB;
-						tMax = xA;
-					}
-					
-					double min = yA;
-					double max = yB;
-					if(min > max)
-					{
-						min = yB;
-						max = yA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-					
-					min = zA;
-					max = zB;
-					if(min > max)
-					{
-						min = zB;
-						max = zA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-				}
-				
-				if(tMax < 0)
-				{
-					continue; //Behind camera.
-				}
-				
-				if(tMin > tMax)
-				{
-					continue; //No collision.
-				}
-				
-				if(tMin < dist)
-				{
-					match = peg;
-					dist = tMin;
-				}
+				continue;
 			}
 			
-			for(Blot blot : component.getBlots())
+			match = blot;
+			dist = distance;
+		}
+		
+		for(Meshable meshable : component.getModelHolder().getSolid())
+		{
+			CubeFull shape = (CubeFull) meshable;
+			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
+			Vector3 size = shape.getSize();
+			if(shape.getMapper() != null)
 			{
-				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(blot.getModel().getPosition());
-				CubeFull shape = blot.getModel();
-				Vector3 size = shape.getSize();
-				
-				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
-				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
-				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
-				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
-				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
-				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
-				
-				double tMin;
-				double tMax;
-				{
-					if(xA < xB)
-					{
-						tMin = xA;
-						tMax = xB;
-					}
-					else
-					{
-						tMin = xB;
-						tMax = xA;
-					}
-					
-					double min = yA;
-					double max = yB;
-					if(min > max)
-					{
-						min = yB;
-						max = yA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-					
-					min = zA;
-					max = zB;
-					if(min > max)
-					{
-						min = zB;
-						max = zA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-				}
-				
-				if(tMax < 0)
-				{
-					continue; //Behind camera.
-				}
-				
-				if(tMin > tMax)
-				{
-					continue; //No collision.
-				}
-				
-				if(tMin < dist)
-				{
-					match = blot;
-					dist = tMin;
-				}
+				size = shape.getMapper().getMappedSize(size, component);
 			}
 			
-			for(Meshable meshable : component.getModelHolder().getSolid())
+			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			if(distance < 0 || distance >= dist)
 			{
-				CubeFull shape = (CubeFull) meshable;
-				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
-				Vector3 size = shape.getSize();
-				
-				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
-				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
-				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
-				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
-				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
-				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
-				
-				double tMin;
-				double tMax;
-				{
-					if(xA < xB)
-					{
-						tMin = xA;
-						tMax = xB;
-					}
-					else
-					{
-						tMin = xB;
-						tMax = xA;
-					}
-					
-					double min = yA;
-					double max = yB;
-					if(min > max)
-					{
-						min = yB;
-						max = yA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-					
-					min = zA;
-					max = zB;
-					if(min > max)
-					{
-						min = zB;
-						max = zA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-				}
-				
-				if(tMax < 0)
-				{
-					continue; //Behind camera.
-				}
-				
-				if(tMin > tMax)
-				{
-					continue; //No collision.
-				}
-				
-				if(tMin < dist)
-				{
-					match = component;
-					dist = tMin;
-				}
+				continue;
 			}
 			
-			for(Meshable meshable : component.getModelHolder().getColorables())
+			match = component;
+			dist = distance;
+		}
+		
+		for(Meshable meshable : component.getModelHolder().getColorables())
+		{
+			CubeFull shape = (CubeFull) meshable;
+			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
+			Vector3 size = shape.getSize();
+			
+			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			if(distance < 0 || distance >= dist)
 			{
-				CubeFull shape = (CubeFull) meshable;
-				Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
-				Vector3 size = shape.getSize();
-				
-				double xA = (size.getX() - cameraPositionBoard.getX()) * xr;
-				double xB = ((-size.getX()) - cameraPositionBoard.getX()) * xr;
-				double yA = (size.getY() - cameraPositionBoard.getY()) * yr;
-				double yB = ((-size.getY()) - cameraPositionBoard.getY()) * yr;
-				double zA = (size.getZ() - cameraPositionBoard.getZ()) * zr;
-				double zB = ((-size.getZ()) - cameraPositionBoard.getZ()) * zr;
-				
-				double tMin;
-				double tMax;
-				{
-					if(xA < xB)
-					{
-						tMin = xA;
-						tMax = xB;
-					}
-					else
-					{
-						tMin = xB;
-						tMax = xA;
-					}
-					
-					double min = yA;
-					double max = yB;
-					if(min > max)
-					{
-						min = yB;
-						max = yA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-					
-					min = zA;
-					max = zB;
-					if(min > max)
-					{
-						min = zB;
-						max = zA;
-					}
-					
-					if(min > tMin)
-					{
-						tMin = min;
-					}
-					if(max < tMax)
-					{
-						tMax = max;
-					}
-				}
-				
-				if(tMax < 0)
-				{
-					continue; //Behind camera.
-				}
-				
-				if(tMin > tMax)
-				{
-					continue; //No collision.
-				}
-				
-				if(tMin < dist)
-				{
-					match = component;
-					dist = tMin;
-				}
+				continue;
+			}
+			
+			match = component;
+			dist = distance;
+		}
+	}
+	
+	private double distance(Vector3 size, Vector3 camPos, Vector3 camRay)
+	{
+		double xA = (size.getX() - camPos.getX()) / camRay.getX();
+		double xB = ((-size.getX()) - camPos.getX()) / camRay.getX();
+		double yA = (size.getY() - camPos.getY()) / camRay.getY();
+		double yB = ((-size.getY()) - camPos.getY()) / camRay.getY();
+		double zA = (size.getZ() - camPos.getZ()) / camRay.getZ();
+		double zB = ((-size.getZ()) - camPos.getZ()) / camRay.getZ();
+		
+		double tMin;
+		double tMax;
+		{
+			if(xA < xB)
+			{
+				tMin = xA;
+				tMax = xB;
+			}
+			else
+			{
+				tMin = xB;
+				tMax = xA;
+			}
+			
+			double min = yA;
+			double max = yB;
+			if(min > max)
+			{
+				min = yB;
+				max = yA;
+			}
+			
+			if(min > tMin)
+			{
+				tMin = min;
+			}
+			if(max < tMax)
+			{
+				tMax = max;
+			}
+			
+			min = zA;
+			max = zB;
+			if(min > max)
+			{
+				min = zB;
+				max = zA;
+			}
+			
+			if(min > tMin)
+			{
+				tMin = min;
+			}
+			if(max < tMax)
+			{
+				tMax = max;
 			}
 		}
 		
-		currentlySelected = match;
+		if(tMax < 0)
+		{
+			return -1; //Behind camera.
+		}
+		
+		if(tMin > tMax)
+		{
+			return -1; //No collision.
+		}
+		
+		return tMin;
+	}
+	
+	private double distance(MinMaxBox aabb, Vector3 camPos, Vector3 camRay)
+	{
+		Vector3 minV = aabb.getMin();
+		Vector3 maxV = aabb.getMax();
+		
+		double xA = (maxV.getX() - camPos.getX()) / camRay.getX();
+		double xB = (minV.getX() - camPos.getX()) / camRay.getX();
+		double yA = (maxV.getY() - camPos.getY()) / camRay.getY();
+		double yB = (minV.getY() - camPos.getY()) / camRay.getY();
+		double zA = (maxV.getZ() - camPos.getZ()) / camRay.getZ();
+		double zB = (minV.getZ() - camPos.getZ()) / camRay.getZ();
+		
+		double tMin;
+		double tMax;
+		{
+			if(xA < xB)
+			{
+				tMin = xA;
+				tMax = xB;
+			}
+			else
+			{
+				tMin = xB;
+				tMax = xA;
+			}
+			
+			double min = yA;
+			double max = yB;
+			if(min > max)
+			{
+				min = yB;
+				max = yA;
+			}
+			
+			if(min > tMin)
+			{
+				tMin = min;
+			}
+			if(max < tMax)
+			{
+				tMax = max;
+			}
+			
+			min = zA;
+			max = zB;
+			if(min > max)
+			{
+				min = zB;
+				max = zA;
+			}
+			
+			if(min > tMin)
+			{
+				tMin = min;
+			}
+			if(max < tMax)
+			{
+				tMax = max;
+			}
+		}
+		
+		if(tMax < 0)
+		{
+			return -1; //Behind camera.
+		}
+		
+		if(tMin > tMax)
+		{
+			return -1; //No collision.
+		}
+		
+		return tMin;
 	}
 	
 	@Override

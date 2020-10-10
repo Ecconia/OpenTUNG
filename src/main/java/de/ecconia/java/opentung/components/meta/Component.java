@@ -29,7 +29,7 @@ public abstract class Component extends Part
 	{
 		if(ownBounds == null)
 		{
-			createBounds();
+			createOwnBounds();
 		}
 		
 		return ownBounds;
@@ -221,7 +221,7 @@ public abstract class Component extends Part
 		}
 	}
 	
-	public void createBounds()
+	public void createOwnBounds()
 	{
 		ownBounds = null; //Reset and don't expand it further.
 		for(Peg peg : pegs)
