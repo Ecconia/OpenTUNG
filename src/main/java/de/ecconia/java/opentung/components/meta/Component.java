@@ -18,6 +18,23 @@ public abstract class Component extends Part
 	//Bounds:
 	protected MinMaxBox connectorBounds;
 	
+	private MinMaxBox ownBounds;
+	
+	public MinMaxBox getBounds()
+	{
+		return getOwnBounds();
+	}
+	
+	public MinMaxBox getOwnBounds()
+	{
+		if(ownBounds == null)
+		{
+			createBounds();
+		}
+		
+		return ownBounds;
+	}
+	
 	//Connector:
 	protected final List<Peg> pegs = new ArrayList<>();
 	protected final List<Blot> blots = new ArrayList<>();
@@ -196,18 +213,43 @@ public abstract class Component extends Part
 	{
 		for(Peg peg : pegs)
 		{
-			addConnectorBox(peg.getModel());
+			connectorBounds = expandMinMaxBox(connectorBounds, peg.getModel());
 		}
 		for(Blot blot : blots)
 		{
-			addConnectorBox(blot.getModel());
+			connectorBounds = expandMinMaxBox(connectorBounds, blot.getModel());
 		}
 	}
 	
-	protected void addConnectorBox(CubeFull box)
+	public void createBounds()
+	{
+		ownBounds = null; //Reset and don't expand it further.
+		for(Peg peg : pegs)
+		{
+			ownBounds = expandMinMaxBox(ownBounds, peg.getModel());
+		}
+		for(Blot blot : blots)
+		{
+			ownBounds = expandMinMaxBox(ownBounds, blot.getModel());
+		}
+		for(Meshable m : getModelHolder().getSolid())
+		{
+			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
+		}
+		for(Meshable m : getModelHolder().getColorables())
+		{
+			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
+		}
+	}
+	
+	protected MinMaxBox expandMinMaxBox(MinMaxBox mmBox, CubeFull box)
 	{
 		Vector3 mPosition = box.getPosition();
 		Vector3 mSize = box.getSize();
+		if(box.getMapper() != null)
+		{
+			mSize = box.getMapper().getMappedSize(mSize, this);
+		}
 		Vector3 min = mPosition.subtract(mSize);
 		Vector3 max = mPosition.add(mSize);
 		
@@ -253,21 +295,23 @@ public abstract class Component extends Part
 		g = rotation.inverse().multiply(g).add(position);
 		h = rotation.inverse().multiply(h).add(position);
 		
-		if(connectorBounds == null)
+		if(mmBox == null)
 		{
-			connectorBounds = new MinMaxBox(a);
+			mmBox = new MinMaxBox(a);
 		}
 		else
 		{
-			connectorBounds.expand(a);
+			mmBox.expand(a);
 		}
-		connectorBounds.expand(b);
-		connectorBounds.expand(c);
-		connectorBounds.expand(d);
-		connectorBounds.expand(e);
-		connectorBounds.expand(f);
-		connectorBounds.expand(g);
-		connectorBounds.expand(h);
+		mmBox.expand(b);
+		mmBox.expand(c);
+		mmBox.expand(d);
+		mmBox.expand(e);
+		mmBox.expand(f);
+		mmBox.expand(g);
+		mmBox.expand(h);
+		
+		return mmBox;
 	}
 	
 	public Connector getConnectorAt(String debug, Vector3 absolutePoint)

@@ -60,6 +60,7 @@ public class RenderPlane3D implements RenderPlane
 	private ShaderProgram lineShader;
 	private LineVAO crossyIndicator;
 	private LineVAO axisIndicator;
+	private LineVAO boxHighlighter;
 	private ShaderProgram justShape;
 	private SimpleCubeVAO cubeVAO;
 	private ShaderProgram visualShapeShader;
@@ -930,6 +931,7 @@ public class RenderPlane3D implements RenderPlane
 		lineShader = new ShaderProgram("lineShader");
 		crossyIndicator = LineVAO.generateCrossyIndicator();
 		axisIndicator = LineVAO.generateAxisIndicator();
+		boxHighlighter = LineVAO.generateBox(new Color(255, 100, 100));
 		justShape = new ShaderProgram("justShape");
 		cubeVAO = SimpleCubeVAO.generateCube();
 		visualShapeShader = new ShaderProgram("visualShape");
@@ -1219,6 +1221,47 @@ public class RenderPlane3D implements RenderPlane
 				axisIndicator.draw();
 			}
 		}
+		
+		//Draw the current bounding box:
+		if(currentlySelected != null)
+		{
+			GL30.glDisable(GL30.GL_CULL_FACE);
+			
+			Component selected = currentlySelected instanceof Component ? (Component) currentlySelected : currentlySelected.getParent();
+			MinMaxBox box = selected.getBounds();
+			
+			if(box != null)
+			{
+				Vector3 size = box.getMax().subtract(box.getMin()).divide(2);
+				Vector3 pos = box.getMin().add(size);
+				size = size.add(0.001, 0.001, 0.001);
+				drawBox(pos, size, view);
+			}
+			
+			GL30.glEnable(GL30.GL_CULL_FACE);
+		}
+	}
+	
+	private void drawBox(Vector3 pos, Vector3 size, float[] view)
+	{
+		Matrix modelMatrix = new Matrix();
+		modelMatrix.translate((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
+		modelMatrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+		
+		lineShader.use();
+		lineShader.setUniform(1, view);
+		lineShader.setUniform(2, modelMatrix.getMat());
+		
+		boxHighlighter.use();
+		boxHighlighter.draw();
+		
+		justShape.use();
+		justShape.setUniform(1, view);
+		justShape.setUniform(2, modelMatrix.getMat());
+		justShape.setUniformV4(3, new float[]{1f, 100f / 255f, 100f / 255f, 0.3f});
+		
+		cubeVAO.use();
+		cubeVAO.draw();
 	}
 	
 	private void drawWireToBePlaced(float[] view)
