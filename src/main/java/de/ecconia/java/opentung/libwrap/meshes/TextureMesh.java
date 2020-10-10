@@ -27,8 +27,8 @@ public class TextureMesh
 	{
 		texture.activate();
 		textureShader.use();
-		textureShader.setUniform(1, view);
-		textureShader.setUniform(2, view);
+		textureShader.setUniformM4(1, view);
+		textureShader.setUniformM4(2, view);
 		vao.use();
 		vao.draw();
 	}
@@ -36,7 +36,7 @@ public class TextureMesh
 	public void updateProjection(float[] projection)
 	{
 		textureShader.use();
-		textureShader.setUniform(0, projection);
+		textureShader.setUniformM4(0, projection);
 	}
 	
 	public void update(List<CompBoard> boards)

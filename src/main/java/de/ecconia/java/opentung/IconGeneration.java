@@ -42,7 +42,7 @@ public class IconGeneration
 				viewMatrix.translate(0.0f, 0.0f, 0);
 				viewMatrix.rotate(-20, 1, 0, 0);
 				viewMatrix.rotate(-45, 0, 1, 0);
-				shader.setUniform(1, viewMatrix.getMat());
+				shader.setUniformM4(1, viewMatrix.getMat());
 				
 				List<Meshable> meshes = new ArrayList<>();
 				meshes.addAll(infoModel.getSolid());
@@ -189,7 +189,7 @@ public class IconGeneration
 				Matrix projection = new Matrix();
 				projection.orthoMatrix(side, side);
 				transMat.multiply(projection);
-				shader.setUniform(0, transMat.getMat());
+				shader.setUniformM4(0, transMat.getMat());
 				
 				for(Meshable meshable : meshes)
 				{
@@ -210,7 +210,7 @@ public class IconGeneration
 					}
 					model.translate((float) relPos.getX(), (float) relPos.getY(), (float) relPos.getZ());
 					model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-					shader.setUniform(2, model.getMat());
+					shader.setUniformM4(2, model.getMat());
 					
 					shader.setUniformV4(3, cast.getColorArray());
 					

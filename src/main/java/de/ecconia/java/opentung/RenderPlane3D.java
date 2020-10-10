@@ -965,7 +965,7 @@ public class RenderPlane3D implements RenderPlane
 				IconGeneration.render(visualShapeShader, visualShape);
 				
 				//Restore the projection matrix of this shader, since it got abused.
-				visualShapeShader.setUniform(0, latestProjectionMat);
+				visualShapeShader.setUniformM4(0, latestProjectionMat);
 				//Restore viewport:
 				GL30.glViewport(0, 0, width, height);
 			}
@@ -1198,7 +1198,7 @@ public class RenderPlane3D implements RenderPlane
 			drawHighlight(view);
 			
 			lineShader.use();
-			lineShader.setUniform(1, view);
+			lineShader.setUniformM4(1, view);
 			Matrix model = new Matrix();
 			if(Settings.drawComponentPositionIndicator)
 			{
@@ -1206,7 +1206,7 @@ public class RenderPlane3D implements RenderPlane
 				{
 					model.identity();
 					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-					lineShader.setUniform(2, model.getMat());
+					lineShader.setUniformM4(2, model.getMat());
 					crossyIndicator.use();
 					crossyIndicator.draw();
 				}
@@ -1216,7 +1216,7 @@ public class RenderPlane3D implements RenderPlane
 				model.identity();
 				Vector3 position = new Vector3(0, 10, 0);
 				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-				lineShader.setUniform(2, model.getMat());
+				lineShader.setUniformM4(2, model.getMat());
 				axisIndicator.use();
 				axisIndicator.draw();
 			}
@@ -1249,15 +1249,15 @@ public class RenderPlane3D implements RenderPlane
 		modelMatrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
 		
 		lineShader.use();
-		lineShader.setUniform(1, view);
-		lineShader.setUniform(2, modelMatrix.getMat());
+		lineShader.setUniformM4(1, view);
+		lineShader.setUniformM4(2, modelMatrix.getMat());
 		
 		boxHighlighter.use();
 		boxHighlighter.draw();
 		
 		justShape.use();
-		justShape.setUniform(1, view);
-		justShape.setUniform(2, modelMatrix.getMat());
+		justShape.setUniformM4(1, view);
+		justShape.setUniformM4(2, modelMatrix.getMat());
 		justShape.setUniformV4(3, new float[]{1f, 100f / 255f, 100f / 255f, 0.3f});
 		
 		cubeVAO.use();
@@ -1305,8 +1305,8 @@ public class RenderPlane3D implements RenderPlane
 			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
 			
 			justShape.use();
-			justShape.setUniform(1, view);
-			justShape.setUniform(2, model.getMat());
+			justShape.setUniformM4(1, view);
+			justShape.setUniformM4(2, model.getMat());
 			justShape.setUniformV4(3, new float[]{1.0f, 0.0f, 1.0f, 1.0f});
 			
 			cubeVAO.use();
@@ -1329,7 +1329,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			Matrix m = new Matrix();
 			visualShapeShader.use();
-			visualShapeShader.setUniform(1, view);
+			visualShapeShader.setUniformM4(1, view);
 			visualShape.use();
 			
 			Quaternion originalGlobalRotation = grabbedComponent.getRotation();
@@ -1361,7 +1361,7 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformM4(2, m.getMat());
 				visualShapeShader.setUniformV4(3, c.getColorArray());
 				visualShape.draw();
 			}
@@ -1378,7 +1378,7 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformM4(2, m.getMat());
 				visualShapeShader.setUniformV4(3, (blot.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
 				visualShape.draw();
 			}
@@ -1395,7 +1395,7 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformM4(2, m.getMat());
 				visualShapeShader.setUniformV4(3, (peg.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
 				visualShape.draw();
 			}
@@ -1415,7 +1415,7 @@ public class RenderPlane3D implements RenderPlane
 				m.multiply(new Matrix(rotation.createMatrix()));
 				m.scale(0.025f, 0.01f, (float) distance);
 				visualShapeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformM4(2, m.getMat());
 				visualShape.draw();
 			}
 			
@@ -1432,7 +1432,7 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniform(2, m.getMat());
+				visualShapeShader.setUniformM4(2, m.getMat());
 				visualShapeShader.setUniformV4(3, ((Colorable) grabbedComponent).getCurrentColor(i).asArray());
 				visualShape.draw();
 			}
@@ -1441,12 +1441,12 @@ public class RenderPlane3D implements RenderPlane
 			{
 				CompLabel label = (CompLabel) grabbedComponent;
 				sdfShader.use();
-				sdfShader.setUniform(1, view);
+				sdfShader.setUniformM4(1, view);
 				label.activate();
 				m.identity();
 				m.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
 				m.multiply(new Matrix(label.getRotation().createMatrix()));
-				sdfShader.setUniform(2, m.getMat());
+				sdfShader.setUniformM4(2, m.getMat());
 				label.getModelHolder().drawTextures();
 			}
 			
@@ -1460,13 +1460,13 @@ public class RenderPlane3D implements RenderPlane
 		{
 			//TODO: Switch to line shader with uniform color.
 			lineShader.use();
-			lineShader.setUniform(1, view);
+			lineShader.setUniformM4(1, view);
 			GL30.glLineWidth(5f);
 			Matrix model = new Matrix();
 			model.identity();
 			Vector3 datPos = placementData.getPosition().add(placementData.getNormal().multiply(0.075));
 			model.translate((float) datPos.getX(), (float) datPos.getY(), (float) datPos.getZ());
-			lineShader.setUniform(2, model.getMat());
+			lineShader.setUniformM4(2, model.getMat());
 			crossyIndicator.use();
 			crossyIndicator.draw();
 		}
@@ -1524,8 +1524,8 @@ public class RenderPlane3D implements RenderPlane
 			//Draw the board:
 			boardTexture.activate();
 			placeableBoardShader.use();
-			placeableBoardShader.setUniform(1, view);
-			placeableBoardShader.setUniform(2, matrix.getMat());
+			placeableBoardShader.setUniformM4(1, view);
+			placeableBoardShader.setUniformM4(2, matrix.getMat());
 			placeableBoardShader.setUniformV2(3, new float[]{x, z});
 			placeableBoardShader.setUniformV4(4, Color.boardDefault.asArray());
 			visualShape.use();
@@ -1555,7 +1555,7 @@ public class RenderPlane3D implements RenderPlane
 		colorMesh.draw(view);
 		
 		sdfShader.use();
-		sdfShader.setUniform(1, view);
+		sdfShader.setUniformM4(1, view);
 		for(CompLabel label : board.getLabelsToRender())
 		{
 			label.activate();
@@ -1563,20 +1563,20 @@ public class RenderPlane3D implements RenderPlane
 			model.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
 			Matrix rotMat = new Matrix(label.getRotation().createMatrix());
 			model.multiply(rotMat);
-			sdfShader.setUniform(2, model.getMat());
+			sdfShader.setUniformM4(2, model.getMat());
 			label.getModelHolder().drawTextures();
 		}
 		
 		if(!wireEndsToRender.isEmpty())
 		{
 			lineShader.use();
-			lineShader.setUniform(1, view);
+			lineShader.setUniformM4(1, view);
 			
 			for(Vector3 position : wireEndsToRender)
 			{
 				model.identity();
 				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-				lineShader.setUniform(2, model.getMat());
+				lineShader.setUniformM4(2, model.getMat());
 				crossyIndicator.use();
 				crossyIndicator.draw();
 			}
@@ -1617,7 +1617,7 @@ public class RenderPlane3D implements RenderPlane
 		else //Connector
 		{
 			justShape.use();
-			justShape.setUniform(1, view);
+			justShape.setUniformM4(1, view);
 			justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
 			Matrix matrix = new Matrix();
 			World3DHelper.drawCubeFull(justShape, cubeVAO, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
@@ -1668,7 +1668,7 @@ public class RenderPlane3D implements RenderPlane
 			World3DHelper.drawStencilComponent(justShape, cubeVAO, (CompWireRaw) wire, view);
 		}
 		justShape.use();
-		justShape.setUniform(1, view);
+		justShape.setUniformM4(1, view);
 		justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		for(Connector connector : connectorsToHighlight)
@@ -2086,15 +2086,15 @@ public class RenderPlane3D implements RenderPlane
 		textureMesh.updateProjection(projection);
 		
 		placeableBoardShader.use();
-		placeableBoardShader.setUniform(0, projection);
+		placeableBoardShader.setUniformM4(0, projection);
 		visualShapeShader.use();
-		visualShapeShader.setUniform(0, projection);
+		visualShapeShader.setUniformM4(0, projection);
 		sdfShader.use();
-		sdfShader.setUniform(0, projection);
+		sdfShader.setUniformM4(0, projection);
 		lineShader.use();
-		lineShader.setUniform(0, projection);
+		lineShader.setUniformM4(0, projection);
 		justShape.use();
-		justShape.setUniform(0, projection);
+		justShape.setUniformM4(0, projection);
 	}
 	
 	public Camera getCamera()
