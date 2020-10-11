@@ -391,6 +391,9 @@ public class RenderPlane3D implements RenderPlane
 			
 			gpuTasks.add((unused) -> {
 				board.getComponentsToRender().add(grabbedComponent);
+				grabbedComponent.setParent(placement.getParentBoard());
+				placement.getParentBoard().addChild(grabbedComponent);
+				placement.getParentBoard().updateBounds();
 				for(Wire wire : grabbedWires)
 				{
 					board.getWiresToRender().add((CompWireRaw) wire);
@@ -474,6 +477,7 @@ public class RenderPlane3D implements RenderPlane
 					gpuTasks.put((ignored) -> {
 						board.getBoardsToRender().add((CompBoard) newComponent);
 						placement.getParentBoard().addChild(newComponent);
+						placement.getParentBoard().updateBounds();
 						refreshBoardMeshes();
 					});
 				}
@@ -534,6 +538,7 @@ public class RenderPlane3D implements RenderPlane
 				gpuTasks.put((ignored) -> {
 					board.getComponentsToRender().add(newComponent);
 					placement.getParentBoard().addChild(newComponent);
+					placement.getParentBoard().updateBounds();
 					refreshComponentMeshes(newComponent instanceof Colorable);
 				});
 			}
@@ -565,11 +570,6 @@ public class RenderPlane3D implements RenderPlane
 			{
 				//Asume containers are not logic components.
 				gpuTasks.add((unused) -> {
-					if(container.getParent() != null)
-					{
-						((CompContainer) container.getParent()).remove(container);
-					}
-					
 					if(container instanceof CompBoard)
 					{
 						board.getBoardsToRender().remove(container);
@@ -579,6 +579,13 @@ public class RenderPlane3D implements RenderPlane
 					{
 						board.getComponentsToRender().remove(container);
 						refreshComponentMeshes(container instanceof Colorable);
+					}
+					
+					if(container.getParent() != null)
+					{
+						CompContainer parent = (CompContainer) container.getParent();
+						parent.remove(container);
+						parent.updateBounds();
 					}
 				});
 			}
@@ -645,11 +652,6 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-				if(component.getParent() != null)
-				{
-					((CompContainer) component.getParent()).remove(component);
-				}
-				
 				List<Wire> wiresToRemove = new ArrayList<>();
 				for(Blot blot : component.getBlots())
 				{
@@ -689,6 +691,14 @@ public class RenderPlane3D implements RenderPlane
 						((CompLabel) component).unload();
 						board.getLabelsToRender().remove(component);
 					}
+					
+					if(component.getParent() != null)
+					{
+						CompContainer parent = (CompContainer) component.getParent();
+						parent.remove(component);
+						parent.updateBounds();
+					}
+					
 					refreshComponentMeshes(component instanceof Colorable);
 				});
 			});
@@ -800,6 +810,12 @@ public class RenderPlane3D implements RenderPlane
 				//Remove from meshes on render thread
 				board.getComponentsToRender().remove(toBeGrabbed);
 				board.getWiresToRender().removeAll(wires);
+				if(toBeGrabbed.getParent() != null)
+				{
+					CompContainer parent = (CompContainer) toBeGrabbed.getParent();
+					parent.remove(toBeGrabbed);
+					parent.updateBounds();
+				}
 				refreshComponentMeshes(toBeGrabbed instanceof Colorable);
 				//Create construct to store the grabbed content (to be drawn).
 				
@@ -819,10 +835,6 @@ public class RenderPlane3D implements RenderPlane
 			{
 				//Was aborted. But data is no longer valid.
 				return;
-			}
-			if(compCopy.getParent() != null)
-			{
-				((CompContainer) compCopy.getParent()).remove(compCopy);
 			}
 			for(Wire wire : wireCopy)
 			{
@@ -865,6 +877,12 @@ public class RenderPlane3D implements RenderPlane
 				board.getLabelsToRender().add((CompLabel) grabbedComponent);
 			}
 			
+			if(grabbedComponent.getParent() != null)
+			{
+				CompContainer parent = (CompContainer) grabbedComponent.getParent();
+				parent.addChild(grabbedComponent);
+				parent.updateBounds();
+			}
 			refreshComponentMeshes(grabbedComponent instanceof Colorable);
 			
 			grabbedComponent = null;

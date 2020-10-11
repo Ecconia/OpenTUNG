@@ -26,6 +26,16 @@ public abstract class CompContainer extends Component
 		return bounds;
 	}
 	
+	public void updateBounds()
+	{
+		createBounds(); //Updates the bounds.
+		if(getParent() != null)
+		{
+			//Cast, cause if this is not a part, this must be a container.
+			((CompContainer) getParent()).updateBounds();
+		}
+	}
+	
 	//Raw data:
 	private final List<Component> children = new ArrayList<>();
 	
