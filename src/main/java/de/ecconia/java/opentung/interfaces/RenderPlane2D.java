@@ -125,7 +125,7 @@ public class RenderPlane2D implements RenderPlane
 	{
 		interfaceShader.use();
 		Matrix mat = new Matrix();
-		interfaceShader.setUniform(1, mat.getMat());
+		interfaceShader.setUniformM4(1, mat.getMat());
 		indicator.draw();
 		
 		//Draw interfaces:
@@ -173,11 +173,11 @@ public class RenderPlane2D implements RenderPlane
 		projectionMatrix.interfaceMatrix(width, height);
 		float[] pM = projectionMatrix.getMat();
 		componentIconShader.use();
-		componentIconShader.setUniform(0, pM);
+		componentIconShader.setUniformM4(0, pM);
 		interfaceShader.use();
-		interfaceShader.setUniform(0, pM);
+		interfaceShader.setUniformM4(0, pM);
 		labelShader.use();
-		labelShader.setUniform(0, pM);
+		labelShader.setUniformM4(0, pM);
 		if(indicator != null)
 		{
 			indicator.unload();

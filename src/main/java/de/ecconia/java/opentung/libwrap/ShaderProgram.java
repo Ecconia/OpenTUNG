@@ -125,12 +125,12 @@ public class ShaderProgram
 		return uniformIDs[location];
 	}
 	
-	public void setUniform(int id, float[] matrix)
+	public void setUniformM4(int id, float[] matrix)
 	{
 		GL30.glUniformMatrix4fv(uniformIDs[id], false, matrix);
 	}
 	
-	public void setUniform(int id, float value)
+	public void setUniformV1(int id, float value)
 	{
 		GL30.glUniform1f(uniformIDs[id], value);
 	}

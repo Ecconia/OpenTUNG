@@ -89,9 +89,9 @@ public class ColorMesh
 	public void draw(float[] view)
 	{
 		colorMeshShader.use();
-		colorMeshShader.setUniform(1, view);
+		colorMeshShader.setUniformM4(1, view);
 		colorMeshShader.setUniformArray(2, falseDataArray);
-		colorMeshShader.setUniform(3, view);
+		colorMeshShader.setUniformM4(3, view);
 		vao.use();
 		vao.draw();
 	}
@@ -99,7 +99,7 @@ public class ColorMesh
 	public void updateProjection(float[] projection)
 	{
 		colorMeshShader.use();
-		colorMeshShader.setUniform(0, projection);
+		colorMeshShader.setUniformM4(0, projection);
 	}
 	
 	private static class ColorMeshVAO extends LargeGenericVAO

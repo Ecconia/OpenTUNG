@@ -18,7 +18,7 @@ public class World3DHelper
 	public static void drawStencilComponent(ShaderProgram justShape, GenericVAO cubeVAO, Component component, float[] view)
 	{
 		justShape.use();
-		justShape.setUniform(1, view);
+		justShape.setUniformM4(1, view);
 		justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		Vector3 placementOffset = component.getModelHolder().getPlacementOffset();
@@ -47,7 +47,7 @@ public class World3DHelper
 	public static void drawModel(ShaderProgram justShape, GenericVAO cubeVAO, ModelHolder model, Vector3 position, Quaternion quaternion, float[] view)
 	{
 		justShape.use();
-		justShape.setUniform(1, view);
+		justShape.setUniformM4(1, view);
 		Matrix matrix = new Matrix();
 		Matrix rotation = new Matrix(quaternion.createMatrix());
 		Vector3 placementOffset = model.getPlacementOffset();
@@ -93,7 +93,7 @@ public class World3DHelper
 		matrix.translate((float) cubePosition.getX(), (float) cubePosition.getY(), (float) cubePosition.getZ());
 		Vector3 size = cube.getSize();
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		justShape.setUniform(2, matrix.getMat());
+		justShape.setUniformM4(2, matrix.getMat());
 		
 		cubeVAO.use();
 		cubeVAO.draw();
@@ -120,7 +120,7 @@ public class World3DHelper
 		position = cube.getPosition();
 		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		justShape.setUniform(2, matrix.getMat());
+		justShape.setUniformM4(2, matrix.getMat());
 		
 		cubeVAO.use();
 		cubeVAO.draw();

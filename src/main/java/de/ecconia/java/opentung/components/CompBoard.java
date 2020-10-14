@@ -90,16 +90,7 @@ public class CompBoard extends CompContainer implements CustomData
 		//TODO: This is still ungeneric.
 		CubeFull shape = (CubeFull) getModelHolder().getSolid().get(0);
 		
-		Color color = this.color;
-		if(type.colorISID())
-		{
-			int id = getRayID();
-			int r = id & 0xFF;
-			int g = (id & 0xFF00) >> 8;
-			int b = (id & 0xFF0000) >> 16;
-			color = new Color(r, g, b);
-		}
-		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
+		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, this.color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
 	}
 	
 	//### Save/Load ###

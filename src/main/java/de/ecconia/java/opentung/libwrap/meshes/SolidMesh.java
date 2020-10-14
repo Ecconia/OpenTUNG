@@ -52,8 +52,8 @@ public class SolidMesh
 	public void draw(float[] view)
 	{
 		solidMeshShader.use();
-		solidMeshShader.setUniform(1, view);
-		solidMeshShader.setUniform(2, view);
+		solidMeshShader.setUniformM4(1, view);
+		solidMeshShader.setUniformM4(2, view);
 		vao.use();
 		vao.draw();
 	}
@@ -61,7 +61,7 @@ public class SolidMesh
 	public void updateProjection(float[] projection)
 	{
 		solidMeshShader.use();
-		solidMeshShader.setUniform(0, projection);
+		solidMeshShader.setUniformM4(0, projection);
 	}
 	
 	private static class SolidMeshVAO extends LargeGenericVAO

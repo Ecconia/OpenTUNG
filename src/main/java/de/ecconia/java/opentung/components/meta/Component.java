@@ -4,7 +4,6 @@ import de.ecconia.java.opentung.MinMaxBox;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
-import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
@@ -18,6 +17,23 @@ public abstract class Component extends Part
 {
 	//Bounds:
 	protected MinMaxBox connectorBounds;
+	
+	private MinMaxBox ownBounds;
+	
+	public MinMaxBox getBounds()
+	{
+		return getOwnBounds();
+	}
+	
+	public MinMaxBox getOwnBounds()
+	{
+		if(ownBounds == null)
+		{
+			createOwnBounds();
+		}
+		
+		return ownBounds;
+	}
 	
 	//Connector:
 	protected final List<Peg> pegs = new ArrayList<>();
@@ -172,26 +188,16 @@ public abstract class Component extends Part
 		}
 		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
 		{
-			Color color = null;
-			if(type.colorISID())
-			{
-				int id = getRayID();
-				int r = id & 0xFF;
-				int g = (id & 0xFF00) >> 8;
-				int b = (id & 0xFF0000) >> 16;
-				color = new Color(r, g, b);
-			}
-			
 			for(Meshable m : getModelHolder().getSolid())
 			{
-				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 			
 			if(type == MeshTypeThing.Raycast)
 			{
 				for(Meshable m : getModelHolder().getColorables())
 				{
-					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, color, position, rotation, getModelHolder().getPlacementOffset(), type);
+					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 				}
 			}
 		}
@@ -207,18 +213,47 @@ public abstract class Component extends Part
 	{
 		for(Peg peg : pegs)
 		{
-			addConnectorBox(peg.getModel());
+			connectorBounds = expandMinMaxBox(connectorBounds, peg.getModel());
 		}
 		for(Blot blot : blots)
 		{
-			addConnectorBox(blot.getModel());
+			connectorBounds = expandMinMaxBox(connectorBounds, blot.getModel());
 		}
 	}
 	
-	protected void addConnectorBox(CubeFull box)
+	public void createOwnBounds()
+	{
+		ownBounds = null; //Reset and don't expand it further.
+		for(Peg peg : pegs)
+		{
+			ownBounds = expandMinMaxBox(ownBounds, peg.getModel());
+		}
+		for(Blot blot : blots)
+		{
+			ownBounds = expandMinMaxBox(ownBounds, blot.getModel());
+		}
+		for(Meshable m : getModelHolder().getSolid())
+		{
+			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
+		}
+		for(Meshable m : getModelHolder().getColorables())
+		{
+			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
+		}
+		for(Meshable m : getModelHolder().getConductors())
+		{
+			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
+		}
+	}
+	
+	protected MinMaxBox expandMinMaxBox(MinMaxBox mmBox, CubeFull box)
 	{
 		Vector3 mPosition = box.getPosition();
 		Vector3 mSize = box.getSize();
+		if(box.getMapper() != null)
+		{
+			mSize = box.getMapper().getMappedSize(mSize, this);
+		}
 		Vector3 min = mPosition.subtract(mSize);
 		Vector3 max = mPosition.add(mSize);
 		
@@ -264,21 +299,23 @@ public abstract class Component extends Part
 		g = rotation.inverse().multiply(g).add(position);
 		h = rotation.inverse().multiply(h).add(position);
 		
-		if(connectorBounds == null)
+		if(mmBox == null)
 		{
-			connectorBounds = new MinMaxBox(a);
+			mmBox = new MinMaxBox(a);
 		}
 		else
 		{
-			connectorBounds.expand(a);
+			mmBox.expand(a);
 		}
-		connectorBounds.expand(b);
-		connectorBounds.expand(c);
-		connectorBounds.expand(d);
-		connectorBounds.expand(e);
-		connectorBounds.expand(f);
-		connectorBounds.expand(g);
-		connectorBounds.expand(h);
+		mmBox.expand(b);
+		mmBox.expand(c);
+		mmBox.expand(d);
+		mmBox.expand(e);
+		mmBox.expand(f);
+		mmBox.expand(g);
+		mmBox.expand(h);
+		
+		return mmBox;
 	}
 	
 	public Connector getConnectorAt(String debug, Vector3 absolutePoint)

@@ -132,9 +132,9 @@ public class ConductorMesh
 	public void draw(float[] view)
 	{
 		solidMeshShader.use();
-		solidMeshShader.setUniform(1, view);
+		solidMeshShader.setUniformM4(1, view);
 		solidMeshShader.setUniformArray(2, falseDataArray);
-		solidMeshShader.setUniform(3, view);
+		solidMeshShader.setUniformM4(3, view);
 		vao.use();
 		vao.draw();
 	}
@@ -142,7 +142,7 @@ public class ConductorMesh
 	public void updateProjection(float[] projection)
 	{
 		solidMeshShader.use();
-		solidMeshShader.setUniform(0, projection);
+		solidMeshShader.setUniformM4(0, projection);
 	}
 	
 	private static class ConductorMeshVAO extends LargeGenericVAO

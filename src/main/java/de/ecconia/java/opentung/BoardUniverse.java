@@ -13,6 +13,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.savefile.BoardAndWires;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -60,29 +61,10 @@ public class BoardUniverse
 			return index;
 		}
 	};
-	private final IDManager raycastIDs = new IDManager(1, 0x1000000)
-	{
-		@Override
-		public Integer getNewID()
-		{
-			Integer index = getNewIDInternal();
-			if(index == null)
-			{
-				System.out.println("[ID ISSUE!!!] Ran out of Raycast ID's, assigning null to the component this will lead to crashes!");
-				JOptionPane.showMessageDialog(null, "You can only have a maximum of 4065 color objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
-			}
-			return index;
-		}
-	};
 	
 	public IDManager getColorableIDs()
 	{
 		return colorableIDs;
-	}
-	
-	public IDManager getRaycastIDs()
-	{
-		return raycastIDs;
 	}
 	
 	//### OTHER ###
@@ -113,7 +95,7 @@ public class BoardUniverse
 		linkSnappingPegs(board);
 	}
 	
-	public void startFinalizeImport(BlockingQueue<GPUTask> gpuTasks)
+	public void startFinalizeImport(BlockingQueue<GPUTask> gpuTasks, WireRayCaster wireRayCaster)
 	{
 		Thread finalizeThread = new Thread(() -> {
 			System.out.println("[BoardImport] Creating connector bounds.");
@@ -182,6 +164,13 @@ public class BoardUniverse
 					simulation.updateNextTick((Updateable) comp);
 				}
 			}
+			
+			long startWireProcessing = System.currentTimeMillis();
+			for(CompWireRaw wire : wiresToRender)
+			{
+				wireRayCaster.addWire(wire);
+			}
+			System.out.println("[BoardImport] Sorting " + wiresToRender.size() + " wires took " + (System.currentTimeMillis() - startWireProcessing) + "ms.");
 			
 			try
 			{
