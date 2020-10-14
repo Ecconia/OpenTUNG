@@ -240,6 +240,10 @@ public abstract class Component extends Part
 		{
 			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
 		}
+		for(Meshable m : getModelHolder().getConductors())
+		{
+			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
+		}
 	}
 	
 	protected MinMaxBox expandMinMaxBox(MinMaxBox mmBox, CubeFull box)

@@ -118,6 +118,16 @@ public class LineVAO extends GenericVAO
 		});
 	}
 	
+	public static LineVAO generateLine()
+	{
+		return new LineVAO(new float[]{
+				-0.0f, +0.0f, +0.0f, 1.0f, 0.0f, 0.0f,
+				+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+		}, new short[]{
+				0, 1,
+		});
+	}
+	
 	@Override
 	protected void init()
 	{

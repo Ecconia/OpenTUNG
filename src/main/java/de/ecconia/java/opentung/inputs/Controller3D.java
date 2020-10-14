@@ -141,6 +141,10 @@ public class Controller3D implements Controller
 			checkMouseLeft(false);
 			checkMouseRight(false);
 		}
+		else if(keyIndex == GLFW.GLFW_KEY_U)
+		{
+			renderPlane3D.updateRayDebug();
+		}
 	}
 	
 	@Override

@@ -35,6 +35,9 @@ import de.ecconia.java.opentung.libwrap.vaos.VisualShapeVAO;
 import de.ecconia.java.opentung.math.MathHelper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.raycast.CastChunkLocation;
+import de.ecconia.java.opentung.raycast.RayCastResult;
+import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
@@ -61,6 +64,7 @@ public class RenderPlane3D implements RenderPlane
 	private LineVAO crossyIndicator;
 	private LineVAO axisIndicator;
 	private LineVAO boxHighlighter;
+	private LineVAO rayLine;
 	private ShaderProgram justShape;
 	private SimpleCubeVAO cubeVAO;
 	private ShaderProgram visualShapeShader;
@@ -84,6 +88,8 @@ public class RenderPlane3D implements RenderPlane
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
 	private final SharedData sharedData;
 	
+	private final WireRayCaster wireRayCaster;
+	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
 	
@@ -97,7 +103,8 @@ public class RenderPlane3D implements RenderPlane
 	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board, SharedData sharedData)
 	{
 		this.board = board;
-		board.startFinalizeImport(gpuTasks);
+		this.wireRayCaster = new WireRayCaster();
+		board.startFinalizeImport(gpuTasks, wireRayCaster);
 		this.inputHandler = inputHandler;
 		this.sharedData = sharedData;
 		sharedData.setGPUTasks(gpuTasks);
@@ -890,6 +897,11 @@ public class RenderPlane3D implements RenderPlane
 		});
 	}
 	
+	public void updateRayDebug()
+	{
+		wireRayCaster.clearCache();
+	}
+	
 	//Setup and stuff:
 	
 	@Override
@@ -950,6 +962,7 @@ public class RenderPlane3D implements RenderPlane
 		crossyIndicator = LineVAO.generateCrossyIndicator();
 		axisIndicator = LineVAO.generateAxisIndicator();
 		boxHighlighter = LineVAO.generateBox(new Color(255, 100, 100));
+		rayLine = LineVAO.generateLine();
 		justShape = new ShaderProgram("justShape");
 		cubeVAO = SimpleCubeVAO.generateCube();
 		visualShapeShader = new ShaderProgram("visualShape");
@@ -1240,11 +1253,36 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
+		GL30.glDisable(GL30.GL_CULL_FACE);
+		
+		List<CastChunkLocation> locations = wireRayCaster.getLocations();
+		if(locations != null)
+		{
+			Vector3 camPos = wireRayCaster.getCamPos();
+			Vector3 camRay = wireRayCaster.getCamRay().multiply(WireRayCaster.maxCastDistance);
+			Matrix modelMatrix = new Matrix();
+			modelMatrix.translate((float) camPos.getX(), (float) camPos.getY(), (float) camPos.getZ());
+			modelMatrix.scale((float) camRay.getX(), (float) camRay.getY(), (float) camRay.getZ());
+			
+			lineShader.use();
+			lineShader.setUniformM4(1, view);
+			lineShader.setUniformM4(2, modelMatrix.getMat());
+			
+			rayLine.use();
+			rayLine.draw();
+			
+			for(CastChunkLocation loc : locations)
+			{
+				Vector3 size = new Vector3(0.5, 0.5, 0.5);
+				Vector3 pos = new Vector3(loc.getX() + 0.5, loc.getY() + 0.5, loc.getZ() + 0.5);
+				size = size.add(0.001, 0.001, 0.001);
+				drawBox(pos, size, view);
+			}
+		}
+		
 		//Draw the current bounding box:
 		if(currentlySelected != null)
 		{
-			GL30.glDisable(GL30.GL_CULL_FACE);
-			
 			Component selected = currentlySelected instanceof Component ? (Component) currentlySelected : currentlySelected.getParent();
 			MinMaxBox box = selected.getBounds();
 			
@@ -1256,8 +1294,9 @@ public class RenderPlane3D implements RenderPlane
 				drawBox(pos, size, view);
 			}
 			
-			GL30.glEnable(GL30.GL_CULL_FACE);
 		}
+		
+		GL30.glEnable(GL30.GL_CULL_FACE);
 	}
 	
 	private void drawBox(Vector3 pos, Vector3 size, float[] view)
@@ -1737,93 +1776,11 @@ public class RenderPlane3D implements RenderPlane
 		
 		long wireStart = System.currentTimeMillis();
 		
-		for(CompWireRaw wire : board.getWiresToRender())
+		RayCastResult result = wireRayCaster.castRay(cameraPosition, cameraRay);
+		if(result != null && result.getDistance() < dist)
 		{
-			Quaternion boardRotation = wire.getRotation();
-			Vector3 cameraPositionBoardSpace = boardRotation.multiply(cameraPosition.subtract(wire.getPosition()));
-			Vector3 cameraRayBoardSpace = boardRotation.multiply(cameraRay);
-			CubeFull shape = (CubeFull) wire.getModelHolder().getConductors().get(0);
-			Vector3 size = shape.getSize();
-			if(shape.getMapper() != null)
-			{
-				size = shape.getMapper().getMappedSize(size, wire);
-			}
-			
-			double xr = 1.0 / cameraRayBoardSpace.getX();
-			double yr = 1.0 / cameraRayBoardSpace.getY();
-			double zr = 1.0 / cameraRayBoardSpace.getZ();
-			
-			double xA = (size.getX() - cameraPositionBoardSpace.getX()) * xr;
-			double xB = ((-size.getX()) - cameraPositionBoardSpace.getX()) * xr;
-			double yA = (size.getY() - cameraPositionBoardSpace.getY()) * yr;
-			double yB = ((-size.getY()) - cameraPositionBoardSpace.getY()) * yr;
-			double zA = (size.getZ() - cameraPositionBoardSpace.getZ()) * zr;
-			double zB = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) * zr;
-			
-			double tMin;
-			double tMax;
-			{
-				if(xA < xB)
-				{
-					tMin = xA;
-					tMax = xB;
-				}
-				else
-				{
-					tMin = xB;
-					tMax = xA;
-				}
-				
-				double min = yA;
-				double max = yB;
-				if(min > max)
-				{
-					min = yB;
-					max = yA;
-				}
-				
-				if(min > tMin)
-				{
-					tMin = min;
-				}
-				if(max < tMax)
-				{
-					tMax = max;
-				}
-				
-				min = zA;
-				max = zB;
-				if(min > max)
-				{
-					min = zB;
-					max = zA;
-				}
-				
-				if(min > tMin)
-				{
-					tMin = min;
-				}
-				if(max < tMax)
-				{
-					tMax = max;
-				}
-			}
-			
-			if(tMax < 0)
-			{
-				continue; //Behind camera.
-			}
-			
-			if(tMin > tMax)
-			{
-				continue; //No collision.
-			}
-			
-			if(tMin < dist)
-			{
-				match = wire;
-				dist = tMin;
-			}
+			match = result.getMatch();
+			dist = result.getDistance();
 		}
 		
 		long restStart = System.currentTimeMillis();
