@@ -57,6 +57,8 @@ public class Settings
 	
 	@SettingInfo(key = "settings.graphic.raycasting", comment = "Raycasting is done to detect what you are looking at.")
 	public static boolean doRaycasting = true;
+	@SettingInfo(key = "settings.graphic.raycasting.maxRange", comment = "Maximum distance for wire raycast.")
+	public static double maxCastDistance = 100;
 	
 	@SettingsSectionStart(key = "settings.graphic.highlight.drawToggles", comment = "Select if to highlight these things:")
 	@SettingInfo(key = "settings.graphic.highlight.drawToggles.boards")

@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,70 +12,22 @@ import java.util.Map;
 
 public class WireRayCaster
 {
-	//Debugging cache:
-	private List<CastChunkLocation> locations;
-	private Vector3 camPos;
-	private Vector3 camRay;
-	
-	public static double maxCastDistance = 100;
 	private final Map<CastChunkLocation, List<CompWireRaw>> chunks = new HashMap<>();
-	
-	public WireRayCaster()
-	{
-	}
-	
-	public void clearCache()
-	{
-		locations = null;
-	}
-	
-	public List<CastChunkLocation> getLocations()
-	{
-		return locations;
-	}
-	
-	public Vector3 getCamPos()
-	{
-		return camPos;
-	}
-	
-	public Vector3 getCamRay()
-	{
-		return camRay;
-	}
 	
 	public RayCastResult castRay(Vector3 camPos, Vector3 camRay)
 	{
-//		System.out.println();
 		int dx = camRay.getX() < 0 ? 0 : 1;
 		int dy = camRay.getY() < 0 ? 0 : 1;
 		int dz = camRay.getZ() < 0 ? 0 : 1;
-		
 		CastChunkLocation currentLocation = vec2Pos(camPos);
-		boolean addLocations = locations == null;
 		RayCastResult result = checkChunk(currentLocation, camPos, camRay);
 		if(result != null)
 		{
 			return result;
 		}
-		if(addLocations)
-		{
-			this.camPos = camPos;
-			System.out.println("Pos: " + camPos);
-			System.out.println("Pos: " + camRay);
-			this.camRay = camRay;
-			locations = new ArrayList<>();
-			locations.add(currentLocation);
-			System.out.println("Checking chunk at: " + currentLocation);
-		}
 		
-		while((currentLocation = getNextChunk(currentLocation, dx, dy, dz, camPos, camRay, maxCastDistance)) != null)
+		while((currentLocation = getNextChunk(currentLocation, dx, dy, dz, camPos, camRay, Settings.maxCastDistance)) != null)
 		{
-			if(addLocations)
-			{
-				locations.add(currentLocation);
-				System.out.println("Checking chunk at: " + currentLocation);
-			}
 			result = checkChunk(currentLocation, camPos, camRay);
 			if(result != null)
 			{
@@ -180,14 +133,12 @@ public class WireRayCaster
 	
 	public RayCastResult checkChunk(CastChunkLocation chunkLocation, Vector3 camPos, Vector3 camRay)
 	{
-//		System.out.println("Checking chunk at: " + chunk);
 		List<CompWireRaw> chunk = chunks.get(chunkLocation);
 		if(chunk == null)
 		{
 			return null;
 		}
 
-//		System.out.println("Checking chunk " + chunkLocation + " with " + chunk.size() + " wires.");
 		double distance = Double.MAX_VALUE;
 		CompWireRaw match = null;
 		for(CompWireRaw wire : chunk)

@@ -897,11 +897,6 @@ public class RenderPlane3D implements RenderPlane
 		});
 	}
 	
-	public void updateRayDebug()
-	{
-		wireRayCaster.clearCache();
-	}
-	
 	//Setup and stuff:
 	
 	@Override
@@ -1252,51 +1247,6 @@ public class RenderPlane3D implements RenderPlane
 				axisIndicator.draw();
 			}
 		}
-		
-		GL30.glDisable(GL30.GL_CULL_FACE);
-		
-		List<CastChunkLocation> locations = wireRayCaster.getLocations();
-		if(locations != null)
-		{
-			Vector3 camPos = wireRayCaster.getCamPos();
-			Vector3 camRay = wireRayCaster.getCamRay().multiply(WireRayCaster.maxCastDistance);
-			Matrix modelMatrix = new Matrix();
-			modelMatrix.translate((float) camPos.getX(), (float) camPos.getY(), (float) camPos.getZ());
-			modelMatrix.scale((float) camRay.getX(), (float) camRay.getY(), (float) camRay.getZ());
-			
-			lineShader.use();
-			lineShader.setUniformM4(1, view);
-			lineShader.setUniformM4(2, modelMatrix.getMat());
-			
-			rayLine.use();
-			rayLine.draw();
-			
-			for(CastChunkLocation loc : locations)
-			{
-				Vector3 size = new Vector3(0.5, 0.5, 0.5);
-				Vector3 pos = new Vector3(loc.getX() + 0.5, loc.getY() + 0.5, loc.getZ() + 0.5);
-				size = size.add(0.001, 0.001, 0.001);
-				drawBox(pos, size, view);
-			}
-		}
-		
-		//Draw the current bounding box:
-		if(currentlySelected != null)
-		{
-			Component selected = currentlySelected instanceof Component ? (Component) currentlySelected : currentlySelected.getParent();
-			MinMaxBox box = selected.getBounds();
-			
-			if(box != null)
-			{
-				Vector3 size = box.getMax().subtract(box.getMin()).divide(2);
-				Vector3 pos = box.getMin().add(size);
-				size = size.add(0.001, 0.001, 0.001);
-				drawBox(pos, size, view);
-			}
-			
-		}
-		
-		GL30.glEnable(GL30.GL_CULL_FACE);
 	}
 	
 	private void drawBox(Vector3 pos, Vector3 size, float[] view)
@@ -1764,8 +1714,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void cpuRaycast()
 	{
-		long totalStart = System.currentTimeMillis();
-		
 		Vector3 cameraPosition = camera.getPosition();
 		Vector3 cameraRay = Vector3.zp;
 		cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
@@ -1774,8 +1722,6 @@ public class RenderPlane3D implements RenderPlane
 		match = null;
 		dist = Double.MAX_VALUE;
 		
-		long wireStart = System.currentTimeMillis();
-		
 		RayCastResult result = wireRayCaster.castRay(cameraPosition, cameraRay);
 		if(result != null && result.getDistance() < dist)
 		{
@@ -1783,14 +1729,7 @@ public class RenderPlane3D implements RenderPlane
 			dist = result.getDistance();
 		}
 		
-		long restStart = System.currentTimeMillis();
-		long wireDuration = restStart - wireStart;
-		
 		focusProbe(board.getRootBoard(), cameraPosition, cameraRay);
-		
-		long restDuration = System.currentTimeMillis() - restStart;
-		
-		System.out.println("Raycast. Wire: " + wireDuration + "ms Rest: " + restDuration + "ms Total: " + (System.currentTimeMillis() - totalStart) + "ms");
 		
 		currentlySelected = match;
 	}
