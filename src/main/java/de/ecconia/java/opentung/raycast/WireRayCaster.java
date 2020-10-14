@@ -40,24 +40,41 @@ public class WireRayCaster
 	
 	public void addWire(CompWireRaw wire)
 	{
-		//TODO: Use exact bounds:
-		Vector3 start = wire.getEnd1();
-		Vector3 end = wire.getEnd2();
+		double halfLength = wire.getLength() / 2.0;
+		Vector3 ray = new Vector3(0, 0, 1);
+		Vector3 a = new Vector3(+0.025, +0.01, -halfLength);
+		Vector3 b = new Vector3(+0.025, -0.01, -halfLength);
+		Vector3 c = new Vector3(-0.025, +0.01, -halfLength);
+		Vector3 d = new Vector3(-0.025, -0.01, -halfLength);
 		
-		Vector3 wireRay = end.subtract(start);
-		int dx = wireRay.getX() < 0 ? 0 : 1;
-		int dy = wireRay.getY() < 0 ? 0 : 1;
-		int dz = wireRay.getZ() < 0 ? 0 : 1;
+		Quaternion rot = wire.getRotation().inverse();
+		ray = rot.multiply(ray);
+		a = rot.multiply(a).add(wire.getPosition());
+		b = rot.multiply(b).add(wire.getPosition());
+		c = rot.multiply(c).add(wire.getPosition());
+		d = rot.multiply(d).add(wire.getPosition());
 		
-		CastChunkLocation chunkLocation = vec2Pos(start);
+		int dx = ray.getX() < 0 ? 0 : 1;
+		int dy = ray.getY() < 0 ? 0 : 1;
+		int dz = ray.getZ() < 0 ? 0 : 1;
+		
+		addToChunks(wire, a, ray, dx, dy, dz);
+		addToChunks(wire, b, ray, dx, dy, dz);
+		addToChunks(wire, c, ray, dx, dy, dz);
+		addToChunks(wire, d, ray, dx, dy, dz);
+	}
+	
+	private void addToChunks(CompWireRaw wire, Vector3 pos, Vector3 ray, int dx, int dy, int dz)
+	{
+		CastChunkLocation chunkLocation = vec2Pos(pos);
 		addToChunk(chunkLocation, wire);
-		while((chunkLocation = getNextChunk(chunkLocation, dx, dy, dz, start, wireRay, wire.getLength())) != null)
+		while((chunkLocation = getNextChunk(chunkLocation, dx, dy, dz, pos, ray, wire.getLength())) != null)
 		{
 			addToChunk(chunkLocation, wire);
 		}
 	}
 	
-	public void addToChunk(CastChunkLocation chunkLocation, CompWireRaw wire)
+	private void addToChunk(CastChunkLocation chunkLocation, CompWireRaw wire)
 	{
 		List<CompWireRaw> chunk = chunks.get(chunkLocation);
 		if(chunk == null)
@@ -65,7 +82,10 @@ public class WireRayCaster
 			chunk = new ArrayList<>();
 			chunks.put(chunkLocation, chunk);
 		}
-		chunk.add(wire);
+		if(!chunk.contains(wire))
+		{
+			chunk.add(wire);
+		}
 	}
 	
 	public CastChunkLocation getNextChunk(CastChunkLocation currentChunk, int dx, int dy, int dz, Vector3 camPos, Vector3 camRay, double limit)
@@ -138,7 +158,7 @@ public class WireRayCaster
 		{
 			return null;
 		}
-
+		
 		double distance = Double.MAX_VALUE;
 		CompWireRaw match = null;
 		for(CompWireRaw wire : chunk)
