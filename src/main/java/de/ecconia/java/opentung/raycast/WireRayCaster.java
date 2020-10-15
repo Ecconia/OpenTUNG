@@ -64,6 +64,32 @@ public class WireRayCaster
 		addToChunks(wire, d, ray, dx, dy, dz);
 	}
 	
+	public void removeWire(CompWireRaw wire)
+	{
+		double halfLength = wire.getLength() / 2.0;
+		Vector3 ray = new Vector3(0, 0, 1);
+		Vector3 a = new Vector3(+0.025, +0.01, -halfLength);
+		Vector3 b = new Vector3(+0.025, -0.01, -halfLength);
+		Vector3 c = new Vector3(-0.025, +0.01, -halfLength);
+		Vector3 d = new Vector3(-0.025, -0.01, -halfLength);
+		
+		Quaternion rot = wire.getRotation().inverse();
+		ray = rot.multiply(ray);
+		a = rot.multiply(a).add(wire.getPosition());
+		b = rot.multiply(b).add(wire.getPosition());
+		c = rot.multiply(c).add(wire.getPosition());
+		d = rot.multiply(d).add(wire.getPosition());
+		
+		int dx = ray.getX() < 0 ? 0 : 1;
+		int dy = ray.getY() < 0 ? 0 : 1;
+		int dz = ray.getZ() < 0 ? 0 : 1;
+		
+		removeFromChunks(wire, a, ray, dx, dy, dz);
+		removeFromChunks(wire, b, ray, dx, dy, dz);
+		removeFromChunks(wire, c, ray, dx, dy, dz);
+		removeFromChunks(wire, d, ray, dx, dy, dz);
+	}
+	
 	private void addToChunks(CompWireRaw wire, Vector3 pos, Vector3 ray, int dx, int dy, int dz)
 	{
 		CastChunkLocation chunkLocation = vec2Pos(pos);
@@ -71,6 +97,16 @@ public class WireRayCaster
 		while((chunkLocation = getNextChunk(chunkLocation, dx, dy, dz, pos, ray, wire.getLength())) != null)
 		{
 			addToChunk(chunkLocation, wire);
+		}
+	}
+	
+	private void removeFromChunks(CompWireRaw wire, Vector3 pos, Vector3 ray, int dx, int dy, int dz)
+	{
+		CastChunkLocation chunkLocation = vec2Pos(pos);
+		removeFromChunk(chunkLocation, wire);
+		while((chunkLocation = getNextChunk(chunkLocation, dx, dy, dz, pos, ray, wire.getLength())) != null)
+		{
+			removeFromChunk(chunkLocation, wire);
 		}
 	}
 	
@@ -85,6 +121,19 @@ public class WireRayCaster
 		if(!chunk.contains(wire))
 		{
 			chunk.add(wire);
+		}
+	}
+	
+	private void removeFromChunk(CastChunkLocation chunkLocation, CompWireRaw wire)
+	{
+		List<CompWireRaw> chunk = chunks.get(chunkLocation);
+		if(chunk != null)
+		{
+			chunk.remove(wire);
+			if(chunk.isEmpty())
+			{
+				chunks.remove(chunkLocation);
+			}
 		}
 	}
 	

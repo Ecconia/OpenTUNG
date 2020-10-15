@@ -286,6 +286,7 @@ public class RenderPlane3D implements RenderPlane
 					gpuTasks.put((ignored) -> {
 						//Add the wire to the mesh sources
 						board.getWiresToRender().add(newWire);
+						wireRayCaster.addWire(newWire);
 						
 						refreshWireMeshes();
 					});
@@ -403,7 +404,9 @@ public class RenderPlane3D implements RenderPlane
 				placement.getParentBoard().updateBounds();
 				for(Wire wire : grabbedWires)
 				{
-					board.getWiresToRender().add((CompWireRaw) wire);
+					CompWireRaw cwire = (CompWireRaw) wire;
+					board.getWiresToRender().add(cwire);
+					wireRayCaster.addWire(cwire);
 				}
 				if(grabbedComponent instanceof CompLabel)
 				{
@@ -620,6 +623,7 @@ public class RenderPlane3D implements RenderPlane
 						connectorsToHighlight = new ArrayList<>();
 					}
 					board.getWiresToRender().remove(wireToDelete);
+					wireRayCaster.removeWire(wireToDelete);
 					refreshWireMeshes();
 				});
 			});
@@ -692,6 +696,7 @@ public class RenderPlane3D implements RenderPlane
 					for(Wire wire : wiresToRemove)
 					{
 						board.getWiresToRender().remove(wire);
+						wireRayCaster.removeWire((CompWireRaw) wire);
 					}
 					if(component instanceof CompLabel)
 					{
@@ -816,7 +821,11 @@ public class RenderPlane3D implements RenderPlane
 				}
 				//Remove from meshes on render thread
 				board.getComponentsToRender().remove(toBeGrabbed);
-				board.getWiresToRender().removeAll(wires);
+				for(Wire wire : wires)
+				{
+					board.getWiresToRender().remove(wire);
+					wireRayCaster.removeWire((CompWireRaw) wire);
+				}
 				if(toBeGrabbed.getParent() != null)
 				{
 					CompContainer parent = (CompContainer) toBeGrabbed.getParent();
@@ -877,7 +886,9 @@ public class RenderPlane3D implements RenderPlane
 			board.getComponentsToRender().add(grabbedComponent);
 			for(Wire wire : grabbedWires)
 			{
-				board.getWiresToRender().add((CompWireRaw) wire);
+				CompWireRaw cwire = (CompWireRaw) wire;
+				board.getWiresToRender().add(cwire);
+				wireRayCaster.addWire(cwire);
 			}
 			if(grabbedComponent instanceof CompLabel)
 			{
