@@ -74,7 +74,6 @@ public class RenderPlane2D implements RenderPlane
 	{
 		this.sharedData = sharedData;
 		this.inputHandler = inputHandler;
-		inputHandler.setController(new Controller2D(this));
 		
 		text = new MeshText();
 	}
@@ -118,6 +117,9 @@ public class RenderPlane2D implements RenderPlane
 		text.createAtlas();
 		
 		pauseMenu.setup();
+		
+		//Only set this one if this plane is ready, we don't want to receive input events before here.
+		inputHandler.setController(new Controller2D(this));
 	}
 	
 	@Override

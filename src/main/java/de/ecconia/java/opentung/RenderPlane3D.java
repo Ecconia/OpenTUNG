@@ -980,9 +980,6 @@ public class RenderPlane3D implements RenderPlane
 		sdfShader = new ShaderProgram("sdfLabel");
 		
 		camera = new Camera();
-		//Do not start receiving events before here. Be sure the whole thing is properly setted up.
-		controller = new Controller3D(this);
-		inputHandler.setController(controller);
 		
 		//Create meshes:
 		{
@@ -1007,6 +1004,10 @@ public class RenderPlane3D implements RenderPlane
 				GL30.glViewport(0, 0, width, height);
 			}
 		});
+		
+		//Do not start receiving events before here. Be sure the whole thing is properly setted up.
+		controller = new Controller3D(this);
+		inputHandler.setController(controller);
 		
 		System.out.println("[Debug] Label amount: " + board.getLabelsToRender().size());
 		System.out.println("[Debug] Wire amount: " + board.getWiresToRender().size());
