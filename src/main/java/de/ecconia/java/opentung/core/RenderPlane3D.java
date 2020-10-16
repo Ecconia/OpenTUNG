@@ -14,6 +14,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -1751,19 +1752,25 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void testComponent(Component component, Vector3 camPos, Vector3 camRay)
 	{
-		Quaternion boardRotation = component.getRotation();
-		Vector3 cameraPositionBoardSpace = boardRotation.multiply(camPos.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
-		Vector3 cameraRayBoardSpace = boardRotation.multiply(camRay);
-		
-		//TODO: Rotated cubes... (Delayer)
+		Quaternion componentRotation = component.getRotation();
+		Vector3 cameraPositionComponentSpace = componentRotation.multiply(camPos.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
+		Vector3 cameraRayComponentSpace = componentRotation.multiply(camRay);
 		
 		for(Peg peg : component.getPegs())
 		{
-			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(peg.getModel().getPosition());
 			CubeFull shape = peg.getModel();
 			Vector3 size = shape.getSize();
+			Vector3 cameraRayPegSpace = cameraRayComponentSpace;
+			Vector3 cameraPositionPeg = cameraPositionComponentSpace;
+			if(shape instanceof CubeOpenRotated)
+			{
+				Quaternion rotation = ((CubeOpenRotated) shape).getRotation().inverse();
+				cameraRayPegSpace = rotation.multiply(cameraRayPegSpace);
+				cameraPositionPeg = rotation.multiply(cameraPositionPeg);
+			}
+			cameraPositionPeg = cameraPositionPeg.subtract(peg.getModel().getPosition());
 			
-			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			double distance = distance(size, cameraPositionPeg, cameraRayPegSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
@@ -1775,11 +1782,19 @@ public class RenderPlane3D implements RenderPlane
 		
 		for(Blot blot : component.getBlots())
 		{
-			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(blot.getModel().getPosition());
 			CubeFull shape = blot.getModel();
 			Vector3 size = shape.getSize();
+			Vector3 cameraRayBlotSpace = cameraRayComponentSpace;
+			Vector3 cameraPositionBlot = cameraPositionComponentSpace;
+			if(shape instanceof CubeOpenRotated)
+			{
+				Quaternion rotation = ((CubeOpenRotated) shape).getRotation().inverse();
+				cameraRayBlotSpace = rotation.multiply(cameraRayBlotSpace);
+				cameraPositionBlot = rotation.multiply(cameraPositionBlot);
+			}
+			cameraPositionBlot = cameraPositionBlot.subtract(blot.getModel().getPosition());
 			
-			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			double distance = distance(size, cameraPositionBlot, cameraRayBlotSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
@@ -1792,14 +1807,14 @@ public class RenderPlane3D implements RenderPlane
 		for(Meshable meshable : component.getModelHolder().getSolid())
 		{
 			CubeFull shape = (CubeFull) meshable;
-			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
+			Vector3 cameraPositionSolidSpace = cameraPositionComponentSpace.subtract(shape.getPosition());
 			Vector3 size = shape.getSize();
 			if(shape.getMapper() != null)
 			{
 				size = shape.getMapper().getMappedSize(size, component);
 			}
 			
-			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			double distance = distance(size, cameraPositionSolidSpace, cameraRayComponentSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
@@ -1812,10 +1827,10 @@ public class RenderPlane3D implements RenderPlane
 		for(Meshable meshable : component.getModelHolder().getColorables())
 		{
 			CubeFull shape = (CubeFull) meshable;
-			Vector3 cameraPositionBoard = cameraPositionBoardSpace.subtract(shape.getPosition());
+			Vector3 cameraPositionColorSpace = cameraPositionComponentSpace.subtract(shape.getPosition());
 			Vector3 size = shape.getSize();
 			
-			double distance = distance(size, cameraPositionBoard, cameraRayBoardSpace);
+			double distance = distance(size, cameraPositionColorSpace, cameraRayComponentSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
