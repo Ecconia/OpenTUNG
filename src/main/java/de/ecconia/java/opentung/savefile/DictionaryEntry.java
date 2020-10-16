@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.savefile;
 
-import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.util.io.ByteReader;
 
 public class DictionaryEntry

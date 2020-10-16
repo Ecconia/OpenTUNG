@@ -1,7 +1,6 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.util;
 
-import de.ecconia.Ansi;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class MinMaxBox
 {

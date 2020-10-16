@@ -1,14 +1,14 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.MinMaxBox;
-import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.util.MinMaxBox;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.List;
 
 public class CompSnappingPeg extends Component

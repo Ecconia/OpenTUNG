@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.Camera;
-import de.ecconia.java.opentung.RenderPlane3D;
+import de.ecconia.java.opentung.core.Camera;
+import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.Component;

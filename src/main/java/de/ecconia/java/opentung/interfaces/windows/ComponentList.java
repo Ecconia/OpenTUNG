@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
-import de.ecconia.java.opentung.PlaceableInfo;
-import de.ecconia.java.opentung.ShaderStorage;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.components.meta.ComponentAwareness;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;

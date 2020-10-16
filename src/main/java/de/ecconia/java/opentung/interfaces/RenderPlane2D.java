@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.OpenTUNG;
-import de.ecconia.java.opentung.RenderPlane;
-import de.ecconia.java.opentung.ShaderStorage;
-import de.ecconia.java.opentung.SharedData;
+import de.ecconia.java.opentung.core.RenderPlane;
+import de.ecconia.java.opentung.core.ShaderStorage;
+import de.ecconia.java.opentung.core.SharedData;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.interfaces.windows.ComponentList;

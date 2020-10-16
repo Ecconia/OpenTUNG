@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.savefile;
 
-import de.ecconia.java.opentung.BoardUniverse;
-import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.core.BoardUniverse;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
@@ -10,8 +10,8 @@ import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
-import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.io.ByteWriter;
 import java.io.File;

@@ -1,5 +1,6 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.core;
 
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import java.io.File;
 import java.util.concurrent.BlockingQueue;
 

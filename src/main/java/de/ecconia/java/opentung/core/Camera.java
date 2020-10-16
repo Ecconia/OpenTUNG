@@ -1,8 +1,8 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.core;
 
 import de.ecconia.java.opentung.libwrap.Location;
 import de.ecconia.java.opentung.libwrap.Matrix;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
 
 public class Camera

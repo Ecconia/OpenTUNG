@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.math;
+package de.ecconia.java.opentung.util.math;
 
 public class Quaternion
 {

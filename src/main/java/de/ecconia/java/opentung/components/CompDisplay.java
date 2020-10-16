@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -11,7 +11,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
 

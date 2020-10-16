@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.components.fragments;
 
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class TexturedFace extends CubeOpen
 {

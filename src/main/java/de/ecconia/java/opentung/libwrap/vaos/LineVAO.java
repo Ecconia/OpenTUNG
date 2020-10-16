@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung.libwrap.vaos;
 
-import de.ecconia.java.opentung.MinMaxBox;
+import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.components.fragments.Color;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.opengl.GL30;
 

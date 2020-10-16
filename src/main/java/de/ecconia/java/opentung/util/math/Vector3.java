@@ -1,6 +1,6 @@
-package de.ecconia.java.opentung.math;
+package de.ecconia.java.opentung.util.math;
 
-import de.ecconia.Ansi;
+import de.ecconia.java.opentung.util.Ansi;
 import java.util.Objects;
 
 public class Vector3

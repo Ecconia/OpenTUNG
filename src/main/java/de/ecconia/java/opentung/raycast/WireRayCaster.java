@@ -2,8 +2,8 @@ package de.ecconia.java.opentung.raycast;
 
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.HashMap;

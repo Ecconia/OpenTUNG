@@ -1,9 +1,8 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
-import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 
 public abstract class Part

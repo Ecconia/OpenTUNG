@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.BoardUniverse;
+import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;

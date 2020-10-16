@@ -1,9 +1,5 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.components.meta.CustomData;
-import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import java.awt.image.BufferedImage;
 

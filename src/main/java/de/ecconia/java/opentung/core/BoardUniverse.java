@@ -1,6 +1,6 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.core;
 
-import de.ecconia.Ansi;
+import de.ecconia.java.opentung.util.Ansi;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -11,8 +11,9 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.units.IDManager;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.savefile.BoardAndWires;
 import de.ecconia.java.opentung.settings.Settings;

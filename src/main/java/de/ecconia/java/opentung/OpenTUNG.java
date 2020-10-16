@@ -1,5 +1,9 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.java.opentung.core.BoardUniverse;
+import de.ecconia.java.opentung.core.RenderPlane3D;
+import de.ecconia.java.opentung.core.ShaderStorage;
+import de.ecconia.java.opentung.core.SharedData;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;

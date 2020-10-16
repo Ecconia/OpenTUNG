@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.units;
 
 import java.util.LinkedList;
 import java.util.Queue;

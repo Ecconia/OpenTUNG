@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import org.lwjgl.glfw.GLFW;
 

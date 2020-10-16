@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.core;
 
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -10,8 +10,8 @@ import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
-import de.ecconia.java.opentung.math.Quaternion;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class World3DHelper
 {

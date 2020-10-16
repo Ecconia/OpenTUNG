@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.PlaceableInfo;
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;

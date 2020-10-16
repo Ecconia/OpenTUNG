@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.components.fragments;
 
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public enum Direction
 {

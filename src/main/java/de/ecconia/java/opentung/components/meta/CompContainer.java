@@ -1,10 +1,10 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.MinMaxBox;
+import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 

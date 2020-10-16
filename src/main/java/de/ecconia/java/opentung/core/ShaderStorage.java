@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.core;
 
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;

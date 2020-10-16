@@ -1,5 +1,6 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.units;
 
+import de.ecconia.java.opentung.core.GPUTask;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;

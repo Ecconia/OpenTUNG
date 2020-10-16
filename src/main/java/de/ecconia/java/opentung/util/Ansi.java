@@ -1,4 +1,4 @@
-package de.ecconia;
+package de.ecconia.java.opentung.util;
 
 public class Ansi
 {

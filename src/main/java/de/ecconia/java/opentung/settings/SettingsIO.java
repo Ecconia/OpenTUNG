@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.settings;
 
-import de.ecconia.Ansi;
+import de.ecconia.java.opentung.util.Ansi;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

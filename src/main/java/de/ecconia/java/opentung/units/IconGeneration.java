@@ -1,5 +1,8 @@
-package de.ecconia.java.opentung;
+package de.ecconia.java.opentung.units;
 
+import de.ecconia.java.opentung.OpenTUNG;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
@@ -9,8 +12,8 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
-import de.ecconia.java.opentung.math.Vector2;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector2;
+import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;

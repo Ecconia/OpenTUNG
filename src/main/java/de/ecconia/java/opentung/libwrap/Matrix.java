@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.libwrap;
 
-import de.ecconia.java.opentung.math.Vector2;
-import de.ecconia.java.opentung.math.Vector3;
+import de.ecconia.java.opentung.util.math.Vector2;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class Matrix
 {
