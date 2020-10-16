@@ -13,6 +13,8 @@ import org.lwjgl.opengl.GL30;
 public class ShaderStorage
 {
 	//2D:
+	private final Matrix interfaceProjectionMatrix;
+	
 	private final ShaderProgram interfaceShader;
 	private final ShaderProgram flatTextShader;
 	
@@ -22,9 +24,10 @@ public class ShaderStorage
 	private final ShaderProgram flatPlaneShader;
 	private final FlatPlaneVAO flatPlane;
 	
-	private final Matrix interfaceProjectionMatrix;
-	
 	//3D:
+	private final Matrix perspectiveProjectionMatrix;
+	private float[] perspectiveProjection;
+	
 	private final ShaderProgram lineShader;
 	private final ShaderProgram invisibleCubeShader;
 	private final ShaderProgram visibleCubeShader;
@@ -39,7 +42,6 @@ public class ShaderStorage
 	
 	private int width = 0;
 	private int height = 0;
-	private float[] perspectiveProjection;
 	
 	public ShaderStorage()
 	{
@@ -76,6 +78,8 @@ public class ShaderStorage
 		flatPlane = FlatPlaneVAO.generateFullCanvasPlane();
 		
 		//3D:
+		perspectiveProjectionMatrix = new Matrix();
+		
 		sdfShader = new ShaderProgram("sdfLabel");
 		
 		invisibleCubeShader = new ShaderProgram("invisibleCubeShader");
@@ -106,9 +110,8 @@ public class ShaderStorage
 		flatTextShader.setUniformM4(0, pM);
 		
 		//3D section:
-		Matrix p = new Matrix();
-		p.perspective(Settings.fov, (float) width / (float) height, 0.1f, 100000f);
-		float[] projection = p.getMat();
+		perspectiveProjectionMatrix.perspective(Settings.fov, (float) width / (float) height, 0.1f, 100000f);
+		float[] projection = perspectiveProjectionMatrix.getMat();
 		perspectiveProjection = projection;
 		
 		textureCubeShader.use();
