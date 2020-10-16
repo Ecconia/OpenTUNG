@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.ShaderStorage;
 import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -91,19 +92,21 @@ public class Hotbar
 		}
 	}
 	
-	public void drawIcons(ShaderProgram iconShader, GenericVAO iconPlane)
+	public void drawIcons(ShaderStorage shaderStorage)
 	{
 		if(i_count == 0)
 		{
 			return;
 		}
 		
-		iconShader.use();
+		ShaderProgram textureShader = shaderStorage.getFlatTextureShader();
+		textureShader.use();
 		//Size:
 		float scale = Settings.guiScale;
-		iconShader.setUniformV2(1, new float[]{(side / 2f - 5f) * scale, (side / 2f - 5f) * scale});
+		textureShader.setUniformV2(1, new float[]{(side / 2f - 5f) * scale, (side / 2f - 5f) * scale});
 		
-		iconPlane.use();
+		GenericVAO texturePlane = shaderStorage.getFlatTexturePlane();
+		texturePlane.use();
 		
 		float width = (side + padding) * scale;
 		float x = xOffset * scale; //Scale to actual position.
@@ -115,8 +118,8 @@ public class Hotbar
 				info.getIconTexture().activate();
 				
 				//Offset:
-				iconShader.setUniformV2(2, new float[]{x, yOffset * scale});
-				iconPlane.draw();
+				textureShader.setUniformV2(2, new float[]{x, yOffset * scale});
+				texturePlane.draw();
 			}
 			
 			x += width;

@@ -2,18 +2,18 @@ package de.ecconia.java.opentung.libwrap.vaos;
 
 import org.lwjgl.opengl.GL30;
 
-public class VisualShapeVAO extends GenericVAO
+public class VisibleCubeVAO extends GenericVAO
 {
-	public VisualShapeVAO(float[] vertices, short[] indices)
+	public VisibleCubeVAO(float[] vertices, short[] indices)
 	{
 		super(vertices, indices);
 	}
 	
-	public static VisualShapeVAO generateCube()
+	public static VisibleCubeVAO generateVisibleCube()
 	{
 		//Texture is for Boards only!!!
 		float x = 0.01f;
-		return new VisualShapeVAO(new float[]{
+		return new VisibleCubeVAO(new float[]{
 				//Near:
 				+1, -1, -1, +0, +0, -1, 0, 0, //0 - R B N
 				-1, -1, -1, +0, +0, -1, x, 0, //1 - L B N

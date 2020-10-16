@@ -2,16 +2,16 @@ package de.ecconia.java.opentung.libwrap.vaos;
 
 import org.lwjgl.opengl.GL30;
 
-public class InYaFaceVAO extends GenericVAO
+public class FlatPlaneVAO extends GenericVAO
 {
-	public InYaFaceVAO(float[] vertices, short[] indices)
+	public FlatPlaneVAO(float[] vertices, short[] indices)
 	{
 		super(vertices, indices);
 	}
 	
-	public static InYaFaceVAO generateInYaFacePlane()
+	public static FlatPlaneVAO generateFullCanvasPlane()
 	{
-		return new InYaFaceVAO(new float[]{
+		return new FlatPlaneVAO(new float[]{
 				-1, -1,
 				+1, -1,
 				+1, +1,

@@ -38,6 +38,8 @@ public class OpenTUNG
 	private static File boardFile;
 	private static BoardUniverse boardUniverse;
 	
+	private static ShaderStorage shaderStorage;
+	
 	public static void main(String[] args)
 	{
 		//Catch if any thread shuts down unexpectedly. Print on output stream to get the exact time.
@@ -123,6 +125,7 @@ public class OpenTUNG
 						if(newSize != null)
 						{
 							GL30.glViewport(0, 0, newSize.width, newSize.height);
+							shaderStorage.newSize(newSize.width, newSize.height);
 							interactables.newSize(newSize.width, newSize.height);
 							worldView.newSize(newSize.width, newSize.height);
 						}
@@ -264,6 +267,12 @@ public class OpenTUNG
 		setBackgroundColor();
 		
 		setOpenGLMode();
+		
+		System.out.println("[Init] Loading shaders and static models.");
+		shaderStorage = new ShaderStorage();
+		shaderStorage.newSize(initialWidth, initialHeight);
+		sharedData.setShaderStorage(shaderStorage);
+		System.out.println("[Init] Loaded shaders and static models.");
 		
 		worldView = new RenderPlane3D(inputHandler, boardUniverse, sharedData);
 		interactables = new RenderPlane2D(inputHandler, sharedData);

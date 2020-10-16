@@ -28,14 +28,10 @@ import de.ecconia.java.opentung.libwrap.meshes.ColorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
 import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
 import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
-import de.ecconia.java.opentung.libwrap.vaos.InYaFaceVAO;
-import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
-import de.ecconia.java.opentung.libwrap.vaos.SimpleCubeVAO;
-import de.ecconia.java.opentung.libwrap.vaos.VisualShapeVAO;
+import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.math.MathHelper;
 import de.ecconia.java.opentung.math.Quaternion;
 import de.ecconia.java.opentung.math.Vector3;
-import de.ecconia.java.opentung.raycast.CastChunkLocation;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
@@ -60,20 +56,6 @@ public class RenderPlane3D implements RenderPlane
 	private Camera camera;
 	private long lastCycle;
 	
-	private ShaderProgram lineShader;
-	private LineVAO crossyIndicator;
-	private LineVAO axisIndicator;
-	private LineVAO boxHighlighter;
-	private LineVAO rayLine;
-	private ShaderProgram justShape;
-	private SimpleCubeVAO cubeVAO;
-	private ShaderProgram visualShapeShader;
-	private VisualShapeVAO visualShape;
-	private ShaderProgram placeableBoardShader;
-	private ShaderProgram inYaFace;
-	private InYaFaceVAO inYaFaceVAO;
-	private ShaderProgram sdfShader;
-	
 	private TextureWrapper boardTexture;
 	
 	private final InputProcessor inputHandler;
@@ -87,6 +69,7 @@ public class RenderPlane3D implements RenderPlane
 	private final LabelToolkit labelToolkit = new LabelToolkit();
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
 	private final SharedData sharedData;
+	private final ShaderStorage shaderStorage;
 	
 	private final WireRayCaster wireRayCaster;
 	
@@ -96,9 +79,6 @@ public class RenderPlane3D implements RenderPlane
 	private Part currentlySelected; //What the camera is currently looking at.
 	private Cluster clusterToHighlight;
 	private List<Connector> connectorsToHighlight = new ArrayList<>();
-	private int width = 0;
-	private int height = 0;
-	private float[] latestProjectionMat;
 	
 	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board, SharedData sharedData)
 	{
@@ -107,6 +87,7 @@ public class RenderPlane3D implements RenderPlane
 		board.startFinalizeImport(gpuTasks, wireRayCaster);
 		this.inputHandler = inputHandler;
 		this.sharedData = sharedData;
+		this.shaderStorage = sharedData.getShaderStorage();
 		sharedData.setGPUTasks(gpuTasks);
 		sharedData.setRenderPlane3D(this);
 	}
@@ -964,21 +945,6 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
-		lineShader = new ShaderProgram("lineShader");
-		crossyIndicator = LineVAO.generateCrossyIndicator();
-		axisIndicator = LineVAO.generateAxisIndicator();
-		boxHighlighter = LineVAO.generateBox(new Color(255, 100, 100));
-		rayLine = LineVAO.generateLine();
-		justShape = new ShaderProgram("justShape");
-		cubeVAO = SimpleCubeVAO.generateCube();
-		visualShapeShader = new ShaderProgram("visualShape");
-		visualShape = VisualShapeVAO.generateCube();
-		placeableBoardShader = new ShaderProgram("placeableBoardShader");
-		
-		inYaFace = new ShaderProgram("outline/inYaFacePlane");
-		inYaFaceVAO = InYaFaceVAO.generateInYaFacePlane();
-		sdfShader = new ShaderProgram("sdfLabel");
-		
 		camera = new Camera();
 		
 		//Create meshes:
@@ -996,12 +962,9 @@ public class RenderPlane3D implements RenderPlane
 			@Override
 			public void execute(RenderPlane3D world3D)
 			{
-				IconGeneration.render(visualShapeShader, visualShape);
-				
-				//Restore the projection matrix of this shader, since it got abused.
-				visualShapeShader.setUniformM4(0, latestProjectionMat);
-				//Restore viewport:
-				GL30.glViewport(0, 0, width, height);
+				IconGeneration.render(shaderStorage);
+				//Restore the projection matrix and viewport of this shader, since they got abused.
+				shaderStorage.resetViewportAndVisibleCubeShader();
 			}
 		});
 		
@@ -1235,11 +1198,13 @@ public class RenderPlane3D implements RenderPlane
 			drawWireToBePlaced(view);
 			drawHighlight(view);
 			
+			ShaderProgram lineShader = shaderStorage.getLineShader();
 			lineShader.use();
 			lineShader.setUniformM4(1, view);
 			Matrix model = new Matrix();
 			if(Settings.drawComponentPositionIndicator)
 			{
+				GenericVAO crossyIndicator = shaderStorage.getCrossyIndicator();
 				for(Component comp : board.getComponentsToRender())
 				{
 					model.identity();
@@ -1251,6 +1216,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			if(Settings.drawWorldAxisIndicator)
 			{
+				GenericVAO axisIndicator = shaderStorage.getAxisIndicator();
 				model.identity();
 				Vector3 position = new Vector3(0, 10, 0);
 				model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
@@ -1259,28 +1225,6 @@ public class RenderPlane3D implements RenderPlane
 				axisIndicator.draw();
 			}
 		}
-	}
-	
-	private void drawBox(Vector3 pos, Vector3 size, float[] view)
-	{
-		Matrix modelMatrix = new Matrix();
-		modelMatrix.translate((float) pos.getX(), (float) pos.getY(), (float) pos.getZ());
-		modelMatrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		
-		lineShader.use();
-		lineShader.setUniformM4(1, view);
-		lineShader.setUniformM4(2, modelMatrix.getMat());
-		
-		boxHighlighter.use();
-		boxHighlighter.draw();
-		
-		justShape.use();
-		justShape.setUniformM4(1, view);
-		justShape.setUniformM4(2, modelMatrix.getMat());
-		justShape.setUniformV4(3, new float[]{1f, 100f / 255f, 100f / 255f, 0.3f});
-		
-		cubeVAO.use();
-		cubeVAO.draw();
 	}
 	
 	private void drawWireToBePlaced(float[] view)
@@ -1323,13 +1267,14 @@ public class RenderPlane3D implements RenderPlane
 			Vector3 size = new Vector3(0.025, 0.01, distance);
 			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
 			
-			justShape.use();
-			justShape.setUniformM4(1, view);
-			justShape.setUniformM4(2, model.getMat());
-			justShape.setUniformV4(3, new float[]{1.0f, 0.0f, 1.0f, 1.0f});
-			
-			cubeVAO.use();
-			cubeVAO.draw();
+			ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
+			invisibleCubeShader.use();
+			invisibleCubeShader.setUniformM4(1, view);
+			invisibleCubeShader.setUniformM4(2, model.getMat());
+			invisibleCubeShader.setUniformV4(3, new float[]{1.0f, 0.0f, 1.0f, 1.0f});
+			GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
+			invisibleCube.use();
+			invisibleCube.draw();
 		}
 	}
 	
@@ -1346,10 +1291,13 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(isGrabbing())
 		{
+			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
+			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
+			
 			Matrix m = new Matrix();
-			visualShapeShader.use();
-			visualShapeShader.setUniformM4(1, view);
-			visualShape.use();
+			visibleCubeShader.use();
+			visibleCubeShader.setUniformM4(1, view);
+			visibleCube.use();
 			
 			Quaternion originalGlobalRotation = grabbedComponent.getRotation();
 			Vector3 originalGlobalPosition = grabbedComponent.getPosition();
@@ -1380,9 +1328,9 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniformM4(2, m.getMat());
-				visualShapeShader.setUniformV4(3, c.getColorArray());
-				visualShape.draw();
+				visibleCubeShader.setUniformM4(2, m.getMat());
+				visibleCubeShader.setUniformV4(3, c.getColorArray());
+				visibleCube.draw();
 			}
 			
 			for(Blot blot : grabbedComponent.getBlots())
@@ -1397,9 +1345,9 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniformM4(2, m.getMat());
-				visualShapeShader.setUniformV4(3, (blot.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visualShape.draw();
+				visibleCubeShader.setUniformM4(2, m.getMat());
+				visibleCubeShader.setUniformV4(3, (blot.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visibleCube.draw();
 			}
 			
 			for(Peg peg : grabbedComponent.getPegs())
@@ -1414,9 +1362,9 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniformM4(2, m.getMat());
-				visualShapeShader.setUniformV4(3, (peg.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visualShape.draw();
+				visibleCubeShader.setUniformM4(2, m.getMat());
+				visibleCubeShader.setUniformV4(3, (peg.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visibleCube.draw();
 			}
 			
 			for(Wire wire : grabbedWires)
@@ -1433,9 +1381,9 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 				m.multiply(new Matrix(rotation.createMatrix()));
 				m.scale(0.025f, 0.01f, (float) distance);
-				visualShapeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visualShapeShader.setUniformM4(2, m.getMat());
-				visualShape.draw();
+				visibleCubeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visibleCubeShader.setUniformM4(2, m.getMat());
+				visibleCube.draw();
 			}
 			
 			List<Meshable> colorables = grabbedComponent.getModelHolder().getColorables();
@@ -1451,13 +1399,14 @@ public class RenderPlane3D implements RenderPlane
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visualShapeShader.setUniformM4(2, m.getMat());
-				visualShapeShader.setUniformV4(3, ((Colorable) grabbedComponent).getCurrentColor(i).asArray());
-				visualShape.draw();
+				visibleCubeShader.setUniformM4(2, m.getMat());
+				visibleCubeShader.setUniformV4(3, ((Colorable) grabbedComponent).getCurrentColor(i).asArray());
+				visibleCube.draw();
 			}
 			
 			if(grabbedComponent instanceof CompLabel)
 			{
+				ShaderProgram sdfShader = shaderStorage.getSdfShader();
 				CompLabel label = (CompLabel) grabbedComponent;
 				sdfShader.use();
 				sdfShader.setUniformM4(1, view);
@@ -1477,6 +1426,7 @@ public class RenderPlane3D implements RenderPlane
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		if(currentPlaceable == null)
 		{
+			ShaderProgram lineShader = shaderStorage.getLineShader();
 			//TODO: Switch to line shader with uniform color.
 			lineShader.use();
 			lineShader.setUniformM4(1, view);
@@ -1486,6 +1436,7 @@ public class RenderPlane3D implements RenderPlane
 			Vector3 datPos = placementData.getPosition().add(placementData.getNormal().multiply(0.075));
 			model.translate((float) datPos.getX(), (float) datPos.getY(), (float) datPos.getZ());
 			lineShader.setUniformM4(2, model.getMat());
+			GenericVAO crossyIndicator = shaderStorage.getCrossyIndicator();
 			crossyIndicator.use();
 			crossyIndicator.draw();
 		}
@@ -1542,19 +1493,23 @@ public class RenderPlane3D implements RenderPlane
 			
 			//Draw the board:
 			boardTexture.activate();
-			placeableBoardShader.use();
-			placeableBoardShader.setUniformM4(1, view);
-			placeableBoardShader.setUniformM4(2, matrix.getMat());
-			placeableBoardShader.setUniformV2(3, new float[]{x, z});
-			placeableBoardShader.setUniformV4(4, Color.boardDefault.asArray());
-			visualShape.use();
-			visualShape.draw();
+			ShaderProgram textureCubeShader = shaderStorage.getTextureCubeShader();
+			textureCubeShader.use();
+			textureCubeShader.setUniformM4(1, view);
+			textureCubeShader.setUniformM4(2, matrix.getMat());
+			textureCubeShader.setUniformV2(3, new float[]{x, z});
+			textureCubeShader.setUniformV4(4, Color.boardDefault.asArray());
+			GenericVAO textureCube = shaderStorage.getVisibleOpTexCube();
+			textureCube.use();
+			textureCube.draw();
 		}
 		else
 		{
+			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
+			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
 			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
 			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			World3DHelper.drawModel(visualShapeShader, visualShape, currentPlaceable.getModel(), placementData.getPosition(), modelRotation.multiply(compRotation), view);
+			World3DHelper.drawModel(visibleCubeShader, visibleCube, currentPlaceable.getModel(), placementData.getPosition(), modelRotation.multiply(compRotation), view);
 		}
 	}
 	
@@ -1573,6 +1528,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 		colorMesh.draw(view);
 		
+		ShaderProgram sdfShader = shaderStorage.getSdfShader();
 		sdfShader.use();
 		sdfShader.setUniformM4(1, view);
 		for(CompLabel label : board.getLabelsToRender())
@@ -1588,6 +1544,8 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(!wireEndsToRender.isEmpty())
 		{
+			ShaderProgram lineShader = shaderStorage.getLineShader();
+			GenericVAO crossyIndicator = shaderStorage.getCrossyIndicator();
 			lineShader.use();
 			lineShader.setUniformM4(1, view);
 			
@@ -1629,17 +1587,19 @@ public class RenderPlane3D implements RenderPlane
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
 		
+		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
+		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
 		if(part instanceof Component)
 		{
-			World3DHelper.drawStencilComponent(justShape, cubeVAO, (Component) part, view);
+			World3DHelper.drawStencilComponent(invisibleCubeShader, invisibleCube, (Component) part, view);
 		}
 		else //Connector
 		{
-			justShape.use();
-			justShape.setUniformM4(1, view);
-			justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
+			invisibleCubeShader.use();
+			invisibleCubeShader.setUniformM4(1, view);
+			invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
 			Matrix matrix = new Matrix();
-			World3DHelper.drawCubeFull(justShape, cubeVAO, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
+			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
 		}
 		
 		//Draw on top
@@ -1654,10 +1614,12 @@ public class RenderPlane3D implements RenderPlane
 				Settings.highlightColorA
 		};
 		
-		inYaFace.use();
-		inYaFace.setUniformV4(0, color);
-		inYaFaceVAO.use();
-		inYaFaceVAO.draw();
+		ShaderProgram planeShader = shaderStorage.getFlatPlaneShader();
+		planeShader.use();
+		planeShader.setUniformV4(0, color);
+		GenericVAO fullCanvasPlane = shaderStorage.getFlatPlane();
+		fullCanvasPlane.use();
+		fullCanvasPlane.draw();
 		
 		//Restore settings:
 		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
@@ -1678,21 +1640,23 @@ public class RenderPlane3D implements RenderPlane
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
 		
+		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
+		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
 		for(Wire wire : clusterToHighlight.getWires())
 		{
 			if(wire instanceof HiddenWire)
 			{
 				continue;
 			}
-			World3DHelper.drawStencilComponent(justShape, cubeVAO, (CompWireRaw) wire, view);
+			World3DHelper.drawStencilComponent(invisibleCubeShader, invisibleCube, (CompWireRaw) wire, view);
 		}
-		justShape.use();
-		justShape.setUniformM4(1, view);
-		justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
+		invisibleCubeShader.use();
+		invisibleCubeShader.setUniformM4(1, view);
+		invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		for(Connector connector : connectorsToHighlight)
 		{
-			World3DHelper.drawCubeFull(justShape, cubeVAO, connector.getModel(), connector.getParent(), connector.getParent().getModelHolder().getPlacementOffset(), matrix);
+			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, connector.getModel(), connector.getParent(), connector.getParent().getModelHolder().getPlacementOffset(), matrix);
 		}
 		
 		//Draw on top
@@ -1707,10 +1671,12 @@ public class RenderPlane3D implements RenderPlane
 				Settings.highlightClusterColorA
 		};
 		
-		inYaFace.use();
-		inYaFace.setUniformV4(0, color);
-		inYaFaceVAO.use();
-		inYaFaceVAO.draw();
+		ShaderProgram planeShader = shaderStorage.getFlatPlaneShader();
+		planeShader.use();
+		planeShader.setUniformV4(0, color);
+		GenericVAO fullCanvasPlane = shaderStorage.getFlatPlane();
+		fullCanvasPlane.use();
+		fullCanvasPlane.draw();
 		
 		//Restore settings:
 		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
@@ -1999,28 +1965,11 @@ public class RenderPlane3D implements RenderPlane
 	@Override
 	public void newSize(int width, int height)
 	{
-		this.width = width;
-		this.height = height;
-		Matrix p = new Matrix();
-		p.perspective(Settings.fov, (float) width / (float) height, 0.1f, 100000f);
-		float[] projection = p.getMat();
-		latestProjectionMat = projection;
-		
+		float[] projection = shaderStorage.getProjectionMatrix();
 		solidMesh.updateProjection(projection);
 		conductorMesh.updateProjection(projection);
 		colorMesh.updateProjection(projection);
 		textureMesh.updateProjection(projection);
-		
-		placeableBoardShader.use();
-		placeableBoardShader.setUniformM4(0, projection);
-		visualShapeShader.use();
-		visualShapeShader.setUniformM4(0, projection);
-		sdfShader.use();
-		sdfShader.setUniformM4(0, projection);
-		lineShader.use();
-		lineShader.setUniformM4(0, projection);
-		justShape.use();
-		justShape.setUniformM4(0, projection);
 	}
 	
 	public Camera getCamera()

@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.RenderPlane;
+import de.ecconia.java.opentung.ShaderStorage;
 import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
@@ -11,7 +12,6 @@ import de.ecconia.java.opentung.interfaces.windows.PauseMenu;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
-import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.savefile.Saver;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
@@ -23,40 +23,13 @@ import org.lwjgl.opengl.GL30;
 
 public class RenderPlane2D implements RenderPlane
 {
-	private final Matrix projectionMatrix = new Matrix();
 	private final InputProcessor inputHandler;
 	private final SharedData sharedData;
-	
-	private ShaderProgram interfaceShader;
-	private ShaderProgram componentIconShader;
-	private ShaderProgram labelShader;
+	private final ShaderStorage shaderStorage;
 	
 	private TextureWrapper logo;
 	
-	private final GenericVAO iconPlane = new GenericVAO(new float[]{
-			-1, -1, 0, 0, // L T
-			-1, +1, 0, 1, // L B
-			+1, -1, 1, 0, // R T
-			+1, +1, 1, 1, // R B
-	}, new short[]{
-			0, 1, 2,
-			1, 3, 2,
-	})
-	{
-		@Override
-		protected void init()
-		{
-			//Position:
-			GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 0);
-			GL30.glEnableVertexAttribArray(0);
-			//TextureCoord:
-			GL30.glVertexAttribPointer(1, 2, GL30.GL_FLOAT, false, 4 * Float.BYTES, 2 * Float.BYTES);
-			GL30.glEnableVertexAttribArray(1);
-		}
-	};
-	
 	private Point indicator;
-	
 	private Hotbar hotbar;
 	private ComponentList componentList;
 	private PauseMenu pauseMenu;
@@ -65,7 +38,6 @@ public class RenderPlane2D implements RenderPlane
 	private boolean showPauseMenu;
 	
 	public long vg;
-	private int width, height;
 	
 	private final MeshText text;
 	
@@ -73,6 +45,7 @@ public class RenderPlane2D implements RenderPlane
 	public RenderPlane2D(InputProcessor inputHandler, SharedData sharedData)
 	{
 		this.sharedData = sharedData;
+		this.shaderStorage = sharedData.getShaderStorage();
 		this.inputHandler = inputHandler;
 		
 		text = new MeshText();
@@ -110,10 +83,6 @@ public class RenderPlane2D implements RenderPlane
 		});
 		pauseMenu = new PauseMenu(this);
 		
-		interfaceShader = new ShaderProgram("interfaceShader");
-		componentIconShader = new ShaderProgram("interfaces/componentIconShader");
-		labelShader = new ShaderProgram("interfaces/labelShader");
-		
 		text.createAtlas();
 		
 		pauseMenu.setup();
@@ -125,15 +94,16 @@ public class RenderPlane2D implements RenderPlane
 	@Override
 	public void render()
 	{
-		interfaceShader.use();
 		Matrix mat = new Matrix();
+		ShaderProgram interfaceShader = shaderStorage.getInterfaceShader();
+		interfaceShader.use();
 		interfaceShader.setUniformM4(1, mat.getMat());
 		indicator.draw();
 		
 		//Draw interfaces:
 		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
 		//TODO: "DPI"
-		NanoVG.nvgBeginFrame(vg, width, height, 1);
+		NanoVG.nvgBeginFrame(vg, shaderStorage.getWidth(), shaderStorage.getHeight(), 1);
 		float scale = Settings.guiScale;
 		NanoVG.nnvgScale(vg, scale, scale);
 		hotbar.draw();
@@ -153,14 +123,14 @@ public class RenderPlane2D implements RenderPlane
 		OpenTUNG.setOpenGLMode();
 		
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
-		hotbar.drawIcons(componentIconShader, iconPlane);
+		hotbar.drawIcons(sharedData.getShaderStorage());
 		if(tsShowComponentList)
 		{
-			componentList.drawIcons(componentIconShader, iconPlane);
+			componentList.drawIcons(sharedData.getShaderStorage());
 		}
 		if(tsShowPauseMenu)
 		{
-			pauseMenu.renderDecor(componentIconShader, iconPlane);
+			pauseMenu.renderDecor(getSharedData().getShaderStorage());
 		}
 		
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
@@ -169,17 +139,6 @@ public class RenderPlane2D implements RenderPlane
 	@Override
 	public void newSize(int width, int height)
 	{
-		this.width = width;
-		this.height = height;
-		
-		projectionMatrix.interfaceMatrix(width, height);
-		float[] pM = projectionMatrix.getMat();
-		componentIconShader.use();
-		componentIconShader.setUniformM4(0, pM);
-		interfaceShader.use();
-		interfaceShader.setUniformM4(0, pM);
-		labelShader.use();
-		labelShader.setUniformM4(0, pM);
 		if(indicator != null)
 		{
 			indicator.unload();
@@ -189,12 +148,12 @@ public class RenderPlane2D implements RenderPlane
 	
 	public float realWidth(float scale)
 	{
-		return width / scale;
+		return shaderStorage.getWidth() / scale;
 	}
 	
 	public float realHeight(float scale)
 	{
-		return height / scale;
+		return shaderStorage.getHeight() / scale;
 	}
 	
 	public Hotbar getHotbar()
@@ -313,11 +272,6 @@ public class RenderPlane2D implements RenderPlane
 	public TextureWrapper getLogo()
 	{
 		return logo;
-	}
-	
-	public ShaderProgram getLabelShader()
-	{
-		return labelShader;
 	}
 	
 	public void issueShutdown()

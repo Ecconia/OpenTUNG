@@ -15,70 +15,70 @@ import de.ecconia.java.opentung.math.Vector3;
 
 public class World3DHelper
 {
-	public static void drawStencilComponent(ShaderProgram justShape, GenericVAO cubeVAO, Component component, float[] view)
+	public static void drawStencilComponent(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, Component component, float[] view)
 	{
-		justShape.use();
-		justShape.setUniformM4(1, view);
-		justShape.setUniformV4(3, new float[]{0, 0, 0, 0});
+		invisibleCubeShader.use();
+		invisibleCubeShader.setUniformM4(1, view);
+		invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		Vector3 placementOffset = component.getModelHolder().getPlacementOffset();
 		for(Meshable meshable : component.getModelHolder().getPegModels())
 		{
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, component, placementOffset, matrix);
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
 		}
 		for(Meshable meshable : component.getModelHolder().getBlotModels())
 		{
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, component, placementOffset, matrix);
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
 		}
 		for(Meshable meshable : component.getModelHolder().getColorables())
 		{
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, component, placementOffset, matrix);
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
 		}
 		for(Meshable meshable : component.getModelHolder().getSolid())
 		{
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, component, placementOffset, matrix);
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
 		}
 		for(Meshable meshable : component.getModelHolder().getConductors())
 		{
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, component, placementOffset, matrix);
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
 		}
 	}
 	
-	public static void drawModel(ShaderProgram justShape, GenericVAO cubeVAO, ModelHolder model, Vector3 position, Quaternion quaternion, float[] view)
+	public static void drawModel(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, ModelHolder model, Vector3 position, Quaternion quaternion, float[] view)
 	{
-		justShape.use();
-		justShape.setUniformM4(1, view);
+		invisibleCubeShader.use();
+		invisibleCubeShader.setUniformM4(1, view);
 		Matrix matrix = new Matrix();
 		Matrix rotation = new Matrix(quaternion.createMatrix());
 		Vector3 placementOffset = model.getPlacementOffset();
 		for(Meshable meshable : model.getPegModels())
 		{
-			justShape.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getBlotModels())
 		{
-			justShape.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getColorables())
 		{
-			justShape.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getSolid())
 		{
-			justShape.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getConductors())
 		{
-			justShape.setUniformV4(3, Color.circuitOFF.asArray());
-			drawCubeFull(justShape, cubeVAO, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			invisibleCubeShader.setUniformV4(3, Color.circuitOFF.asArray());
+			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 	}
 	
-	public static void drawCubeFull(ShaderProgram justShape, GenericVAO cubeVAO, CubeFull cube, Vector3 position, Matrix rotation, Vector3 placementOffset, Matrix matrix)
+	public static void drawCubeFull(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, CubeFull cube, Vector3 position, Matrix rotation, Vector3 placementOffset, Matrix matrix)
 	{
 		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
 		matrix.identity();
@@ -93,13 +93,13 @@ public class World3DHelper
 		matrix.translate((float) cubePosition.getX(), (float) cubePosition.getY(), (float) cubePosition.getZ());
 		Vector3 size = cube.getSize();
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		justShape.setUniformM4(2, matrix.getMat());
+		invisibleCubeShader.setUniformM4(2, matrix.getMat());
 		
-		cubeVAO.use();
-		cubeVAO.draw();
+		invisibleCube.use();
+		invisibleCube.draw();
 	}
 	
-	public static void drawCubeFull(ShaderProgram justShape, GenericVAO cubeVAO, CubeFull cube, Part part, Vector3 placementOffset, Matrix matrix)
+	public static void drawCubeFull(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, CubeFull cube, Part part, Vector3 placementOffset, Matrix matrix)
 	{
 		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
 		matrix.identity();
@@ -120,9 +120,9 @@ public class World3DHelper
 		position = cube.getPosition();
 		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		justShape.setUniformM4(2, matrix.getMat());
+		invisibleCubeShader.setUniformM4(2, matrix.getMat());
 		
-		cubeVAO.use();
-		cubeVAO.draw();
+		invisibleCube.use();
+		invisibleCube.draw();
 	}
 }

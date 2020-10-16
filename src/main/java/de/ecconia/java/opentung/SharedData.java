@@ -11,6 +11,7 @@ public class SharedData
 	private RenderPlane3D renderPlane3D;
 	private File currentBoardFile;
 	private boolean simulationLoaded;
+	private ShaderStorage shaderStorage;
 	
 	private final BoardUniverse boardUniverse;
 	
@@ -88,5 +89,15 @@ public class SharedData
 	public boolean isSimulationLoaded()
 	{
 		return simulationLoaded;
+	}
+	
+	public void setShaderStorage(ShaderStorage shaderStorage)
+	{
+		this.shaderStorage = shaderStorage;
+	}
+	
+	public ShaderStorage getShaderStorage()
+	{
+		return shaderStorage;
 	}
 }

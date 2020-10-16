@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
+import de.ecconia.java.opentung.ShaderStorage;
 import de.ecconia.java.opentung.SharedData;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.MeshText;
@@ -80,27 +81,29 @@ public class PauseMenu
 		buttonExit.renderFrame(nvg, middleX, middleY);
 	}
 	
-	public void renderDecor(ShaderProgram iconShader, GenericVAO iconPlane)
+	public void renderDecor(ShaderStorage shaderStorage)
 	{
 		float scale = Settings.guiScale;
 		renderPlane2D.getLogo().activate();
 		
-		iconShader.use();
-		iconShader.setUniformV2(1, new float[]{(180) * scale, (180) * scale});
-		iconShader.setUniformV2(2, new float[]{(windowStartX + windowWidth / 1.8f) * scale, (windowStartY + windowHeight / 3.4f) * scale});
-		iconPlane.use();
-		iconPlane.draw();
+		ShaderProgram textureShader = shaderStorage.getFlatTextureShader();
+		textureShader.use();
+		textureShader.setUniformV2(1, new float[]{(180) * scale, (180) * scale});
+		textureShader.setUniformV2(2, new float[]{(windowStartX + windowWidth / 1.8f) * scale, (windowStartY + windowHeight / 3.4f) * scale});
+		GenericVAO texturePlane = shaderStorage.getFlatTexturePlane();
+		texturePlane.use();
+		texturePlane.draw();
 		
 		float middleX = windowStartX + windowWidth / 2f;
 		float middleY = windowStartY + windowHeight / 2f;
 		MeshText fontUnit = renderPlane2D.getText();
 		fontUnit.activate();
-		ShaderProgram labelShader = renderPlane2D.getLabelShader();
-		labelShader.use();
-		labelShader.setUniformV3(2, new float[]{0, 0, 0});
-		buttonSave.renderText(labelShader, middleX, middleY);
-		buttonSaveAs.renderText(labelShader, middleX, middleY);
-		buttonExit.renderText(labelShader, middleX, middleY);
+		ShaderProgram textShader = shaderStorage.getFlatTextShader();
+		textShader.use();
+		textShader.setUniformV3(2, new float[]{0, 0, 0});
+		buttonSave.renderText(textShader, middleX, middleY);
+		buttonSaveAs.renderText(textShader, middleX, middleY);
+		buttonExit.renderText(textShader, middleX, middleY);
 	}
 	
 	public boolean leftMouseUp(int x, int y)

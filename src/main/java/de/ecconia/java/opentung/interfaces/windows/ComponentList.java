@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.PlaceableInfo;
+import de.ecconia.java.opentung.ShaderStorage;
 import de.ecconia.java.opentung.components.meta.ComponentAwareness;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
@@ -82,23 +83,25 @@ public class ComponentList
 		}
 	}
 	
-	public void drawIcons(ShaderProgram iconShader, GenericVAO iconPlane)
+	public void drawIcons(ShaderStorage shaderStorage)
 	{
 		float scale = Settings.guiScale;
-		iconShader.use();
+		ShaderProgram textureShader = shaderStorage.getFlatTextureShader();
+		textureShader.use();
 		//Set image scale.
-		iconShader.setUniformV2(1, new float[]{(side / 2f - 5f) * scale, (side / 2f - 5f) * scale});
-		iconPlane.use();
+		textureShader.setUniformV2(1, new float[]{(side / 2f - 5f) * scale, (side / 2f - 5f) * scale});
+		GenericVAO texturePlane = shaderStorage.getFlatTexturePlane();
+		texturePlane.use();
 		for(IconButton component : components)
 		{
-			component.renderIcon(iconShader, iconPlane, middleX, middleY);
+			component.renderIcon(textureShader, texturePlane, middleX, middleY);
 		}
 		
 		if(draggedElement != null)
 		{
 			draggedElement.getIconTexture().activate();
-			iconShader.setUniformV2(2, new float[]{mousePosX * scale, mousePosY * scale});
-			iconPlane.draw();
+			textureShader.setUniformV2(2, new float[]{mousePosX * scale, mousePosY * scale});
+			texturePlane.draw();
 		}
 	}
 	

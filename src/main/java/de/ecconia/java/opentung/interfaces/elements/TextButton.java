@@ -33,10 +33,10 @@ public class TextButton extends AbstractButton
 		textWidth = r.getInteger();
 	}
 	
-	public void renderText(ShaderProgram labelShader, float x, float y)
+	public void renderText(ShaderProgram textShader, float x, float y)
 	{
 		float scale = Settings.guiScale;
-		labelShader.setUniformV3(1, new float[]{
+		textShader.setUniformV3(1, new float[]{
 				(x + relX - textWidth / 2f) * scale,
 				(y + relY) * scale,
 				scale

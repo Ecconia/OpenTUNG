@@ -8,7 +8,7 @@ import de.ecconia.java.opentung.components.meta.ComponentAwareness;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.vaos.VisualShapeVAO;
+import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.math.Vector2;
 import de.ecconia.java.opentung.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
@@ -19,14 +19,16 @@ import org.lwjgl.opengl.GL30;
 
 public class IconGeneration
 {
-	public static void render(ShaderProgram shader, VisualShapeVAO visualShape)
+	public static void render(ShaderStorage shaderStorage)
 	{
+		ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
+		GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
 		int side = Settings.componentIconResolution;
 		
 		GL30.glViewport(0, 0, side, side);
 		GL30.glClearColor(1, 1, 0, 1);
 		
-		visualShape.use();
+		visibleCube.use();
 		for(PlaceableInfo info : ComponentAwareness.componentTypes)
 		{
 			System.out.println("[ComponentIconRenderer] " + info.getName());
@@ -36,13 +38,13 @@ public class IconGeneration
 			{
 				ModelHolder infoModel = info.getModel();
 				
-				shader.use();
+				visibleCubeShader.use();
 				
 				Matrix viewMatrix = new Matrix();
 				viewMatrix.translate(0.0f, 0.0f, 0);
 				viewMatrix.rotate(-20, 1, 0, 0);
 				viewMatrix.rotate(-45, 0, 1, 0);
-				shader.setUniformM4(1, viewMatrix.getMat());
+				visibleCubeShader.setUniformM4(1, viewMatrix.getMat());
 				
 				List<Meshable> meshes = new ArrayList<>();
 				meshes.addAll(infoModel.getSolid());
@@ -189,7 +191,7 @@ public class IconGeneration
 				Matrix projection = new Matrix();
 				projection.orthoMatrix(side, side);
 				transMat.multiply(projection);
-				shader.setUniformM4(0, transMat.getMat());
+				visibleCubeShader.setUniformM4(0, transMat.getMat());
 				
 				for(Meshable meshable : meshes)
 				{
@@ -210,11 +212,11 @@ public class IconGeneration
 					}
 					model.translate((float) relPos.getX(), (float) relPos.getY(), (float) relPos.getZ());
 					model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-					shader.setUniformM4(2, model.getMat());
+					visibleCubeShader.setUniformM4(2, model.getMat());
 					
-					shader.setUniformV4(3, cast.getColorArray());
+					visibleCubeShader.setUniformV4(3, cast.getColorArray());
 					
-					visualShape.draw();
+					visibleCube.draw();
 				}
 			}
 			

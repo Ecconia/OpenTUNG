@@ -2,16 +2,16 @@ package de.ecconia.java.opentung.libwrap.vaos;
 
 import org.lwjgl.opengl.GL30;
 
-public class SimpleCubeVAO extends GenericVAO
+public class InvisibleCubeVAO extends GenericVAO
 {
-	public SimpleCubeVAO(float[] vertices, short[] indices)
+	public InvisibleCubeVAO(float[] vertices, short[] indices)
 	{
 		super(vertices, indices);
 	}
 	
-	public static SimpleCubeVAO generateCube()
+	public static InvisibleCubeVAO generateInvisibleCube()
 	{
-		return new SimpleCubeVAO(new float[]{
+		return new InvisibleCubeVAO(new float[]{
 				+1, -1, -1, //0 - R B N
 				-1, -1, -1, //1 - L B N
 				-1, +1, -1, //2 - L T N
