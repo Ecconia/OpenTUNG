@@ -681,6 +681,10 @@ public class RenderPlane3D implements RenderPlane
 					board.getComponentsToRender().remove(component);
 					for(Wire wire : wiresToRemove)
 					{
+						if(wire.getClass() == HiddenWire.class)
+						{
+							continue;
+						}
 						board.getWiresToRender().remove(wire);
 						wireRayCaster.removeWire((CompWireRaw) wire);
 					}
