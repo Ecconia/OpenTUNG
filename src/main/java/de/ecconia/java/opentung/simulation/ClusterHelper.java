@@ -52,53 +52,54 @@ public class ClusterHelper
 			}
 			case SourceBlot * 4 + SourceActive:
 			{
-				wireCluster = pwSourceBlotAndSourceActive(board, simulation, connectorA, connectorB);
+				wireCluster = pwSourceBlotAndSourceActive(simulation, connectorA, connectorB);
 				break;
 			}
 			case SourceBlot * 4 + DrainOFF:
 			{
-				wireCluster = pwSourceAndDrainOFF(board, simulation, connectorA, connectorB);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorA, connectorB);
 				break;
 			}
 			case SourceBlot * 4 + DrainActive:
 			{
-				wireCluster = pwSourceBlotAndDrainActive(board, simulation, connectorA, connectorB);
+				wireCluster = pwSourceBlotAndDrainActive(simulation, connectorA, connectorB);
 				break;
 			}
 			case SourceActive * 4 + SourceBlot:
 			{
-				wireCluster = pwSourceBlotAndSourceActive(board, simulation, connectorB, connectorA);
+				wireCluster = pwSourceBlotAndSourceActive(simulation, connectorB, connectorA);
 				break;
 			}
 			case SourceActive * 4 + SourceActive:
 			{
-				wireCluster = pwSourceActiveAndSourceActive(board, simulation, connectorA, connectorB);
+				wireCluster = pwSourceActiveAndSourceActive(simulation, connectorA, connectorB);
 				break;
 			}
 			case SourceActive * 4 + DrainOFF:
 			{
-				wireCluster = pwSourceAndDrainOFF(board, simulation, connectorA, connectorB);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorA, connectorB);
 				break;
 			}
 			case SourceActive * 4 + DrainActive:
 			{
-				wireCluster = pwSourceActiveAndDrainActive(board, simulation, connectorA, connectorB);
+				wireCluster = pwSourceActiveAndDrainActive(simulation, connectorA, connectorB);
 				break;
 			}
 			case DrainOFF * 4 + SourceBlot:
 			{
-				wireCluster = pwSourceAndDrainOFF(board, simulation, connectorB, connectorA);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorB, connectorA);
 				break;
 			}
 			case DrainOFF * 4 + SourceActive:
 			{
-				wireCluster = pwSourceAndDrainOFF(board, simulation, connectorB, connectorA);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorB, connectorA);
 				break;
 			}
 			case DrainOFF * 4 + DrainOFF:
 			{
 				//Append A to B (deletes A)
-				board.deleteCluster(clusterB.getId());
+				//TBI: Should something be done when deleting?
+//				board.deleteCluster(clusterB.getId());
 				Prototype merge = new Prototype(clusterB);
 				merge.mergeInto(clusterA);
 				wireCluster = clusterA;
@@ -106,27 +107,27 @@ public class ClusterHelper
 			}
 			case DrainOFF * 4 + DrainActive:
 			{
-				wireCluster = pwDrainOffAndDrainActive(board, simulation, connectorA, connectorB);
+				wireCluster = pwDrainOffAndDrainActive(simulation, connectorA, connectorB);
 				break;
 			}
 			case DrainActive * 4 + SourceBlot:
 			{
-				wireCluster = pwSourceBlotAndDrainActive(board, simulation, connectorB, connectorA);
+				wireCluster = pwSourceBlotAndDrainActive(simulation, connectorB, connectorA);
 				break;
 			}
 			case DrainActive * 4 + SourceActive:
 			{
-				wireCluster = pwSourceActiveAndDrainActive(board, simulation, connectorB, connectorA);
+				wireCluster = pwSourceActiveAndDrainActive(simulation, connectorB, connectorA);
 				break;
 			}
 			case DrainActive * 4 + DrainOFF:
 			{
-				wireCluster = pwDrainOffAndDrainActive(board, simulation, connectorB, connectorA);
+				wireCluster = pwDrainOffAndDrainActive(simulation, connectorB, connectorA);
 				break;
 			}
 			case DrainActive * 4 + DrainActive:
 			{
-				wireCluster = pwDrainActiveAndDrainActive(board, simulation, connectorA, connectorB);
+				wireCluster = pwDrainActiveAndDrainActive(simulation, connectorA, connectorB);
 				break;
 			}
 		}
@@ -135,7 +136,7 @@ public class ClusterHelper
 		wireCluster.addWire(newWire);
 	}
 	
-	private static Cluster pwDrainActiveAndDrainActive(BoardUniverse board, SimulationManager simulation, Connector drainActive1, Connector drainActive2)
+	private static Cluster pwDrainActiveAndDrainActive(SimulationManager simulation, Connector drainActive1, Connector drainActive2)
 	{
 		InheritingCluster drainActive1Cluster = (InheritingCluster) drainActive1.getCluster();
 		InheritingCluster drainActive2Cluster = (InheritingCluster) drainActive2.getCluster();
@@ -180,7 +181,7 @@ public class ClusterHelper
 		return drainActive1Cluster;
 	}
 	
-	private static Cluster pwDrainOffAndDrainActive(BoardUniverse board, SimulationManager simulation, Connector drainOff, Connector drainActive)
+	private static Cluster pwDrainOffAndDrainActive(SimulationManager simulation, Connector drainOff, Connector drainActive)
 	{
 		InheritingCluster drainActiveCluster = (InheritingCluster) drainActive.getCluster();
 		InheritingCluster drainOffCluster = (InheritingCluster) drainOff.getCluster();
@@ -198,7 +199,7 @@ public class ClusterHelper
 		return drainActiveCluster;
 	}
 	
-	private static Cluster pwSourceActiveAndDrainActive(BoardUniverse board, SimulationManager simulation, Connector sourceActive, Connector drainActive)
+	private static Cluster pwSourceActiveAndDrainActive(SimulationManager simulation, Connector sourceActive, Connector drainActive)
 	{
 		SourceCluster sourceActiveCluster = (SourceCluster) sourceActive.getCluster();
 		InheritingCluster drainActiveCluster = (InheritingCluster) drainActive.getCluster();
@@ -224,13 +225,13 @@ public class ClusterHelper
 		return drainActiveCluster;
 	}
 	
-	private static Cluster pwSourceActiveAndSourceActive(BoardUniverse board, SimulationManager simulation, Connector sourceActive1, Connector sourceActive2)
+	private static Cluster pwSourceActiveAndSourceActive(SimulationManager simulation, Connector sourceActive1, Connector sourceActive2)
 	{
 		SourceCluster sourceActive1Cluster = (SourceCluster) sourceActive1.getCluster();
 		SourceCluster sourceActive2Cluster = (SourceCluster) sourceActive2.getCluster();
 		
 		//Split A and B off their Blots and make their merge a Cluster C with A and B as source
-		InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+		InheritingCluster newCluster = new InheritingCluster();
 		newCluster.addSource(sourceActive1Cluster);
 		newCluster.addSource(sourceActive2Cluster);
 		sourceActive1Cluster.addDrain(newCluster);
@@ -254,13 +255,13 @@ public class ClusterHelper
 		return newCluster;
 	}
 	
-	private static Cluster pwSourceBlotAndSourceActive(BoardUniverse board, SimulationManager simulation, Connector sourceBlot, Connector sourceActive)
+	private static Cluster pwSourceBlotAndSourceActive(SimulationManager simulation, Connector sourceBlot, Connector sourceActive)
 	{
 		SourceCluster sourceBlotCluster = (SourceCluster) sourceBlot.getCluster();
 		SourceCluster sourceActiveCluster = (SourceCluster) sourceActive.getCluster();
 		
 		//Split B off its Blot, make it a new cluster C, let C have A and B as source
-		InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+		InheritingCluster newCluster = new InheritingCluster();
 		newCluster.addSource(sourceBlotCluster);
 		sourceBlotCluster.addDrain(newCluster);
 		
@@ -287,7 +288,7 @@ public class ClusterHelper
 		return sourceBlotCluster;
 	}
 	
-	private static Cluster pwSourceBlotAndDrainActive(BoardUniverse board, SimulationManager simulation, Connector sourceBlot, Connector drainActive)
+	private static Cluster pwSourceBlotAndDrainActive(SimulationManager simulation, Connector sourceBlot, Connector drainActive)
 	{
 		SourceCluster sourceBlotCluster = (SourceCluster) sourceBlot.getCluster();
 		InheritingCluster drainActiveCluster = (InheritingCluster) drainActive.getCluster();
@@ -305,13 +306,14 @@ public class ClusterHelper
 		return sourceBlotCluster;
 	}
 	
-	private static Cluster pwSourceAndDrainOFF(BoardUniverse board, SimulationManager simulation, Connector source, Connector drainOff)
+	private static Cluster pwSourceAndDrainOFF(SimulationManager simulation, Connector source, Connector drainOff)
 	{
 		SourceCluster sourceCluster = (SourceCluster) source.getCluster();
 		InheritingCluster drainOffCluster = (InheritingCluster) drainOff.getCluster();
 		
 		//Append B to A (deletes B)
-		board.deleteCluster(drainOffCluster.getId());
+		//TBI: Should something be done when deleting?
+//		board.deleteCluster(drainOffCluster.getId());
 		Prototype movedClusterParts = new Prototype(drainOffCluster);
 		movedClusterParts.mergeInto(sourceCluster);
 		
@@ -326,7 +328,7 @@ public class ClusterHelper
 	
 	//Removal:
 	
-	public static void removeWire(BoardUniverse board, SimulationManager simulation, Wire wireToDelete)
+	public static void removeWire(SimulationManager simulation, Wire wireToDelete)
 	{
 		Connector a = wireToDelete.getConnectorA();
 		Connector b = wireToDelete.getConnectorB();
@@ -349,7 +351,7 @@ public class ClusterHelper
 				
 				if(split.getBlotWires().isEmpty())
 				{
-					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					InheritingCluster newCluster = new InheritingCluster();
 					split.mergeInto(newCluster);
 					//Can't have any sources now, cause we are about to delete the only source.
 					if(blotCluster.isActive())
@@ -384,7 +386,8 @@ public class ClusterHelper
 						split.scheduleUpdateable(simulation);
 					}
 					
-					board.deleteCluster(otherCluster.getId());
+					//TBI: Should something be done when deleting?
+//				    board.deleteCluster(otherCluster.getId());
 				}
 				else
 				{
@@ -412,7 +415,7 @@ public class ClusterHelper
 			boolean bSideHasNoCluster = b.getCluster() == null;
 			if(splitA.getBlotWires().isEmpty())
 			{
-				InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+				InheritingCluster newCluster = new InheritingCluster();
 				splitA.mergeInto(newCluster);
 				//Can't have any sources now, cause we are about to delete the only source.
 				if(cluster.isActive())
@@ -431,7 +434,7 @@ public class ClusterHelper
 				Prototype splitB = splitNonSourcePartFromCluster(b);
 				if(splitB.getBlotWires().isEmpty())
 				{
-					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					InheritingCluster newCluster = new InheritingCluster();
 					splitB.mergeInto(newCluster);
 					//Can't have any sources now, cause we are about to delete the only source.
 					if(cluster.isActive())
@@ -464,7 +467,8 @@ public class ClusterHelper
 				splitA.mergeInto(cluster); //Restore/Undo
 				return; //We are done here.
 			}
-			board.deleteCluster(cluster.getId());
+			//TBI: Should something be done when deleting?
+//			board.deleteCluster(cluster.getId());
 			
 			if(splitA.getBlotWires().size() == 1)
 			{
@@ -483,7 +487,7 @@ public class ClusterHelper
 			else
 			{
 				//Creating new cluster for A side:
-				InheritingCluster aCluster = new InheritingCluster(board.getNewClusterID());
+				InheritingCluster aCluster = new InheritingCluster();
 				splitA.mergeInto(aCluster);
 				if(splitA.getBlotWires().isEmpty())
 				{
@@ -535,7 +539,7 @@ public class ClusterHelper
 			else
 			{
 				//Creating new cluster for B side:
-				InheritingCluster bCluster = new InheritingCluster(board.getNewClusterID());
+				InheritingCluster bCluster = new InheritingCluster();
 				splitB.mergeInto(bCluster);
 				if(splitB.getBlotWires().isEmpty())
 				{
@@ -571,7 +575,7 @@ public class ClusterHelper
 		}
 	}
 	
-	public static void removePeg(BoardUniverse board, SimulationManager simulation, Peg peg)
+	public static void removePeg(SimulationManager simulation, Peg peg)
 	{
 		Cluster cluster = peg.getCluster();
 		cluster.remove(peg);
@@ -611,7 +615,7 @@ public class ClusterHelper
 					}
 					
 					Prototype split = splitNonSourcePartFromCluster(otherSide); //There can't be any sources anymore.
-					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					InheritingCluster newCluster = new InheritingCluster();
 					split.mergeInto(newCluster);
 				}
 			}
@@ -632,7 +636,7 @@ public class ClusterHelper
 					if(split.getBlotWires().isEmpty())
 					{
 						//New and off section:
-						InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+						InheritingCluster newCluster = new InheritingCluster();
 						split.mergeInto(newCluster);
 						
 						if(source.isActive())
@@ -656,7 +660,8 @@ public class ClusterHelper
 		else
 		{
 			InheritingCluster drain = (InheritingCluster) cluster;
-			board.deleteCluster(drain.getId());
+			//TBI: Should something be done when deleting?
+//			board.deleteCluster(drain.getId());
 			
 			if(drain.getSources().isEmpty())
 			{
@@ -679,7 +684,7 @@ public class ClusterHelper
 					}
 					
 					Prototype split = splitNonSourcePartFromCluster(otherSide);
-					InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+					InheritingCluster newCluster = new InheritingCluster();
 					split.mergeInto(newCluster);
 				}
 			}
@@ -726,7 +731,7 @@ public class ClusterHelper
 					}
 					else
 					{
-						InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+						InheritingCluster newCluster = new InheritingCluster();
 						split.mergeInto(newCluster);
 						
 						for(Wire sourceWire : split.getBlotWires())
@@ -754,10 +759,11 @@ public class ClusterHelper
 		}
 	}
 	
-	public static void removeBlot(BoardUniverse board, SimulationManager simulation, Blot blot)
+	public static void removeBlot(SimulationManager simulation, Blot blot)
 	{
 		SourceCluster sourceCluster = (SourceCluster) blot.getCluster();
-		board.deleteCluster(sourceCluster.getId());
+		//TBI: Should something be done when deleting?
+//		board.deleteCluster(sourceCluster.getId());
 		
 		for(Wire blotWire : blot.getWires())
 		{
@@ -781,7 +787,7 @@ public class ClusterHelper
 					System.out.println("WARNING: Corrupted cluster network. SourceCluster with more than one Source.");
 				}
 				
-				InheritingCluster newCluster = new InheritingCluster(board.getNewClusterID());
+				InheritingCluster newCluster = new InheritingCluster();
 				split.mergeInto(newCluster);
 				//Can't have any sources now, cause we are about to delete the only source.
 				if(sourceCluster.isActive())

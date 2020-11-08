@@ -7,7 +7,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
+import de.ecconia.java.opentung.meshing.MeshTypeThing;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.List;
 

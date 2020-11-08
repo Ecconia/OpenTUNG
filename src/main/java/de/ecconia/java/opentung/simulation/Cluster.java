@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.meshing.ConductorMeshBagReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,17 +10,7 @@ public abstract class Cluster implements Updateable
 {
 	private final List<Connector> connectors = new ArrayList<>();
 	private final List<Wire> wires = new ArrayList<>();
-	private final int id;
-	
-	public Cluster(int id)
-	{
-		this.id = id;
-	}
-	
-	public int getId()
-	{
-		return id;
-	}
+	private final List<ConductorMeshBagReference> conductorMeshBags = new ArrayList<>();
 	
 	public void addConnector(Connector connector)
 	{
@@ -59,9 +50,13 @@ public abstract class Cluster implements Updateable
 		return connectors;
 	}
 	
-	public void updateState(SimulationManager simulation)
+	public void updateState()
 	{
-		simulation.changeState(id, isActive());
+		boolean active = isActive();
+		for(ConductorMeshBagReference meshBag : conductorMeshBags)
+		{
+			meshBag.setActive(active);
+		}
 	}
 	
 	public void remove(Connector current)
@@ -72,5 +67,10 @@ public abstract class Cluster implements Updateable
 	public void remove(Wire wire)
 	{
 		wires.remove(wire);
+	}
+	
+	public void addMeshReference(ConductorMeshBagReference meshBagReference)
+	{
+		conductorMeshBags.add(meshBagReference);
 	}
 }

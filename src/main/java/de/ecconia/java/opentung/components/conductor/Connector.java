@@ -6,7 +6,7 @@ import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
-import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
+import de.ecconia.java.opentung.meshing.MeshTypeThing;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -157,11 +157,11 @@ public abstract class Connector extends Part implements Clusterable
 	{
 		if(cluster instanceof SourceCluster)
 		{
-			System.out.println("Source#" + cluster.getId() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
+			System.out.println("Source#" + hashCode() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
 		}
 		else
 		{
-			System.out.println("Drain#" + cluster.getId() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
+			System.out.println("Drain#" + hashCode() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
 		}
 	}
 }

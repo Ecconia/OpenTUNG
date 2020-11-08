@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -11,9 +10,11 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.util.math.Vector3;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class CompDisplay extends Component implements Updateable, Colorable, CustomData
 {
@@ -64,21 +65,34 @@ public class CompDisplay extends Component implements Updateable, Colorable, Cus
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		simulation.setColor(colorID, getCurrentColor(0));
+		if(colorMeshBag != null)
+		{
+			colorMeshBag.setColor(getCurrentColor(0));
+		}
 	}
 	
-	private int colorID;
+	private ColorMeshBagReference colorMeshBag;
 	
 	@Override
-	public void setColorID(int id, int colorID)
+	public void setColorMeshBag(int id, ColorMeshBagReference meshBag)
 	{
-		this.colorID = colorID;
+		this.colorMeshBag = meshBag;
 	}
 	
 	@Override
-	public int getColorID(int id)
+	public ColorMeshBagReference getColorMeshBag(int id)
 	{
-		return colorID;
+		return colorMeshBag;
+	}
+	
+	@Override
+	public void updateColors()
+	{
+		ColorMeshBagReference colorMeshBag = this.colorMeshBag;
+		if(colorMeshBag != null)
+		{
+			colorMeshBag.setColor(getCurrentColor(0));
+		}
 	}
 	
 	@Override

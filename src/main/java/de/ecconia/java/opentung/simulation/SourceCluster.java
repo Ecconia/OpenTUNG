@@ -7,12 +7,11 @@ import java.util.List;
 public class SourceCluster extends Cluster
 {
 	private final Blot source;
-	private List<InheritingCluster> drains = new ArrayList<>();
+	private final List<InheritingCluster> drains = new ArrayList<>();
 	private boolean active;
 	
-	public SourceCluster(int id, Blot source)
+	public SourceCluster(Blot source)
 	{
-		super(id);
 		this.source = source;
 	}
 	
@@ -44,7 +43,7 @@ public class SourceCluster extends Cluster
 		{
 			active = sourceState; //Change the internal memory state, for next update.
 			updateContent(simulation); //Update all the components connected to this cluster.
-			simulation.changeState(getId(), active);
+			updateState();
 			if(active)
 			{
 				for(InheritingCluster drain : drains)
@@ -65,7 +64,7 @@ public class SourceCluster extends Cluster
 	@Override
 	public String toString()
 	{
-		return "cs" + getId();
+		return "Source#" + hashCode();
 	}
 	
 	public void remove(InheritingCluster drain)

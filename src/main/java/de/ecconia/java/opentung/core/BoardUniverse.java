@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.core;
 
-import de.ecconia.java.opentung.util.Ansi;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -11,9 +10,6 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.units.IDManager;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.savefile.BoardAndWires;
 import de.ecconia.java.opentung.settings.Settings;
@@ -24,13 +20,15 @@ import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
+import de.ecconia.java.opentung.util.Ansi;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import javax.swing.JOptionPane;
 
 public class BoardUniverse
 {
@@ -44,35 +42,9 @@ public class BoardUniverse
 	//TODO: remove.
 	public final List<CompWireRaw> brokenWires = new ArrayList<>();
 	
-	//TODO: Switch to indexed data structure.
-	private final List<Cluster> clusters = new ArrayList<>();
-	
-	//### IDs ###
-	private final IDManager colorableIDs = new IDManager(0, 4065)
-	{
-		@Override
-		public Integer getNewID()
-		{
-			Integer index = getNewIDInternal();
-			if(index == null)
-			{
-				System.out.println("[ID ISSUE!!!] Ran out of Color ID's, assigning null to the component this will lead to crashes!");
-				JOptionPane.showMessageDialog(null, "You can only have a maximum of 0xFFFFFF raycast objects as of now. Complain to a developer. What happens now is undefined.", "Out of IDs!", JOptionPane.ERROR_MESSAGE);
-			}
-			return index;
-		}
-	};
-	
-	public IDManager getColorableIDs()
-	{
-		return colorableIDs;
-	}
-	
 	//### OTHER ###
 	
 	private final SimulationManager simulation = new SimulationManager();
-	
-	private int nextClusterID = 0;
 	
 	public BoardUniverse(BoardAndWires bnw)
 	{
@@ -145,8 +117,6 @@ public class BoardUniverse
 				}
 			}
 			
-			System.out.println("[Debug] Cluster amount: " + nextClusterID);
-			
 			System.out.println("[BoardImport] Initializing simulation.");
 			//Update clusters:
 			for(Component component : componentsToRender)
@@ -190,8 +160,7 @@ public class BoardUniverse
 	
 	private void createPeggyCluster(Peg peg)
 	{
-		InheritingCluster cluster = new InheritingCluster(nextClusterID++);
-		clusters.add(cluster);
+		InheritingCluster cluster = new InheritingCluster();
 		
 		List<Connector> connectorsToProbe = new ArrayList<>();
 		connectorsToProbe.add(peg);
@@ -242,8 +211,7 @@ public class BoardUniverse
 	private void createBlottyCluster(Blot blot)
 	{
 		//Precondition: No blot can have a cluster at this point.
-		Cluster cluster = new SourceCluster(nextClusterID++, blot);
-		clusters.add(cluster);
+		Cluster cluster = new SourceCluster(blot);
 		cluster.addConnector(blot);
 		blot.setCluster(cluster);
 		
@@ -258,7 +226,7 @@ public class BoardUniverse
 			if(otherSide instanceof Blot)
 			{
 				System.out.println("WARNING: Circuit contains Blot-Blot connection which is not allowed.");
-				wire.setCluster(new InheritingCluster(nextClusterID++)); //Required for maintenance mode. Every conductor needs a cluster.
+				wire.setCluster(new InheritingCluster()); //Required for maintenance mode. Every conductor needs a cluster.
 				continue;
 			}
 			cluster.addWire(wire);
@@ -309,7 +277,7 @@ public class BoardUniverse
 						//Ignore this wire, it will never be accessed.
 						wire.setConnectorA(placebo);
 						wire.setConnectorB(placebo);
-						wire.setCluster(new InheritingCluster(nextClusterID++)); //Assign empty cluster, just for the ID.
+						wire.setCluster(new InheritingCluster()); //Assign empty cluster, just for the ID.
 					}
 					else if(connectorA == null)
 					{
@@ -557,23 +525,8 @@ public class BoardUniverse
 		return boardsToRender;
 	}
 	
-	public List<Cluster> getClusters()
-	{
-		return clusters;
-	}
-	
 	public List<CompWireRaw> getBrokenWires()
 	{
 		return brokenWires;
-	}
-	
-	public int getNewClusterID()
-	{
-		return nextClusterID++;
-	}
-	
-	public void deleteCluster(int id)
-	{
-		//TODO: Remember ID for resuage, its a slot in a shader to be used.
 	}
 }

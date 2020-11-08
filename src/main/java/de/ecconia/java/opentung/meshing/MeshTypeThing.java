@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.libwrap.meshes;
+package de.ecconia.java.opentung.meshing;
 
 public enum MeshTypeThing
 {

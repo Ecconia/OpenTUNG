@@ -40,12 +40,19 @@ void main()
 		value = vector.w;
 	}
 	
-	float r = float((value >> 24) & 255u);
-	float g = float((value >> 16) & 255u);
-	float b = float((value >> 8) & 255u);
-	float a = float(value & 255u);
-	
-	tColor = vec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
+	if(value == 0u)
+	{
+		tColor = vec4(32.0 / 255.0, 32.0 / 255.0, 32.0 / 255.0, 255.0);
+	}
+	else
+	{
+		float r = float((value >> 24) & 255u);
+		float g = float((value >> 16) & 255u);
+		float b = float((value >> 8) & 255u);
+		float a = float(value & 255u);
+		
+		tColor = vec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
+	}
 	
 	vec4 transformedPos = view * vec4(inPosition, 1.0);
 	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement
