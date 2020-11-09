@@ -34,11 +34,9 @@ public class BoardUniverse
 {
 	private final CompBoard rootBoard;
 	
-	private final List<CompBoard> boardsToRender = new ArrayList<>();
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
-	private final List<Component> componentsToRender = new ArrayList<>();
+	private List<Component> componentsToRender = new ArrayList<>(); //TODO: Remove
 	private final List<CompLabel> labelsToRender = new ArrayList<>();
-	private final List<CompSnappingWire> snappingWires = new ArrayList<>();
 	//TODO: remove.
 	public final List<CompWireRaw> brokenWires = new ArrayList<>();
 	
@@ -92,11 +90,6 @@ public class BoardUniverse
 				wire.getConnectorA().addWire(wire);
 				wire.getConnectorB().addWire(wire);
 			}
-			for(Wire snappingWire : snappingWires)
-			{
-				snappingWire.getConnectorA().addWire(snappingWire);
-				snappingWire.getConnectorB().addWire(snappingWire);
-			}
 			
 			//Create blot clusters:
 			for(Component comp : componentsToRender)
@@ -135,6 +128,8 @@ public class BoardUniverse
 					simulation.updateNextTick((Updateable) comp);
 				}
 			}
+			componentsToRender.clear();
+			componentsToRender = null; //End of usage. TODO transfer reference instead of storing it.
 			
 			long startWireProcessing = System.currentTimeMillis();
 			for(CompWireRaw wire : wiresToRender)
@@ -455,8 +450,10 @@ public class BoardUniverse
 						Vector3 direction = other.getConnectionPoint().subtract(connectionPoint).divide(2); //Get half of it.
 						wire.setPosition(connectionPoint.add(direction));
 						wire.setRotation(Quaternion.angleAxis(Math.toDegrees(Math.asin(direction.getX() / direction.length())), Vector3.yp));
-						snappingWires.add(wire);
 						componentsToRender.add(wire);
+						//Do here. Since no reference afterwards.
+						wire.getConnectorA().addWire(wire);
+						wire.getConnectorB().addWire(wire);
 					}
 				}
 				
@@ -467,15 +464,11 @@ public class BoardUniverse
 	
 	private void importComponent(Component component)
 	{
-		if(component instanceof CompBoard)
-		{
-			boardsToRender.add((CompBoard) component);
-		}
-		else if(component instanceof CompWireRaw)
+		if(component instanceof CompWireRaw)
 		{
 			wiresToRender.add((CompWireRaw) component);
 		}
-		else
+		else if(!(component instanceof CompBoard))
 		{
 			componentsToRender.add(component);
 		}
@@ -505,24 +498,9 @@ public class BoardUniverse
 		return wiresToRender;
 	}
 	
-	public List<Component> getComponentsToRender()
-	{
-		return componentsToRender;
-	}
-	
-	public List<CompSnappingWire> getSnappingWires()
-	{
-		return snappingWires;
-	}
-	
 	public List<CompLabel> getLabelsToRender()
 	{
 		return labelsToRender;
-	}
-	
-	public List<CompBoard> getBoardsToRender()
-	{
-		return boardsToRender;
 	}
 	
 	public List<CompWireRaw> getBrokenWires()

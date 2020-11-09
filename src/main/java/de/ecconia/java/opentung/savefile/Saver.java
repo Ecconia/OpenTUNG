@@ -1,7 +1,5 @@
 package de.ecconia.java.opentung.savefile;
 
-import de.ecconia.java.opentung.core.BoardUniverse;
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
@@ -10,10 +8,12 @@ import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.io.ByteWriter;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,34 +23,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
-import javax.swing.JOptionPane;
 
 public class Saver
 {
 	public static void save(BoardUniverse boardWrapper, File saveFile)
 	{
 		//Getting:
-		int componentAmount = boardWrapper.getBoardsToRender().size() + boardWrapper.getComponentsToRender().size() - boardWrapper.getSnappingWires().size();
 		List<CompWireRaw> wires = boardWrapper.getWiresToRender();
 		CompBoard rootBoard = boardWrapper.getRootBoard();
 		
 		//Collecting:
-		int expectedBoards = boardWrapper.getBoardsToRender().size();
-		int boardCount = 0;
-		List<Component> components = new ArrayList<>(componentAmount);
+		List<Component> components = new ArrayList<>();
 		{
 			Queue<Component> pending = new LinkedList<>();
 			pending.add(rootBoard);
 			while(!pending.isEmpty())
 			{
 				Component current = pending.remove();
+				//TODO: Should not happen anymore. Ensure!
 				if(current instanceof CompWireRaw)
 				{
 					continue;
-				}
-				if(current instanceof CompBoard)
-				{
-					boardCount++;
 				}
 				components.add(current);
 				if(current instanceof CompContainer)
@@ -62,26 +55,7 @@ public class Saver
 				}
 			}
 		}
-		boolean broken = false;
-		if(boardCount != expectedBoards)
-		{
-			System.out.println("[OpenTUNG-Saver] BOARDS: " + boardCount + " / " + expectedBoards);
-			broken = true;
-		}
-		if(components.size() != componentAmount)
-		{
-			System.out.println("[OpenTUNG-Saver] COMPONENTS: " + components.size() + " / " + componentAmount);
-			broken = true;
-		}
-		else
-		{
-			System.out.println("[OpenTUNG-Saver] Collected: " + components.size());
-		}
-		if(broken)
-		{
-			saveFile = alternativeFile(saveFile);
-			JOptionPane.showMessageDialog(null, "The calculated component/board amount is not correct, please report this issue. Saving as " + saveFile.getName(), "Issue while saving...", JOptionPane.ERROR_MESSAGE);
-		}
+		System.out.println("[OpenTUNG-Saver] Collected: " + components.size());
 		
 		Map<Component, Integer> componentIDs = new HashMap<>();
 		Map<Connector, Integer> connectorIDs = new HashMap<>();
@@ -214,23 +188,5 @@ public class Saver
 			System.out.println("Error while saving, please report. Continuing.");
 			e.printStackTrace();
 		}
-	}
-	
-	private static File alternativeFile(File original)
-	{
-		File parent = original.getParentFile();
-		String name = original.getName();
-		int ending = name.lastIndexOf('.');
-		//Assume always ending!!!
-		name = name.substring(0, ending) + "-";
-		
-		File newFile = new File(parent, name + ".opentung");
-		while(newFile.exists())
-		{
-			name += '-';
-			newFile = new File(parent, name + ".opentung");
-		}
-		
-		return newFile;
 	}
 }

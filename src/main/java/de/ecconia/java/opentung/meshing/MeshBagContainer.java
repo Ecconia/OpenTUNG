@@ -2,7 +2,9 @@ package de.ecconia.java.opentung.meshing;
 
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
+import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -11,7 +13,9 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.SimulationManager;
+import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -114,9 +118,26 @@ public class MeshBagContainer
 			List<Meshable> meshables = new ArrayList<>();
 			ModelHolder modelHolder = component.getModelHolder();
 			meshables.addAll(modelHolder.getSolid());
+			//Snapping pegs have a colored peg -> thus its solid.
 			if(component instanceof CompSnappingPeg)
 			{
 				meshables.add(component.getModelHolder().getPegModels().get(0));
+				//TBI: Is this an okay way to hack in snapping wires?
+				{
+					Peg mainPeg = component.getPegs().get(0);
+					for(Wire rWire : mainPeg.getWires())
+					{
+						if(rWire instanceof CompSnappingWire)
+						{
+							//Ensure that the wire is only added once (by the snapping peg at side A).
+							if(rWire.getConnectorA().equals(mainPeg))
+							{
+								MeshBag bag = getFreeSolidMesh(16);
+								bag.addComponent((CompSnappingWire) rWire, 16);
+							}
+						}
+					}
+				}
 			}
 			if(!meshables.isEmpty())
 			{
@@ -173,25 +194,31 @@ public class MeshBagContainer
 	
 	public void draw(float[] view)
 	{
-		//BoardMeshes:
-		shaderStorage.getBoardTexture().activate();
-		ShaderProgram boardShader = shaderStorage.getMeshBoardShader();
-		boardShader.use();
-		boardShader.setUniformM4(1, view);
-		boardShader.setUniformM4(2, view);
-		for(MeshBag bag : boardMeshes)
+		if(Settings.drawBoards)
 		{
-			bag.draw();
+			//BoardMeshes:
+			shaderStorage.getBoardTexture().activate();
+			ShaderProgram boardShader = shaderStorage.getMeshBoardShader();
+			boardShader.use();
+			boardShader.setUniformM4(1, view);
+			boardShader.setUniformM4(2, view);
+			for(MeshBag bag : boardMeshes)
+			{
+				bag.draw();
+			}
 		}
 		
-		//SolidMeshes:
-		ShaderProgram solidShader = shaderStorage.getMeshSolidShader();
-		solidShader.use();
-		solidShader.setUniformM4(1, view);
-		solidShader.setUniformM4(2, view);
-		for(MeshBag bag : solidMeshes)
+		if(Settings.drawMaterial)
 		{
-			bag.draw();
+			//SolidMeshes:
+			ShaderProgram solidShader = shaderStorage.getMeshSolidShader();
+			solidShader.use();
+			solidShader.setUniformM4(1, view);
+			solidShader.setUniformM4(2, view);
+			for(MeshBag bag : solidMeshes)
+			{
+				bag.draw();
+			}
 		}
 		
 		//ColorMeshes:

@@ -375,7 +375,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused) -> {
-				board.getComponentsToRender().add(grabbedComponent);
+				//TODO: board.getComponentsToRender().add(grabbedComponent);
 				grabbedComponent.setParent(placement.getParentBoard());
 				placement.getParentBoard().addChild(grabbedComponent);
 				placement.getParentBoard().updateBounds();
@@ -462,7 +462,7 @@ public class RenderPlane3D implements RenderPlane
 				try
 				{
 					gpuTasks.put((ignored) -> {
-						board.getBoardsToRender().add((CompBoard) newComponent);
+						//TODO: board.getBoardsToRender().add((CompBoard) newComponent);
 						placement.getParentBoard().addChild(newComponent);
 						placement.getParentBoard().updateBounds();
 						//TODO: refreshBoardMeshes();
@@ -514,7 +514,7 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
-					board.getComponentsToRender().add(newComponent);
+					//TODO: board.getComponentsToRender().add(newComponent);
 					placement.getParentBoard().addChild(newComponent);
 					placement.getParentBoard().updateBounds();
 					//TODO: refreshComponentMeshes(newComponent instanceof Colorable);
@@ -550,12 +550,12 @@ public class RenderPlane3D implements RenderPlane
 				gpuTasks.add((unused) -> {
 					if(container instanceof CompBoard)
 					{
-						board.getBoardsToRender().remove(container);
+						//TODO: board.getBoardsToRender().remove(container);
 						//TODO: refreshBoardMeshes();
 					}
 					else
 					{
-						board.getComponentsToRender().remove(container);
+						//TODO: board.getComponentsToRender().remove(container);
 						//TODO: refreshComponentMeshes(container instanceof Colorable);
 					}
 					
@@ -611,7 +611,7 @@ public class RenderPlane3D implements RenderPlane
 							sPeg.getPartner().setPartner(null);
 							sPeg.setPartner(null);
 							gpuTasks.add((unused) -> {
-								board.getComponentsToRender().remove(wire);
+								//TODO: board.getComponentsToRender().remove(wire);
 							});
 						});
 						break;
@@ -649,7 +649,7 @@ public class RenderPlane3D implements RenderPlane
 							connectorsToHighlight = new ArrayList<>();
 						}
 					}
-					board.getComponentsToRender().remove(component);
+					//TODO: board.getComponentsToRender().remove(component);
 					for(Wire wire : wiresToRemove)
 					{
 						if(wire.getClass() == HiddenWire.class)
@@ -715,7 +715,7 @@ public class RenderPlane3D implements RenderPlane
 						sPeg.getPartner().setPartner(null);
 						sPeg.setPartner(null);
 						gpuTasks.add((unused) -> {
-							board.getComponentsToRender().remove(wire);
+							//TODO: board.getComponentsToRender().remove(wire);
 							//No mesh updates, since by order one will happen soon anyway.
 						});
 					});
@@ -770,7 +770,7 @@ public class RenderPlane3D implements RenderPlane
 					board.getLabelsToRender().remove(toBeGrabbed);
 				}
 				//Remove from meshes on render thread
-				board.getComponentsToRender().remove(toBeGrabbed);
+				//TODO: board.getComponentsToRender().remove(toBeGrabbed);
 				for(Wire wire : wires)
 				{
 					board.getWiresToRender().remove(wire);
@@ -833,7 +833,7 @@ public class RenderPlane3D implements RenderPlane
 	public void abortGrabbing()
 	{
 		gpuTasks.add((unused) -> {
-			board.getComponentsToRender().add(grabbedComponent);
+			//TODO: board.getComponentsToRender().add(grabbedComponent);
 			for(Wire wire : grabbedWires)
 			{
 				CompWireRaw cwire = (CompWireRaw) wire;
@@ -1103,18 +1103,6 @@ public class RenderPlane3D implements RenderPlane
 			lineShader.use();
 			lineShader.setUniformM4(1, view);
 			Matrix model = new Matrix();
-			if(Settings.drawComponentPositionIndicator)
-			{
-				GenericVAO crossyIndicator = shaderStorage.getCrossyIndicator();
-				for(Component comp : board.getComponentsToRender())
-				{
-					model.identity();
-					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-					lineShader.setUniformM4(2, model.getMat());
-					crossyIndicator.use();
-					crossyIndicator.draw();
-				}
-			}
 			if(Settings.drawWorldAxisIndicator)
 			{
 				GenericVAO axisIndicator = shaderStorage.getAxisIndicator();
