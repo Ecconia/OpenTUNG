@@ -2,7 +2,6 @@ package de.ecconia.java.opentung.meshing;
 
 public enum MeshTypeThing
 {
-	Raycast(false, false, true, 3 + 3),
 	Board(true, true, true, 3 + 3 + 2 + 3),
 	Solid(true, false, true, 3 + 3 + 3),
 	Conductor(true, false, false, 3 + 3),

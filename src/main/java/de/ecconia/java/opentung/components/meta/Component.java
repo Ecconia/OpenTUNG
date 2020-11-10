@@ -111,7 +111,7 @@ public abstract class Component extends Part
 	@Override
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
+		if(!(type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
@@ -131,14 +131,6 @@ public abstract class Component extends Part
 			{
 				amount += getModelHolder().getSolid().size() * ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
 			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
-				}
-			}
 		}
 		
 		return amount;
@@ -147,7 +139,7 @@ public abstract class Component extends Part
 	@Override
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
+		if(!(type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
@@ -166,14 +158,6 @@ public abstract class Component extends Part
 			{
 				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
 			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
-				}
-			}
 		}
 		
 		return amount;
@@ -189,19 +173,11 @@ public abstract class Component extends Part
 				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
-		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
+		else if(type == MeshTypeThing.Solid)
 		{
 			for(Meshable m : getModelHolder().getSolid())
 			{
 				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
 			}
 		}
 		else
@@ -227,14 +203,6 @@ public abstract class Component extends Part
 	public void createOwnBounds()
 	{
 		ownBounds = null; //Reset and don't expand it further.
-		for(Peg peg : pegs)
-		{
-			ownBounds = expandMinMaxBox(ownBounds, peg.getModel());
-		}
-		for(Blot blot : blots)
-		{
-			ownBounds = expandMinMaxBox(ownBounds, blot.getModel());
-		}
 		for(Meshable m : getModelHolder().getSolid())
 		{
 			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);

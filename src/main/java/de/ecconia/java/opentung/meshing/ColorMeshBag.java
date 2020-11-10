@@ -54,6 +54,7 @@ public class ColorMeshBag extends MeshBag
 		int colorableAmount = component.getModelHolder().getColorables().size();
 		for(int i = 0; i < colorableAmount; i++)
 		{
+			//TODO: Simulation thread?
 			ColorMeshBagReference ref = colorable.removeColorMeshBag(i);
 			unusedIDs.add(ref.getIndex());
 		}

@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
@@ -17,17 +18,14 @@ import de.ecconia.java.opentung.util.math.Vector3;
 
 public class CompColorDisplay extends Component implements Updateable, Colorable
 {
-	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelBuilder()
+			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
+			.addColorable(new CubeFull(new Vector3(0.0, 0.48 + 0.15, 0.0), new Vector3(0.3, 0.3, 0.3), Color.displayOff))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.09, 0.1), new Vector3(0.1, 0.18, 0.1), Direction.YPos, Color.circuitOFF))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.24, -0.1), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF))
+			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-ColorDisplay", "0.2.6", CompColorDisplay.class, CompColorDisplay::new);
-	
-	static
-	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.075, 0.0));
-		modelHolder.addColorable(new CubeFull(new Vector3(0.0, 0.48 + 0.15, 0.0), new Vector3(0.3, 0.3, 0.3), Color.displayOff));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.09, 0.1), new Vector3(0.1, 0.18, 0.1), Direction.YPos, Color.circuitOFF));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.24, -0.1), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF));
-	}
 	
 	@Override
 	public ModelHolder getModelHolder()

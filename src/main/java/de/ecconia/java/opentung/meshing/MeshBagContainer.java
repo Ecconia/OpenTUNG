@@ -5,11 +5,8 @@ import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Peg;
-import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -108,87 +105,37 @@ public class MeshBagContainer
 	{
 		if(component instanceof CompBoard)
 		{
-			//TODO: Getter for vertex amount on ModelHolder.
-			MeshBag bag = getFreeBoardMesh(4 * 6);
-			bag.addComponent(component, 4 * 6);
+			int vertexCount = component.getModelHolder().getSolidVerticesAmount();
+			MeshBag bag = getFreeBoardMesh(vertexCount);
+			bag.addComponent(component, vertexCount);
 			component.setSolidMeshBag(bag);
 		}
 		else
 		{
 			//Solid:
-			List<Meshable> meshables = new ArrayList<>();
-			ModelHolder modelHolder = component.getModelHolder();
-			meshables.addAll(modelHolder.getSolid());
-			//Snapping pegs have a colored peg -> thus its solid.
-			if(component instanceof CompSnappingPeg)
+			int vertexCount = component.getModelHolder().getSolidVerticesAmount();
+			if(vertexCount != 0)
 			{
-				meshables.add(component.getModelHolder().getPegModels().get(0));
-				//TBI: Is this an okay way to hack in snapping wires?
-				{
-					Peg mainPeg = component.getPegs().get(0);
-					for(Wire rWire : mainPeg.getWires())
-					{
-						if(rWire instanceof CompSnappingWire)
-						{
-							//Ensure that the wire is only added once (by the snapping peg at side A).
-							if(rWire.getConnectorA().equals(mainPeg))
-							{
-								MeshBag bag = getFreeSolidMesh(16);
-								bag.addComponent((CompSnappingWire) rWire, 16);
-								((CompWireRaw) rWire).setSolidMeshBag(bag);
-							}
-							break;
-						}
-					}
-				}
-			}
-			if(!meshables.isEmpty())
-			{
-				int verticesCount = 0;
-				//TODO: Improve this crap:
-				for(Meshable meshable : meshables)
-				{
-					verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
-				}
-				MeshBag bag = getFreeSolidMesh(verticesCount);
-				bag.addComponent(component, verticesCount);
+				MeshBag bag = getFreeSolidMesh(vertexCount);
+				bag.addComponent(component, vertexCount);
 				component.setSolidMeshBag(bag);
 			}
 			
 			//Color:
-			int colorableAmount = component.getModelHolder().getColorables().size();
-			if(colorableAmount != 0)
+			vertexCount = component.getModelHolder().getColorVerticesAmount();
+			if(vertexCount != 0)
 			{
-				int verticesCount = 0;
-				for(Meshable meshable : component.getModelHolder().getColorables())
-				{
-					verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
-				}
-				ColorMeshBag bag = getFreeColorMesh(verticesCount);
-				bag.addComponent(component, verticesCount, simulation);
+				ColorMeshBag bag = getFreeColorMesh(vertexCount);
+				bag.addComponent(component, vertexCount, simulation);
 				component.setColorMeshBag(bag);
 			}
 			
-			//Snapping pegs, may have a peg, but it is classified as solid.
-			if(component instanceof CompSnappingPeg)
-			{
-				return;
-			}
-			
 			//Conductor:
-			meshables.clear();
-			meshables.addAll(component.getModelHolder().getConductors());
-			meshables.addAll(component.getModelHolder().getPegModels());
-			meshables.addAll(component.getModelHolder().getBlotModels());
-			if(!meshables.isEmpty())
+			vertexCount = component.getModelHolder().getConductorVerticesAmount();
+			if(vertexCount != 0)
 			{
-				int verticesCount = 0;
-				for(Meshable meshable : meshables)
-				{
-					verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
-				}
-				ConductorMeshBag bag = getFreeConductorMesh(verticesCount);
-				bag.addComponent(component, verticesCount, simulation);
+				ConductorMeshBag bag = getFreeConductorMesh(vertexCount);
+				bag.addComponent(component, vertexCount, simulation);
 				component.setConductorMeshBag(bag);
 			}
 		}
@@ -198,68 +145,33 @@ public class MeshBagContainer
 	{
 		if(component instanceof CompBoard)
 		{
-			MeshBag associatedMB = component.getSolidMeshBag();
-			associatedMB.removeComponent(component, 4 * 6);
+			component.getSolidMeshBag().removeComponent(component, component.getModelHolder().getSolidVerticesAmount());
+			component.setSolidMeshBag(null);
 		}
 		else
 		{
-			//TODO: OMG!!!! COUNT THE VERTICES ONCE!
 			//Solid:
-			MeshBag solidMeshBag = component.getSolidMeshBag();
-			if(solidMeshBag != null)
+			int vertexCount = component.getModelHolder().getSolidVerticesAmount();
+			if(vertexCount != 0)
 			{
-				List<Meshable> meshables = new ArrayList<>();
-				ModelHolder modelHolder = component.getModelHolder();
-				meshables.addAll(modelHolder.getSolid());
-				//Snapping pegs have a colored peg -> thus its solid.
-				if(component instanceof CompSnappingPeg)
-				{
-					meshables.add(component.getModelHolder().getPegModels().get(0));
-				}
-				if(!meshables.isEmpty())
-				{
-					int verticesCount = 0;
-					//TODO: Improve this crap:
-					for(Meshable meshable : meshables)
-					{
-						verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
-					}
-					component.getSolidMeshBag().removeComponent(component, verticesCount);
-					component.setSolidMeshBag(null);
-				}
+				component.getSolidMeshBag().removeComponent(component, vertexCount);
+				component.setSolidMeshBag(null);
 			}
 			
 			//Color:
-			ColorMeshBag colorMeshBag = component.getColorMeshBag();
-			if(colorMeshBag != null)
+			vertexCount = component.getModelHolder().getColorVerticesAmount();
+			if(vertexCount != 0)
 			{
-				int verticesCount = 0;
-				for(Meshable meshable : component.getModelHolder().getColorables())
-				{
-					verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
-				}
-				colorMeshBag.removeComponent(component, verticesCount);
+				component.getColorMeshBag().removeComponent(component, vertexCount);
 				component.setColorMeshBag(null);
 			}
 			
 			//Conductor:
-			ConductorMeshBag conductorMeshBag = component.getConductorMeshBag();
-			if(conductorMeshBag != null)
+			vertexCount = component.getModelHolder().getConductorVerticesAmount();
+			if(vertexCount != 0)
 			{
-				List<Meshable> meshables = new ArrayList<>();
-				meshables.addAll(component.getModelHolder().getConductors());
-				meshables.addAll(component.getModelHolder().getPegModels());
-				meshables.addAll(component.getModelHolder().getBlotModels());
-				if(!meshables.isEmpty())
-				{
-					int verticesCount = 0;
-					for(Meshable meshable : meshables)
-					{
-						verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
-					}
-					conductorMeshBag.removeComponent(component, verticesCount, simulation);
-					component.setConductorMeshBag(null);
-				}
+				component.getConductorMeshBag().removeComponent(component, vertexCount, simulation);
+				component.setConductorMeshBag(null);
 			}
 		}
 	}
@@ -343,6 +255,25 @@ public class MeshBagContainer
 			for(Component child : ((CompContainer) component).getChildren())
 			{
 				addRecursive(child, simulation);
+			}
+		}
+		else if(component instanceof CompSnappingPeg)
+		{
+			Peg mainPeg = component.getPegs().get(0);
+			for(Wire rWire : mainPeg.getWires())
+			{
+				if(rWire instanceof CompSnappingWire)
+				{
+					//Ensure that the wire is only added once (by the snapping peg at side A).
+					if(rWire.getConnectorA().equals(mainPeg))
+					{
+						addComponent((CompSnappingWire) rWire, simulation);
+//						MeshBag bag = getFreeSolidMesh(16);
+//						bag.addComponent((CompSnappingWire) rWire, 16);
+//						((CompWireRaw) rWire).setSolidMeshBag(bag);
+					}
+					break;
+				}
 			}
 		}
 	}

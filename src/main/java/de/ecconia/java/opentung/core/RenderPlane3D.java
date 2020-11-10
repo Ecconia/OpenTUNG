@@ -937,6 +937,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		CompBoard board = (CompBoard) part;
 		
+		//TODO: Another ungeneric access
 		CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
 		Vector3 position = board.getPosition();
 		Quaternion rotation = board.getRotation();
@@ -1217,6 +1218,7 @@ public class RenderPlane3D implements RenderPlane
 				visibleCube.draw();
 			}
 			
+			//TODO: Use getConductors as reference and somehow get the state of it.
 			for(Blot blot : grabbedComponent.getBlots())
 			{
 				CubeFull c = blot.getModel();
@@ -1237,6 +1239,11 @@ public class RenderPlane3D implements RenderPlane
 			for(Peg peg : grabbedComponent.getPegs())
 			{
 				CubeFull c = peg.getModel();
+				//Skip snapping pegs.
+				if(Color.snappingPeg.asVector().equals(c.getColor()))
+				{
+					continue;
+				}
 				m.identity();
 				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
 				m.multiply(rotMat);

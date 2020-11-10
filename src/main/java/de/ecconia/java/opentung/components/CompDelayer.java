@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
@@ -10,28 +9,27 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.util.io.ByteReader;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class CompDelayer extends Component implements Powerable, Updateable, CustomData
 {
-	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelBuilder()
+			.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0))
+			.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material))
+			//TODO: Positions of the rotated components is more or less wrong.
+			.addPeg(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xp), new Vector3(0.0, 0.285, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg, Color.circuitOFF))
+			.addBlot(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xn), new Vector3(0.0, 0.195, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg, Color.circuitOFF))
+			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Delayer", "0.2.6", CompDelayer.class, CompDelayer::new);
-	
-	static
-	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0));
-		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		//TODO: Positions of the rotated components is more or less wrong.
-		modelHolder.addPeg(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xp), new Vector3(0.0, 0.285, 0.0), new Vector3(0.09, 0.24, 0.09), Direction.YNeg, Color.circuitOFF));
-		modelHolder.addBlot(new CubeOpenRotated(Quaternion.angleAxis(45, Vector3.xn), new Vector3(0.0, 0.195, 0.0), new Vector3(0.15, 0.12, 0.15), Direction.YNeg, Color.circuitOFF));
-	}
 	
 	@Override
 	public ModelHolder getModelHolder()

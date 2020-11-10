@@ -1,23 +1,21 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.util.math.Vector3;
 
 public class CompPeg extends Component
 {
-	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelBuilder()
+			.setPlacementOffset(new Vector3(0.0, +0.15 + 0.075, 0.0))
+			.addPeg(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), Color.circuitOFF))
+			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Peg", "0.2.6", CompPeg.class, CompPeg::new);
-	
-	static
-	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, +0.15 + 0.075, 0.0));
-		modelHolder.addPeg(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.09, 0.3, 0.09), Color.circuitOFF));
-	}
 	
 	@Override
 	public ModelHolder getModelHolder()

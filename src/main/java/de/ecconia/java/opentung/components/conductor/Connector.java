@@ -74,7 +74,7 @@ public abstract class Connector extends Part implements Clusterable
 	@Override
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Conductor)
 		{
 			return model.getFacesCount() * 4 * type.getFloatCount();
 		}
@@ -87,7 +87,7 @@ public abstract class Connector extends Part implements Clusterable
 	@Override
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Conductor)
 		{
 			return model.getFacesCount() * 4 * (2 * 3);
 		}
@@ -100,7 +100,7 @@ public abstract class Connector extends Part implements Clusterable
 	@Override
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesOffset, int[] indices, ModelHolder.IntHolder indicesOffset, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Conductor)
 		{
 			model.generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getParent().getModelHolder().getPlacementOffset(), type);
 		}
