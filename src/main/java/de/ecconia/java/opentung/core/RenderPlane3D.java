@@ -374,7 +374,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused) -> {
-				//TODO: board.getComponentsToRender().add(grabbedComponent);
+				worldMesh.addComponent(grabbedComponent, board.getSimulation());
 				grabbedComponent.setParent(placement.getParentBoard());
 				placement.getParentBoard().addChild(grabbedComponent);
 				placement.getParentBoard().updateBounds();
@@ -382,14 +382,13 @@ public class RenderPlane3D implements RenderPlane
 				{
 					CompWireRaw cwire = (CompWireRaw) wire;
 					board.getWiresToRender().add(cwire);
+					worldMesh.addComponent(cwire, board.getSimulation());
 					wireRayCaster.addWire(cwire);
 				}
 				if(grabbedComponent instanceof CompLabel)
 				{
 					board.getLabelsToRender().add((CompLabel) grabbedComponent);
 				}
-				
-				//TODO: refreshComponentMeshes(grabbedComponent instanceof Colorable);
 				
 				grabbedComponent = null;
 				grabbedWires = null;
@@ -710,8 +709,7 @@ public class RenderPlane3D implements RenderPlane
 						sPeg.getPartner().setPartner(null);
 						sPeg.setPartner(null);
 						gpuTasks.add((unused) -> {
-							//TODO: board.getComponentsToRender().remove(wire);
-							//No mesh updates, since by order one will happen soon anyway.
+							worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
 						});
 					});
 					break;
@@ -765,10 +763,11 @@ public class RenderPlane3D implements RenderPlane
 					board.getLabelsToRender().remove(toBeGrabbed);
 				}
 				//Remove from meshes on render thread
-				//TODO: board.getComponentsToRender().remove(toBeGrabbed);
+				worldMesh.removeComponent(toBeGrabbed, board.getSimulation());
 				for(Wire wire : wires)
 				{
 					board.getWiresToRender().remove(wire);
+					worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					wireRayCaster.removeWire((CompWireRaw) wire);
 				}
 				if(toBeGrabbed.getParent() != null)
@@ -777,7 +776,6 @@ public class RenderPlane3D implements RenderPlane
 					parent.remove(toBeGrabbed);
 					parent.updateBounds();
 				}
-				//TODO: refreshComponentMeshes(toBeGrabbed instanceof Colorable);
 				//Create construct to store the grabbed content (to be drawn).
 				
 				grabRotation = 0;
@@ -811,6 +809,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused2) -> {
+				//Thats pretty much it. Just make the clipboard invisible:
 				grabbedWires = null;
 				grabbedComponent = null;
 				
@@ -818,9 +817,6 @@ public class RenderPlane3D implements RenderPlane
 				{
 					((CompLabel) compCopy).unload();
 				}
-				System.out.println("[MeshDebug] Update:");
-				//TODO: conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
-				System.out.println("[MeshDebug] Done.");
 			});
 		});
 	}
@@ -833,6 +829,7 @@ public class RenderPlane3D implements RenderPlane
 			{
 				CompWireRaw cwire = (CompWireRaw) wire;
 				board.getWiresToRender().add(cwire);
+				worldMesh.addComponent(cwire, board.getSimulation());
 				wireRayCaster.addWire(cwire);
 			}
 			if(grabbedComponent instanceof CompLabel)
@@ -846,7 +843,7 @@ public class RenderPlane3D implements RenderPlane
 				parent.addChild(grabbedComponent);
 				parent.updateBounds();
 			}
-			// TODO: refreshComponentMeshes(grabbedComponent instanceof Colorable);
+			worldMesh.addComponent(grabbedComponent, board.getSimulation());
 			
 			grabbedComponent = null;
 			grabbedWires = null;
