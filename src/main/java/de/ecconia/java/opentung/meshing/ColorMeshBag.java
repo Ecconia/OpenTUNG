@@ -47,6 +47,20 @@ public class ColorMeshBag extends MeshBag
 		super.addComponent(component, verticesAmount);
 	}
 	
+	@Override
+	public void removeComponent(Component component, int verticesAmount)
+	{
+		Colorable colorable = (Colorable) component;
+		int colorableAmount = component.getModelHolder().getColorables().size();
+		for(int i = 0; i < colorableAmount; i++)
+		{
+			ColorMeshBagReference ref = colorable.removeColorMeshBag(i);
+			unusedIDs.add(ref.getIndex());
+		}
+		
+		super.removeComponent(component, verticesAmount);
+	}
+	
 	private int getFreeIndex()
 	{
 		Integer id = unusedIDs.poll();

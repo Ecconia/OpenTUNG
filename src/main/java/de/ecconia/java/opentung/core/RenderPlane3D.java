@@ -264,8 +264,7 @@ public class RenderPlane3D implements RenderPlane
 						//Add the wire to the mesh sources
 						board.getWiresToRender().add(newWire);
 						wireRayCaster.addWire(newWire);
-						
-						//TODO: refreshWireMeshes();
+						worldMesh.addComponent(newWire, board.getSimulation());
 					});
 				}
 				catch(InterruptedException e)
@@ -462,10 +461,9 @@ public class RenderPlane3D implements RenderPlane
 				try
 				{
 					gpuTasks.put((ignored) -> {
-						//TODO: board.getBoardsToRender().add((CompBoard) newComponent);
 						placement.getParentBoard().addChild(newComponent);
 						placement.getParentBoard().updateBounds();
-						//TODO: refreshBoardMeshes();
+						worldMesh.addComponent(newComponent, board.getSimulation());
 					});
 				}
 				catch(InterruptedException e)
@@ -514,10 +512,9 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
-					//TODO: board.getComponentsToRender().add(newComponent);
 					placement.getParentBoard().addChild(newComponent);
 					placement.getParentBoard().updateBounds();
-					//TODO: refreshComponentMeshes(newComponent instanceof Colorable);
+					worldMesh.addComponent(newComponent, board.getSimulation());
 				});
 			}
 			catch(InterruptedException e)
@@ -550,13 +547,11 @@ public class RenderPlane3D implements RenderPlane
 				gpuTasks.add((unused) -> {
 					if(container instanceof CompBoard)
 					{
-						//TODO: board.getBoardsToRender().remove(container);
-						//TODO: refreshBoardMeshes();
+						worldMesh.removeComponent(container, board.getSimulation());
 					}
 					else
 					{
-						//TODO: board.getComponentsToRender().remove(container);
-						//TODO: refreshComponentMeshes(container instanceof Colorable);
+						worldMesh.removeComponent(container, board.getSimulation());
 					}
 					
 					if(container.getParent() != null)
@@ -592,7 +587,7 @@ public class RenderPlane3D implements RenderPlane
 					}
 					board.getWiresToRender().remove(wireToDelete);
 					wireRayCaster.removeWire(wireToDelete);
-					//TODO: refreshWireMeshes();
+					worldMesh.removeComponent(wireToDelete, board.getSimulation());
 				});
 			});
 		}
@@ -611,7 +606,7 @@ public class RenderPlane3D implements RenderPlane
 							sPeg.getPartner().setPartner(null);
 							sPeg.setPartner(null);
 							gpuTasks.add((unused) -> {
-								//TODO: board.getComponentsToRender().remove(wire);
+								worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
 							});
 						});
 						break;
@@ -649,7 +644,6 @@ public class RenderPlane3D implements RenderPlane
 							connectorsToHighlight = new ArrayList<>();
 						}
 					}
-					//TODO: board.getComponentsToRender().remove(component);
 					for(Wire wire : wiresToRemove)
 					{
 						if(wire.getClass() == HiddenWire.class)
@@ -658,6 +652,7 @@ public class RenderPlane3D implements RenderPlane
 						}
 						board.getWiresToRender().remove(wire);
 						wireRayCaster.removeWire((CompWireRaw) wire);
+						worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					}
 					if(component instanceof CompLabel)
 					{
@@ -672,7 +667,7 @@ public class RenderPlane3D implements RenderPlane
 						parent.updateBounds();
 					}
 					
-					//TODO: refreshComponentMeshes(component instanceof Colorable);
+					worldMesh.removeComponent(component, board.getSimulation());
 				});
 			});
 		}

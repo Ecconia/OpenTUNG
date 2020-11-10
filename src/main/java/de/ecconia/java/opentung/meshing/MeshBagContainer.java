@@ -111,6 +111,7 @@ public class MeshBagContainer
 			//TODO: Getter for vertex amount on ModelHolder.
 			MeshBag bag = getFreeBoardMesh(4 * 6);
 			bag.addComponent(component, 4 * 6);
+			component.setSolidMeshBag(bag);
 		}
 		else
 		{
@@ -134,7 +135,9 @@ public class MeshBagContainer
 							{
 								MeshBag bag = getFreeSolidMesh(16);
 								bag.addComponent((CompSnappingWire) rWire, 16);
+								((CompWireRaw) rWire).setSolidMeshBag(bag);
 							}
+							break;
 						}
 					}
 				}
@@ -149,6 +152,7 @@ public class MeshBagContainer
 				}
 				MeshBag bag = getFreeSolidMesh(verticesCount);
 				bag.addComponent(component, verticesCount);
+				component.setSolidMeshBag(bag);
 			}
 			
 			//Color:
@@ -162,6 +166,7 @@ public class MeshBagContainer
 				}
 				ColorMeshBag bag = getFreeColorMesh(verticesCount);
 				bag.addComponent(component, verticesCount, simulation);
+				component.setColorMeshBag(bag);
 			}
 			
 			//Snapping pegs, may have a peg, but it is classified as solid.
@@ -184,12 +189,79 @@ public class MeshBagContainer
 				}
 				ConductorMeshBag bag = getFreeConductorMesh(verticesCount);
 				bag.addComponent(component, verticesCount, simulation);
+				component.setConductorMeshBag(bag);
 			}
 		}
 	}
 	
-	public void removeComponent(Component component)
+	public void removeComponent(Component component, SimulationManager simulation)
 	{
+		if(component instanceof CompBoard)
+		{
+			MeshBag associatedMB = component.getSolidMeshBag();
+			associatedMB.removeComponent(component, 4 * 6);
+		}
+		else
+		{
+			//TODO: OMG!!!! COUNT THE VERTICES ONCE!
+			//Solid:
+			MeshBag solidMeshBag = component.getSolidMeshBag();
+			if(solidMeshBag != null)
+			{
+				List<Meshable> meshables = new ArrayList<>();
+				ModelHolder modelHolder = component.getModelHolder();
+				meshables.addAll(modelHolder.getSolid());
+				//Snapping pegs have a colored peg -> thus its solid.
+				if(component instanceof CompSnappingPeg)
+				{
+					meshables.add(component.getModelHolder().getPegModels().get(0));
+				}
+				if(!meshables.isEmpty())
+				{
+					int verticesCount = 0;
+					//TODO: Improve this crap:
+					for(Meshable meshable : meshables)
+					{
+						verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
+					}
+					component.getSolidMeshBag().removeComponent(component, verticesCount);
+					component.setSolidMeshBag(null);
+				}
+			}
+			
+			//Color:
+			ColorMeshBag colorMeshBag = component.getColorMeshBag();
+			if(colorMeshBag != null)
+			{
+				int verticesCount = 0;
+				for(Meshable meshable : component.getModelHolder().getColorables())
+				{
+					verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
+				}
+				colorMeshBag.removeComponent(component, verticesCount);
+				component.setColorMeshBag(null);
+			}
+			
+			//Conductor:
+			ConductorMeshBag conductorMeshBag = component.getConductorMeshBag();
+			if(conductorMeshBag != null)
+			{
+				List<Meshable> meshables = new ArrayList<>();
+				meshables.addAll(component.getModelHolder().getConductors());
+				meshables.addAll(component.getModelHolder().getPegModels());
+				meshables.addAll(component.getModelHolder().getBlotModels());
+				if(!meshables.isEmpty())
+				{
+					int verticesCount = 0;
+					for(Meshable meshable : meshables)
+					{
+						verticesCount += ((CubeFull) meshable).getFacesCount() * 4;
+					}
+					conductorMeshBag.removeComponent(component, verticesCount, simulation);
+					component.setConductorMeshBag(null);
+				}
+			}
+		}
 	}
 	
 	public void draw(float[] view)

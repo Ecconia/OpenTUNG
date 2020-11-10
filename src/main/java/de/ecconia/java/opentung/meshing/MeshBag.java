@@ -29,6 +29,13 @@ public abstract class MeshBag
 		meshBagContainer.setDirty(this);
 	}
 	
+	public void removeComponent(Component component, int verticesAmount)
+	{
+		components.remove(component);
+		this.verticesAmount -= verticesAmount;
+		meshBagContainer.setDirty(this);
+	}
+	
 	public int getVerticesAmount()
 	{
 		return verticesAmount;

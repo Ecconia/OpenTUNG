@@ -107,6 +107,32 @@ public class ConductorMeshBag extends MeshBag
 		super.addComponent(component, verticesAmount);
 	}
 	
+	public void removeComponent(Component component, int verticesAmount, SimulationManager simulation)
+	{
+		List<Cluster> componentClusters = collectClusters(component);
+		for(Cluster cluster : componentClusters)
+		{
+			if(cluster != null)
+			{
+				ClusterInfo ci = clusterInfos.get(cluster);
+				if(ci != null)
+				{
+					ci.decrementReference();
+					if(ci.getUsage() == 0)
+					{
+						simulation.updateJobNextTickThreadSafe((unused) -> {
+							cluster.removeMeshReference(this);
+							unusedIDs.add(ci.getIndex());
+						});
+						clusterInfos.remove(cluster);
+					}
+				}
+			}
+		}
+		
+		super.removeComponent(component, verticesAmount);
+	}
+	
 	private List<Cluster> collectClusters(Component component)
 	{
 		List<Cluster> componentClusters = new ArrayList<>();
@@ -285,6 +311,11 @@ public class ConductorMeshBag extends MeshBag
 		public void incrementReference()
 		{
 			usage++;
+		}
+		
+		public void decrementReference()
+		{
+			usage--;
 		}
 	}
 	

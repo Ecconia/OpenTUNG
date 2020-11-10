@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.ConductorMeshBagReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,5 +73,11 @@ public abstract class Cluster implements Updateable
 	public void addMeshReference(ConductorMeshBagReference meshBagReference)
 	{
 		conductorMeshBags.add(meshBagReference);
+	}
+	
+	public void removeMeshReference(ConductorMeshBag conductorMeshBagOriginal)
+	{
+		//TODO: Store and remove the reference instead.
+		conductorMeshBags.removeIf(meshBagReference -> meshBagReference.getConductorMeshBag() == conductorMeshBagOriginal);
 	}
 }

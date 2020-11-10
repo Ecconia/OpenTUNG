@@ -15,4 +15,9 @@ public class ConductorMeshBagReference
 	{
 		conductorMeshBag.setActive(id, active);
 	}
+	
+	public ConductorMeshBag getConductorMeshBag()
+	{
+		return conductorMeshBag;
+	}
 }

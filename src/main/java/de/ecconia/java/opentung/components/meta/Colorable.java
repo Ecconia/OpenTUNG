@@ -9,6 +9,8 @@ public interface Colorable
 	
 	ColorMeshBagReference getColorMeshBag(int id);
 	
+	ColorMeshBagReference removeColorMeshBag(int id);
+	
 	Color getCurrentColor(int id);
 	
 	void updateColors();

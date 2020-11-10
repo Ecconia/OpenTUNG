@@ -80,6 +80,14 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 	}
 	
 	@Override
+	public ColorMeshBagReference removeColorMeshBag(int id)
+	{
+		ColorMeshBagReference ret = colorMeshBag;
+		colorMeshBag = null;
+		return ret;
+	}
+	
+	@Override
 	public void updateColors()
 	{
 		ColorMeshBagReference colorMeshBag = this.colorMeshBag;

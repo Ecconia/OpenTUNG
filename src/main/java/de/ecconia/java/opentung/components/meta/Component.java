@@ -1,13 +1,16 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
+import de.ecconia.java.opentung.meshing.ColorMeshBag;
+import de.ecconia.java.opentung.meshing.ConductorMeshBag;
+import de.ecconia.java.opentung.meshing.MeshBag;
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
+import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
@@ -341,5 +344,43 @@ public abstract class Component extends Part
 			}
 		}
 		return null;
+	}
+	
+	//Meshing:
+	
+	private MeshBag solidMeshBag;
+	
+	public MeshBag getSolidMeshBag()
+	{
+		return solidMeshBag;
+	}
+	
+	public void setSolidMeshBag(MeshBag solidMeshBag)
+	{
+		this.solidMeshBag = solidMeshBag;
+	}
+	
+	private ConductorMeshBag conductorMeshBag;
+	
+	public ConductorMeshBag getConductorMeshBag()
+	{
+		return conductorMeshBag;
+	}
+	
+	public void setConductorMeshBag(ConductorMeshBag conductorMeshBag)
+	{
+		this.conductorMeshBag = conductorMeshBag;
+	}
+	
+	private ColorMeshBag colorMeshBag;
+	
+	public ColorMeshBag getColorMeshBag()
+	{
+		return colorMeshBag;
+	}
+	
+	public void setColorMeshBag(ColorMeshBag colorMeshBag)
+	{
+		this.colorMeshBag = colorMeshBag;
 	}
 }
