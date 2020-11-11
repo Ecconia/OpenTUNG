@@ -71,7 +71,7 @@ public class ColorMeshBag extends MeshBag
 		}
 		
 		int newIndex = highestIndex++;
-		if(newIndex > colors.length)
+		if(newIndex >= colors.length)
 		{
 			colors = new int[colors.length + 4];
 			dirty = true;
