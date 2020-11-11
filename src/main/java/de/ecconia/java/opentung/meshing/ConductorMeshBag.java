@@ -29,8 +29,6 @@ public class ConductorMeshBag extends MeshBag
 	
 	boolean needsInitialFix;
 	
-	boolean dirty = false;
-	
 	public ConductorMeshBag(MeshBagContainer meshBagContainer)
 	{
 		super(meshBagContainer);
@@ -64,7 +62,7 @@ public class ConductorMeshBag extends MeshBag
 		{
 			//Brute force expand by 4.
 			clusters = new int[clusters.length + 4];
-			dirty = true;
+			meshBagContainer.addDirtyConductorMB(this);
 		}
 		return newIndex;
 	}
@@ -85,7 +83,7 @@ public class ConductorMeshBag extends MeshBag
 				if(ci == null)
 				{
 					int index = getFreeIndex();
-					ci = new ClusterInfo(index);
+					ci = new ClusterInfo(index, cluster);
 					clusterInfos.put(cluster, ci);
 					ConductorMeshBagReference newReference = new ConductorMeshBagReference(this, index);
 					simulation.updateJobNextTickThreadSafe((unused) -> {
@@ -169,7 +167,7 @@ public class ConductorMeshBag extends MeshBag
 						if(ci == null)
 						{
 							int index = getFreeIndex();
-							ci = new ClusterInfo(index);
+							ci = new ClusterInfo(index, cluster);
 							clusterInfos.put(cluster, ci);
 							ConductorMeshBagReference newReference = new ConductorMeshBagReference(this, index);
 							simulation.updateJobNextTickThreadSafe((unused) -> {
@@ -286,15 +284,28 @@ public class ConductorMeshBag extends MeshBag
 		}
 	}
 	
+	public void refresh(SimulationManager simulation)
+	{
+		List<ClusterInfo> clusters = new ArrayList<>(clusterInfos.values());
+		simulation.updateJobNextTickThreadSafe((unused) -> {
+			for(ClusterInfo ci : clusters)
+			{
+				setActive(ci.getIndex(), ci.getCluster().isActive());
+			}
+		});
+	}
+	
 	private static class ClusterInfo
 	{
 		private final int index;
+		private final Cluster cluster;
 		
 		private int usage;
 		
-		public ClusterInfo(int index)
+		public ClusterInfo(int index, Cluster cluster)
 		{
 			this.index = index;
+			this.cluster = cluster;
 			usage = 1;
 		}
 		
@@ -306,6 +317,11 @@ public class ConductorMeshBag extends MeshBag
 		public int getUsage()
 		{
 			return usage;
+		}
+		
+		public Cluster getCluster()
+		{
+			return cluster;
 		}
 		
 		public void incrementReference()

@@ -7,7 +7,9 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.SimulationManager;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import org.lwjgl.opengl.GL30;
 
@@ -17,8 +19,6 @@ public class ColorMeshBag extends MeshBag
 	
 	private int[] colors = new int[4]; //Maximum: (4096 - 32) / 4 * 4
 	private int highestIndex = 0;
-	
-	private boolean dirty = false;
 	
 	public ColorMeshBag(MeshBagContainer meshBagContainer)
 	{
@@ -74,7 +74,7 @@ public class ColorMeshBag extends MeshBag
 		if(newIndex >= colors.length)
 		{
 			colors = new int[colors.length + 4];
-			dirty = true;
+			meshBagContainer.addDirtyColorMB(this);
 		}
 		return newIndex;
 	}
@@ -86,16 +86,13 @@ public class ColorMeshBag extends MeshBag
 	
 	public void refresh(SimulationManager simulationManager)
 	{
-		//Restore color array data:
-		if(dirty)
-		{
-			simulationManager.updateJobNextTickThreadSafe((unused) -> {
-				for(Component component : components)
-				{
-					((Colorable) component).updateColors();
-				}
-			});
-		}
+		List<Component> components = new ArrayList<>(this.components);
+		simulationManager.updateJobNextTickThreadSafe((unused) -> {
+			for(Component component : components)
+			{
+				((Colorable) component).updateColors();
+			}
+		});
 	}
 	
 	public void rebuild()

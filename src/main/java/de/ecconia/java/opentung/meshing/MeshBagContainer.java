@@ -26,6 +26,7 @@ public class MeshBagContainer
 	private final ShaderStorage shaderStorage;
 	private final Set<MeshBag> dirtyMeshBags = new HashSet<>();
 	private final Set<ConductorMeshBag> dirtyConductorMeshBags = new HashSet<>();
+	private final Set<ColorMeshBag> dirtyColorMeshBags = new HashSet<>();
 	
 	private final List<MeshBag> boardMeshes = new ArrayList<>();
 	private final List<MeshBag> solidMeshes = new ArrayList<>();
@@ -278,23 +279,48 @@ public class MeshBagContainer
 		}
 	}
 	
+	//Refresh/Update mechanisms:
+	
 	protected void setDirty(MeshBag bag)
 	{
 		dirtyMeshBags.add(bag);
 	}
 	
+	public void addDirtyConductorMB(ConductorMeshBag conductorMeshBag)
+	{
+		dirtyConductorMeshBags.add(conductorMeshBag);
+	}
+	
+	public void addDirtyColorMB(ColorMeshBag colorMeshBag)
+	{
+		dirtyColorMeshBags.add(colorMeshBag);
+	}
+	
 	public void rebuildDirty(SimulationManager simulationManager)
 	{
-		for(MeshBag bag : dirtyMeshBags)
+		if(!dirtyConductorMeshBags.isEmpty())
 		{
-			bag.rebuild();
+			for(ConductorMeshBag bag : dirtyConductorMeshBags)
+			{
+				bag.refresh(simulationManager);
+			}
+			dirtyConductorMeshBags.clear();
 		}
-		dirtyMeshBags.clear();
-		//TODO: No don't check every tick - why would I?
-		//Check if simulation needs to trigger updates:
-		for(ColorMeshBag bag : colorMeshes)
+		if(!dirtyColorMeshBags.isEmpty())
 		{
-			bag.refresh(simulationManager);
+			for(ColorMeshBag bag : dirtyColorMeshBags)
+			{
+				bag.refresh(simulationManager);
+			}
+			dirtyColorMeshBags.clear();
+		}
+		if(!dirtyMeshBags.isEmpty())
+		{
+			for(MeshBag bag : dirtyMeshBags)
+			{
+				bag.rebuild();
+			}
+			dirtyMeshBags.clear();
 		}
 	}
 }

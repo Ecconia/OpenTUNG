@@ -7,8 +7,7 @@ import java.util.List;
 
 public abstract class MeshBag
 {
-	private final MeshBagContainer meshBagContainer;
-	
+	protected final MeshBagContainer meshBagContainer;
 	protected final List<Component> components;
 	
 	protected GenericVAO vao;
