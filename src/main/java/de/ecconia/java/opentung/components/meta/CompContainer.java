@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +33,18 @@ public abstract class CompContainer extends Component
 		{
 			//Cast, cause if this is not a part, this must be a container.
 			((CompContainer) getParent()).updateBounds();
+		}
+	}
+	
+	@Override
+	public void updateBoundsDeep()
+	{
+		createOwnBounds();
+		bounds = new MinMaxBox(getOwnBounds());
+		for(Component child : children)
+		{
+			child.updateBoundsDeep();
+			bounds.expand(child.getBounds());
 		}
 	}
 	

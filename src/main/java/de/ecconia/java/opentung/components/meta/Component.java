@@ -38,6 +38,11 @@ public abstract class Component extends Part
 		return ownBounds;
 	}
 	
+	public void updateBoundsDeep()
+	{
+		createOwnBounds();
+	}
+	
 	//Connector:
 	protected final List<Peg> pegs = new ArrayList<>();
 	protected final List<Blot> blots = new ArrayList<>();

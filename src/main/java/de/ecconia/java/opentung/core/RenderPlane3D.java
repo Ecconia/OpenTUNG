@@ -377,6 +377,7 @@ public class RenderPlane3D implements RenderPlane
 				worldMesh.addComponent(grabbedComponent, board.getSimulation());
 				grabbedComponent.setParent(placement.getParentBoard());
 				placement.getParentBoard().addChild(grabbedComponent);
+				grabbedComponent.updateBoundsDeep();
 				placement.getParentBoard().updateBounds();
 				for(Wire wire : grabbedWires)
 				{
