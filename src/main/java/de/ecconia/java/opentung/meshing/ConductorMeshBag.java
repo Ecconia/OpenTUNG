@@ -88,7 +88,7 @@ public class ConductorMeshBag extends MeshBag
 					ConductorMeshBagReference newReference = new ConductorMeshBagReference(this, index);
 					simulation.updateJobNextTickThreadSafe((unused) -> {
 						cluster.addMeshReference(newReference);
-						cluster.updateState();
+						cluster.updateState(); //TODO: Should this update all meshes? I don't think so!
 					});
 				}
 				else
@@ -295,6 +295,78 @@ public class ConductorMeshBag extends MeshBag
 		});
 	}
 	
+	public void handleUpdates(List<ConductorMBUpdate> updates, SimulationManager simulation)
+	{
+		HashMap<Cluster, Integer> clusterCounts = new HashMap<>();
+		for(ConductorMBUpdate value : updates)
+		{
+			Integer integer = clusterCounts.get(value.getFrom());
+			int previously = integer == null ? -1 : integer - 1;
+			clusterCounts.put(value.getFrom(), previously);
+			integer = clusterCounts.get(value.getTo());
+			previously = integer == null ? +1 : integer + 1;
+			clusterCounts.put(value.getTo(), previously);
+		}
+		
+		for(Map.Entry<Cluster, Integer> entry : clusterCounts.entrySet())
+		{
+			int usages = entry.getValue();
+			if(usages == 0)
+			{
+				continue;
+			}
+			Cluster cluster = entry.getKey();
+			ClusterInfo ci = clusterInfos.get(cluster);
+			if(ci == null)
+			{
+				if(usages < 0)
+				{
+					System.out.println("[ERROR] Attempted to remove cluster from ConductorMeshBag, but the cluster was not referenced in it!");
+				}
+				else
+				{
+					//Create cluster-info:
+					int index = getFreeIndex();
+					ci = new ClusterInfo(index, cluster, usages);
+					clusterInfos.put(cluster, ci);
+					ConductorMeshBagReference newReference = new ConductorMeshBagReference(this, index);
+					simulation.updateJobNextTickThreadSafe((unused) -> {
+						cluster.addMeshReference(newReference);
+						cluster.updateState(); //TODO: Should this update all meshes? I don't think so!
+					});
+				}
+			}
+			else
+			{
+				if(usages > 0)
+				{
+					ci.incrementReference(usages);
+				}
+				else
+				{
+					ci.decrementReference(usages);
+					int newUsage = ci.getUsage();
+					if(newUsage < 0)
+					{
+						System.out.println("[ERROR] Attempted to remove cluster from ConductorMeshBag, but the cluster didn't have that many usages!");
+					}
+					if(newUsage <= 0)
+					{
+						ClusterInfo finalCi = ci;
+						simulation.updateJobNextTickThreadSafe((unused) -> {
+							cluster.removeMeshReference(this);
+							unusedIDs.add(finalCi.getIndex());
+						});
+						clusterInfos.remove(cluster);
+					}
+				}
+			}
+		}
+		
+		//There is probably always a need to rebuild. Cause some of the components have different clusters.
+		meshBagContainer.setDirty(this);
+	}
+	
 	private static class ClusterInfo
 	{
 		private final int index;
@@ -304,9 +376,14 @@ public class ConductorMeshBag extends MeshBag
 		
 		public ClusterInfo(int index, Cluster cluster)
 		{
+			this(index, cluster, 1);
+		}
+		
+		public ClusterInfo(int index, Cluster cluster, int usage)
+		{
 			this.index = index;
 			this.cluster = cluster;
-			usage = 1;
+			this.usage = usage;
 		}
 		
 		public int getIndex()
@@ -332,6 +409,16 @@ public class ConductorMeshBag extends MeshBag
 		public void decrementReference()
 		{
 			usage--;
+		}
+		
+		public void incrementReference(int usages)
+		{
+			this.usage += usages;
+		}
+		
+		public void decrementReference(int usages)
+		{
+			this.usage -= usages;
 		}
 	}
 	
@@ -364,6 +451,27 @@ public class ConductorMeshBag extends MeshBag
 			//Normal:
 			GL30.glVertexAttribPointer(1, 3, GL30.GL_FLOAT, false, 6 * Float.BYTES, 3 * Float.BYTES);
 			GL30.glEnableVertexAttribArray(1);
+		}
+	}
+	
+	public static class ConductorMBUpdate
+	{
+		private final Cluster from, to;
+		
+		public ConductorMBUpdate(Cluster from, Cluster to)
+		{
+			this.from = from;
+			this.to = to;
+		}
+		
+		public Cluster getFrom()
+		{
+			return from;
+		}
+		
+		public Cluster getTo()
+		{
+			return to;
 		}
 	}
 }

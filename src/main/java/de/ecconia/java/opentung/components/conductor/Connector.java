@@ -112,7 +112,7 @@ public abstract class Connector extends Part implements Clusterable
 	
 	public Vector3 getConnectionPoint()
 	{
-		//TODO: VERY ungeneric, to be fixed!!!
+		//TODO: VERY ungeneric, to be fixed!!! Btw also wrong for at least displays.
 		Vector3 connectionOffset;
 		if(model instanceof CubeOpenRotated)
 		{
@@ -157,11 +157,11 @@ public abstract class Connector extends Part implements Clusterable
 	{
 		if(cluster instanceof SourceCluster)
 		{
-			System.out.println("Source#" + hashCode() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
+			System.out.println("Source#" + cluster.hashCode() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
 		}
 		else
 		{
-			System.out.println("Drain#" + hashCode() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
+			System.out.println("Drain#" + cluster.hashCode() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
 		}
 	}
 }

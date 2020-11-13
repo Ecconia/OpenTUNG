@@ -27,6 +27,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
@@ -45,7 +46,9 @@ import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -254,13 +257,19 @@ public class RenderPlane3D implements RenderPlane
 			Cluster wireCluster;
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 				//Places the wires and updates clusters as needed. Also finishes the wire linking.
-				ClusterHelper.placeWire(simulation, board, from, to, newWire);
+				ClusterHelper.placeWire(simulation, board, from, to, newWire, updates);
 				
 				//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
 				try
 				{
 					gpuTasks.put((ignored) -> {
+						System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+						for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+						{
+							entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+						}
 						//Add the wire to the mesh sources
 						board.getWiresToRender().add(newWire);
 						wireRayCaster.addWire(newWire);
@@ -577,9 +586,15 @@ public class RenderPlane3D implements RenderPlane
 					((CompContainer) wireToDelete.getParent()).remove(wireToDelete);
 				}
 				
-				ClusterHelper.removeWire(simulation, wireToDelete);
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+				ClusterHelper.removeWire(simulation, wireToDelete, updates);
 				
 				gpuTasks.add((unused) -> {
+					System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+					{
+						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+					}
 					if(clusterToHighlight == wireToDelete.getCluster())
 					{
 						clusterToHighlight = null;
@@ -602,10 +617,16 @@ public class RenderPlane3D implements RenderPlane
 					{
 						CompSnappingPeg sPeg = (CompSnappingPeg) toBeDeleted;
 						board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-							ClusterHelper.removeWire(simulation, wire);
+							Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+							ClusterHelper.removeWire(simulation, wire, updates);
 							sPeg.getPartner().setPartner(null);
 							sPeg.setPartner(null);
 							gpuTasks.add((unused) -> {
+								System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+								for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+								{
+									entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+								}
 								worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
 							});
 						});
@@ -616,18 +637,24 @@ public class RenderPlane3D implements RenderPlane
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				List<Wire> wiresToRemove = new ArrayList<>();
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 				for(Blot blot : component.getBlots())
 				{
-					ClusterHelper.removeBlot(simulation, blot);
+					ClusterHelper.removeBlot(simulation, blot, updates);
 					wiresToRemove.addAll(blot.getWires());
 				}
 				for(Peg peg : component.getPegs())
 				{
-					ClusterHelper.removePeg(simulation, peg);
+					ClusterHelper.removePeg(simulation, peg, updates);
 					wiresToRemove.addAll(peg.getWires());
 				}
 				
 				gpuTasks.add((unused) -> {
+					System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+					{
+						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+					}
 					for(Blot blot : component.getBlots())
 					{
 						if(clusterToHighlight == blot.getCluster())
@@ -706,10 +733,16 @@ public class RenderPlane3D implements RenderPlane
 				{
 					CompSnappingPeg sPeg = (CompSnappingPeg) toBeGrabbed;
 					board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-						ClusterHelper.removeWire(simulation, wire);
+						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+						ClusterHelper.removeWire(simulation, wire, updates);
 						sPeg.getPartner().setPartner(null);
 						sPeg.setPartner(null);
 						gpuTasks.add((unused) -> {
+							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+							{
+								entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+							}
 							worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
 						});
 					});
@@ -796,20 +829,27 @@ public class RenderPlane3D implements RenderPlane
 				//Was aborted. But data is no longer valid.
 				return;
 			}
+			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 			for(Wire wire : wireCopy)
 			{
-				ClusterHelper.removeWire(board.getSimulation(), wire);
+				ClusterHelper.removeWire(board.getSimulation(), wire, updates);
 			}
 			for(Peg peg : compCopy.getPegs())
 			{
-				ClusterHelper.removePeg(board.getSimulation(), peg);
+				ClusterHelper.removePeg(board.getSimulation(), peg, updates);
 			}
 			for(Blot blot : compCopy.getBlots())
 			{
-				ClusterHelper.removeBlot(board.getSimulation(), blot);
+				ClusterHelper.removeBlot(board.getSimulation(), blot, updates);
 			}
 			
 			gpuTasks.add((unused2) -> {
+				System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+				for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+				{
+					entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+				}
+				
 				//Thats pretty much it. Just make the clipboard invisible:
 				grabbedWires = null;
 				grabbedComponent = null;

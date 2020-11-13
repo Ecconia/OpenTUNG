@@ -1,12 +1,15 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.core.BoardUniverse;
+import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class ClusterHelper
 {
@@ -17,7 +20,7 @@ public class ClusterHelper
 	
 	//Wire Placement:
 	
-	public static void placeWire(SimulationManager simulation, BoardUniverse board, Connector connectorA, Connector connectorB, Wire newWire)
+	public static void placeWire(SimulationManager simulation, BoardUniverse board, Connector connectorA, Connector connectorB, Wire newWire, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		Cluster clusterA = connectorA.getCluster();
 		Cluster clusterB = connectorB.getCluster();
@@ -52,47 +55,47 @@ public class ClusterHelper
 			}
 			case SourceBlot * 4 + SourceActive:
 			{
-				wireCluster = pwSourceBlotAndSourceActive(simulation, connectorA, connectorB);
+				wireCluster = pwSourceBlotAndSourceActive(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case SourceBlot * 4 + DrainOFF:
 			{
-				wireCluster = pwSourceAndDrainOFF(simulation, connectorA, connectorB);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case SourceBlot * 4 + DrainActive:
 			{
-				wireCluster = pwSourceBlotAndDrainActive(simulation, connectorA, connectorB);
+				wireCluster = pwSourceBlotAndDrainActive(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case SourceActive * 4 + SourceBlot:
 			{
-				wireCluster = pwSourceBlotAndSourceActive(simulation, connectorB, connectorA);
+				wireCluster = pwSourceBlotAndSourceActive(simulation, connectorB, connectorA, updates);
 				break;
 			}
 			case SourceActive * 4 + SourceActive:
 			{
-				wireCluster = pwSourceActiveAndSourceActive(simulation, connectorA, connectorB);
+				wireCluster = pwSourceActiveAndSourceActive(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case SourceActive * 4 + DrainOFF:
 			{
-				wireCluster = pwSourceAndDrainOFF(simulation, connectorA, connectorB);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case SourceActive * 4 + DrainActive:
 			{
-				wireCluster = pwSourceActiveAndDrainActive(simulation, connectorA, connectorB);
+				wireCluster = pwSourceActiveAndDrainActive(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case DrainOFF * 4 + SourceBlot:
 			{
-				wireCluster = pwSourceAndDrainOFF(simulation, connectorB, connectorA);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorB, connectorA, updates);
 				break;
 			}
 			case DrainOFF * 4 + SourceActive:
 			{
-				wireCluster = pwSourceAndDrainOFF(simulation, connectorB, connectorA);
+				wireCluster = pwSourceAndDrainOFF(simulation, connectorB, connectorA, updates);
 				break;
 			}
 			case DrainOFF * 4 + DrainOFF:
@@ -101,33 +104,33 @@ public class ClusterHelper
 				//TBI: Should something be done when deleting?
 //				board.deleteCluster(clusterB.getId());
 				Prototype merge = new Prototype(clusterB);
-				merge.mergeInto(clusterA);
+				merge.mergeInto(clusterA, updates);
 				wireCluster = clusterA;
 				break;
 			}
 			case DrainOFF * 4 + DrainActive:
 			{
-				wireCluster = pwDrainOffAndDrainActive(simulation, connectorA, connectorB);
+				wireCluster = pwDrainOffAndDrainActive(simulation, connectorA, connectorB, updates);
 				break;
 			}
 			case DrainActive * 4 + SourceBlot:
 			{
-				wireCluster = pwSourceBlotAndDrainActive(simulation, connectorB, connectorA);
+				wireCluster = pwSourceBlotAndDrainActive(simulation, connectorB, connectorA, updates);
 				break;
 			}
 			case DrainActive * 4 + SourceActive:
 			{
-				wireCluster = pwSourceActiveAndDrainActive(simulation, connectorB, connectorA);
+				wireCluster = pwSourceActiveAndDrainActive(simulation, connectorB, connectorA, updates);
 				break;
 			}
 			case DrainActive * 4 + DrainOFF:
 			{
-				wireCluster = pwDrainOffAndDrainActive(simulation, connectorB, connectorA);
+				wireCluster = pwDrainOffAndDrainActive(simulation, connectorB, connectorA, updates);
 				break;
 			}
 			case DrainActive * 4 + DrainActive:
 			{
-				wireCluster = pwDrainActiveAndDrainActive(simulation, connectorA, connectorB);
+				wireCluster = pwDrainActiveAndDrainActive(simulation, connectorA, connectorB, updates);
 				break;
 			}
 		}
@@ -136,7 +139,7 @@ public class ClusterHelper
 		wireCluster.addWire(newWire);
 	}
 	
-	private static Cluster pwDrainActiveAndDrainActive(SimulationManager simulation, Connector drainActive1, Connector drainActive2)
+	private static Cluster pwDrainActiveAndDrainActive(SimulationManager simulation, Connector drainActive1, Connector drainActive2, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		InheritingCluster drainActive1Cluster = (InheritingCluster) drainActive1.getCluster();
 		InheritingCluster drainActive2Cluster = (InheritingCluster) drainActive2.getCluster();
@@ -157,7 +160,7 @@ public class ClusterHelper
 			}
 		}
 		Prototype merge = splitNonSourcePartFromCluster(drainActive1);
-		merge.mergeInto(drainActive2Cluster);
+		merge.mergeInto(drainActive2Cluster, updates);
 		
 		//If just one of A/B is ON, then update the other
 		if(on1 != on2)
@@ -181,14 +184,14 @@ public class ClusterHelper
 		return drainActive1Cluster;
 	}
 	
-	private static Cluster pwDrainOffAndDrainActive(SimulationManager simulation, Connector drainOff, Connector drainActive)
+	private static Cluster pwDrainOffAndDrainActive(SimulationManager simulation, Connector drainOff, Connector drainActive, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		InheritingCluster drainActiveCluster = (InheritingCluster) drainActive.getCluster();
 		InheritingCluster drainOffCluster = (InheritingCluster) drainOff.getCluster();
 		
 		//Append A to B (deletes A)
 		Prototype merge = new Prototype(drainOffCluster);
-		merge.mergeInto(drainActiveCluster);
+		merge.mergeInto(drainActiveCluster, updates);
 		
 		//If B is ON, update A
 		if(drainActiveCluster.isActive())
@@ -199,14 +202,14 @@ public class ClusterHelper
 		return drainActiveCluster;
 	}
 	
-	private static Cluster pwSourceActiveAndDrainActive(SimulationManager simulation, Connector sourceActive, Connector drainActive)
+	private static Cluster pwSourceActiveAndDrainActive(SimulationManager simulation, Connector sourceActive, Connector drainActive, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		SourceCluster sourceActiveCluster = (SourceCluster) sourceActive.getCluster();
 		InheritingCluster drainActiveCluster = (InheritingCluster) drainActive.getCluster();
 		
 		//Split A off its Blot, append it to B
 		Prototype splitA = splitNonSourcePartFromCluster(sourceActive);
-		splitA.mergeInto(drainActiveCluster);
+		splitA.mergeInto(drainActiveCluster, updates);
 		
 		//Add A as source to B
 		drainActiveCluster.addSource(sourceActiveCluster);
@@ -225,7 +228,7 @@ public class ClusterHelper
 		return drainActiveCluster;
 	}
 	
-	private static Cluster pwSourceActiveAndSourceActive(SimulationManager simulation, Connector sourceActive1, Connector sourceActive2)
+	private static Cluster pwSourceActiveAndSourceActive(SimulationManager simulation, Connector sourceActive1, Connector sourceActive2, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		SourceCluster sourceActive1Cluster = (SourceCluster) sourceActive1.getCluster();
 		SourceCluster sourceActive2Cluster = (SourceCluster) sourceActive2.getCluster();
@@ -239,8 +242,8 @@ public class ClusterHelper
 		
 		Prototype splitA = splitNonSourcePartFromCluster(sourceActive1);
 		Prototype splitB = splitNonSourcePartFromCluster(sourceActive2);
-		splitA.mergeInto(newCluster);
-		splitB.mergeInto(newCluster);
+		splitA.mergeInto(newCluster, updates);
+		splitB.mergeInto(newCluster, updates);
 		
 		//Update C according to its sources
 		if(sourceActive1Cluster.isActive())
@@ -255,7 +258,7 @@ public class ClusterHelper
 		return newCluster;
 	}
 	
-	private static Cluster pwSourceBlotAndSourceActive(SimulationManager simulation, Connector sourceBlot, Connector sourceActive)
+	private static Cluster pwSourceBlotAndSourceActive(SimulationManager simulation, Connector sourceBlot, Connector sourceActive, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		SourceCluster sourceBlotCluster = (SourceCluster) sourceBlot.getCluster();
 		SourceCluster sourceActiveCluster = (SourceCluster) sourceActive.getCluster();
@@ -266,7 +269,7 @@ public class ClusterHelper
 		sourceBlotCluster.addDrain(newCluster);
 		
 		Prototype splitted = splitNonSourcePartFromCluster(sourceActive);
-		splitted.mergeInto(newCluster);
+		splitted.mergeInto(newCluster, updates);
 		
 		//We want to store these guys multiple times, for each wire-connection.
 		for(Wire sourceWire : splitted.getBlotWires())
@@ -288,7 +291,7 @@ public class ClusterHelper
 		return sourceBlotCluster;
 	}
 	
-	private static Cluster pwSourceBlotAndDrainActive(SimulationManager simulation, Connector sourceBlot, Connector drainActive)
+	private static Cluster pwSourceBlotAndDrainActive(SimulationManager simulation, Connector sourceBlot, Connector drainActive, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		SourceCluster sourceBlotCluster = (SourceCluster) sourceBlot.getCluster();
 		InheritingCluster drainActiveCluster = (InheritingCluster) drainActive.getCluster();
@@ -306,7 +309,7 @@ public class ClusterHelper
 		return sourceBlotCluster;
 	}
 	
-	private static Cluster pwSourceAndDrainOFF(SimulationManager simulation, Connector source, Connector drainOff)
+	private static Cluster pwSourceAndDrainOFF(SimulationManager simulation, Connector source, Connector drainOff, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		SourceCluster sourceCluster = (SourceCluster) source.getCluster();
 		InheritingCluster drainOffCluster = (InheritingCluster) drainOff.getCluster();
@@ -315,7 +318,7 @@ public class ClusterHelper
 		//TBI: Should something be done when deleting?
 //		board.deleteCluster(drainOffCluster.getId());
 		Prototype movedClusterParts = new Prototype(drainOffCluster);
-		movedClusterParts.mergeInto(sourceCluster);
+		movedClusterParts.mergeInto(sourceCluster, updates);
 		
 		//If A is ON, update B
 		if(sourceCluster.isActive())
@@ -328,7 +331,7 @@ public class ClusterHelper
 	
 	//Removal:
 	
-	public static void removeWire(SimulationManager simulation, Wire wireToDelete)
+	public static void removeWire(SimulationManager simulation, Wire wireToDelete, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		Connector a = wireToDelete.getConnectorA();
 		Connector b = wireToDelete.getConnectorB();
@@ -352,7 +355,7 @@ public class ClusterHelper
 				if(split.getBlotWires().isEmpty())
 				{
 					InheritingCluster newCluster = new InheritingCluster();
-					split.mergeInto(newCluster);
+					split.mergeInto(newCluster, updates);
 					//Can't have any sources now, cause we are about to delete the only source.
 					if(blotCluster.isActive())
 					{
@@ -362,7 +365,7 @@ public class ClusterHelper
 				else
 				{
 					//There are more connections to the blot, thus just restore the split.
-					split.mergeInto(blotCluster);
+					split.mergeInto(blotCluster, updates);
 				}
 			}
 			else
@@ -378,7 +381,7 @@ public class ClusterHelper
 					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
 					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
 					
-					split.mergeInto(source);
+					split.mergeInto(source, updates);
 					source.remove(otherCluster);
 					
 					if(source.isActive() != otherCluster.isActive())
@@ -416,7 +419,7 @@ public class ClusterHelper
 			if(splitA.getBlotWires().isEmpty())
 			{
 				InheritingCluster newCluster = new InheritingCluster();
-				splitA.mergeInto(newCluster);
+				splitA.mergeInto(newCluster, updates);
 				//Can't have any sources now, cause we are about to delete the only source.
 				if(cluster.isActive())
 				{
@@ -426,7 +429,7 @@ public class ClusterHelper
 			else
 			{
 				//There are more connections to the origin, thus just restore the split.
-				splitA.mergeInto(cluster);
+				splitA.mergeInto(cluster, updates);
 			}
 			//If the B side has no cluster anymore, it must have been splitted off while splitting off the A side. Both are still the same cluster and still connected, no further action needed.
 			if(!bSideHasNoCluster)
@@ -435,7 +438,7 @@ public class ClusterHelper
 				if(splitB.getBlotWires().isEmpty())
 				{
 					InheritingCluster newCluster = new InheritingCluster();
-					splitB.mergeInto(newCluster);
+					splitB.mergeInto(newCluster, updates);
 					//Can't have any sources now, cause we are about to delete the only source.
 					if(cluster.isActive())
 					{
@@ -445,7 +448,7 @@ public class ClusterHelper
 				else
 				{
 					//There are more connections to the origin, thus just restore the split.
-					splitB.mergeInto(cluster);
+					splitB.mergeInto(cluster, updates);
 				}
 			}
 			
@@ -464,7 +467,7 @@ public class ClusterHelper
 			if(b.getCluster() == null)
 			{
 				//Both are in the same split, thus no changes have to be made.
-				splitA.mergeInto(cluster); //Restore/Undo
+				splitA.mergeInto(cluster, updates); //Restore/Undo
 				return; //We are done here.
 			}
 			//TBI: Should something be done when deleting?
@@ -477,7 +480,7 @@ public class ClusterHelper
 				SourceCluster source = (SourceCluster) sourceConnector.getCluster();
 				
 				source.remove(cluster);
-				splitA.mergeInto(source);
+				splitA.mergeInto(source, updates);
 				
 				if(source.isActive() != cluster.isActive())
 				{
@@ -488,7 +491,7 @@ public class ClusterHelper
 			{
 				//Creating new cluster for A side:
 				InheritingCluster aCluster = new InheritingCluster();
-				splitA.mergeInto(aCluster);
+				splitA.mergeInto(aCluster, updates);
 				if(splitA.getBlotWires().isEmpty())
 				{
 					//Can't have any sources now, must be off.
@@ -529,7 +532,7 @@ public class ClusterHelper
 				SourceCluster source = (SourceCluster) sourceConnector.getCluster();
 				
 				source.remove(cluster);
-				splitB.mergeInto(source);
+				splitB.mergeInto(source, updates);
 				
 				if(source.isActive() != cluster.isActive())
 				{
@@ -540,7 +543,7 @@ public class ClusterHelper
 			{
 				//Creating new cluster for B side:
 				InheritingCluster bCluster = new InheritingCluster();
-				splitB.mergeInto(bCluster);
+				splitB.mergeInto(bCluster, updates);
 				if(splitB.getBlotWires().isEmpty())
 				{
 					//Can't have any sources now, must be off.
@@ -575,7 +578,7 @@ public class ClusterHelper
 		}
 	}
 	
-	public static void removePeg(SimulationManager simulation, Peg peg)
+	public static void removePeg(SimulationManager simulation, Peg peg, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		Cluster cluster = peg.getCluster();
 		cluster.remove(peg);
@@ -616,7 +619,7 @@ public class ClusterHelper
 					
 					Prototype split = splitNonSourcePartFromCluster(otherSide); //There can't be any sources anymore.
 					InheritingCluster newCluster = new InheritingCluster();
-					split.mergeInto(newCluster);
+					split.mergeInto(newCluster, updates);
 				}
 			}
 			else
@@ -637,7 +640,7 @@ public class ClusterHelper
 					{
 						//New and off section:
 						InheritingCluster newCluster = new InheritingCluster();
-						split.mergeInto(newCluster);
+						split.mergeInto(newCluster, updates);
 						
 						if(source.isActive())
 						{
@@ -653,7 +656,7 @@ public class ClusterHelper
 				
 				for(Prototype split : toReset)
 				{
-					split.mergeInto(source);
+					split.mergeInto(source, updates);
 				}
 			}
 		}
@@ -685,7 +688,7 @@ public class ClusterHelper
 					
 					Prototype split = splitNonSourcePartFromCluster(otherSide);
 					InheritingCluster newCluster = new InheritingCluster();
-					split.mergeInto(newCluster);
+					split.mergeInto(newCluster, updates);
 				}
 			}
 			else
@@ -721,7 +724,7 @@ public class ClusterHelper
 						Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
 						SourceCluster source = (SourceCluster) sourceConnector.getCluster();
 						
-						split.mergeInto(source);
+						split.mergeInto(source, updates);
 						source.remove(drain);
 						
 						if(source.isActive() != drain.isActive())
@@ -732,7 +735,7 @@ public class ClusterHelper
 					else
 					{
 						InheritingCluster newCluster = new InheritingCluster();
-						split.mergeInto(newCluster);
+						split.mergeInto(newCluster, updates);
 						
 						for(Wire sourceWire : split.getBlotWires())
 						{
@@ -759,7 +762,7 @@ public class ClusterHelper
 		}
 	}
 	
-	public static void removeBlot(SimulationManager simulation, Blot blot)
+	public static void removeBlot(SimulationManager simulation, Blot blot, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 	{
 		SourceCluster sourceCluster = (SourceCluster) blot.getCluster();
 		//TBI: Should something be done when deleting?
@@ -788,7 +791,7 @@ public class ClusterHelper
 				}
 				
 				InheritingCluster newCluster = new InheritingCluster();
-				split.mergeInto(newCluster);
+				split.mergeInto(newCluster, updates);
 				//Can't have any sources now, cause we are about to delete the only source.
 				if(sourceCluster.isActive())
 				{
@@ -807,7 +810,7 @@ public class ClusterHelper
 					Connector sourceConnector = sourceWire.getConnectorA().getCluster() instanceof SourceCluster ? sourceWire.getConnectorA() : sourceWire.getConnectorB();
 					SourceCluster source = (SourceCluster) sourceConnector.getCluster();
 					
-					split.mergeInto(source);
+					split.mergeInto(source, updates);
 					source.remove(otherSideCluster);
 					
 					if(source.isActive() != otherSideCluster.isActive())
@@ -837,7 +840,7 @@ public class ClusterHelper
 	// - splitted parts don't have a cluster anymore
 	private static Prototype splitNonSourcePartFromCluster(Connector startPoint)
 	{
-		Prototype prototype = new Prototype();
+		Prototype prototype = new Prototype(startPoint);
 		Cluster startCluster = startPoint.getCluster();
 		
 		LinkedList<Connector> connectors = new LinkedList<>();
@@ -892,16 +895,19 @@ public class ClusterHelper
 	
 	private static class Prototype
 	{
+		private final Cluster shrunkCluster;
 		private final List<Wire> wires = new ArrayList<>();
 		private final List<Connector> connectors = new ArrayList<>();
 		private final List<Wire> blotWires = new ArrayList<>();
 		
-		public Prototype()
+		public Prototype(Connector connector)
 		{
+			this.shrunkCluster = connector.getCluster();
 		}
 		
 		public Prototype(Cluster cluster)
 		{
+			this.shrunkCluster = cluster;
 			for(Wire wire : cluster.getWires())
 			{
 				wire.setCluster(null);
@@ -934,17 +940,53 @@ public class ClusterHelper
 			return wires;
 		}
 		
-		public void mergeInto(Cluster cluster)
+		public void mergeInto(Cluster cluster, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
 		{
 			for(Connector drainConnector : connectors)
 			{
 				drainConnector.setCluster(cluster);
+				doMeshUpdate(drainConnector, cluster, updates);
 				cluster.addConnector(drainConnector);
 			}
 			for(Wire wire : wires)
 			{
 				wire.setCluster(cluster);
+				doMeshUpdate(wire, cluster, updates);
 				cluster.addWire(wire);
+			}
+		}
+		
+		private void doMeshUpdate(Clusterable clusterable, Cluster cluster, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
+		{
+			Component component;
+			if(clusterable instanceof Component)
+			{
+				component = (Component) clusterable;
+			}
+			else if(clusterable instanceof Connector)
+			{
+				component = ((Connector) clusterable).getParent();
+			}
+			else
+			{
+				return; //Not visible, ditch.
+			}
+			ConductorMeshBag meshBag = component.getConductorMeshBag();
+			if(meshBag == null)
+			{
+				return; //Currently invisible, ditch.
+			}
+			
+			if(shrunkCluster != cluster)
+			{
+				//Dump all cases which don't change things.
+				List<ConductorMeshBag.ConductorMBUpdate> list = updates.get(meshBag);
+				if(list == null)
+				{
+					list = new ArrayList<>();
+					updates.put(meshBag, list);
+				}
+				list.add(new ConductorMeshBag.ConductorMBUpdate(shrunkCluster, cluster));
 			}
 		}
 		

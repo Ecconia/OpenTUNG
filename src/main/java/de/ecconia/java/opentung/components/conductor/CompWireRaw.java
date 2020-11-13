@@ -11,6 +11,9 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
 import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
+import de.ecconia.java.opentung.simulation.SimulationManager;
+import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.math.Vector3;
 
@@ -140,5 +143,18 @@ public class CompWireRaw extends Component implements Wire
 	public boolean hasCluster()
 	{
 		return cluster != null;
+	}
+	
+	@Override
+	public void leftClicked(SimulationManager simulation)
+	{
+		if(cluster instanceof SourceCluster)
+		{
+			System.out.println("Source#" + cluster.hashCode() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
+		}
+		else
+		{
+			System.out.println("Drain#" + cluster.hashCode() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
+		}
 	}
 }
