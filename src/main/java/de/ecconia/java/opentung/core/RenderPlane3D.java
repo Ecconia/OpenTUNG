@@ -556,7 +556,14 @@ public class RenderPlane3D implements RenderPlane
 				gpuTasks.add((unused) -> {
 					if(container instanceof CompBoard)
 					{
-						worldMesh.removeComponent(container, board.getSimulation());
+						if(container.getParent() != null)
+						{
+							worldMesh.removeComponent(container, board.getSimulation());
+						}
+						else
+						{
+							System.out.println("Cannot remove root-board!");
+						}
 					}
 					else
 					{
