@@ -235,6 +235,14 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
+			if(from.getCluster() == clusterToHighlight || to.getCluster() == clusterToHighlight)
+			{
+				gpuTasks.add((unused) -> {
+					clusterToHighlight = null;
+					connectorsToHighlight = new ArrayList<>();
+				});
+			}
+			
 			//Add wire:
 			CompWireRaw newWire;
 			{
