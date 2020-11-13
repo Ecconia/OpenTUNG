@@ -140,70 +140,73 @@ public class PauseMenu
 	
 	public void save(boolean chooser)
 	{
-		{
-			SharedData sd = renderPlane2D.getSharedData();
-			File currentSaveFile = sd.getCurrentBoardFile();
-			if(chooser)
+		Thread t = new Thread(() -> {
 			{
-				JFileChooser fileChooser = new JFileChooser(currentSaveFile.getParentFile());
-				int result = fileChooser.showSaveDialog(null);
-				if(result != JFileChooser.APPROVE_OPTION)
+				SharedData sd = renderPlane2D.getSharedData();
+				File currentSaveFile = sd.getCurrentBoardFile();
+				if(chooser)
 				{
-					return;
-				}
-				currentSaveFile = fileChooser.getSelectedFile();
-				int endingIndex = currentSaveFile.getName().lastIndexOf('.');
-				if(endingIndex < 0)
-				{
-					currentSaveFile = new File(currentSaveFile.getParent(), currentSaveFile.getName() + ".opentung");
+					JFileChooser fileChooser = new JFileChooser(currentSaveFile.getParentFile());
+					int result = fileChooser.showSaveDialog(null);
+					if(result != JFileChooser.APPROVE_OPTION)
+					{
+						return;
+					}
+					currentSaveFile = fileChooser.getSelectedFile();
+					int endingIndex = currentSaveFile.getName().lastIndexOf('.');
+					if(endingIndex < 0)
+					{
+						currentSaveFile = new File(currentSaveFile.getParent(), currentSaveFile.getName() + ".opentung");
+					}
+					else
+					{
+						String ending = currentSaveFile.getName().substring(endingIndex + 1);
+						if(!ending.equals("opentung"))
+						{
+							JOptionPane.showMessageDialog(null, "File-ending must be '.opentung', change or leave blank.", "Can only save .opentung files.", JOptionPane.ERROR_MESSAGE, null);
+							return;
+						}
+					}
 				}
 				else
 				{
-					String ending = currentSaveFile.getName().substring(endingIndex + 1);
-					if(!ending.equals("opentung"))
+					int endingIndex = currentSaveFile.getName().lastIndexOf('.');
+					if(currentSaveFile.getName().substring(endingIndex + 1).equals("tungboard")) //Assumes file has always ending.
 					{
-						JOptionPane.showMessageDialog(null, "File-ending must be '.opentung', change or leave blank.", "Can only save .opentung files.", JOptionPane.ERROR_MESSAGE, null);
-						return;
+						int result = JOptionPane.showOptionDialog(null, "You loaded a .tungboard file, save as .opentung file?", "Save as OpenTUNG-Save?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
+						if(result != JOptionPane.OK_OPTION)
+						{
+							return;
+						}
+						currentSaveFile = new File(currentSaveFile.getParent(), currentSaveFile.getName().substring(0, endingIndex + 1) + "opentung");
 					}
 				}
-			}
-			else
-			{
-				int endingIndex = currentSaveFile.getName().lastIndexOf('.');
-				if(currentSaveFile.getName().substring(endingIndex + 1).equals("tungboard")) //Assumes file has always ending.
-				{
-					int result = JOptionPane.showOptionDialog(null, "You loaded a .tungboard file, save as .opentung file?", "Save as OpenTUNG-Save?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
-					if(result != JOptionPane.OK_OPTION)
-					{
-						return;
-					}
-					currentSaveFile = new File(currentSaveFile.getParent(), currentSaveFile.getName().substring(0, endingIndex + 1) + "opentung");
-				}
+				
+				sd.setCurrentBoardFile(currentSaveFile);
 			}
 			
-			sd.setCurrentBoardFile(currentSaveFile);
-		}
-		
-		//Lock
-		if(!renderPlane2D.prepareSaving())
-		{
-			return;
-		}
-		buttonSave.setDisabled(true);
-		buttonSaveAs.setDisabled(true);
-		
-		Thread saveThread = new Thread(() -> {
-			System.out.println("Saving...");
-			long startTime = System.currentTimeMillis();
-			renderPlane2D.performSave();
-			System.out.println("Done, took: " + (System.currentTimeMillis() - startTime) + "ms");
-			//Unlock:
-			renderPlane2D.postSave();
-			buttonSave.setDisabled(false);
-			buttonSaveAs.setDisabled(false);
-		}, "SaveThread");
-		saveThread.setDaemon(false); //Yes it should finish saving first! Thus no daemon.
-		saveThread.start();
+			//Lock
+			if(!renderPlane2D.prepareSaving())
+			{
+				return;
+			}
+			buttonSave.setDisabled(true);
+			buttonSaveAs.setDisabled(true);
+			
+			Thread saveThread = new Thread(() -> {
+				System.out.println("Saving...");
+				long startTime = System.currentTimeMillis();
+				renderPlane2D.performSave();
+				System.out.println("Done, took: " + (System.currentTimeMillis() - startTime) + "ms");
+				//Unlock:
+				renderPlane2D.postSave();
+				buttonSave.setDisabled(false);
+				buttonSaveAs.setDisabled(false);
+			}, "SaveThread");
+			saveThread.setDaemon(false); //Yes it should finish saving first! Thus no daemon.
+			saveThread.start();
+		}, "Save-Preparation-Thread");
+		t.start();
 	}
 	
 	private boolean downInside(float x, float y)
