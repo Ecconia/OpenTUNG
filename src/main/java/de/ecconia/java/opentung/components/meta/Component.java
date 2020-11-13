@@ -1,13 +1,16 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
-import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
+import de.ecconia.java.opentung.meshing.ColorMeshBag;
+import de.ecconia.java.opentung.meshing.ConductorMeshBag;
+import de.ecconia.java.opentung.meshing.MeshBag;
+import de.ecconia.java.opentung.meshing.MeshTypeThing;
+import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
@@ -33,6 +36,11 @@ public abstract class Component extends Part
 		}
 		
 		return ownBounds;
+	}
+	
+	public void updateBoundsDeep()
+	{
+		createOwnBounds();
 	}
 	
 	//Connector:
@@ -108,7 +116,7 @@ public abstract class Component extends Part
 	@Override
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
+		if(!(type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
@@ -128,14 +136,6 @@ public abstract class Component extends Part
 			{
 				amount += getModelHolder().getSolid().size() * ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
 			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					amount += ((CubeFull) m).getFacesCount() * 4 * attributeAmount;
-				}
-			}
 		}
 		
 		return amount;
@@ -144,7 +144,7 @@ public abstract class Component extends Part
 	@Override
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		if(!(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
+		if(!(type == MeshTypeThing.Solid || type == MeshTypeThing.Display))
 		{
 			throw new RuntimeException("Wrong meshing type, for this stage of the project. Fix the code here.");
 		}
@@ -163,14 +163,6 @@ public abstract class Component extends Part
 			{
 				amount += ((CubeFull) m).getFacesCount() * (2 * 3);
 			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					amount += ((CubeFull) m).getFacesCount() * (2 * 3);
-				}
-			}
 		}
 		
 		return amount;
@@ -186,19 +178,11 @@ public abstract class Component extends Part
 				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
 			}
 		}
-		else if(type == MeshTypeThing.Raycast || type == MeshTypeThing.Solid)
+		else if(type == MeshTypeThing.Solid)
 		{
 			for(Meshable m : getModelHolder().getSolid())
 			{
 				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-			}
-			
-			if(type == MeshTypeThing.Raycast)
-			{
-				for(Meshable m : getModelHolder().getColorables())
-				{
-					((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
-				}
 			}
 		}
 		else
@@ -224,14 +208,6 @@ public abstract class Component extends Part
 	public void createOwnBounds()
 	{
 		ownBounds = null; //Reset and don't expand it further.
-		for(Peg peg : pegs)
-		{
-			ownBounds = expandMinMaxBox(ownBounds, peg.getModel());
-		}
-		for(Blot blot : blots)
-		{
-			ownBounds = expandMinMaxBox(ownBounds, blot.getModel());
-		}
 		for(Meshable m : getModelHolder().getSolid())
 		{
 			ownBounds = expandMinMaxBox(ownBounds, (CubeFull) m);
@@ -341,5 +317,43 @@ public abstract class Component extends Part
 			}
 		}
 		return null;
+	}
+	
+	//Meshing:
+	
+	private MeshBag solidMeshBag;
+	
+	public MeshBag getSolidMeshBag()
+	{
+		return solidMeshBag;
+	}
+	
+	public void setSolidMeshBag(MeshBag solidMeshBag)
+	{
+		this.solidMeshBag = solidMeshBag;
+	}
+	
+	private ConductorMeshBag conductorMeshBag;
+	
+	public ConductorMeshBag getConductorMeshBag()
+	{
+		return conductorMeshBag;
+	}
+	
+	public void setConductorMeshBag(ConductorMeshBag conductorMeshBag)
+	{
+		this.conductorMeshBag = conductorMeshBag;
+	}
+	
+	private ColorMeshBag colorMeshBag;
+	
+	public ColorMeshBag getColorMeshBag()
+	{
+		return colorMeshBag;
+	}
+	
+	public void setColorMeshBag(ColorMeshBag colorMeshBag)
+	{
+		this.colorMeshBag = colorMeshBag;
 	}
 }

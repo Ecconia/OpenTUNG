@@ -22,14 +22,6 @@ public class World3DHelper
 		invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
 		Matrix matrix = new Matrix();
 		Vector3 placementOffset = component.getModelHolder().getPlacementOffset();
-		for(Meshable meshable : component.getModelHolder().getPegModels())
-		{
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
-		}
-		for(Meshable meshable : component.getModelHolder().getBlotModels())
-		{
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
-		}
 		for(Meshable meshable : component.getModelHolder().getColorables())
 		{
 			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, component, placementOffset, matrix);
@@ -44,41 +36,31 @@ public class World3DHelper
 		}
 	}
 	
-	public static void drawModel(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, ModelHolder model, Vector3 position, Quaternion quaternion, float[] view)
+	public static void drawModel(ShaderProgram visibleCubeShader, GenericVAO visibleCube, ModelHolder model, Vector3 position, Quaternion quaternion, float[] view)
 	{
-		invisibleCubeShader.use();
-		invisibleCubeShader.setUniformM4(1, view);
+		visibleCubeShader.use();
+		visibleCubeShader.setUniformM4(1, view);
 		Matrix matrix = new Matrix();
 		Matrix rotation = new Matrix(quaternion.createMatrix());
 		Vector3 placementOffset = model.getPlacementOffset();
-		for(Meshable meshable : model.getPegModels())
-		{
-			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
-		}
-		for(Meshable meshable : model.getBlotModels())
-		{
-			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
-		}
 		for(Meshable meshable : model.getColorables())
 		{
-			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			visibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+			drawCubeFull(visibleCubeShader, visibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getSolid())
 		{
-			invisibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			visibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+			drawCubeFull(visibleCubeShader, visibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 		for(Meshable meshable : model.getConductors())
 		{
-			invisibleCubeShader.setUniformV4(3, Color.circuitOFF.asArray());
-			drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			visibleCubeShader.setUniformV4(3, Color.circuitOFF.asArray());
+			drawCubeFull(visibleCubeShader, visibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 	}
 	
-	public static void drawCubeFull(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, CubeFull cube, Vector3 position, Matrix rotation, Vector3 placementOffset, Matrix matrix)
+	public static void drawCubeFull(ShaderProgram visibleCubeShader, GenericVAO visibleCube, CubeFull cube, Vector3 position, Matrix rotation, Vector3 placementOffset, Matrix matrix)
 	{
 		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
 		matrix.identity();
@@ -93,10 +75,10 @@ public class World3DHelper
 		matrix.translate((float) cubePosition.getX(), (float) cubePosition.getY(), (float) cubePosition.getZ());
 		Vector3 size = cube.getSize();
 		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-		invisibleCubeShader.setUniformM4(2, matrix.getMat());
+		visibleCubeShader.setUniformM4(2, matrix.getMat());
 		
-		invisibleCube.use();
-		invisibleCube.draw();
+		visibleCube.use();
+		visibleCube.draw();
 	}
 	
 	public static void drawCubeFull(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, CubeFull cube, Part part, Vector3 placementOffset, Matrix matrix)

@@ -51,8 +51,7 @@ public class IconGeneration
 				
 				List<Meshable> meshes = new ArrayList<>();
 				meshes.addAll(infoModel.getSolid());
-				meshes.addAll(infoModel.getPegModels());
-				meshes.addAll(infoModel.getBlotModels());
+				meshes.addAll(infoModel.getConductors());
 				meshes.addAll(infoModel.getColorables());
 				
 				Matrix pv = new Matrix(); //pMatCopy

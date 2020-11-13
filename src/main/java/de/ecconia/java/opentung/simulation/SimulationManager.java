@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +17,6 @@ public class SimulationManager extends Thread
 	private List<Cluster> updateClusterNextStage = new ArrayList<>();
 	private List<Cluster> updateClusterThisStage = new ArrayList<>();
 	
-	private int[] connectorMeshStates;
-	private int[] colorMeshStates;
-	
 	private int tps;
 	private int ups;
 	private int upsCounter;
@@ -31,16 +27,6 @@ public class SimulationManager extends Thread
 	public SimulationManager()
 	{
 		super("Simulation-Thread");
-	}
-	
-	public void setConnectorMeshStates(int[] connectorMeshStates)
-	{
-		this.connectorMeshStates = connectorMeshStates;
-	}
-	
-	public void setColorMeshStates(int[] colorMeshStates)
-	{
-		this.colorMeshStates = colorMeshStates;
 	}
 	
 	@Override
@@ -227,21 +213,6 @@ public class SimulationManager extends Thread
 		}
 	}
 	
-	public void changeState(int id, boolean active)
-	{
-		int index = id / 32;
-		int offset = id % 32;
-		int mask = (1 << offset);
-		
-		int value = connectorMeshStates[index];
-		value = value & ~mask;
-		if(active)
-		{
-			value |= mask;
-		}
-		connectorMeshStates[index] = value;
-	}
-	
 	public int getTPS()
 	{
 		return tps;
@@ -250,11 +221,6 @@ public class SimulationManager extends Thread
 	public float getLoad()
 	{
 		return (float) Math.round(((float) ups / (float) tps) * 100f) / 100f;
-	}
-	
-	public void setColor(int colorID, Color color)
-	{
-		colorMeshStates[colorID] = color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 255;
 	}
 	
 	public void pauseSimulation(AtomicInteger pauseArrived)

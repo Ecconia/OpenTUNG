@@ -6,7 +6,7 @@ import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
-import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
+import de.ecconia.java.opentung.meshing.MeshTypeThing;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -74,7 +74,7 @@ public abstract class Connector extends Part implements Clusterable
 	@Override
 	public int getWholeMeshEntryVCount(MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Conductor)
 		{
 			return model.getFacesCount() * 4 * type.getFloatCount();
 		}
@@ -87,7 +87,7 @@ public abstract class Connector extends Part implements Clusterable
 	@Override
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Conductor)
 		{
 			return model.getFacesCount() * 4 * (2 * 3);
 		}
@@ -100,7 +100,7 @@ public abstract class Connector extends Part implements Clusterable
 	@Override
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesOffset, int[] indices, ModelHolder.IntHolder indicesOffset, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Conductor || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Conductor)
 		{
 			model.generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getParent().getModelHolder().getPlacementOffset(), type);
 		}
@@ -112,7 +112,7 @@ public abstract class Connector extends Part implements Clusterable
 	
 	public Vector3 getConnectionPoint()
 	{
-		//TODO: VERY ungeneric, to be fixed!!!
+		//TODO: VERY ungeneric, to be fixed!!! Btw also wrong for at least displays.
 		Vector3 connectionOffset;
 		if(model instanceof CubeOpenRotated)
 		{
@@ -157,11 +157,11 @@ public abstract class Connector extends Part implements Clusterable
 	{
 		if(cluster instanceof SourceCluster)
 		{
-			System.out.println("Source#" + cluster.getId() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
+			System.out.println("Source#" + cluster.hashCode() + " Drains: " + ((SourceCluster) cluster).getDrains().size() + " Active: " + cluster.isActive());
 		}
 		else
 		{
-			System.out.println("Drain#" + cluster.getId() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
+			System.out.println("Drain#" + cluster.hashCode() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
 		}
 	}
 }

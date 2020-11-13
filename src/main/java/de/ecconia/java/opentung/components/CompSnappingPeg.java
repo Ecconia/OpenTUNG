@@ -1,26 +1,24 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.util.MinMaxBox;
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.libwrap.meshes.MeshTypeThing;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.meshing.MeshTypeThing;
+import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.List;
 
 public class CompSnappingPeg extends Component
 {
-	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelBuilder()
+			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
+			.addColoredPegModel(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg))
+			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-SnappingPeg", "0.2.6", CompSnappingPeg.class, CompSnappingPeg::new);
-	
-	static
-	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.075, 0.0));
-		modelHolder.addPeg(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg));
-	}
 	
 	@Override
 	public ModelHolder getModelHolder()
@@ -48,10 +46,6 @@ public class CompSnappingPeg extends Component
 		{
 			return 6 * 4 * (3 + 3 + 3);
 		}
-		else if(type == MeshTypeThing.Raycast)
-		{
-			return 6 * 4 * (3 + 3);
-		}
 		else
 		{
 			return 0;
@@ -61,13 +55,13 @@ public class CompSnappingPeg extends Component
 	@Override
 	public int getWholeMeshEntryICount(MeshTypeThing type)
 	{
-		return type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast ? 6 * (3 * 2) : 0;
+		return type == MeshTypeThing.Solid ? 6 * (3 * 2) : 0;
 	}
 	
 	@Override
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
 	{
-		if(type == MeshTypeThing.Solid || type == MeshTypeThing.Raycast)
+		if(type == MeshTypeThing.Solid)
 		{
 			//TODO: This is still ungeneric.
 			getModelHolder().getPegModels().get(0).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);

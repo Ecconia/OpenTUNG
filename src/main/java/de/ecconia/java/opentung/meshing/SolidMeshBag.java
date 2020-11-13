@@ -1,26 +1,19 @@
-package de.ecconia.java.opentung.libwrap.meshes;
+package de.ecconia.java.opentung.meshing;
 
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
-import java.util.List;
 import org.lwjgl.opengl.GL30;
 
-public class SolidMesh
+public class SolidMeshBag extends MeshBag
 {
-	private final ShaderProgram solidMeshShader;
-	private GenericVAO vao;
-	
-	public SolidMesh(List<Component> components)
+	public SolidMeshBag(MeshBagContainer meshBagContainer)
 	{
-		this.solidMeshShader = new ShaderProgram("mesh/meshSolid");
-		
-		update(components);
+		super(meshBagContainer);
 	}
 	
-	public void update(List<Component> componentsToRender)
+	@Override
+	public void rebuild()
 	{
 		if(vao != null)
 		{
@@ -29,7 +22,7 @@ public class SolidMesh
 		
 		int verticesAmount = 0;
 		int indicesAmount = 0;
-		for(Component component : componentsToRender)
+		for(Component component : components)
 		{
 			verticesAmount += component.getWholeMeshEntryVCount(MeshTypeThing.Solid);
 			indicesAmount += component.getWholeMeshEntryICount(MeshTypeThing.Solid);
@@ -41,27 +34,12 @@ public class SolidMesh
 		ModelHolder.IntHolder vertexCounter = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder verticesOffset = new ModelHolder.IntHolder();
 		ModelHolder.IntHolder indicesOffset = new ModelHolder.IntHolder();
-		for(Component comp : componentsToRender)
+		for(Component comp : components)
 		{
 			comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, MeshTypeThing.Solid);
 		}
 		
 		vao = new SolidMeshVAO(vertices, indices);
-	}
-	
-	public void draw(float[] view)
-	{
-		solidMeshShader.use();
-		solidMeshShader.setUniformM4(1, view);
-		solidMeshShader.setUniformM4(2, view);
-		vao.use();
-		vao.draw();
-	}
-	
-	public void updateProjection(float[] projection)
-	{
-		solidMeshShader.use();
-		solidMeshShader.setUniformM4(0, projection);
 	}
 	
 	private static class SolidMeshVAO extends LargeGenericVAO

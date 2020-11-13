@@ -11,13 +11,115 @@ import java.util.List;
 
 public class ModelHolder
 {
+	//Only allow this package to create a ModelHolder - ensures the builder is used.
+	protected ModelHolder()
+	{
+	}
+	
+	//Offset section. The offset moves the model center relative to the component position.
 	private Vector3 offset = Vector3.zero;
 	
-	private final List<CubeFull> pegModels = new ArrayList<>();
-	
-	public void addPeg(CubeFull pegModel)
+	public void setPlacementOffset(Vector3 offset)
 	{
-		pegModels.add(pegModel);
+		this.offset = offset;
+	}
+	
+	public Vector3 getPlacementOffset()
+	{
+		return offset;
+	}
+	
+	//Contains the solid parts of the model. Each has one color which doesn't change.
+	private final List<Meshable> solid = new ArrayList<>();
+	private int solidVertexCount = 0;
+	
+	public void addSolid(Meshable meshable)
+	{
+		solid.add(meshable);
+		//TODO: Get rid of the 4, add method to meshable - don't wanna cast this.
+		solidVertexCount += ((CubeFull) meshable).getFacesCount() * 4;
+	}
+	
+	public List<Meshable> getSolid()
+	{
+		return solid;
+	}
+	
+	public int getSolidVerticesAmount()
+	{
+		return solidVertexCount;
+	}
+	
+	//Contains all visual conductors. Means they turn black/red depending on their state.
+	private final List<Meshable> conductors = new ArrayList<>();
+	private int conductorVertexCount = 0;
+	
+	public void addConductor(Meshable meshable)
+	{
+		conductors.add(meshable);
+		conductorVertexCount += ((CubeFull) meshable).getFacesCount() * 4;
+	}
+	
+	public List<Meshable> getConductors()
+	{
+		return conductors;
+	}
+	
+	public int getConductorVerticesAmount()
+	{
+		return conductorVertexCount;
+	}
+	
+	//Contains all meshables which can have any non-transparent color.
+	private final List<Meshable> colorables = new ArrayList<>();
+	private int colorVertexCount = 0;
+	
+	public void addColorable(Meshable meshable)
+	{
+		colorables.add(meshable);
+		colorVertexCount += ((CubeFull) meshable).getFacesCount() * 4;
+	}
+	
+	public List<Meshable> getColorables()
+	{
+		return colorables;
+	}
+	
+	public int getColorVerticesAmount()
+	{
+		return colorVertexCount;
+	}
+	
+	//Peg and Blot models. Both connectors are the connection points for wires.
+	private final List<CubeFull> pegModels = new ArrayList<>();
+	private final List<CubeFull> blotModels = new ArrayList<>();
+	
+	public void addPegModel(CubeFull connectorModel)
+	{
+		pegModels.add(connectorModel);
+		conductors.add(connectorModel);
+		conductorVertexCount += connectorModel.getFacesCount() * 4;
+	}
+	
+	public void addBlotModel(CubeFull connectorModel)
+	{
+		blotModels.add(connectorModel);
+		conductors.add(connectorModel);
+		conductorVertexCount += connectorModel.getFacesCount() * 4;
+	}
+	
+	public void addColoredPegModel(CubeFull connectorModel)
+	{
+		pegModels.add(connectorModel);
+		solid.add(connectorModel);
+		solidVertexCount += connectorModel.getFacesCount() * 4;
+	}
+	
+	public void addColoredBlotModel(CubeFull connectorModel)
+	{
+		blotModels.add(connectorModel);
+		solid.add(connectorModel);
+		solidVertexCount += connectorModel.getFacesCount() * 4;
 	}
 	
 	public List<CubeFull> getPegModels()
@@ -25,60 +127,23 @@ public class ModelHolder
 		return pegModels;
 	}
 	
-	private final List<CubeFull> blotModels = new ArrayList<>();
-	
-	public void addBlot(CubeFull blotModel)
-	{
-		blotModels.add(blotModel);
-	}
-	
-	public void addColorable(Meshable colorable)
-	{
-		colorables.add(colorable);
-	}
-	
 	public List<CubeFull> getBlotModels()
 	{
 		return blotModels;
 	}
 	
-	private final List<Meshable> colorables = new ArrayList<>();
-	private final List<Meshable> solid = new ArrayList<>();
-	private final List<Meshable> conductors = new ArrayList<>();
+	//Contains the textures which will be rendered along with this component.
 	private final List<Meshable> textures = new ArrayList<>();
-	
+	//Stores a VAO for this texture...
+	//TODO: Move to a mesh.
 	private GenericVAO textureVAO;
-	
-	public void setPlacementOffset(Vector3 offset)
-	{
-		this.offset = offset;
-	}
-	
-	//### Adders ###
-	
-	public void addSolid(Meshable meshable)
-	{
-		//Bounds and outline
-		solid.add(meshable); //Solid to be drawn.
-	}
 	
 	public void addTexture(TexturedFace meshable)
 	{
-		//Non bounds, non outline
 		textures.add(meshable);
 	}
 	
-	public void addConductor(Meshable meshable)
-	{
-		//Non bounds, but outline
-		conductors.add(meshable);
-	}
-	
-	//### Generators ###
-	
-	/**
-	 * Generates a full object ready to be drawn with input->output peg/blob states as given as parameters.
-	 */
+	//Generates a full object ready to be drawn with input->output peg/blob states as given as parameters.
 	public void generateTextureVAO()
 	{
 		//Shader only has position and texture, TODO: add normals cause it defaults to Y+
@@ -106,6 +171,8 @@ public class ModelHolder
 		textureVAO.use();
 		textureVAO.draw();
 	}
+	
+	//TODO: Extract this class...
 	
 	public static class IntHolder
 	{
@@ -137,32 +204,5 @@ public class ModelHolder
 		{
 			return "Val: " + value;
 		}
-	}
-	
-	// Getters:
-	
-	public List<Meshable> getSolid()
-	{
-		return solid;
-	}
-	
-	public List<Meshable> getConductors()
-	{
-		return conductors;
-	}
-	
-	public Vector3 getPlacementOffset()
-	{
-		return offset;
-	}
-	
-	public boolean hasColorables()
-	{
-		return !colorables.isEmpty();
-	}
-	
-	public List<Meshable> getColorables()
-	{
-		return colorables;
 	}
 }

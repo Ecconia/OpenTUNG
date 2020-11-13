@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -10,22 +9,22 @@ import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.util.math.Vector3;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class CompDisplay extends Component implements Updateable, Colorable, CustomData
 {
-	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelBuilder()
+			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
+			.addColorable(new CubeFull(new Vector3(0.0, 0.48 + 0.15, 0.0), new Vector3(0.3, 0.3, 0.3), Color.displayOff))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.24, 0.0), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF))
+			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Display", "0.2.6", CompDisplay.class, CompDisplay::new);
-	
-	static
-	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.075, 0.0));
-		modelHolder.addColorable(new CubeFull(new Vector3(0.0, 0.48 + 0.15, 0.0), new Vector3(0.3, 0.3, 0.3), Color.displayOff));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.24, 0.0), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF));
-	}
 	
 	@Override
 	public ModelHolder getModelHolder()
@@ -64,21 +63,42 @@ public class CompDisplay extends Component implements Updateable, Colorable, Cus
 	@Override
 	public void update(SimulationManager simulation)
 	{
-		simulation.setColor(colorID, getCurrentColor(0));
+		if(colorMeshBag != null)
+		{
+			colorMeshBag.setColor(getCurrentColor(0));
+		}
 	}
 	
-	private int colorID;
+	private ColorMeshBagReference colorMeshBag;
 	
 	@Override
-	public void setColorID(int id, int colorID)
+	public void setColorMeshBag(int id, ColorMeshBagReference meshBag)
 	{
-		this.colorID = colorID;
+		this.colorMeshBag = meshBag;
 	}
 	
 	@Override
-	public int getColorID(int id)
+	public ColorMeshBagReference getColorMeshBag(int id)
 	{
-		return colorID;
+		return colorMeshBag;
+	}
+	
+	@Override
+	public ColorMeshBagReference removeColorMeshBag(int id)
+	{
+		ColorMeshBagReference ret = colorMeshBag;
+		colorMeshBag = null;
+		return ret;
+	}
+	
+	@Override
+	public void updateColors()
+	{
+		ColorMeshBagReference colorMeshBag = this.colorMeshBag;
+		if(colorMeshBag != null)
+		{
+			colorMeshBag.setColor(getCurrentColor(0));
+		}
 	}
 	
 	@Override

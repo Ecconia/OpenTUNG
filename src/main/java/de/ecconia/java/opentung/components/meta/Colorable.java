@@ -1,12 +1,17 @@
 package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.components.fragments.Color;
+import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
 
 public interface Colorable
 {
-	void setColorID(int id, int colorID);
+	void setColorMeshBag(int id, ColorMeshBagReference colorMeshBag);
 	
-	int getColorID(int id);
+	ColorMeshBagReference getColorMeshBag(int id);
+	
+	ColorMeshBagReference removeColorMeshBag(int id);
 	
 	Color getCurrentColor(int id);
+	
+	void updateColors();
 }

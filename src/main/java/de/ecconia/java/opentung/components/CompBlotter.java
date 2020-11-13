@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.components;
 
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Peg;
@@ -17,16 +18,13 @@ import de.ecconia.java.opentung.simulation.Updateable;
 
 public class CompBlotter extends Component implements Powerable, Updateable
 {
-	public static final ModelHolder modelHolder = new ModelHolder();
+	public static final ModelHolder modelHolder = new ModelBuilder()
+			.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0))
+			.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.0, +0.15 + 0.15), new Vector3(0.09, 0.09, 0.30), Direction.ZNeg, Color.circuitOFF))
+			.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos, Color.circuitOFF))
+			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Blotter", "0.2.6", CompBlotter.class, CompBlotter::new);
-	
-	static
-	{
-		modelHolder.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0));
-		modelHolder.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material));
-		modelHolder.addPeg(new CubeOpen(new Vector3(0.0, 0.0, +0.15 + 0.15), new Vector3(0.09, 0.09, 0.30), Direction.ZNeg, Color.circuitOFF));
-		modelHolder.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos, Color.circuitOFF));
-	}
 	
 	@Override
 	public ModelHolder getModelHolder()

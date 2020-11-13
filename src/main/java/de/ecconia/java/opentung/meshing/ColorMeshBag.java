@@ -1,39 +1,101 @@
-package de.ecconia.java.opentung.libwrap.meshes;
+package de.ecconia.java.opentung.meshing;
 
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.SimulationManager;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import org.lwjgl.opengl.GL30;
 
-public class ColorMesh
+public class ColorMeshBag extends MeshBag
 {
-	private final ShaderProgram colorMeshShader;
-	private GenericVAO vao;
+	private final Queue<Integer> unusedIDs = new LinkedList<>();
 	
-	//TODO: Apply check, that the ID's never get over the size below *32
-	//TODO: Apply check, that the amount of array positions gets generated automatically.
-	private final int[] falseDataArray = new int[(4096 - 32) / 4 * 4];
+	private int[] colors = new int[4]; //Maximum: (4096 - 32) / 4 * 4
+	private int highestIndex = 0;
 	
-	public ColorMesh(List<Component> components, SimulationManager simulation)
+	public ColorMeshBag(MeshBagContainer meshBagContainer)
 	{
-		this.colorMeshShader = new ShaderProgram("mesh/meshColor");
-		simulation.setColorMeshStates(falseDataArray);
-		
-		update(components);
-		
-		Color color = Color.displayOff;
-		Arrays.fill(falseDataArray, color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 0xff);
+		super(meshBagContainer);
 	}
 	
-	public void update(List<Component> components)
+	public void setColor(int colorID, Color color)
+	{
+		colors[colorID] = color.getR() << 24 | color.getG() << 16 | color.getB() << 8 | 255;
+	}
+	
+	public void addComponent(Component component, int verticesAmount, SimulationManager simulation)
+	{
+		//TODO: When removing also free the ID.
+		Colorable colorable = (Colorable) component;
+		int colorableAmount = component.getModelHolder().getColorables().size();
+		for(int i = 0; i < colorableAmount; i++)
+		{
+			colorable.setColorMeshBag(i, new ColorMeshBagReference(this, getFreeIndex()));
+		}
+		//Update the current color.
+		simulation.updateJobNextTickThreadSafe((unused) -> {
+			colorable.updateColors();
+		});
+		
+		super.addComponent(component, verticesAmount);
+	}
+	
+	@Override
+	public void removeComponent(Component component, int verticesAmount)
+	{
+		Colorable colorable = (Colorable) component;
+		int colorableAmount = component.getModelHolder().getColorables().size();
+		for(int i = 0; i < colorableAmount; i++)
+		{
+			//TODO: Simulation thread?
+			ColorMeshBagReference ref = colorable.removeColorMeshBag(i);
+			unusedIDs.add(ref.getIndex());
+		}
+		
+		super.removeComponent(component, verticesAmount);
+	}
+	
+	private int getFreeIndex()
+	{
+		Integer id = unusedIDs.poll();
+		if(id != null)
+		{
+			return id;
+		}
+		
+		int newIndex = highestIndex++;
+		if(newIndex >= colors.length)
+		{
+			colors = new int[colors.length + 4];
+			meshBagContainer.addDirtyColorMB(this);
+		}
+		return newIndex;
+	}
+	
+	public int[] getDataArray()
+	{
+		return colors;
+	}
+	
+	public void refresh(SimulationManager simulationManager)
+	{
+		List<Component> components = new ArrayList<>(this.components);
+		simulationManager.updateJobNextTickThreadSafe((unused) -> {
+			for(Component component : components)
+			{
+				((Colorable) component).updateColors();
+			}
+		});
+	}
+	
+	public void rebuild()
 	{
 		if(vao != null)
 		{
@@ -44,11 +106,6 @@ public class ColorMesh
 		int indicesAmount = 0;
 		for(Component component : components)
 		{
-			if(!(component instanceof Colorable))
-			{
-				continue;
-			}
-			
 			verticesAmount += component.getWholeMeshEntryVCount(MeshTypeThing.Display);
 			indicesAmount += component.getWholeMeshEntryICount(MeshTypeThing.Display);
 		}
@@ -75,7 +132,7 @@ public class ColorMesh
 			{
 				CubeFull cube = (CubeFull) comp.getModelHolder().getColorables().get(i);
 				
-				int colorID = ((Colorable) comp).getColorID(i);
+				int colorID = ((Colorable) comp).getColorMeshBag(i).getIndex();
 				for(int j = 0; j < cube.getFacesCount() * 4; j++)
 				{
 					colorIDs[colorIDIndex.getAndInc()] = colorID;
@@ -84,22 +141,6 @@ public class ColorMesh
 		}
 		
 		vao = new ColorMeshVAO(vertices, indices, colorIDs);
-	}
-	
-	public void draw(float[] view)
-	{
-		colorMeshShader.use();
-		colorMeshShader.setUniformM4(1, view);
-		colorMeshShader.setUniformArray(2, falseDataArray);
-		colorMeshShader.setUniformM4(3, view);
-		vao.use();
-		vao.draw();
-	}
-	
-	public void updateProjection(float[] projection)
-	{
-		colorMeshShader.use();
-		colorMeshShader.setUniformM4(0, projection);
 	}
 	
 	private static class ColorMeshVAO extends LargeGenericVAO

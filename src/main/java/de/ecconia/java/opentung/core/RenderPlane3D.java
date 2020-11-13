@@ -26,18 +26,9 @@ import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.TextureWrapper;
-import de.ecconia.java.opentung.libwrap.meshes.ColorMesh;
-import de.ecconia.java.opentung.libwrap.meshes.ConductorMesh;
-import de.ecconia.java.opentung.libwrap.meshes.SolidMesh;
-import de.ecconia.java.opentung.libwrap.meshes.TextureMesh;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
-import de.ecconia.java.opentung.units.IconGeneration;
-import de.ecconia.java.opentung.units.LabelToolkit;
-import de.ecconia.java.opentung.util.MinMaxBox;
-import de.ecconia.java.opentung.util.math.MathHelper;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
+import de.ecconia.java.opentung.meshing.ConductorMeshBag;
+import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
@@ -48,10 +39,16 @@ import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
+import de.ecconia.java.opentung.units.IconGeneration;
+import de.ecconia.java.opentung.units.LabelToolkit;
+import de.ecconia.java.opentung.util.MinMaxBox;
+import de.ecconia.java.opentung.util.math.MathHelper;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,14 +59,9 @@ public class RenderPlane3D implements RenderPlane
 	private Camera camera;
 	private long lastCycle;
 	
-	private TextureWrapper boardTexture;
-	
 	private final InputProcessor inputHandler;
 	
-	private TextureMesh textureMesh;
-	private SolidMesh solidMesh;
-	private ConductorMesh conductorMesh;
-	private ColorMesh colorMesh;
+	private final MeshBagContainer worldMesh;
 	
 	private final List<Vector3> wireEndsToRender = new ArrayList<>();
 	private final LabelToolkit labelToolkit = new LabelToolkit();
@@ -96,6 +88,7 @@ public class RenderPlane3D implements RenderPlane
 		this.shaderStorage = sharedData.getShaderStorage();
 		sharedData.setGPUTasks(gpuTasks);
 		sharedData.setRenderPlane3D(this);
+		this.worldMesh = new MeshBagContainer(sharedData.getShaderStorage());
 	}
 	
 	public void prepareSaving(AtomicInteger pauseArrived)
@@ -264,18 +257,23 @@ public class RenderPlane3D implements RenderPlane
 			Cluster wireCluster;
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 				//Places the wires and updates clusters as needed. Also finishes the wire linking.
-				ClusterHelper.placeWire(simulation, board, from, to, newWire);
+				ClusterHelper.placeWire(simulation, board, from, to, newWire, updates);
 				
 				//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
 				try
 				{
 					gpuTasks.put((ignored) -> {
+						System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+						for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+						{
+							entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+						}
 						//Add the wire to the mesh sources
 						board.getWiresToRender().add(newWire);
 						wireRayCaster.addWire(newWire);
-						
-						refreshWireMeshes();
+						worldMesh.addComponent(newWire, board.getSimulation());
 					});
 				}
 				catch(InterruptedException e)
@@ -385,22 +383,22 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused) -> {
-				board.getComponentsToRender().add(grabbedComponent);
+				worldMesh.addComponent(grabbedComponent, board.getSimulation());
 				grabbedComponent.setParent(placement.getParentBoard());
 				placement.getParentBoard().addChild(grabbedComponent);
+				grabbedComponent.updateBoundsDeep();
 				placement.getParentBoard().updateBounds();
 				for(Wire wire : grabbedWires)
 				{
 					CompWireRaw cwire = (CompWireRaw) wire;
 					board.getWiresToRender().add(cwire);
+					worldMesh.addComponent(cwire, board.getSimulation());
 					wireRayCaster.addWire(cwire);
 				}
 				if(grabbedComponent instanceof CompLabel)
 				{
 					board.getLabelsToRender().add((CompLabel) grabbedComponent);
 				}
-				
-				refreshComponentMeshes(grabbedComponent instanceof Colorable);
 				
 				grabbedComponent = null;
 				grabbedWires = null;
@@ -472,10 +470,9 @@ public class RenderPlane3D implements RenderPlane
 				try
 				{
 					gpuTasks.put((ignored) -> {
-						board.getBoardsToRender().add((CompBoard) newComponent);
 						placement.getParentBoard().addChild(newComponent);
 						placement.getParentBoard().updateBounds();
-						refreshBoardMeshes();
+						worldMesh.addComponent(newComponent, board.getSimulation());
 					});
 				}
 				catch(InterruptedException e)
@@ -491,7 +488,7 @@ public class RenderPlane3D implements RenderPlane
 			if(currentPlaceable == CompThroughPeg.info)
 			{
 				//TODO: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
-				Cluster cluster = new InheritingCluster(board.getNewClusterID());
+				Cluster cluster = new InheritingCluster();
 				Peg first = newComponent.getPegs().get(0);
 				Peg second = newComponent.getPegs().get(1);
 				cluster.addConnector(first);
@@ -504,24 +501,15 @@ public class RenderPlane3D implements RenderPlane
 			{
 				for(Peg peg : newComponent.getPegs())
 				{
-					Cluster cluster = new InheritingCluster(board.getNewClusterID());
+					Cluster cluster = new InheritingCluster();
 					cluster.addConnector(peg);
 					peg.setCluster(cluster);
 				}
 				for(Blot blot : newComponent.getBlots())
 				{
-					Cluster cluster = new SourceCluster(board.getNewClusterID(), blot);
+					Cluster cluster = new SourceCluster(blot);
 					cluster.addConnector(blot);
 					blot.setCluster(cluster);
-				}
-			}
-			
-			if(newComponent instanceof Colorable)
-			{
-				int colorablesCount = newComponent.getModelHolder().getColorables().size();
-				for(int i = 0; i < colorablesCount; i++)
-				{
-					((Colorable) newComponent).setColorID(i, board.getColorableIDs().getNewID());
 				}
 			}
 			
@@ -533,10 +521,9 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
-					board.getComponentsToRender().add(newComponent);
 					placement.getParentBoard().addChild(newComponent);
 					placement.getParentBoard().updateBounds();
-					refreshComponentMeshes(newComponent instanceof Colorable);
+					worldMesh.addComponent(newComponent, board.getSimulation());
 				});
 			}
 			catch(InterruptedException e)
@@ -569,13 +556,11 @@ public class RenderPlane3D implements RenderPlane
 				gpuTasks.add((unused) -> {
 					if(container instanceof CompBoard)
 					{
-						board.getBoardsToRender().remove(container);
-						refreshBoardMeshes();
+						worldMesh.removeComponent(container, board.getSimulation());
 					}
 					else
 					{
-						board.getComponentsToRender().remove(container);
-						refreshComponentMeshes(container instanceof Colorable);
+						worldMesh.removeComponent(container, board.getSimulation());
 					}
 					
 					if(container.getParent() != null)
@@ -601,9 +586,15 @@ public class RenderPlane3D implements RenderPlane
 					((CompContainer) wireToDelete.getParent()).remove(wireToDelete);
 				}
 				
-				ClusterHelper.removeWire(board, simulation, wireToDelete);
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+				ClusterHelper.removeWire(simulation, wireToDelete, updates);
 				
 				gpuTasks.add((unused) -> {
+					System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+					{
+						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+					}
 					if(clusterToHighlight == wireToDelete.getCluster())
 					{
 						clusterToHighlight = null;
@@ -611,7 +602,7 @@ public class RenderPlane3D implements RenderPlane
 					}
 					board.getWiresToRender().remove(wireToDelete);
 					wireRayCaster.removeWire(wireToDelete);
-					refreshWireMeshes();
+					worldMesh.removeComponent(wireToDelete, board.getSimulation());
 				});
 			});
 		}
@@ -626,43 +617,44 @@ public class RenderPlane3D implements RenderPlane
 					{
 						CompSnappingPeg sPeg = (CompSnappingPeg) toBeDeleted;
 						board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-							ClusterHelper.removeWire(board, simulation, wire);
+							Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+							ClusterHelper.removeWire(simulation, wire, updates);
 							sPeg.getPartner().setPartner(null);
 							sPeg.setPartner(null);
 							gpuTasks.add((unused) -> {
-								board.getComponentsToRender().remove(wire);
+								System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+								for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+								{
+									entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+								}
+								worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
 							});
 						});
 						break;
 					}
 				}
 			}
-			else if(toBeDeleted instanceof Colorable)
-			{
-				Colorable colorable = (Colorable) toBeDeleted;
-				gpuTasks.add((unused) -> {
-					int colorablesCount = component.getModelHolder().getColorables().size();
-					for(int i = 0; i < colorablesCount; i++)
-					{
-						board.getColorableIDs().freeID(colorable.getColorID(i));
-					}
-				});
-			}
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				List<Wire> wiresToRemove = new ArrayList<>();
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 				for(Blot blot : component.getBlots())
 				{
-					ClusterHelper.removeBlot(board, simulation, blot);
+					ClusterHelper.removeBlot(simulation, blot, updates);
 					wiresToRemove.addAll(blot.getWires());
 				}
 				for(Peg peg : component.getPegs())
 				{
-					ClusterHelper.removePeg(board, simulation, peg);
+					ClusterHelper.removePeg(simulation, peg, updates);
 					wiresToRemove.addAll(peg.getWires());
 				}
 				
 				gpuTasks.add((unused) -> {
+					System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+					{
+						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+					}
 					for(Blot blot : component.getBlots())
 					{
 						if(clusterToHighlight == blot.getCluster())
@@ -679,7 +671,6 @@ public class RenderPlane3D implements RenderPlane
 							connectorsToHighlight = new ArrayList<>();
 						}
 					}
-					board.getComponentsToRender().remove(component);
 					for(Wire wire : wiresToRemove)
 					{
 						if(wire.getClass() == HiddenWire.class)
@@ -688,6 +679,7 @@ public class RenderPlane3D implements RenderPlane
 						}
 						board.getWiresToRender().remove(wire);
 						wireRayCaster.removeWire((CompWireRaw) wire);
+						worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					}
 					if(component instanceof CompLabel)
 					{
@@ -702,7 +694,7 @@ public class RenderPlane3D implements RenderPlane
 						parent.updateBounds();
 					}
 					
-					refreshComponentMeshes(component instanceof Colorable);
+					worldMesh.removeComponent(component, board.getSimulation());
 				});
 			});
 		}
@@ -741,28 +733,22 @@ public class RenderPlane3D implements RenderPlane
 				{
 					CompSnappingPeg sPeg = (CompSnappingPeg) toBeGrabbed;
 					board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-						ClusterHelper.removeWire(board, simulation, wire);
+						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+						ClusterHelper.removeWire(simulation, wire, updates);
 						sPeg.getPartner().setPartner(null);
 						sPeg.setPartner(null);
 						gpuTasks.add((unused) -> {
-							board.getComponentsToRender().remove(wire);
-							//No mesh updates, since by order one will happen soon anyway.
+							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+							{
+								entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+							}
+							worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
 						});
 					});
 					break;
 				}
 			}
-		}
-		else if(toBeGrabbed instanceof Colorable)
-		{
-			Colorable colorable = (Colorable) toBeGrabbed;
-			gpuTasks.add((unused) -> {
-				int colorablesCount = toBeGrabbed.getModelHolder().getColorables().size();
-				for(int i = 0; i < colorablesCount; i++)
-				{
-					board.getColorableIDs().freeID(colorable.getColorID(i));
-				}
-			});
 		}
 		
 		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
@@ -811,10 +797,11 @@ public class RenderPlane3D implements RenderPlane
 					board.getLabelsToRender().remove(toBeGrabbed);
 				}
 				//Remove from meshes on render thread
-				board.getComponentsToRender().remove(toBeGrabbed);
+				worldMesh.removeComponent(toBeGrabbed, board.getSimulation());
 				for(Wire wire : wires)
 				{
 					board.getWiresToRender().remove(wire);
+					worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					wireRayCaster.removeWire((CompWireRaw) wire);
 				}
 				if(toBeGrabbed.getParent() != null)
@@ -823,7 +810,6 @@ public class RenderPlane3D implements RenderPlane
 					parent.remove(toBeGrabbed);
 					parent.updateBounds();
 				}
-				refreshComponentMeshes(toBeGrabbed instanceof Colorable);
 				//Create construct to store the grabbed content (to be drawn).
 				
 				grabRotation = 0;
@@ -843,20 +829,28 @@ public class RenderPlane3D implements RenderPlane
 				//Was aborted. But data is no longer valid.
 				return;
 			}
+			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 			for(Wire wire : wireCopy)
 			{
-				ClusterHelper.removeWire(board, board.getSimulation(), wire);
+				ClusterHelper.removeWire(board.getSimulation(), wire, updates);
 			}
 			for(Peg peg : compCopy.getPegs())
 			{
-				ClusterHelper.removePeg(board, board.getSimulation(), peg);
+				ClusterHelper.removePeg(board.getSimulation(), peg, updates);
 			}
 			for(Blot blot : compCopy.getBlots())
 			{
-				ClusterHelper.removeBlot(board, board.getSimulation(), blot);
+				ClusterHelper.removeBlot(board.getSimulation(), blot, updates);
 			}
 			
 			gpuTasks.add((unused2) -> {
+				System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+				for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+				{
+					entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+				}
+				
+				//Thats pretty much it. Just make the clipboard invisible:
 				grabbedWires = null;
 				grabbedComponent = null;
 				
@@ -864,9 +858,6 @@ public class RenderPlane3D implements RenderPlane
 				{
 					((CompLabel) compCopy).unload();
 				}
-				System.out.println("[MeshDebug] Update:");
-				conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
-				System.out.println("[MeshDebug] Done.");
 			});
 		});
 	}
@@ -874,11 +865,12 @@ public class RenderPlane3D implements RenderPlane
 	public void abortGrabbing()
 	{
 		gpuTasks.add((unused) -> {
-			board.getComponentsToRender().add(grabbedComponent);
+			//TODO: board.getComponentsToRender().add(grabbedComponent);
 			for(Wire wire : grabbedWires)
 			{
 				CompWireRaw cwire = (CompWireRaw) wire;
 				board.getWiresToRender().add(cwire);
+				worldMesh.addComponent(cwire, board.getSimulation());
 				wireRayCaster.addWire(cwire);
 			}
 			if(grabbedComponent instanceof CompLabel)
@@ -892,7 +884,7 @@ public class RenderPlane3D implements RenderPlane
 				parent.addChild(grabbedComponent);
 				parent.updateBounds();
 			}
-			refreshComponentMeshes(grabbedComponent instanceof Colorable);
+			worldMesh.addComponent(grabbedComponent, board.getSimulation());
 			
 			grabbedComponent = null;
 			grabbedWires = null;
@@ -904,18 +896,6 @@ public class RenderPlane3D implements RenderPlane
 	@Override
 	public void setup()
 	{
-		{
-			int side = 16;
-			BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g = image.createGraphics();
-			g.setColor(java.awt.Color.white);
-			g.fillRect(0, 0, side - 1, side - 1);
-			g.setColor(new java.awt.Color(0x777777));
-			g.drawRect(0, 0, side - 1, side - 1);
-			g.dispose();
-			boardTexture = TextureWrapper.createBoardTexture(image);
-		}
-		
 		//TODO: Currently manually triggered, but to be optimized away.
 		CompLabel.initGL();
 		CompPanelLabel.initGL();
@@ -935,37 +915,9 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
-		//Colorable IDs:
-		{
-			for(Component comp : board.getComponentsToRender())
-			{
-				if(!(comp instanceof Colorable))
-				{
-					continue;
-				}
-				
-				int colorablesCount = comp.getModelHolder().getColorables().size();
-				for(int i = 0; i < colorablesCount; i++)
-				{
-					CubeFull cube = (CubeFull) comp.getModelHolder().getColorables().get(i);
-					
-					int colorID = board.getColorableIDs().getNewID();
-					((Colorable) comp).setColorID(i, colorID);
-				}
-			}
-		}
-		
 		camera = new Camera();
 		
-		//Create meshes:
-		{
-			System.out.println("[MeshDebug] Starting mesh generation...");
-			textureMesh = new TextureMesh(boardTexture, board.getBoardsToRender());
-			solidMesh = new SolidMesh(board.getComponentsToRender());
-			conductorMesh = new ConductorMesh(board.getComponentsToRender(), board.getWiresToRender(), board.getSimulation(), true);
-			colorMesh = new ColorMesh(board.getComponentsToRender(), board.getSimulation());
-			System.out.println("[MeshDebug] Done.");
-		}
+		worldMesh.setup(board, board.getWiresToRender(), board.getSimulation());
 		
 		gpuTasks.add(new GPUTask()
 		{
@@ -989,43 +941,13 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void refreshPostWorldLoad()
 	{
-		System.out.println("[MeshDebug] Update:");
-		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
-		for(Cluster cluster : board.getClusters())
-		{
-			cluster.updateState(board.getSimulation());
-		}
+		System.out.println("[MeshDebug] Post-World-Load:");
+		worldMesh.rebuildConductorMeshes(board.getSimulation());
 		board.getSimulation().start();
 		fullyLoaded = true;
 		sharedData.setSimulationLoaded(true);
 		inputHandler.updatePauseMenu();
-		System.out.println("[MeshDebug] Done.");
-	}
-	
-	public void refreshComponentMeshes(boolean hasColorable)
-	{
-		System.out.println("[MeshDebug] Update:");
-		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
-		solidMesh.update(board.getComponentsToRender());
-		if(hasColorable)
-		{
-			colorMesh.update(board.getComponentsToRender());
-		}
-		System.out.println("[MeshDebug] Done.");
-	}
-	
-	public void refreshWireMeshes()
-	{
-		System.out.println("[MeshDebug] Update:");
-		conductorMesh.update(board.getComponentsToRender(), board.getWiresToRender());
-		System.out.println("[MeshDebug] Done.");
-	}
-	
-	private void refreshBoardMeshes()
-	{
-		System.out.println("[MeshDebug] Update:");
-		textureMesh.update(board.getBoardsToRender());
-		System.out.println("[MeshDebug] Done.");
+		System.out.println("[MeshDebug] P-W-L Done.");
 	}
 	
 	public void calculatePlacementPosition()
@@ -1053,6 +975,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		CompBoard board = (CompBoard) part;
 		
+		//TODO: Another ungeneric access
 		CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
 		Vector3 position = board.getPosition();
 		Quaternion rotation = board.getRotation();
@@ -1185,6 +1108,8 @@ public class RenderPlane3D implements RenderPlane
 			gpuTasks.poll().execute(this);
 		}
 		
+		worldMesh.rebuildDirty(board.getSimulation());
+		
 		camera.lockLocation();
 		controller.doFrameCycle();
 		
@@ -1212,18 +1137,6 @@ public class RenderPlane3D implements RenderPlane
 			lineShader.use();
 			lineShader.setUniformM4(1, view);
 			Matrix model = new Matrix();
-			if(Settings.drawComponentPositionIndicator)
-			{
-				GenericVAO crossyIndicator = shaderStorage.getCrossyIndicator();
-				for(Component comp : board.getComponentsToRender())
-				{
-					model.identity();
-					model.translate((float) comp.getPosition().getX(), (float) comp.getPosition().getY(), (float) comp.getPosition().getZ());
-					lineShader.setUniformM4(2, model.getMat());
-					crossyIndicator.use();
-					crossyIndicator.draw();
-				}
-			}
 			if(Settings.drawWorldAxisIndicator)
 			{
 				GenericVAO axisIndicator = shaderStorage.getAxisIndicator();
@@ -1343,6 +1256,7 @@ public class RenderPlane3D implements RenderPlane
 				visibleCube.draw();
 			}
 			
+			//TODO: Use getConductors as reference and somehow get the state of it.
 			for(Blot blot : grabbedComponent.getBlots())
 			{
 				CubeFull c = blot.getModel();
@@ -1363,6 +1277,11 @@ public class RenderPlane3D implements RenderPlane
 			for(Peg peg : grabbedComponent.getPegs())
 			{
 				CubeFull c = peg.getModel();
+				//Skip snapping pegs.
+				if(Color.snappingPeg.asVector().equals(c.getColor()))
+				{
+					continue;
+				}
 				m.identity();
 				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
 				m.multiply(rotMat);
@@ -1502,7 +1421,7 @@ public class RenderPlane3D implements RenderPlane
 			matrix.scale((float) x * 0.15f, 0.075f, (float) z * 0.15f); //Just use the right size from the start... At this point in code it always has that size.
 			
 			//Draw the board:
-			boardTexture.activate();
+			shaderStorage.getBoardTexture().activate();
 			ShaderProgram textureCubeShader = shaderStorage.getTextureCubeShader();
 			textureCubeShader.use();
 			textureCubeShader.setUniformM4(1, view);
@@ -1525,19 +1444,9 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawDynamic(float[] view)
 	{
+		worldMesh.draw(view);
+		
 		Matrix model = new Matrix();
-		
-		if(Settings.drawBoards)
-		{
-			textureMesh.draw(view);
-		}
-		conductorMesh.draw(view);
-		if(Settings.drawMaterial)
-		{
-			solidMesh.draw(view);
-		}
-		colorMesh.draw(view);
-		
 		ShaderProgram sdfShader = shaderStorage.getSdfShader();
 		sdfShader.use();
 		sdfShader.setUniformM4(1, view);
@@ -1989,11 +1898,6 @@ public class RenderPlane3D implements RenderPlane
 	@Override
 	public void newSize(int width, int height)
 	{
-		float[] projection = shaderStorage.getProjectionMatrix();
-		solidMesh.updateProjection(projection);
-		conductorMesh.updateProjection(projection);
-		colorMesh.updateProjection(projection);
-		textureMesh.updateProjection(projection);
 	}
 	
 	public Camera getCamera()

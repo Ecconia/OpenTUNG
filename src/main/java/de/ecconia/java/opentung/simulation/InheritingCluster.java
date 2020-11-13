@@ -10,11 +10,6 @@ public class InheritingCluster extends Cluster
 	private int activeSources = 0;
 	private boolean lastState;
 	
-	public InheritingCluster(int id)
-	{
-		super(id);
-	}
-	
 	@Override
 	public boolean isActive()
 	{
@@ -45,7 +40,7 @@ public class InheritingCluster extends Cluster
 			//Yep time to update.
 			updateContent(simulation);
 			lastState = isActive();
-			simulation.changeState(getId(), lastState);
+			updateState();
 		}
 	}
 	
@@ -64,7 +59,7 @@ public class InheritingCluster extends Cluster
 	@Override
 	public String toString()
 	{
-		return "ci" + getId();
+		return "Drain" + hashCode();
 	}
 	
 	public void remove(SourceCluster sourceCluster)

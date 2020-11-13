@@ -104,8 +104,6 @@ public class Settings
 	public static boolean drawMaterial = true;
 	
 	//Used for some debugging every now and then.
-	@SettingInfo(key = "settings.graphic.drawToggles.componentPositionIndicator")
-	public static boolean drawComponentPositionIndicator = false;
 	@SettingInfo(key = "settings.graphic.drawToggles.worldAxisIndicator")
 	public static boolean drawWorldAxisIndicator = false;
 	

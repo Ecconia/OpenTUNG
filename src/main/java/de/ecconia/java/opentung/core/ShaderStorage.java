@@ -2,12 +2,15 @@ package de.ecconia.java.opentung.core;
 
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.libwrap.vaos.FlatPlaneVAO;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
-import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.InvisibleCubeVAO;
+import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.VisibleCubeVAO;
 import de.ecconia.java.opentung.settings.Settings;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import org.lwjgl.opengl.GL30;
 
 public class ShaderStorage
@@ -39,6 +42,17 @@ public class ShaderStorage
 	private final InvisibleCubeVAO invisibleCube;
 	private final VisibleCubeVAO visibleOpTexCube;
 	
+	//Textures:
+	private final TextureWrapper boardTexture;
+	
+	//Meshes:
+	
+	private final ShaderProgram meshBoardShader;
+	private final ShaderProgram meshSolidShader;
+	private final ShaderProgram meshColorShader;
+	private final ShaderProgram meshConductorShader;
+	
+	//Other:
 	
 	private int width = 0;
 	private int height = 0;
@@ -92,6 +106,25 @@ public class ShaderStorage
 		lineShader = new ShaderProgram("lineShader");
 		crossyIndicator = LineVAO.generateCrossyIndicator();
 		axisIndicator = LineVAO.generateAxisIndicator();
+		
+		//Textures:
+		{
+			int side = 16;
+			BufferedImage image = new BufferedImage(side, side, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			g.setColor(java.awt.Color.white);
+			g.fillRect(0, 0, side - 1, side - 1);
+			g.setColor(new java.awt.Color(0x777777));
+			g.drawRect(0, 0, side - 1, side - 1);
+			g.dispose();
+			boardTexture = TextureWrapper.createBoardTexture(image);
+		}
+		
+		//3D/Meshes:
+		this.meshBoardShader = new ShaderProgram("mesh/meshBoard");
+		this.meshSolidShader = new ShaderProgram("mesh/meshSolid");
+		this.meshColorShader = new ShaderProgram("mesh/meshColor");
+		this.meshConductorShader = new ShaderProgram("mesh/meshConductor");
 	}
 	
 	public void newSize(int width, int height)
@@ -124,6 +157,16 @@ public class ShaderStorage
 		lineShader.setUniformM4(0, projection);
 		invisibleCubeShader.use();
 		invisibleCubeShader.setUniformM4(0, projection);
+		
+		//3D/Meshes:
+		meshBoardShader.use();
+		meshBoardShader.setUniformM4(0, projection);
+		meshSolidShader.use();
+		meshSolidShader.setUniformM4(0, projection);
+		meshColorShader.use();
+		meshColorShader.setUniformM4(0, projection);
+		meshConductorShader.use();
+		meshConductorShader.setUniformM4(0, projection);
 	}
 	
 	//2D Getters:
@@ -205,6 +248,28 @@ public class ShaderStorage
 		return sdfShader;
 	}
 	
+	//3D/Meshes:
+	
+	public ShaderProgram getMeshBoardShader()
+	{
+		return meshBoardShader;
+	}
+	
+	public ShaderProgram getMeshSolidShader()
+	{
+		return meshSolidShader;
+	}
+	
+	public ShaderProgram getMeshColorShader()
+	{
+		return meshColorShader;
+	}
+	
+	public ShaderProgram getMeshConductorShader()
+	{
+		return meshConductorShader;
+	}
+	
 	//Other:
 	
 	public float[] getProjectionMatrix()
@@ -216,6 +281,11 @@ public class ShaderStorage
 	{
 		visibleCubeShader.setUniformM4(0, perspectiveProjection);
 		GL30.glViewport(0, 0, width, height);
+	}
+	
+	public TextureWrapper getBoardTexture()
+	{
+		return boardTexture;
 	}
 	
 	public int getWidth()
