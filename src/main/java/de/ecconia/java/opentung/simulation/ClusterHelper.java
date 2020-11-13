@@ -768,13 +768,15 @@ public class ClusterHelper
 		//TBI: Should something be done when deleting?
 //		board.deleteCluster(sourceCluster.getId());
 		
+		//Linked list stores all source-clusters which had been processed. In case that they had wires leading to the blot again - these should be skipped.
+		LinkedList<Cluster> newClusters = new LinkedList<>();
 		for(Wire blotWire : blot.getWires())
 		{
 			sourceCluster.remove(blotWire);
 			
 			Connector otherSide = blotWire.getOtherSide(blot);
 			otherSide.remove(blotWire); //Remove the wire-connection from the other side.
-			if(otherSide.getCluster() == null)
+			if(newClusters.contains(otherSide.getCluster()))
 			{
 				//Has been splitted off before, just remove it.
 				continue;
@@ -785,12 +787,34 @@ public class ClusterHelper
 				//Same cluster, split off.
 				Prototype split = splitNonSourcePartFromCluster(otherSide);
 				
-				if(!split.getBlotWires().isEmpty())
+				for(Wire otherBlotWire : split.getBlotWires())
 				{
-					System.out.println("WARNING: Corrupted cluster network. SourceCluster with more than one Source.");
+					Connector a = otherBlotWire.getConnectorA();
+					Connector b = otherBlotWire.getConnectorB();
+					Connector otherSideConnector = null;
+					if(a == blot)
+					{
+						otherSideConnector = b;
+					}
+					else if(b == blot)
+					{
+						otherSideConnector = a;
+					}
+					else
+					{
+						System.out.println("WARNING: Corrupted cluster network. SourceCluster with more than one Source.");
+						continue;
+					}
+					if(otherSideConnector == blot)
+					{
+						System.out.println("WARNING: Corrupted cluster network. Blot connects to itself.");
+					}
+					
+					otherSideConnector.remove(otherBlotWire);
 				}
 				
 				InheritingCluster newCluster = new InheritingCluster();
+				newClusters.add(newCluster);
 				split.mergeInto(newCluster, updates);
 				//Can't have any sources now, cause we are about to delete the only source.
 				if(sourceCluster.isActive())
