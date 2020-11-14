@@ -32,6 +32,11 @@ public class SettingsIO
 		}
 		
 		if(!watcher.register(file.getName(), () -> {
+			if(file.length() == 0)
+			{
+				//File is for weird reasons empty, ignore (happens on Windows edited with IntelliJ).
+				return;
+			}
 			System.out.println("[Settings] Updating from file:");
 			resetKeys();
 			try
