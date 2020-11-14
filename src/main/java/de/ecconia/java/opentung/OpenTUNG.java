@@ -88,6 +88,8 @@ public class OpenTUNG
 			boardUniverse = new BoardUniverse(TungBoardLoader.importTungBoard(boardFile));
 		}
 		
+		SharedData sharedData = new SharedData(boardUniverse, boardFile);
+		
 		System.out.println("Starting GUI...");
 		try
 		{
@@ -109,12 +111,10 @@ public class OpenTUNG
 					System.out.println("OpenGL version: " + GL30.glGetString(GL30.GL_VERSION));
 					System.out.println("Amount of connection-groups per mesh: " + GL30.glGetInteger(GL30.GL_MAX_VERTEX_UNIFORM_COMPONENTS));
 					
-					//TODO: Add shader store.
 					//TODO: Load a placeholder texture here... Just the logo with some background.
 					//Run initially, to reduce weird visible crap.
 					window.update();
 					
-					SharedData sharedData = new SharedData(boardUniverse, boardFile);
 					init(sharedData);
 					
 					long past = System.currentTimeMillis();
@@ -145,7 +145,7 @@ public class OpenTUNG
 						if(now - past > 1000)
 						{
 							past = now;
-							window.setTitle("OpenTUNG FPS: " + finishedRenderings + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad() + " | " + sharedData.getCurrentBoardFile().getName());
+							sharedData.setFPS(finishedRenderings);
 							finishedRenderings = 0;
 						}
 						
@@ -185,7 +185,9 @@ public class OpenTUNG
 			
 			//Let main-thread execute the input handler:
 			Thread.currentThread().setName("Main/Input");
-			inputHandler.eventPollEntry();
+			inputHandler.eventPollEntry(() -> {
+				window.setTitle("OpenTUNG FPS: " + sharedData.getFPS() + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad() + " | " + sharedData.getCurrentBoardFile().getName());
+			});
 			System.out.println("Main/Input thread has turned off.");
 		}
 		catch(Exception e)

@@ -13,6 +13,7 @@ public class SharedData
 	private File currentBoardFile;
 	private boolean simulationLoaded;
 	private ShaderStorage shaderStorage;
+	private int lastFPS;
 	
 	private final BoardUniverse boardUniverse;
 	
@@ -100,5 +101,15 @@ public class SharedData
 	public ShaderStorage getShaderStorage()
 	{
 		return shaderStorage;
+	}
+	
+	public void setFPS(int lastFPS)
+	{
+		this.lastFPS = lastFPS;
+	}
+	
+	public int getFPS()
+	{
+		return lastFPS;
 	}
 }

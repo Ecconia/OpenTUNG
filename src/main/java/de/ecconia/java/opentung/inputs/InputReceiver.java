@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
+import de.ecconia.java.opentung.core.SimpleCallback;
 import org.lwjgl.glfw.GLFW;
 
 public class InputReceiver
@@ -56,9 +57,10 @@ public class InputReceiver
 		GLFW.glfwPostEmptyEvent();
 	}
 	
-	public void eventPollEntry()
+	public void eventPollEntry(SimpleCallback titleUpdater)
 	{
 		long time = System.currentTimeMillis();
+		long lastTitleUpdate = 0;
 		while(!Thread.currentThread().isInterrupted())
 		{
 			if(intervalMode)
@@ -85,9 +87,18 @@ public class InputReceiver
 			}
 			else
 			{
-				GLFW.glfwWaitEvents();
+				GLFW.glfwWaitEventsTimeout(1D); //Wait the maximum of 1 second.
 				processor.postEvents(); //Call anyway.
 				time = System.currentTimeMillis(); //Keep track of time, in case of switching.
+			}
+			
+			{
+				long now = System.currentTimeMillis();
+				if(now - lastTitleUpdate > 1000L)
+				{
+					titleUpdater.call();
+					lastTitleUpdate = now;
+				}
 			}
 		}
 	}

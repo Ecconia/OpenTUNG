@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
+import de.ecconia.java.opentung.core.SimpleCallback;
 import org.lwjgl.glfw.GLFW;
 
 public class InputProcessor implements Controller
@@ -31,10 +32,10 @@ public class InputProcessor implements Controller
 		receiver = new InputReceiver(this, windowID);
 	}
 	
-	public void eventPollEntry()
+	public void eventPollEntry(SimpleCallback titleUpdater)
 	{
 		//Switch to InputReceiver to receive all events.
-		receiver.eventPollEntry();
+		receiver.eventPollEntry(titleUpdater);
 	}
 	
 	public void stop()
