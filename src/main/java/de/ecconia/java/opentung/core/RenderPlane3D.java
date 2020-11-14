@@ -1280,6 +1280,10 @@ public class RenderPlane3D implements RenderPlane
 				m.multiply(rotMat);
 				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
 				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
+				if(c instanceof CubeOpenRotated)
+				{
+					m.multiply(new Matrix(((CubeOpenRotated) c).getRotation().inverse().createMatrix()));
+				}
 				Vector3 mPos = c.getPosition();
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
@@ -1302,6 +1306,10 @@ public class RenderPlane3D implements RenderPlane
 				m.multiply(rotMat);
 				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
 				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
+				if(c instanceof CubeOpenRotated)
+				{
+					m.multiply(new Matrix(((CubeOpenRotated) c).getRotation().inverse().createMatrix()));
+				}
 				Vector3 mPos = c.getPosition();
 				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
 				Vector3 size = c.getSize();
