@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.core;
 
-import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
@@ -55,7 +54,7 @@ public class World3DHelper
 		}
 		for(Meshable meshable : model.getConductors())
 		{
-			visibleCubeShader.setUniformV4(3, Color.circuitOFF.asArray());
+			visibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
 			drawCubeFull(visibleCubeShader, visibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
 		}
 	}
