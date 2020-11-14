@@ -1642,11 +1642,15 @@ public class RenderPlane3D implements RenderPlane
 		match = null;
 		dist = Double.MAX_VALUE;
 		
-		RayCastResult result = wireRayCaster.castRay(cameraPosition, cameraRay);
-		if(result != null && result.getDistance() < dist)
+		//Don't collide with wires, if one is about to be drawn.
+		if(wireStartPoint == null)
 		{
-			match = result.getMatch();
-			dist = result.getDistance();
+			RayCastResult result = wireRayCaster.castRay(cameraPosition, cameraRay);
+			if(result != null && result.getDistance() < dist)
+			{
+				match = result.getMatch();
+				dist = result.getDistance();
+			}
 		}
 		
 		focusProbe(board.getRootBoard(), cameraPosition, cameraRay);
