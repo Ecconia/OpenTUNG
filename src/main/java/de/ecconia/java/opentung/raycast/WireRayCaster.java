@@ -40,6 +40,10 @@ public class WireRayCaster
 	
 	public void addWire(CompWireRaw wire)
 	{
+		if(wire.getLength() <= 0 )
+		{
+			return;
+		}
 		double halfLength = wire.getLength() / 2.0;
 		Vector3 ray = new Vector3(0, 0, 1);
 		Vector3 a = new Vector3(+0.025, +0.01, -halfLength);
@@ -66,6 +70,10 @@ public class WireRayCaster
 	
 	public void removeWire(CompWireRaw wire)
 	{
+		if(wire.getLength() <= 0 )
+		{
+			return; //We don't have such wires here.
+		}
 		double halfLength = wire.getLength() / 2.0;
 		Vector3 ray = new Vector3(0, 0, 1);
 		Vector3 a = new Vector3(+0.025, +0.01, -halfLength);
