@@ -86,9 +86,18 @@ public class CompDelayer extends Component implements Powerable, Updateable, Cus
 		}
 	}
 	
+	private long lastUpdate = 0;
+	
 	@Override
 	public void update(SimulationManager simulation)
 	{
+		long simulationLoopIndex = simulation.getTickLoopIndex();
+		if(simulationLoopIndex == lastUpdate)
+		{
+			return; //Already handled this tick - if not big problem.
+		}
+		lastUpdate = simulationLoopIndex;
+		
 		boolean input = this.input.getCluster().isActive();
 		if(delayCount == 9)
 		{

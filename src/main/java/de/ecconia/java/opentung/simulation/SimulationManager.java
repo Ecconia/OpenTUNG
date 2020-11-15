@@ -24,6 +24,8 @@ public class SimulationManager extends Thread
 	private boolean paused;
 	private AtomicInteger pauseArrived;
 	
+	private long tickLoopIndex;
+	
 	public SimulationManager()
 	{
 		super("Simulation-Thread");
@@ -155,6 +157,8 @@ public class SimulationManager extends Thread
 			}
 		}
 		
+		tickLoopIndex++;
+		
 		{
 			List<Updateable> tmp = updateThisTick;
 			updateThisTick = updateNextTick;
@@ -211,6 +215,11 @@ public class SimulationManager extends Thread
 		{
 			updateClusterNextStage.clear();
 		}
+	}
+	
+	public long getTickLoopIndex()
+	{
+		return tickLoopIndex;
 	}
 	
 	public int getTPS()
