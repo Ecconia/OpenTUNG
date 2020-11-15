@@ -1106,7 +1106,7 @@ public class RenderPlane3D implements RenderPlane
 		Vector3 placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
 		CompBoard placementBoard = board;
 		
-		if(sharedData.getCurrentPlaceable() == CompBoard.info)
+		if(sharedData.getCurrentPlaceable() == CompBoard.info && grabbedComponent == null)
 		{
 			//Boards have their center within, thus the offset needs to be adjusted:
 			placementPosition = placementPosition.add(placementNormal.multiply(placeableBoardIslaying ? 0.15 : (0.15 + 0.075)));
