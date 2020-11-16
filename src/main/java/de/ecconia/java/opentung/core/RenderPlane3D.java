@@ -403,7 +403,7 @@ public class RenderPlane3D implements RenderPlane
 					worldMesh.addComponent(cwire, board.getSimulation());
 					wireRayCaster.addWire(cwire);
 				}
-				if(grabbedComponent instanceof CompLabel)
+				if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
 				{
 					board.getLabelsToRender().add((CompLabel) grabbedComponent);
 				}
@@ -809,6 +809,7 @@ public class RenderPlane3D implements RenderPlane
 				}
 				if(toBeGrabbed instanceof CompLabel)
 				{
+					//Remove regardless of it having texture or not.
 					board.getLabelsToRender().remove(toBeGrabbed);
 				}
 				//Remove from meshes on render thread
@@ -888,7 +889,7 @@ public class RenderPlane3D implements RenderPlane
 				worldMesh.addComponent(cwire, board.getSimulation());
 				wireRayCaster.addWire(cwire);
 			}
-			if(grabbedComponent instanceof CompLabel)
+			if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
 			{
 				board.getLabelsToRender().add((CompLabel) grabbedComponent);
 			}
@@ -1356,7 +1357,7 @@ public class RenderPlane3D implements RenderPlane
 				visibleCube.draw();
 			}
 			
-			if(grabbedComponent instanceof CompLabel)
+			if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
 			{
 				ShaderProgram sdfShader = shaderStorage.getSdfShader();
 				CompLabel label = (CompLabel) grabbedComponent;

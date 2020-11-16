@@ -108,6 +108,11 @@ public class CompLabel extends Component implements CustomData
 		this.texture = null; //Reset texture.
 	}
 	
+	public boolean hasTexture()
+	{
+		return text != null;
+	}
+	
 	//### Save/Load ###
 	
 	@Override
