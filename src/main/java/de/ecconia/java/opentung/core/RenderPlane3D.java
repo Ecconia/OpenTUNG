@@ -349,6 +349,11 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return false;
 		}
+		if(placement.getParentBoard() != board.getRootBoard() && placement.getParentBoard().getParent() == null)
+		{
+			System.out.println("Board attempted to place on is deleted/gone.");
+			return false;
+		}
 		
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		if(isGrabbing())
@@ -550,6 +555,10 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return;
 		}
+		if(boardIsBeingDragged)
+		{
+			return;
+		}
 		if(toBeDeleted instanceof Connector)
 		{
 			toBeDeleted = toBeDeleted.getParent();
@@ -560,31 +569,23 @@ public class RenderPlane3D implements RenderPlane
 			CompContainer container = (CompContainer) toBeDeleted;
 			if(container.isEmpty())
 			{
-				//Asume containers are not logic components.
-				gpuTasks.add((unused) -> {
-					if(container instanceof CompBoard)
-					{
-						if(container.getParent() != null)
-						{
-							worldMesh.removeComponent(container, board.getSimulation());
-						}
-						else
-						{
-							System.out.println("Cannot remove root-board!");
-						}
-					}
-					else
-					{
+				if(container.getParent() != null) //Root board or some other bug, either way, don't delete.
+				{
+					//Remove parent on the input thread, to prevent placements on this component.
+					//This is currently a thread-safe operation.
+					CompContainer parent = (CompContainer) container.getParent();
+					container.setParent(null);
+					//Asume containers are not logic components.
+					gpuTasks.add((unused) -> {
 						worldMesh.removeComponent(container, board.getSimulation());
-					}
-					
-					if(container.getParent() != null)
-					{
-						CompContainer parent = (CompContainer) container.getParent();
 						parent.remove(container);
 						parent.updateBounds();
-					}
-				});
+					});
+				}
+				else
+				{
+					System.out.println("Cannot remove root-component! (If not the root board, there is an issue).");
+				}
 			}
 			else
 			{
