@@ -63,6 +63,13 @@ public class BoardUniverse
 		//Sort Elements into Lists, for the 3D section to use:
 		importComponent(board);
 		
+		for(CompWireRaw wire : wiresToRender)
+		{
+			//Fix Parent of wires.
+			((CompContainer) wire.getParent()).remove(wire);
+			wire.setParent(placeboWireParent);
+		}
+		
 		System.out.println("[BoardImport] Creating SnappingPeg bounds.");
 		board.createSnappingPegBounds();
 		
@@ -252,53 +259,48 @@ public class BoardUniverse
 			};
 		}
 		
-		for(Component component : container.getChildren())
+		for(CompWireRaw wire : wiresToRender)
 		{
-			if(component instanceof CompWireRaw)
+			if(wire.getConnectorA() != null)
 			{
-				CompWireRaw wire = (CompWireRaw) component;
-				
-				Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
-				Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
-				if(!maintenance)
+				continue; //Already processed -> Skip.
+			}
+			Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
+			Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
+			if(!maintenance)
+			{
+				if(connectorA == null || connectorB == null)
 				{
-					if(connectorA == null || connectorB == null)
-					{
-						brokenWires.add(wire);
-						throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
-					}
-					wire.setConnectorA(connectorA);
+					brokenWires.add(wire);
+					throw new RuntimeException("Could not import TungBoard, cause some wires seem to end up outside of connectors.");
+				}
+				wire.setConnectorA(connectorA);
+				wire.setConnectorB(connectorB);
+			}
+			else
+			{
+				if(connectorA == null && connectorB == null)
+				{
+					//Ignore this wire, it will never be accessed.
+					wire.setConnectorA(placebo);
+					wire.setConnectorB(placebo);
+					wire.setCluster(new InheritingCluster()); //Assign empty cluster, just for the ID.
+				}
+				else if(connectorA == null)
+				{
+					wire.setConnectorA(connectorB);
 					wire.setConnectorB(connectorB);
+				}
+				else if(connectorB == null)
+				{
+					wire.setConnectorA(connectorA);
+					wire.setConnectorB(connectorA);
 				}
 				else
 				{
-					if(connectorA == null && connectorB == null)
-					{
-						//Ignore this wire, it will never be accessed.
-						wire.setConnectorA(placebo);
-						wire.setConnectorB(placebo);
-						wire.setCluster(new InheritingCluster()); //Assign empty cluster, just for the ID.
-					}
-					else if(connectorA == null)
-					{
-						wire.setConnectorA(connectorB);
-						wire.setConnectorB(connectorB);
-					}
-					else if(connectorB == null)
-					{
-						wire.setConnectorA(connectorA);
-						wire.setConnectorB(connectorA);
-					}
-					else
-					{
-						wire.setConnectorA(connectorA);
-						wire.setConnectorB(connectorB);
-					}
+					wire.setConnectorA(connectorA);
+					wire.setConnectorB(connectorB);
 				}
-			}
-			else if(component instanceof CompContainer)
-			{
-				linkWires((CompContainer) component, scannable);
 			}
 		}
 	}
@@ -471,9 +473,6 @@ public class BoardUniverse
 	{
 		if(component instanceof CompWireRaw)
 		{
-			//Fix Parent of wires.
-			((CompContainer) component.getParent()).remove(component);
-			component.setParent(placeboWireParent);
 			wiresToRender.add((CompWireRaw) component);
 		}
 		else if(!(component instanceof CompBoard))
