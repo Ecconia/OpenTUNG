@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.PlaceboParent;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.savefile.BoardAndWires;
 import de.ecconia.java.opentung.settings.Settings;
@@ -24,7 +25,6 @@ import de.ecconia.java.opentung.util.Ansi;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +33,7 @@ import java.util.concurrent.BlockingQueue;
 public class BoardUniverse
 {
 	private final CompBoard rootBoard;
+	private final Component placeboWireParent = new PlaceboParent(); //Will be set as parent for wires, but has no other purpose other than removing the null reference.
 	
 	private final List<CompWireRaw> wiresToRender = new ArrayList<>();
 	private List<Component> componentsToRender = new ArrayList<>(); //TODO: Remove
@@ -47,7 +48,11 @@ public class BoardUniverse
 	public BoardUniverse(BoardAndWires bnw)
 	{
 		this(bnw.getBoard());
-		this.wiresToRender.addAll(Arrays.asList(bnw.getWires()));
+		for(CompWireRaw wire : bnw.getWires())
+		{
+			wire.setParent(placeboWireParent);
+			wiresToRender.add(wire);
+		}
 	}
 	
 	public BoardUniverse(CompBoard board)
@@ -466,6 +471,9 @@ public class BoardUniverse
 	{
 		if(component instanceof CompWireRaw)
 		{
+			//Fix Parent of wires.
+			((CompContainer) component.getParent()).remove(component);
+			component.setParent(placeboWireParent);
 			wiresToRender.add((CompWireRaw) component);
 		}
 		else if(!(component instanceof CompBoard))
@@ -506,5 +514,10 @@ public class BoardUniverse
 	public List<CompWireRaw> getBrokenWires()
 	{
 		return brokenWires;
+	}
+	
+	public Component getPlaceboWireParent()
+	{
+		return placeboWireParent;
 	}
 }

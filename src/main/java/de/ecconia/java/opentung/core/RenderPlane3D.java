@@ -22,6 +22,7 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlaceboParent;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -246,8 +247,7 @@ public class RenderPlane3D implements RenderPlane
 			//Add wire:
 			CompWireRaw newWire;
 			{
-				//TODO: Use both connectors to figure out the parent - for now not required but later on.
-				newWire = new CompWireRaw(null);
+				newWire = new CompWireRaw(board.getPlaceboWireParent());
 				
 				Vector3 fromPos = from.getConnectionPoint();
 				Vector3 toPos = to.getConnectionPoint();
@@ -563,45 +563,36 @@ public class RenderPlane3D implements RenderPlane
 		{
 			toBeDeleted = toBeDeleted.getParent();
 		}
+		if(toBeDeleted instanceof CompContainer && !((CompContainer) toBeDeleted).isEmpty())
+		{
+			System.out.println("Cannot delete containers with components yet.");
+			return;
+		}
+		if(toBeDeleted.getParent() == null)
+		{
+			//Either this is a root-board, or its already about to be deleted.
+			System.out.println("Cannot delete the root-board, or this component is already about to be deleted.");
+			return;
+		}
+		//Delete the parent to prevent this component to be deleted another time. And some other reasons.
+		final Component parent = toBeDeleted.getParent();
+		toBeDeleted.setParent(null);
 		
 		if(toBeDeleted instanceof CompContainer)
 		{
 			CompContainer container = (CompContainer) toBeDeleted;
-			if(container.isEmpty())
-			{
-				if(container.getParent() != null) //Root board or some other bug, either way, don't delete.
-				{
-					//Remove parent on the input thread, to prevent placements on this component.
-					//This is currently a thread-safe operation.
-					CompContainer parent = (CompContainer) container.getParent();
-					container.setParent(null);
-					//Asume containers are not logic components.
-					gpuTasks.add((unused) -> {
-						worldMesh.removeComponent(container, board.getSimulation());
-						parent.remove(container);
-						parent.updateBounds();
-					});
-				}
-				else
-				{
-					System.out.println("Cannot remove root-component! (If not the root board, there is an issue).");
-				}
-			}
-			else
-			{
-				System.out.println("Cannot delete containers with components yet.");
-			}
+			gpuTasks.add((unused) -> {
+				worldMesh.removeComponent(container, board.getSimulation());
+				CompContainer parentConainer = (CompContainer) parent;
+				parentConainer.remove(container);
+				parentConainer.updateBounds();
+			});
 		}
 		else if(toBeDeleted instanceof CompWireRaw)
 		{
 			final CompWireRaw wireToDelete = (CompWireRaw) toBeDeleted;
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-				if(wireToDelete.getParent() != null)
-				{
-					((CompContainer) wireToDelete.getParent()).remove(wireToDelete);
-				}
-				
 				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 				ClusterHelper.removeWire(simulation, wireToDelete, updates);
 				
@@ -703,11 +694,11 @@ public class RenderPlane3D implements RenderPlane
 						board.getLabelsToRender().remove(component);
 					}
 					
-					if(component.getParent() != null)
+					if(parent != null)
 					{
-						CompContainer parent = (CompContainer) component.getParent();
-						parent.remove(component);
-						parent.updateBounds();
+						CompContainer parentConainer = (CompContainer) parent;
+						parentConainer.remove(component);
+						parentConainer.updateBounds();
 					}
 					
 					worldMesh.removeComponent(component, board.getSimulation());
@@ -821,9 +812,9 @@ public class RenderPlane3D implements RenderPlane
 					worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					wireRayCaster.removeWire((CompWireRaw) wire);
 				}
-				if(toBeGrabbed.getParent() != null)
+				CompContainer parent = (CompContainer) toBeGrabbed.getParent();
+				if(parent != null)
 				{
-					CompContainer parent = (CompContainer) toBeGrabbed.getParent();
 					parent.remove(toBeGrabbed);
 					parent.updateBounds();
 				}
@@ -895,9 +886,9 @@ public class RenderPlane3D implements RenderPlane
 				board.getLabelsToRender().add((CompLabel) grabbedComponent);
 			}
 			
-			if(grabbedComponent.getParent() != null)
+			CompContainer parent = (CompContainer) grabbedComponent.getParent();
+			if(parent != null)
 			{
-				CompContainer parent = (CompContainer) grabbedComponent.getParent();
 				parent.addChild(grabbedComponent);
 				parent.updateBounds();
 			}

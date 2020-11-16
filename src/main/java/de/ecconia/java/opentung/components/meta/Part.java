@@ -54,7 +54,7 @@ public abstract class Part
 		return rotation;
 	}
 	
-	public void setParent(CompContainer parent)
+	public void setParent(Component parent)
 	{
 		this.parent = parent;
 	}

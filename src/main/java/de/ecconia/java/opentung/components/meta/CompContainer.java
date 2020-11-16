@@ -29,10 +29,11 @@ public abstract class CompContainer extends Component
 	public void updateBounds()
 	{
 		createBounds(); //Updates the bounds.
-		if(getParent() != null)
+		Component parent = getParent();
+		if(parent != null)
 		{
 			//Cast, cause if this is not a part, this must be a container.
-			((CompContainer) getParent()).updateBounds();
+			((CompContainer) parent).updateBounds();
 		}
 	}
 	
