@@ -22,7 +22,6 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
-import de.ecconia.java.opentung.components.meta.PlaceboParent;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -119,6 +118,7 @@ public class RenderPlane3D implements RenderPlane
 	private boolean boardIsBeingDragged = false; //Scope input/(render), read on many places.
 	
 	//Grabbing stuff:
+	private CompContainer grabbedParent;
 	private Component grabbedComponent;
 	private List<Wire> grabbedWires;
 	private int grabRotation;
@@ -721,14 +721,23 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return;
 		}
-		if(toBeGrabbed instanceof CompContainer)
-		{
-			System.out.println("Cannot grab container - yet.");
-			return;
-		}
 		if(toBeGrabbed instanceof Wire)
 		{
 			//We don't grab wires.
+			return;
+		}
+		
+		CompContainer parent = (CompContainer) toBeGrabbed.getParent();
+		if(parent == null)
+		{
+			System.out.println("Can't grab component, since its either the root board or soon deleted.");
+			return;
+		}
+		toBeGrabbed.setParent(null);
+		
+		if(toBeGrabbed instanceof CompContainer)
+		{
+			System.out.println("Cannot grab containers - yet.");
 			return;
 		}
 		//Remove the snapping wire fully. TODO: Restore snapping peg wire when aborting grabbing.
@@ -812,16 +821,15 @@ public class RenderPlane3D implements RenderPlane
 					worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					wireRayCaster.removeWire((CompWireRaw) wire);
 				}
-				CompContainer parent = (CompContainer) toBeGrabbed.getParent();
-				if(parent != null)
-				{
-					parent.remove(toBeGrabbed);
-					parent.updateBounds();
-				}
+				//Parent is never null at this point.
+				parent.remove(toBeGrabbed);
+				parent.updateBounds();
+				
 				//Create construct to store the grabbed content (to be drawn).
 				
 				grabRotation = 0;
 				grabbedComponent = toBeGrabbed;
+				grabbedParent = parent;
 				grabbedWires = wires;
 			});
 		});
@@ -861,6 +869,7 @@ public class RenderPlane3D implements RenderPlane
 				//Thats pretty much it. Just make the clipboard invisible:
 				grabbedWires = null;
 				grabbedComponent = null;
+				grabbedParent = null;
 				
 				if(compCopy instanceof CompLabel)
 				{
@@ -886,16 +895,14 @@ public class RenderPlane3D implements RenderPlane
 				board.getLabelsToRender().add((CompLabel) grabbedComponent);
 			}
 			
-			CompContainer parent = (CompContainer) grabbedComponent.getParent();
-			if(parent != null)
-			{
-				parent.addChild(grabbedComponent);
-				parent.updateBounds();
-			}
+			grabbedParent.addChild(grabbedComponent);
+			grabbedParent.updateBounds();
+			grabbedComponent.setParent(grabbedParent);
 			worldMesh.addComponent(grabbedComponent, board.getSimulation());
 			
 			grabbedComponent = null;
 			grabbedWires = null;
+			grabbedParent = null;
 		});
 	}
 	
