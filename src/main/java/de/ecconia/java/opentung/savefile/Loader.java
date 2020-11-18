@@ -1,20 +1,18 @@
 package de.ecconia.java.opentung.savefile;
 
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.CompBoard;
-import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ComponentAwareness;
 import de.ecconia.java.opentung.components.meta.CustomData;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.simulation.Powerable;
+import de.ecconia.java.opentung.util.io.ByteReader;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import de.ecconia.java.opentung.simulation.Powerable;
-import de.ecconia.java.opentung.util.io.ByteReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -145,13 +143,9 @@ public class Loader
 			{
 				((CompContainer) parent).addChild(component);
 			}
-			for(Peg peg : component.getPegs())
+			for(Connector connector : component.getConnectors())
 			{
-				connectors[connectorIndex++] = peg;
-			}
-			for(Blot blot : component.getBlots())
-			{
-				connectors[connectorIndex++] = blot;
+				connectors[connectorIndex++] = connector;
 			}
 			components[i] = component;
 		}

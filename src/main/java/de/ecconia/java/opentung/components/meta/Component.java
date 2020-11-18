@@ -46,19 +46,25 @@ public abstract class Component extends Part
 	//Connector:
 	protected final List<Peg> pegs = new ArrayList<>();
 	protected final List<Blot> blots = new ArrayList<>();
+	//Stores all pegs first, then all blots:
+	protected final List<Connector> connectors = new ArrayList<>();
 	
 	public Component(Component parent)
 	{
 		super(parent);
 		for(CubeFull cube : getModelHolder().getPegModels())
 		{
-			pegs.add(new Peg(this, cube));
+			Peg peg = new Peg(this, cube);
+			pegs.add(peg);
+			connectors.add(peg);
 		}
 		List<CubeFull> blotModels = getModelHolder().getBlotModels();
 		for(int i = 0; i < blotModels.size(); i++)
 		{
 			CubeFull cube = blotModels.get(i);
-			blots.add(new Blot(this, i, cube));
+			Blot blot = new Blot(this, i, cube);
+			blots.add(blot);
+			connectors.add(blot);
 		}
 	}
 	
@@ -100,6 +106,11 @@ public abstract class Component extends Part
 	public List<Blot> getBlots()
 	{
 		return blots;
+	}
+	
+	public List<Connector> getConnectors()
+	{
+		return connectors;
 	}
 	
 	//ModelHolder getter:

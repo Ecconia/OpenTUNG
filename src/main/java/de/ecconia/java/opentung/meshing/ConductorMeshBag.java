@@ -1,8 +1,7 @@
 package de.ecconia.java.opentung.meshing;
 
-import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
-import de.ecconia.java.opentung.components.conductor.Peg;
+import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;
@@ -138,13 +137,9 @@ public class ConductorMeshBag extends MeshBag
 		{
 			componentClusters.add(((CompWireRaw) component).getCluster());
 		}
-		for(Peg peg : component.getPegs())
+		for(Connector connector : component.getConnectors())
 		{
-			componentClusters.add(peg.getCluster());
-		}
-		for(Blot blot : component.getBlots())
-		{
-			componentClusters.add(blot.getCluster());
+			componentClusters.add(connector.getCluster());
 		}
 		return componentClusters;
 	}
@@ -203,15 +198,10 @@ public class ConductorMeshBag extends MeshBag
 		int indicesAmount = 0;
 		for(Component component : components)
 		{
-			for(Peg peg : component.getPegs())
+			for(Connector connector : component.getConnectors())
 			{
-				verticesAmount += peg.getWholeMeshEntryVCount(type);
-				indicesAmount += peg.getWholeMeshEntryICount(type);
-			}
-			for(Blot blot : component.getBlots())
-			{
-				verticesAmount += blot.getWholeMeshEntryVCount(type);
-				indicesAmount += blot.getWholeMeshEntryICount(type);
+				verticesAmount += connector.getWholeMeshEntryVCount(type);
+				indicesAmount += connector.getWholeMeshEntryICount(type);
 			}
 			for(Meshable m : component.getModelHolder().getConductors())
 			{
@@ -231,20 +221,11 @@ public class ConductorMeshBag extends MeshBag
 		for(Component comp : components)
 		{
 			//TODO: Ungeneric:
-			for(Peg peg : comp.getPegs())
+			for(Connector connector : comp.getConnectors())
 			{
-				peg.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, type);
-				int clusterID = getClusterID(peg);
-				for(int i = 0; i < peg.getModel().getFacesCount() * 4; i++)
-				{
-					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
-				}
-			}
-			for(Blot blot : comp.getBlots())
-			{
-				blot.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, type);
-				int clusterID = getClusterID(blot);
-				for(int i = 0; i < blot.getModel().getFacesCount() * 4; i++)
+				connector.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, type);
+				int clusterID = getClusterID(connector);
+				for(int i = 0; i < connector.getModel().getFacesCount() * 4; i++)
 				{
 					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
 				}

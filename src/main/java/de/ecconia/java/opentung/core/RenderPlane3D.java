@@ -662,17 +662,9 @@ public class RenderPlane3D implements RenderPlane
 					{
 						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
 					}
-					for(Blot blot : component.getBlots())
+					for(Connector connector : component.getConnectors())
 					{
-						if(clusterToHighlight == blot.getCluster())
-						{
-							clusterToHighlight = null;
-							connectorsToHighlight = new ArrayList<>();
-						}
-					}
-					for(Peg peg : component.getPegs())
-					{
-						if(clusterToHighlight == peg.getCluster())
+						if(clusterToHighlight == connector.getCluster())
 						{
 							clusterToHighlight = null;
 							connectorsToHighlight = new ArrayList<>();
@@ -770,19 +762,9 @@ public class RenderPlane3D implements RenderPlane
 		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
 			//Collect wires:
 			List<Wire> wires = new ArrayList<>();
-			for(Peg peg : toBeGrabbed.getPegs())
+			for(Connector connector : toBeGrabbed.getConnectors())
 			{
-				for(Wire wire : peg.getWires())
-				{
-					if(wire instanceof CompWireRaw)
-					{
-						wires.add(wire);
-					}
-				}
-			}
-			for(Blot blot : toBeGrabbed.getBlots())
-			{
-				for(Wire wire : blot.getWires())
+				for(Wire wire : connector.getWires())
 				{
 					if(wire instanceof CompWireRaw)
 					{
@@ -792,17 +774,9 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused2) -> {
-				for(Blot blot : toBeGrabbed.getBlots())
+				for(Connector connector : toBeGrabbed.getConnectors())
 				{
-					if(clusterToHighlight == blot.getCluster())
-					{
-						clusterToHighlight = null;
-						connectorsToHighlight = new ArrayList<>();
-					}
-				}
-				for(Peg peg : toBeGrabbed.getPegs())
-				{
-					if(clusterToHighlight == peg.getCluster())
+					if(clusterToHighlight == connector.getCluster())
 					{
 						clusterToHighlight = null;
 						connectorsToHighlight = new ArrayList<>();
@@ -1272,31 +1246,10 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			//TODO: Use getConductors as reference and somehow get the state of it.
-			for(Blot blot : grabbedComponent.getBlots())
+			for(Connector connector : grabbedComponent.getConnectors())
 			{
-				CubeFull c = blot.getModel();
-				m.identity();
-				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
-				m.multiply(rotMat);
-				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
-				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
-				if(c instanceof CubeOpenRotated)
-				{
-					m.multiply(new Matrix(((CubeOpenRotated) c).getRotation().inverse().createMatrix()));
-				}
-				Vector3 mPos = c.getPosition();
-				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
-				Vector3 size = c.getSize();
-				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visibleCubeShader.setUniformM4(2, m.getMat());
-				visibleCubeShader.setUniformV4(3, (blot.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visibleCube.draw();
-			}
-			
-			for(Peg peg : grabbedComponent.getPegs())
-			{
-				CubeFull c = peg.getModel();
-				//Skip snapping pegs.
+				CubeFull c = connector.getModel();
+				//Skip snapping pegs. TODO: More nicely?
 				if(Color.snappingPeg.asVector().equals(c.getColor()))
 				{
 					continue;
@@ -1315,7 +1268,7 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 size = c.getSize();
 				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
 				visibleCubeShader.setUniformM4(2, m.getMat());
-				visibleCubeShader.setUniformV4(3, (peg.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+				visibleCubeShader.setUniformV4(3, (connector.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
 				visibleCube.draw();
 			}
 			
@@ -1692,9 +1645,9 @@ public class RenderPlane3D implements RenderPlane
 		Vector3 cameraPositionComponentSpace = componentRotation.multiply(camPos.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
 		Vector3 cameraRayComponentSpace = componentRotation.multiply(camRay);
 		
-		for(Peg peg : component.getPegs())
+		for(Connector connector : component.getConnectors())
 		{
-			CubeFull shape = peg.getModel();
+			CubeFull shape = connector.getModel();
 			Vector3 size = shape.getSize();
 			Vector3 cameraRayPegSpace = cameraRayComponentSpace;
 			Vector3 cameraPositionPeg = cameraPositionComponentSpace;
@@ -1704,7 +1657,7 @@ public class RenderPlane3D implements RenderPlane
 				cameraRayPegSpace = rotation.multiply(cameraRayPegSpace);
 				cameraPositionPeg = rotation.multiply(cameraPositionPeg);
 			}
-			cameraPositionPeg = cameraPositionPeg.subtract(peg.getModel().getPosition());
+			cameraPositionPeg = cameraPositionPeg.subtract(connector.getModel().getPosition());
 			
 			double distance = distance(size, cameraPositionPeg, cameraRayPegSpace);
 			if(distance < 0 || distance >= dist)
@@ -1712,31 +1665,7 @@ public class RenderPlane3D implements RenderPlane
 				continue;
 			}
 			
-			match = peg;
-			dist = distance;
-		}
-		
-		for(Blot blot : component.getBlots())
-		{
-			CubeFull shape = blot.getModel();
-			Vector3 size = shape.getSize();
-			Vector3 cameraRayBlotSpace = cameraRayComponentSpace;
-			Vector3 cameraPositionBlot = cameraPositionComponentSpace;
-			if(shape instanceof CubeOpenRotated)
-			{
-				Quaternion rotation = ((CubeOpenRotated) shape).getRotation().inverse();
-				cameraRayBlotSpace = rotation.multiply(cameraRayBlotSpace);
-				cameraPositionBlot = rotation.multiply(cameraPositionBlot);
-			}
-			cameraPositionBlot = cameraPositionBlot.subtract(blot.getModel().getPosition());
-			
-			double distance = distance(size, cameraPositionBlot, cameraRayBlotSpace);
-			if(distance < 0 || distance >= dist)
-			{
-				continue;
-			}
-			
-			match = blot;
+			match = connector;
 			dist = distance;
 		}
 		

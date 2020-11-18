@@ -4,7 +4,6 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
@@ -74,13 +73,9 @@ public class Saver
 				dictionary.put(info, data);
 			}
 			data.incrementCounter();
-			for(Peg peg : component.getPegs())
+			for(Connector connector : component.getConnectors())
 			{
-				connectorIDs.put(peg, connectorID++);
-			}
-			for(Blot blot : component.getBlots())
-			{
-				connectorIDs.put(blot, connectorID++);
+				connectorIDs.put(connector, connectorID++);
 			}
 		}
 		
