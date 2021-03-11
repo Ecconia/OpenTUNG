@@ -121,13 +121,13 @@ public class RenderPlane3D implements RenderPlane
 	private CompContainer grabbedParent;
 	private Component grabbedComponent;
 	private List<Wire> grabbedWires;
-	private int grabRotation;
+	private double grabRotation;
 	
 	//Input handling:
 	
 	private Controller3D controller;
 	private Connector wireStartPoint; //Selected by dragging from a connector.
-	private int placementRotation;
+	private double placementRotation;
 	
 	public Part getCursorObject()
 	{
@@ -292,7 +292,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
-	public void rotatePlacement(int degrees)
+	public void rotatePlacement(double degrees)
 	{
 		if(isGrabbing())
 		{

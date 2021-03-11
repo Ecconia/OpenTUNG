@@ -104,7 +104,7 @@ public class Controller3D implements Controller
 		{
 			if((mods & GLFW.GLFW_MOD_CONTROL) != 0)
 			{
-				renderPlane3D.rotatePlacement(45);
+				renderPlane3D.rotatePlacement(22.5);
 			}
 			else
 			{
