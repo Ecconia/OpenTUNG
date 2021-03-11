@@ -283,9 +283,6 @@ public class MeshBagContainer
 					if(rWire.getConnectorA().equals(mainPeg))
 					{
 						addComponent((CompSnappingWire) rWire, simulation);
-//						MeshBag bag = getFreeSolidMesh(16);
-//						bag.addComponent((CompSnappingWire) rWire, 16);
-//						((CompWireRaw) rWire).setSolidMeshBag(bag);
 					}
 					break;
 				}
