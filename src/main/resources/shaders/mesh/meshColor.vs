@@ -6,8 +6,9 @@ layout(location = 2) in uint inIndex;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform mat4 model;
 
-uniform uvec4 states[1016]; //(4064 - 32)/ 4 // (16384 - 32) / 4
+uniform uvec4 states[1012]; //(4064 - 32)/ 4 // (16384 - 32) / 4
 
 out vec4 tColor;
 out vec3 tPosition;
@@ -54,8 +55,8 @@ void main()
 		tColor = vec4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
 	}
 	
-	vec4 transformedPos = view * vec4(inPosition, 1.0);
+	vec4 transformedPos = view * model * vec4(inPosition, 1.0);
 	gl_Position = projection * transformedPos; //The position in projection system, to be use for placement
 	tPosition = transformedPos.xyz; //The position in camera system, to be use for light calculation
-	tNormal = normalize((inverse(transpose(view)) * vec4(inNormal, 0.0)).xyz);
+	tNormal = normalize((inverse(transpose(view * model)) * vec4(inNormal, 0.0)).xyz);
 }

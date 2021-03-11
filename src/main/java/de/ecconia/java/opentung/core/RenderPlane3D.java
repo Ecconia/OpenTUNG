@@ -16,7 +16,6 @@ import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
-import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
@@ -89,6 +88,7 @@ public class RenderPlane3D implements RenderPlane
 		sharedData.setGPUTasks(gpuTasks);
 		sharedData.setRenderPlane3D(this);
 		this.worldMesh = new MeshBagContainer(sharedData.getShaderStorage());
+		this.secondaryMesh = new MeshBagContainer(sharedData.getShaderStorage());
 	}
 	
 	public void prepareSaving(AtomicInteger pauseArrived)
@@ -122,6 +122,7 @@ public class RenderPlane3D implements RenderPlane
 	private Component grabbedComponent;
 	private List<Wire> grabbedWires;
 	private double grabRotation;
+	private final MeshBagContainer secondaryMesh;
 	
 	//Input handling:
 	
@@ -801,6 +802,7 @@ public class RenderPlane3D implements RenderPlane
 				
 				//Create construct to store the grabbed content (to be drawn).
 				
+				secondaryMesh.addComponent(toBeGrabbed, board.getSimulation());
 				grabRotation = 0;
 				grabbedComponent = toBeGrabbed;
 				grabbedParent = parent;
@@ -839,6 +841,7 @@ public class RenderPlane3D implements RenderPlane
 				{
 					entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
 				}
+				secondaryMesh.removeComponent(compCopy, board.getSimulation());
 				
 				//Thats pretty much it. Just make the clipboard invisible:
 				grabbedWires = null;
@@ -872,6 +875,7 @@ public class RenderPlane3D implements RenderPlane
 			grabbedParent.addChild(grabbedComponent);
 			grabbedParent.updateBounds();
 			grabbedComponent.setParent(grabbedParent);
+			secondaryMesh.removeComponent(grabbedComponent, board.getSimulation());
 			worldMesh.addComponent(grabbedComponent, board.getSimulation());
 			
 			grabbedComponent = null;
@@ -1098,6 +1102,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		worldMesh.rebuildDirty(board.getSimulation());
+		secondaryMesh.rebuildDirty(board.getSimulation());
 		
 		camera.lockLocation();
 		controller.doFrameCycle();
@@ -1203,112 +1208,81 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(isGrabbing())
 		{
-			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
-			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
+			Quaternion newDirectionRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
+			//TODO: Fix rotation, by introducing fix axis.
+			Quaternion customRotation = Quaternion.angleAxis(-grabRotation, placementData.getNormal()); //Create rotation Quaternion.
+			newDirectionRotation = newDirectionRotation.multiply(customRotation); //Apply rotation onto new direction to get alignment.
+			Quaternion newGlobalAlignment = grabbedComponent.getRotation().inverse().multiply(newDirectionRotation); //Undo old alignment and apply new one.
 			
-			Matrix m = new Matrix();
+			Vector3 oldPosition = grabbedComponent.getPosition();
+			Vector3 newPosition = placementData.getPosition();
+			
+			Matrix modelMatrix = new Matrix();
+			
+			//Move the component to the new placement position;
+			Matrix tmpMat = new Matrix();
+			tmpMat.translate(
+					(float) newPosition.getX(),
+					(float) newPosition.getY(),
+					(float) newPosition.getZ());
+			modelMatrix.multiply(tmpMat);
+			
+			//Rotate the mesh to new direction/rotation:
+			modelMatrix.multiply(new Matrix(newGlobalAlignment.createMatrix()));
+			
+			//Move the component back to the world-origin:
+			modelMatrix.translate(
+					(float) -oldPosition.getX(),
+					(float) -oldPosition.getY(),
+					(float) -oldPosition.getZ()
+			);
+			
+			//Set delta-model matrix (moves the component from prev to new pos, including all children.
+			secondaryMesh.setModelMatrix(modelMatrix);
+			secondaryMesh.draw(view);
+			
+			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
 			visibleCubeShader.use();
 			visibleCubeShader.setUniformM4(1, view);
+			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
 			visibleCube.use();
 			
-			Quaternion originalGlobalRotation = grabbedComponent.getRotation();
-			Vector3 originalGlobalPosition = grabbedComponent.getPosition();
-			
-			Vector3 globalPosition = placementData.getPosition();
-			grabbedComponent.setPosition(globalPosition);
-			
-			Vector3 upVectorGlobal = Vector3.yp;
-			Vector3 upVectorLocal = originalGlobalRotation.multiply(upVectorGlobal);
-			Quaternion upVectorLocalRotation = MathHelper.rotationFromVectors(Vector3.yp, upVectorLocal);
-			Quaternion rotationLocal = upVectorLocalRotation.multiply(originalGlobalRotation);
-			Quaternion modelRotation = Quaternion.angleAxis(grabRotation, Vector3.yn);
-			Quaternion rotatedRotation = modelRotation.multiply(rotationLocal);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			rotatedRotation = rotatedRotation.multiply(compRotation);
-			grabbedComponent.setRotation(rotatedRotation);
-			Matrix rotMat = new Matrix(rotatedRotation.createMatrix());
-			
-			for(Meshable meshable : grabbedComponent.getModelHolder().getSolid())
-			{
-				CubeFull c = (CubeFull) meshable;
-				m.identity();
-				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
-				m.multiply(rotMat);
-				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
-				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
-				Vector3 mPos = c.getPosition();
-				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
-				Vector3 size = c.getSize();
-				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visibleCubeShader.setUniformM4(2, m.getMat());
-				visibleCubeShader.setUniformV4(3, c.getColorArray());
-				visibleCube.draw();
-			}
-			
-			//TODO: Use getConductors as reference and somehow get the state of it.
-			for(Connector connector : grabbedComponent.getConnectors())
-			{
-				CubeFull c = connector.getModel();
-				//Skip snapping pegs. TODO: More nicely?
-				if(Color.snappingPeg.asVector().equals(c.getColor()))
-				{
-					continue;
-				}
-				m.identity();
-				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
-				m.multiply(rotMat);
-				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
-				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
-				if(c instanceof CubeOpenRotated)
-				{
-					m.multiply(new Matrix(((CubeOpenRotated) c).getRotation().inverse().createMatrix()));
-				}
-				Vector3 mPos = c.getPosition();
-				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
-				Vector3 size = c.getSize();
-				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visibleCubeShader.setUniformM4(2, m.getMat());
-				visibleCubeShader.setUniformV4(3, (connector.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visibleCube.draw();
-			}
-			
+			Matrix m = new Matrix();
 			for(Wire wire : grabbedWires)
 			{
+				//TODO: When collecting outgoing wires from the board, they need to be separated into A and B side attached to grabbed.
 				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
 				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
+				if(wire.getConnectorA().getParent() == grabbedComponent)
+				{
+					thisPos = thisPos.subtract(oldPosition);
+					thisPos = newGlobalAlignment.inverse().multiply(thisPos);
+					thisPos = thisPos.add(newPosition);
+				}
+				if(wire.getConnectorB().getParent() == grabbedComponent)
+				{
+					thatPos = thatPos.subtract(oldPosition);
+					thatPos = newGlobalAlignment.inverse().multiply(thatPos);
+					thatPos = thatPos.add(newPosition);
+				}
 				
 				Vector3 direction = thisPos.subtract(thatPos).divide(2);
 				double distance = direction.length();
-				Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+				Quaternion wireAlignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 				Vector3 position = thatPos.add(direction);
 				
 				m.identity();
 				m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-				m.multiply(new Matrix(rotation.createMatrix()));
+				m.multiply(new Matrix(wireAlignment.createMatrix()));
 				m.scale(0.025f, 0.01f, (float) distance);
+				//TODO: The color appears raw using this shader, as in unshaded.
 				visibleCubeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
 				visibleCubeShader.setUniformM4(2, m.getMat());
 				visibleCube.draw();
 			}
 			
-			List<Meshable> colorables = grabbedComponent.getModelHolder().getColorables();
-			for(int i = 0; i < colorables.size(); i++)
-			{
-				CubeFull c = (CubeFull) colorables.get(i);
-				m.identity();
-				m.translate((float) globalPosition.getX(), (float) globalPosition.getY(), (float) globalPosition.getZ());
-				m.multiply(rotMat);
-				Vector3 offPos = grabbedComponent.getModelHolder().getPlacementOffset();
-				m.translate((float) offPos.getX(), (float) offPos.getY(), (float) offPos.getZ());
-				Vector3 mPos = c.getPosition();
-				m.translate((float) mPos.getX(), (float) mPos.getY(), (float) mPos.getZ());
-				Vector3 size = c.getSize();
-				m.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
-				visibleCubeShader.setUniformM4(2, m.getMat());
-				visibleCubeShader.setUniformV4(3, ((Colorable) grabbedComponent).getCurrentColor(i).asArray());
-				visibleCube.draw();
-			}
-			
+			//TODO: Iterate over all labels in the secondary mesh. (Currently only one).
+			//TODO: Per Label on grabbed board, undo old board location, apply new board location. (If board that is).
 			if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
 			{
 				ShaderProgram sdfShader = shaderStorage.getSdfShader();
@@ -1317,14 +1291,12 @@ public class RenderPlane3D implements RenderPlane
 				sdfShader.setUniformM4(1, view);
 				label.activate();
 				m.identity();
-				m.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
-				m.multiply(new Matrix(label.getRotation().createMatrix()));
+				m.translate((float) newPosition.getX(), (float) newPosition.getY(), (float) newPosition.getZ());
+				m.multiply(new Matrix(newDirectionRotation.createMatrix()));
 				sdfShader.setUniformM4(2, m.getMat());
 				label.getModelHolder().drawTextures();
 			}
 			
-			grabbedComponent.setPosition(originalGlobalPosition);
-			grabbedComponent.setRotation(originalGlobalRotation);
 			return;
 		}
 		

@@ -9,6 +9,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.ShaderStorage;
+import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.SimulationManager;
@@ -23,6 +24,8 @@ public class MeshBagContainer
 	//Max 97536 for colorables per mesh.
 	private static final int MAX_VERTICES_PER_BAG = 10000;
 	
+	private float[] modelMatrix;
+	
 	private final ShaderStorage shaderStorage;
 	private final Set<MeshBag> dirtyMeshBags = new HashSet<>();
 	private final Set<ConductorMeshBag> dirtyConductorMeshBags = new HashSet<>();
@@ -36,6 +39,13 @@ public class MeshBagContainer
 	public MeshBagContainer(ShaderStorage shaderStorage)
 	{
 		this.shaderStorage = shaderStorage;
+		Matrix modelMatrix = new Matrix();
+		this.modelMatrix = modelMatrix.getMat();
+	}
+	
+	public void setModelMatrix(Matrix modelMatrix)
+	{
+		this.modelMatrix = modelMatrix.getMat();
 	}
 	
 	private MeshBag getFreeBoardMesh(int additionalVertices)
@@ -186,7 +196,8 @@ public class MeshBagContainer
 			ShaderProgram boardShader = shaderStorage.getMeshBoardShader();
 			boardShader.use();
 			boardShader.setUniformM4(1, view);
-			boardShader.setUniformM4(2, view);
+			boardShader.setUniformM4(2, modelMatrix);
+			boardShader.setUniformM4(3, view);
 			for(MeshBag bag : boardMeshes)
 			{
 				bag.draw();
@@ -199,7 +210,8 @@ public class MeshBagContainer
 			ShaderProgram solidShader = shaderStorage.getMeshSolidShader();
 			solidShader.use();
 			solidShader.setUniformM4(1, view);
-			solidShader.setUniformM4(2, view);
+			solidShader.setUniformM4(2, modelMatrix);
+			solidShader.setUniformM4(3, view);
 			for(MeshBag bag : solidMeshes)
 			{
 				bag.draw();
@@ -210,10 +222,11 @@ public class MeshBagContainer
 		ShaderProgram colorShader = shaderStorage.getMeshColorShader();
 		colorShader.use();
 		colorShader.setUniformM4(1, view);
-		colorShader.setUniformM4(3, view);
+		colorShader.setUniformM4(2, modelMatrix);
+		colorShader.setUniformM4(4, view);
 		for(ColorMeshBag meshBag : colorMeshes)
 		{
-			colorShader.setUniformArray(2, meshBag.getDataArray());
+			colorShader.setUniformArray(3, meshBag.getDataArray());
 			meshBag.draw();
 		}
 		
@@ -221,10 +234,11 @@ public class MeshBagContainer
 		ShaderProgram conductorShader = shaderStorage.getMeshConductorShader();
 		conductorShader.use();
 		conductorShader.setUniformM4(1, view);
-		conductorShader.setUniformM4(3, view);
+		conductorShader.setUniformM4(2, modelMatrix);
+		conductorShader.setUniformM4(4, view);
 		for(ConductorMeshBag meshBag : conductorMeshes)
 		{
-			colorShader.setUniformArray(2, meshBag.getDataArray());
+			colorShader.setUniformArray(3, meshBag.getDataArray());
 			meshBag.draw();
 		}
 	}
