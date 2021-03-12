@@ -40,6 +40,8 @@ import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.units.IconGeneration;
 import de.ecconia.java.opentung.units.LabelToolkit;
+import de.ecconia.java.opentung.util.Ansi;
+import de.ecconia.java.opentung.util.FourDirections;
 import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
@@ -111,6 +113,10 @@ public class RenderPlane3D implements RenderPlane
 	
 	private PlacementData placementData; //Scope purely render, read by copy.
 	private boolean fullyLoaded;
+	
+	//Rotation fix variables:
+	private Vector3 fixXAxis = Vector3.xp; //Never NPE, use +X as default.
+	private Vector3 lastUpNormal = Vector3.yp; //Used whenever an item is shadow drawn, to use more natural rotations.
 	
 	//Board specific values:
 	private boolean placeableBoardIsLaying = true;
@@ -358,23 +364,17 @@ public class RenderPlane3D implements RenderPlane
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		if(isGrabbing())
 		{
-			Vector3 newPosition = placement.getPosition();
-			Quaternion newRotation;
-			{
-				Quaternion originalGlobalRotation = grabbedComponent.getRotation();
-				Vector3 upVectorGlobal = Vector3.yp;
-				Vector3 upVectorLocal = originalGlobalRotation.multiply(upVectorGlobal);
-				Quaternion upVectorLocalRotation = MathHelper.rotationFromVectors(Vector3.yp, upVectorLocal);
-				Quaternion rotationLocal = upVectorLocalRotation.multiply(originalGlobalRotation);
-				Quaternion modelRotation = Quaternion.angleAxis(grabRotation, Vector3.yn);
-				Quaternion rotatedRotation = modelRotation.multiply(rotationLocal);
-				Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
-				newRotation = rotatedRotation.multiply(compRotation);
-			}
+			//Calculate the new alignment:
+			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
+			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment);
+			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
+			newAlignment = newAlignment.multiply(normalAxisRotation);
 			
-			grabbedComponent.setPosition(newPosition);
-			grabbedComponent.setRotation(newRotation);
+			//Apply new position and alignment:
+			grabbedComponent.setPosition(placement.getPosition()); //New position
+			grabbedComponent.setRotation(newAlignment);
 			
+			//Update positions and alignment of wires, they inherit the position from the grabbed component.
 			for(Wire wire : grabbedWires)
 			{
 				if(wire instanceof HiddenWire)
@@ -389,10 +389,10 @@ public class RenderPlane3D implements RenderPlane
 				Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 				Vector3 position = thatPos.add(direction);
 				
-				CompWireRaw cwire = (CompWireRaw) wire;
-				cwire.setPosition(position);
-				cwire.setRotation(rotation);
-				cwire.setLength((float) distance * 2f);
+				CompWireRaw cWire = (CompWireRaw) wire;
+				cWire.setPosition(position);
+				cWire.setRotation(rotation);
+				cWire.setLength((float) distance * 2f);
 			}
 			
 			gpuTasks.add((unused) -> {
@@ -403,10 +403,10 @@ public class RenderPlane3D implements RenderPlane
 				placement.getParentBoard().updateBounds();
 				for(Wire wire : grabbedWires)
 				{
-					CompWireRaw cwire = (CompWireRaw) wire;
-					board.getWiresToRender().add(cwire);
-					worldMesh.addComponent(cwire, board.getSimulation());
-					wireRayCaster.addWire(cwire);
+					CompWireRaw cWire = (CompWireRaw) wire;
+					board.getWiresToRender().add(cWire);
+					worldMesh.addComponent(cWire, board.getSimulation());
+					wireRayCaster.addWire(cWire);
 				}
 				if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
 				{
@@ -423,14 +423,17 @@ public class RenderPlane3D implements RenderPlane
 		else if(currentPlaceable != null)
 		{
 			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
-			Quaternion rotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
-			Quaternion finalRotation = rotation.multiply(compRotation);
+			
+			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
+			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment);
+			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
+			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
 			if(isPlacingBoard)
 			{
 				Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIsLaying ? 0 : 90, Vector3.xn);
-				finalRotation = boardAlignment.multiply(finalRotation);
+				finalAlignment = boardAlignment.multiply(finalAlignment);
 			}
+			
 			Vector3 position = placement.getPosition();
 			Component newComponent;
 			if(isPlacingBoard)
@@ -445,8 +448,8 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 cameraRay = Vector3.zp;
 				cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
 				cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
-				Vector3 cameraRayBoardSpace = finalRotation.multiply(cameraRay);
-				Vector3 cameraPositionBoardSpace = finalRotation.multiply(cameraPosition.subtract(position));
+				Vector3 cameraRayBoardSpace = finalAlignment.multiply(cameraRay);
+				Vector3 cameraPositionBoardSpace = finalAlignment.multiply(cameraPosition.subtract(position));
 				
 				//Get collision point with area Y=0:
 				double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
@@ -465,7 +468,7 @@ public class RenderPlane3D implements RenderPlane
 					x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
 					z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
 					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
-					position = position.add(finalRotation.inverse().multiply(roundedCollisionPoint));
+					position = position.add(finalAlignment.inverse().multiply(roundedCollisionPoint));
 				}
 				newComponent = new CompBoard(placement.getParentBoard(), x, z);
 			}
@@ -473,12 +476,10 @@ public class RenderPlane3D implements RenderPlane
 			{
 				newComponent = currentPlaceable.instance(placement.getParentBoard());
 			}
-			newComponent.setRotation(finalRotation);
+			newComponent.setRotation(finalAlignment);
 			newComponent.setPosition(position);
 			
-			//TODO: Update bounds and stuff
-			
-			if(currentPlaceable == CompBoard.info)
+			if(isPlacingBoard)
 			{
 				try
 				{
@@ -801,6 +802,8 @@ public class RenderPlane3D implements RenderPlane
 				
 				//Create construct to store the grabbed content (to be drawn).
 				
+				fixXAxis = toBeGrabbed.getRotation().inverse().multiply(Vector3.xp);
+				lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
 				secondaryMesh.addComponent(toBeGrabbed, board.getSimulation());
 				grabRotation = 0;
 				grabbedComponent = toBeGrabbed;
@@ -1088,7 +1091,7 @@ public class RenderPlane3D implements RenderPlane
 			placementPosition = placementPosition.add(placementNormal.multiply(placeableBoardIsLaying ? 0.15 : (0.15 + 0.075)));
 		}
 		
-		placementData = new PlacementData(placementPosition, placementNormal, placementBoard);
+		placementData = new PlacementData(placementPosition, placementNormal, placementBoard, normalGlobal);
 	}
 	
 	@Override
@@ -1206,18 +1209,19 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(isGrabbing())
 		{
-			Quaternion newDirectionRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
-			//TODO: Fix rotation, by introducing fix axis.
-			Quaternion customRotation = Quaternion.angleAxis(-grabRotation, placementData.getNormal()); //Create rotation Quaternion.
-			newDirectionRotation = newDirectionRotation.multiply(customRotation); //Apply rotation onto new direction to get alignment.
-			Quaternion newGlobalAlignment = grabbedComponent.getRotation().inverse().multiply(newDirectionRotation); //Undo old alignment and apply new one.
+			//Calculate the new alignment:
+			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
+			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment);
+			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
+			newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
 			
-			Vector3 oldPosition = grabbedComponent.getPosition();
-			Vector3 newPosition = placementData.getPosition();
+			//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
+			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(newAlignment);
 			
 			Matrix modelMatrix = new Matrix();
 			
 			//Move the component to the new placement position;
+			Vector3 newPosition = placementData.getPosition();
 			Matrix tmpMat = new Matrix();
 			tmpMat.translate(
 					(float) newPosition.getX(),
@@ -1226,9 +1230,10 @@ public class RenderPlane3D implements RenderPlane
 			modelMatrix.multiply(tmpMat);
 			
 			//Rotate the mesh to new direction/rotation:
-			modelMatrix.multiply(new Matrix(newGlobalAlignment.createMatrix()));
+			modelMatrix.multiply(new Matrix(newDeltaAlignment.createMatrix()));
 			
 			//Move the component back to the world-origin:
+			Vector3 oldPosition = grabbedComponent.getPosition();
 			modelMatrix.translate(
 					(float) -oldPosition.getX(),
 					(float) -oldPosition.getY(),
@@ -1254,13 +1259,13 @@ public class RenderPlane3D implements RenderPlane
 				if(wire.getConnectorA().getParent() == grabbedComponent)
 				{
 					thisPos = thisPos.subtract(oldPosition);
-					thisPos = newGlobalAlignment.inverse().multiply(thisPos);
+					thisPos = newDeltaAlignment.inverse().multiply(thisPos);
 					thisPos = thisPos.add(newPosition);
 				}
 				if(wire.getConnectorB().getParent() == grabbedComponent)
 				{
 					thatPos = thatPos.subtract(oldPosition);
-					thatPos = newGlobalAlignment.inverse().multiply(thatPos);
+					thatPos = newDeltaAlignment.inverse().multiply(thatPos);
 					thatPos = thatPos.add(newPosition);
 				}
 				
@@ -1290,7 +1295,7 @@ public class RenderPlane3D implements RenderPlane
 				label.activate();
 				m.identity();
 				m.translate((float) newPosition.getX(), (float) newPosition.getY(), (float) newPosition.getZ());
-				m.multiply(new Matrix(newDirectionRotation.createMatrix()));
+				m.multiply(new Matrix(newAlignment.createMatrix()));
 				sdfShader.setUniformM4(2, m.getMat());
 				label.getModelHolder().drawTextures();
 			}
@@ -1317,10 +1322,13 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else if(currentPlaceable == CompBoard.info)
 		{
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
+			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
+			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment);
+			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
+			newAlignment = newAlignment.multiply(normalAxisRotation);
+			//Specific board rotation:
 			Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIsLaying ? 0 : 90, Vector3.xn);
-			Quaternion finalRotation = boardAlignment.multiply(modelRotation).multiply(compRotation);
+			Quaternion finalRotation = boardAlignment.multiply(newAlignment);
 			
 			int x = 1;
 			int z = 1;
@@ -1380,12 +1388,59 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else
 		{
+			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
+			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment);
+			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
+			newAlignment = newAlignment.multiply(normalAxisRotation);
 			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
 			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
-			Quaternion modelRotation = Quaternion.angleAxis(placementRotation, Vector3.yn);
-			Quaternion compRotation = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			World3DHelper.drawModel(visibleCubeShader, visibleCube, currentPlaceable.getModel(), placementData.getPosition(), modelRotation.multiply(compRotation), view);
+			World3DHelper.drawModel(visibleCubeShader, visibleCube, currentPlaceable.getModel(), placementData.getPosition(), newAlignment, view);
 		}
+	}
+	
+	private double calculateFixRotationOffset(Quaternion newGlobalAlignment)
+	{
+		FourDirections axes = new FourDirections(placementData.getLocalNormal(), placementData.getParentBoard().getRotation());
+		
+		//Get the angle, from the new X axis, to an "optimal" X axis.
+		Vector3 newVirtualXAxis = newGlobalAlignment.inverse().multiply(Vector3.xp);
+		Vector3 newRandomXAxis = axes.getFitting(fixXAxis);
+		boolean diff = newRandomXAxis == null;
+		if(diff)
+		{
+			//All angles are 90° case. Rotate old axis.
+			//TBI: Target * inverse(Source) = diff //Will that work, cause rotation?
+			Quaternion normalRotation = MathHelper.rotationFromVectors(lastUpNormal, placementData.getNormal()).inverse();
+			//TBI: Rotation may be 180° in that case its pretty much random, but reliably in most cases.
+			newRandomXAxis = normalRotation.multiply(fixXAxis);
+			Vector3 fallbackAxis = newRandomXAxis;
+			newRandomXAxis = axes.getFitting(newRandomXAxis); //Replace with one of the 4, axes, although only minor change.
+			if(newRandomXAxis == null)
+			{
+				System.out.println(Ansi.red + "[ERROR] ROTATION CODE FAILED!" + Ansi.r
+						+ "\n Placement-Vector: " + placementData.getNormal()
+						+ "\n LastNormal: " + lastUpNormal
+						+ "\n RotationResult: " + fallbackAxis);
+				//ChooseAnyAlternative:
+				newRandomXAxis = axes.getA();
+			}
+		}
+		fixXAxis = newRandomXAxis;
+		
+		double newRotation = MathHelper.angleFromVectors(newVirtualXAxis, newRandomXAxis);
+		if(newRotation != 0 && newRotation != 180) //Edge cases.
+		{
+			//We now have the angle, but not the sign of the fix-angle.
+			//For that span a plane between the new X axis and the normal (just use the Y-X plane).
+			// and check if the optimal X-Axis is above or below (just check the Z value).
+			Vector3 undoneNewAxis = newGlobalAlignment.multiply(newRandomXAxis); //Rotate axis back to default space.
+			if(undoneNewAxis.getZ() < 0)
+			{
+				newRotation = -newRotation;
+			}
+		}
+		lastUpNormal = newGlobalAlignment.inverse().multiply(Vector3.yp);
+		return newRotation;
 	}
 	
 	private void drawDynamic(float[] view)
@@ -1836,12 +1891,14 @@ public class RenderPlane3D implements RenderPlane
 		private final Vector3 normal;
 		private final Vector3 position;
 		private final CompBoard parentBoard;
+		private final Vector3 localNormal;
 		
-		public PlacementData(Vector3 position, Vector3 normal, CompBoard parentBoard)
+		public PlacementData(Vector3 position, Vector3 normal, CompBoard parentBoard, Vector3 localNormal)
 		{
 			this.normal = normal;
 			this.position = position;
 			this.parentBoard = parentBoard;
+			this.localNormal = localNormal;
 		}
 		
 		public Vector3 getNormal()
@@ -1857,6 +1914,11 @@ public class RenderPlane3D implements RenderPlane
 		public CompBoard getParentBoard()
 		{
 			return parentBoard;
+		}
+		
+		public Vector3 getLocalNormal()
+		{
+			return localNormal;
 		}
 	}
 }

@@ -215,4 +215,17 @@ public class Vector3
 				this.z * that.z
 		);
 	}
+	
+	public static float[] toFloatArray(Vector3... vertices)
+	{
+		float[] array = new float[vertices.length * 3];
+		int index = 0;
+		for(Vector3 v : vertices)
+		{
+			array[index++] = (float) v.getX();
+			array[index++] = (float) v.getY();
+			array[index++] = (float) v.getZ();
+		}
+		return array;
+	}
 }
