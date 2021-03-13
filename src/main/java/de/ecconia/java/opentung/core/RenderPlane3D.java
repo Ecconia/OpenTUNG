@@ -368,13 +368,12 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
 			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placement);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-			newAlignment = newAlignment.multiply(normalAxisRotation);
-			
-			//Apply new position and alignment:
-			grabbedComponent.setPosition(placement.getPosition()); //New position
-			grabbedComponent.setRotation(newAlignment);
+			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
 			
 			//Update positions and alignment of wires, they inherit the position from the grabbed component.
+			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(finalAlignment);
+			Vector3 newPosition = placementData.getPosition();
+			Vector3 oldPosition = grabbedComponent.getPosition();
 			for(Wire wire : grabbedWires)
 			{
 				if(wire instanceof HiddenWire)
@@ -383,6 +382,18 @@ public class RenderPlane3D implements RenderPlane
 				}
 				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
 				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
+				if(wire.getConnectorA().getParent() == grabbedComponent)
+				{
+					thisPos = thisPos.subtract(oldPosition);
+					thisPos = newDeltaAlignment.inverse().multiply(thisPos);
+					thisPos = thisPos.add(newPosition);
+				}
+				if(wire.getConnectorB().getParent() == grabbedComponent)
+				{
+					thatPos = thatPos.subtract(oldPosition);
+					thatPos = newDeltaAlignment.inverse().multiply(thatPos);
+					thatPos = thatPos.add(newPosition);
+				}
 				
 				Vector3 direction = thisPos.subtract(thatPos).divide(2);
 				double distance = direction.length();
@@ -396,6 +407,10 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused) -> {
+				//Apply new position and alignment:
+				grabbedComponent.setPosition(placement.getPosition()); //New position
+				grabbedComponent.setRotation(finalAlignment);
+				//Move to new meshes:
 				secondaryMesh.removeComponent(grabbedComponent, board.getSimulation());
 				worldMesh.addComponent(grabbedComponent, board.getSimulation());
 				grabbedComponent.setParent(placement.getParentBoard());
