@@ -117,6 +117,7 @@ public class ConductorMeshBag extends MeshBag
 					ci.decrementReference();
 					if(ci.getUsage() == 0)
 					{
+						setActive(ci.getIndex(), false); //Set cluster-data to false/off, to prevent flickering on placement.
 						simulation.updateJobNextTickThreadSafe((unused) -> {
 							cluster.removeMeshReference(this);
 							unusedIDs.add(ci.getIndex());
