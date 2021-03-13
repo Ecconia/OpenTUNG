@@ -396,6 +396,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			gpuTasks.add((unused) -> {
+				secondaryMesh.removeComponent(grabbedComponent, board.getSimulation());
 				worldMesh.addComponent(grabbedComponent, board.getSimulation());
 				grabbedComponent.setParent(placement.getParentBoard());
 				placement.getParentBoard().addChild(grabbedComponent);
