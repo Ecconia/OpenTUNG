@@ -91,7 +91,7 @@ public class FourDirections
 		Vector3 currentChoice = a;
 		
 		double diff = Math.abs(smallestFound - bAngle);
-		if(diff < 0.00001)
+		if(diff < 0.01)
 		{
 			isAlone = false;
 		}
@@ -106,7 +106,7 @@ public class FourDirections
 		}
 		
 		diff = Math.abs(smallestFound - cAngle);
-		if(diff < 0.00001)
+		if(diff < 0.01)
 		{
 			isAlone = false;
 		}
@@ -121,7 +121,7 @@ public class FourDirections
 		}
 		
 		diff = Math.abs(smallestFound - dAngle);
-		if(diff < 0.00001)
+		if(diff < 0.01)
 		{
 			isAlone = false;
 		}
