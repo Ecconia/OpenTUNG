@@ -366,7 +366,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			//Calculate the new alignment:
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
-			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment);
+			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placement);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
 			newAlignment = newAlignment.multiply(normalAxisRotation);
 			
@@ -426,7 +426,7 @@ public class RenderPlane3D implements RenderPlane
 			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
 			
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
-			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment);
+			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placement);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
 			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
 			if(isPlacingBoard)
@@ -1212,7 +1212,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			//Calculate the new alignment:
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
-			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment);
+			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
 			newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
 			
@@ -1324,7 +1324,7 @@ public class RenderPlane3D implements RenderPlane
 		else if(currentPlaceable == CompBoard.info)
 		{
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment);
+			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placementData);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
 			newAlignment = newAlignment.multiply(normalAxisRotation);
 			//Specific board rotation:
@@ -1390,7 +1390,7 @@ public class RenderPlane3D implements RenderPlane
 		else
 		{
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment);
+			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placementData);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
 			newAlignment = newAlignment.multiply(normalAxisRotation);
 			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
@@ -1399,8 +1399,9 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
-	private double calculateFixRotationOffset(Quaternion newGlobalAlignment)
+	private double calculateFixRotationOffset(Quaternion newGlobalAlignment, PlacementData placementData)
 	{
+		//TODO: Thread-safe properly, this gets called on render and input thread. (As in don't make it overwrite the variables when called on input thread).
 		FourDirections axes = new FourDirections(placementData.getLocalNormal(), placementData.getParentBoard().getRotation());
 		
 		//Get the angle, from the new X axis, to an "optimal" X axis.
