@@ -11,7 +11,6 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
-import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 
@@ -55,7 +54,7 @@ public class CPURaycast
 		
 		if(!component.getBounds().contains(camPos))
 		{
-			double distance = distance(component.getBounds(), camPos, camRay);
+			double distance = distance(component.getBounds().getMax(), component.getBounds().getMin(), camPos, camRay);
 			if(distance < 0 || distance >= dist)
 			{
 				return; //We already found something closer bye.
@@ -94,7 +93,7 @@ public class CPURaycast
 			}
 			cameraPositionPeg = cameraPositionPeg.subtract(connector.getModel().getPosition());
 			
-			double distance = distance(size, cameraPositionPeg, cameraRayPegSpace);
+			double distance = distance(size, size.invert(), cameraPositionPeg, cameraRayPegSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
@@ -114,7 +113,7 @@ public class CPURaycast
 				size = shape.getMapper().getMappedSize(size, component);
 			}
 			
-			double distance = distance(size, cameraPositionSolidSpace, cameraRayComponentSpace);
+			double distance = distance(size, size.invert(), cameraPositionSolidSpace, cameraRayComponentSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
@@ -130,7 +129,7 @@ public class CPURaycast
 			Vector3 cameraPositionColorSpace = cameraPositionComponentSpace.subtract(shape.getPosition());
 			Vector3 size = shape.getSize();
 			
-			double distance = distance(size, cameraPositionColorSpace, cameraRayComponentSpace);
+			double distance = distance(size, size.invert(), cameraPositionColorSpace, cameraRayComponentSpace);
 			if(distance < 0 || distance >= dist)
 			{
 				continue;
@@ -141,88 +140,14 @@ public class CPURaycast
 		}
 	}
 	
-	private double distance(Vector3 size, Vector3 camPos, Vector3 camRay)
+	private double distance(Vector3 pos, Vector3 neg, Vector3 camPos, Vector3 camRay)
 	{
-		double xA = (size.getX() - camPos.getX()) / camRay.getX();
-		double xB = ((-size.getX()) - camPos.getX()) / camRay.getX();
-		double yA = (size.getY() - camPos.getY()) / camRay.getY();
-		double yB = ((-size.getY()) - camPos.getY()) / camRay.getY();
-		double zA = (size.getZ() - camPos.getZ()) / camRay.getZ();
-		double zB = ((-size.getZ()) - camPos.getZ()) / camRay.getZ();
-		
-		double tMin;
-		double tMax;
-		{
-			if(xA < xB)
-			{
-				tMin = xA;
-				tMax = xB;
-			}
-			else
-			{
-				tMin = xB;
-				tMax = xA;
-			}
-			
-			double min = yA;
-			double max = yB;
-			if(min > max)
-			{
-				min = yB;
-				max = yA;
-			}
-			
-			if(min > tMin)
-			{
-				tMin = min;
-			}
-			if(max < tMax)
-			{
-				tMax = max;
-			}
-			
-			min = zA;
-			max = zB;
-			if(min > max)
-			{
-				min = zB;
-				max = zA;
-			}
-			
-			if(min > tMin)
-			{
-				tMin = min;
-			}
-			if(max < tMax)
-			{
-				tMax = max;
-			}
-		}
-		
-		if(tMax < 0)
-		{
-			return -1; //Behind camera.
-		}
-		
-		if(tMin > tMax)
-		{
-			return -1; //No collision.
-		}
-		
-		return tMin;
-	}
-	
-	private double distance(MinMaxBox aabb, Vector3 camPos, Vector3 camRay)
-	{
-		Vector3 minV = aabb.getMin();
-		Vector3 maxV = aabb.getMax();
-		
-		double xA = (maxV.getX() - camPos.getX()) / camRay.getX();
-		double xB = (minV.getX() - camPos.getX()) / camRay.getX();
-		double yA = (maxV.getY() - camPos.getY()) / camRay.getY();
-		double yB = (minV.getY() - camPos.getY()) / camRay.getY();
-		double zA = (maxV.getZ() - camPos.getZ()) / camRay.getZ();
-		double zB = (minV.getZ() - camPos.getZ()) / camRay.getZ();
+		double xA = (pos.getX() - camPos.getX()) / camRay.getX();
+		double xB = (neg.getX() - camPos.getX()) / camRay.getX();
+		double yA = (pos.getY() - camPos.getY()) / camRay.getY();
+		double yB = (neg.getY() - camPos.getY()) / camRay.getY();
+		double zA = (pos.getZ() - camPos.getZ()) / camRay.getZ();
+		double zB = (neg.getZ() - camPos.getZ()) / camRay.getZ();
 		
 		double tMin;
 		double tMax;
