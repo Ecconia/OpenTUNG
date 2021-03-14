@@ -190,7 +190,6 @@ public class RenderPlane3D implements RenderPlane
 		if(connector != null)
 		{
 			Connector to = connector;
-			
 			if(from instanceof Blot && to instanceof Blot)
 			{
 				System.out.println("Blot-Blot connections are not allowed, cause pointless.");
@@ -226,8 +225,6 @@ public class RenderPlane3D implements RenderPlane
 				newWire.setPosition(position);
 				newWire.setLength((float) distance * 2f);
 			}
-			
-			Cluster wireCluster;
 			
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
@@ -297,8 +294,7 @@ public class RenderPlane3D implements RenderPlane
 	public boolean attemptPlacement()
 	{
 		PlacementData placement = placementData;
-		boolean boardIsBeingDraggedCopy = boardIsBeingDragged;
-		boardIsBeingDragged = false; //Resets this boolean, if for a reason its not resetted - ugly.
+		boardIsBeingDragged = false; //Resets this boolean, if for a reason it is not reset - ugly.
 		
 		if(wireStartPoint != null)
 		{
@@ -644,7 +640,7 @@ public class RenderPlane3D implements RenderPlane
 						{
 							continue;
 						}
-						board.getWiresToRender().remove(wire);
+						board.getWiresToRender().remove(wire); //Non-Visible wires got filtered before.
 						wireRayCaster.removeWire((CompWireRaw) wire);
 						worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					}
@@ -656,9 +652,9 @@ public class RenderPlane3D implements RenderPlane
 					
 					if(parent != null)
 					{
-						CompContainer parentConainer = (CompContainer) parent;
-						parentConainer.remove(component);
-						parentConainer.updateBounds();
+						CompContainer parentContainer = (CompContainer) parent;
+						parentContainer.remove(component);
+						parentContainer.updateBounds();
 					}
 					
 					worldMesh.removeComponent(component, board.getSimulation());
@@ -808,7 +804,7 @@ public class RenderPlane3D implements RenderPlane
 				}
 				secondaryMesh.removeComponent(compCopy, board.getSimulation());
 				
-				//Thats pretty much it. Just make the clipboard invisible:
+				//That's pretty much it. Just make the clipboard invisible:
 				grabbedWires = null;
 				grabbedComponent = null;
 				grabbedParent = null;
@@ -877,15 +873,10 @@ public class RenderPlane3D implements RenderPlane
 		
 		worldMesh.setup(board, board.getWiresToRender(), board.getSimulation());
 		
-		gpuTasks.add(new GPUTask()
-		{
-			@Override
-			public void execute(RenderPlane3D world3D)
-			{
-				IconGeneration.render(shaderStorage);
-				//Restore the projection matrix and viewport of this shader, since they got abused.
-				shaderStorage.resetViewportAndVisibleCubeShader();
-			}
+		gpuTasks.add(world3D -> {
+			IconGeneration.render(shaderStorage);
+			//Restore the projection matrix and viewport of this shader, since they got abused.
+			shaderStorage.resetViewportAndVisibleCubeShader();
 		});
 		
 		//Do not start receiving events before here. Be sure the whole thing is properly setted up.
@@ -1479,7 +1470,6 @@ public class RenderPlane3D implements RenderPlane
 			invisibleCubeShader.use();
 			invisibleCubeShader.setUniformM4(1, view);
 			invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
-			Matrix matrix = new Matrix();
 			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
 		}
 		
