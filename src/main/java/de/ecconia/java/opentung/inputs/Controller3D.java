@@ -96,7 +96,7 @@ public class Controller3D implements Controller
 		{
 			numberPressed(keyIndex - GLFW.GLFW_KEY_0);
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_E)
+		else if(keyIndex == GLFW.GLFW_KEY_TAB)
 		{
 			inputProcessor.get2DController().openComponentList();
 		}
@@ -111,12 +111,23 @@ public class Controller3D implements Controller
 				renderPlane3D.rotatePlacement(90);
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_T)
+		else if(keyIndex == GLFW.GLFW_KEY_E)
 		{
-			Part toBeDeleted = renderPlane3D.getCursorObject();
-			if(toBeDeleted != null)
+			if(isControl())
 			{
-				renderPlane3D.delete(toBeDeleted);
+				renderPlane3D.stopClusterHighlighting();
+			}
+			else if(renderPlane3D.isGrabbing())
+			{
+				renderPlane3D.deleteGrabbed();
+			}
+			else
+			{
+				Part toBeDeleted = renderPlane3D.getCursorObject();
+				if(toBeDeleted != null)
+				{
+					renderPlane3D.delete(toBeDeleted);
+				}
 			}
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_Q)
@@ -132,8 +143,14 @@ public class Controller3D implements Controller
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_F)
 		{
-			//Grab
-			grab();
+			if(renderPlane3D.isGrabbing())
+			{
+				renderPlane3D.abortGrabbing();
+			}
+			else
+			{
+				grab();
+			}
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_F1)
 		{
@@ -250,7 +267,7 @@ public class Controller3D implements Controller
 	
 	private void mouseLeftUp()
 	{
-		if(renderPlane3D.attemptPlacement())
+		if(renderPlane3D.attemptPlacement(isControl()))
 		{
 			mouseLeftDown = 0;
 			return;
@@ -421,14 +438,18 @@ public class Controller3D implements Controller
 			index = 9;
 		}
 		
-		boolean control = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
-		control |= GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
-		if(control)
+		if(isControl())
 		{
 			index += 10;
 		}
 		
 		inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
+	}
+	
+	private boolean isControl()
+	{
+		boolean control = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
+		return control | GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
 	}
 	
 	private void middleMouseDown()

@@ -162,7 +162,7 @@ public class RenderPlane3D implements RenderPlane
 	public void componentRightClicked(Part part)
 	{
 		//TODO: Move this somewhere more generic.
-		if(part instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info)
+		if(part instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info && !boardIsBeingDragged)
 		{
 			//Right clicked while placing a board -> change layout:
 			placeableBoardIsLaying = !placeableBoardIsLaying;
@@ -291,7 +291,12 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
-	public boolean attemptPlacement()
+	public void stopClusterHighlighting()
+	{
+		clusterHighlighter.stop();
+	}
+	
+	public boolean attemptPlacement(boolean abortPlacement)
 	{
 		PlacementData placement = placementData;
 		boardIsBeingDragged = false; //Resets this boolean, if for a reason it is not reset - ugly.
@@ -394,7 +399,11 @@ public class RenderPlane3D implements RenderPlane
 		else if(currentPlaceable != null)
 		{
 			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
-			
+			//Control is down, just don't place:
+			if(abortPlacement)
+			{
+				return true;
+			}
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
 			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placement);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
@@ -820,6 +829,7 @@ public class RenderPlane3D implements RenderPlane
 	public void abortGrabbing()
 	{
 		gpuTasks.add((unused) -> {
+			//TODO: Thread-safety. Add check if currently grabbing. Else NPE. (Or disable grabbed state more early?)
 			//TODO: board.getComponentsToRender().add(grabbedComponent);
 			for(Wire wire : grabbedWires)
 			{

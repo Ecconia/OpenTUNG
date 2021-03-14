@@ -71,11 +71,16 @@ public class ClusterHighlighter
 	{
 		if(cluster == clusterToHighlight)
 		{
-			gpuTasks.add((unused) -> {
-				clusterToHighlight = null;
-				connectorsToHighlight = new ArrayList<>();
-			});
+			stop();
 		}
+	}
+	
+	public void stop()
+	{
+		gpuTasks.add((unused) -> {
+			clusterToHighlight = null;
+			connectorsToHighlight = new ArrayList<>();
+		});
 	}
 	
 	public void highlightCluster(float[] view)

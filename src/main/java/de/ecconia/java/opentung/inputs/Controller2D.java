@@ -89,7 +89,7 @@ public class Controller2D implements Controller
 				openPauseMenu();
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_E)
+		else if(keyIndex == GLFW.GLFW_KEY_TAB)
 		{
 			if(!renderPlane2D.toggleComponentList())
 			{
