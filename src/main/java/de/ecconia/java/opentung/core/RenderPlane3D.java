@@ -4,7 +4,6 @@ import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompPanelLabel;
-import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.CompThroughPeg;
@@ -70,13 +69,12 @@ public class RenderPlane3D implements RenderPlane
 	private final ShaderStorage shaderStorage;
 	
 	private final WireRayCaster wireRayCaster;
+	private final ClusterHighlighter clusterHighlighter;
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
 	
 	private Part currentlySelected; //What the camera is currently looking at.
-	private Cluster clusterToHighlight;
-	private List<Connector> connectorsToHighlight = new ArrayList<>();
 	
 	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board, SharedData sharedData)
 	{
@@ -88,8 +86,9 @@ public class RenderPlane3D implements RenderPlane
 		this.shaderStorage = sharedData.getShaderStorage();
 		sharedData.setGPUTasks(gpuTasks);
 		sharedData.setRenderPlane3D(this);
-		this.worldMesh = new MeshBagContainer(sharedData.getShaderStorage());
-		this.secondaryMesh = new MeshBagContainer(sharedData.getShaderStorage());
+		this.worldMesh = new MeshBagContainer(shaderStorage);
+		this.secondaryMesh = new MeshBagContainer(shaderStorage);
+		this.clusterHighlighter = new ClusterHighlighter(sharedData);
 	}
 	
 	public void prepareSaving(AtomicInteger pauseArrived)
@@ -165,47 +164,14 @@ public class RenderPlane3D implements RenderPlane
 	public void componentRightClicked(Part part)
 	{
 		//TODO: Move this somewhere more generic.
-		Cluster cluster = null;
 		if(part instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info)
 		{
-			//Rightclicked while placing a board -> change layout:
+			//Right clicked while placing a board -> change layout:
 			placeableBoardIsLaying = !placeableBoardIsLaying;
 			return;
 		}
-		if(part instanceof CompWireRaw)
-		{
-			cluster = ((CompWireRaw) part).getCluster();
-		}
-		else if(part instanceof CompThroughPeg || part instanceof CompPeg || part instanceof CompSnappingPeg)
-		{
-			cluster = ((Component) part).getPegs().get(0).getCluster();
-		}
-		else if(part instanceof Connector)
-		{
-			cluster = ((Connector) part).getCluster();
-		}
 		
-		if(cluster != null)
-		{
-			Cluster fCluster = cluster;
-			gpuTasks.add(new GPUTask()
-			{
-				@Override
-				public void execute(RenderPlane3D world3D)
-				{
-					if(clusterToHighlight == fCluster)
-					{
-						clusterToHighlight = null;
-						connectorsToHighlight = new ArrayList<>();
-					}
-					else
-					{
-						clusterToHighlight = fCluster;
-						connectorsToHighlight = fCluster.getConnectors();
-					}
-				}
-			});
-		}
+		clusterHighlighter.componentRightClicked(part);
 	}
 	
 	public void rightDragOnConnector(Connector connector)
@@ -242,13 +208,8 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
-			if(from.getCluster() == clusterToHighlight || to.getCluster() == clusterToHighlight)
-			{
-				gpuTasks.add((unused) -> {
-					clusterToHighlight = null;
-					connectorsToHighlight = new ArrayList<>();
-				});
-			}
+			clusterHighlighter.clusterChanged(from.getCluster());
+			clusterHighlighter.clusterChanged(to.getCluster());
 			
 			//Add wire:
 			CompWireRaw newWire;
@@ -619,11 +580,7 @@ public class RenderPlane3D implements RenderPlane
 					{
 						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
 					}
-					if(clusterToHighlight == wireToDelete.getCluster())
-					{
-						clusterToHighlight = null;
-						connectorsToHighlight = new ArrayList<>();
-					}
+					clusterHighlighter.clusterChanged(wireToDelete.getCluster());
 					board.getWiresToRender().remove(wireToDelete);
 					wireRayCaster.removeWire(wireToDelete);
 					worldMesh.removeComponent(wireToDelete, board.getSimulation());
@@ -681,11 +638,7 @@ public class RenderPlane3D implements RenderPlane
 					}
 					for(Connector connector : component.getConnectors())
 					{
-						if(clusterToHighlight == connector.getCluster())
-						{
-							clusterToHighlight = null;
-							connectorsToHighlight = new ArrayList<>();
-						}
+						clusterHighlighter.clusterChanged(connector.getCluster());
 					}
 					for(Wire wire : wiresToRemove)
 					{
@@ -793,11 +746,7 @@ public class RenderPlane3D implements RenderPlane
 			gpuTasks.add((unused2) -> {
 				for(Connector connector : toBeGrabbed.getConnectors())
 				{
-					if(clusterToHighlight == connector.getCluster())
-					{
-						clusterToHighlight = null;
-						connectorsToHighlight = new ArrayList<>();
-					}
+					clusterHighlighter.clusterChanged(connector.getCluster());
 				}
 				if(toBeGrabbed instanceof CompLabel)
 				{
@@ -1140,7 +1089,7 @@ public class RenderPlane3D implements RenderPlane
 			
 			drawDynamic(view);
 			drawPlacementPosition(view); //Must be called before drawWireToBePlaced, currently!!!
-			highlightCluster(view);
+			clusterHighlighter.highlightCluster(view);
 			drawWireToBePlaced(view);
 			drawHighlight(view);
 			
@@ -1549,63 +1498,6 @@ public class RenderPlane3D implements RenderPlane
 				Settings.highlightColorG,
 				Settings.highlightColorB,
 				Settings.highlightColorA
-		};
-		
-		ShaderProgram planeShader = shaderStorage.getFlatPlaneShader();
-		planeShader.use();
-		planeShader.setUniformV4(0, color);
-		GenericVAO fullCanvasPlane = shaderStorage.getFlatPlane();
-		fullCanvasPlane.use();
-		fullCanvasPlane.draw();
-		
-		//Restore settings:
-		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
-		GL30.glEnable(GL30.GL_DEPTH_TEST);
-		//Clear stencil buffer:
-		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
-		//After clearing, disable usage/writing of/to stencil buffer again.
-		GL30.glStencilMask(0x00);
-	}
-	
-	private void highlightCluster(float[] view)
-	{
-		if(clusterToHighlight == null)
-		{
-			return;
-		}
-		
-		//Enable drawing to stencil buffer
-		GL30.glStencilMask(0xFF);
-		
-		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
-		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
-		for(Wire wire : clusterToHighlight.getWires())
-		{
-			if(wire instanceof HiddenWire)
-			{
-				continue;
-			}
-			World3DHelper.drawStencilComponent(invisibleCubeShader, invisibleCube, (CompWireRaw) wire, view);
-		}
-		invisibleCubeShader.use();
-		invisibleCubeShader.setUniformM4(1, view);
-		invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
-		Matrix matrix = new Matrix();
-		for(Connector connector : connectorsToHighlight)
-		{
-			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, connector.getModel(), connector.getParent(), connector.getParent().getModelHolder().getPlacementOffset(), matrix);
-		}
-		
-		//Draw on top
-		GL30.glDisable(GL30.GL_DEPTH_TEST);
-		//Only draw if stencil bit is set.
-		GL30.glStencilFunc(GL30.GL_EQUAL, 1, 0xFF);
-		
-		float[] color = new float[]{
-				Settings.highlightClusterColorR,
-				Settings.highlightClusterColorG,
-				Settings.highlightClusterColorB,
-				Settings.highlightClusterColorA
 		};
 		
 		ShaderProgram planeShader = shaderStorage.getFlatPlaneShader();
