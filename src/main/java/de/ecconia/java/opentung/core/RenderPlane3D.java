@@ -120,9 +120,7 @@ public class RenderPlane3D implements RenderPlane
 	private boolean boardIsBeingDragged = false; //Scope input/(render), read on many places.
 	
 	//Grabbing stuff:
-	private CompContainer grabbedParent;
-	private Component grabbedComponent;
-	private List<Wire> grabbedWires;
+	private GrabData grabData;
 	private double grabRotation;
 	private final MeshBagContainer secondaryMesh;
 	
@@ -139,7 +137,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public boolean isGrabbing()
 	{
-		return grabbedComponent != null;
+		return grabData != null;
 	}
 	
 	//Click events:
@@ -330,6 +328,9 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
 			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
 			
+			Component grabbedComponent = grabData.getComponent();
+			List<Wire> grabbedWires = grabData.getWires();
+			
 			//Update positions and alignment of wires, they inherit the position from the grabbed component.
 			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(finalAlignment);
 			Vector3 newPosition = placementData.getPosition();
@@ -389,8 +390,7 @@ public class RenderPlane3D implements RenderPlane
 					board.getLabelsToRender().add((CompLabel) grabbedComponent);
 				}
 				
-				grabbedComponent = null;
-				grabbedWires = null;
+				grabData = null;
 			});
 			
 			return true;
@@ -682,13 +682,19 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return; //We are dragging a wire, don't grab something!
 		}
-		if(grabbedComponent != null || grabbedWires != null)
+		if(grabData != null)
 		{
 			return;
 		}
 		if(toBeGrabbed instanceof Wire)
 		{
 			//We don't grab wires.
+			return;
+		}
+		
+		if(toBeGrabbed instanceof CompContainer)
+		{
+			System.out.println("Cannot grab containers - yet.");
 			return;
 		}
 		
@@ -700,13 +706,8 @@ public class RenderPlane3D implements RenderPlane
 		}
 		toBeGrabbed.setParent(null);
 		
-		if(toBeGrabbed instanceof CompContainer)
-		{
-			System.out.println("Cannot grab containers - yet.");
-			return;
-		}
 		//Remove the snapping wire fully. TODO: Restore snapping peg wire when aborting grabbing.
-		else if(toBeGrabbed instanceof CompSnappingPeg)
+		if(toBeGrabbed instanceof CompSnappingPeg)
 		{
 			for(Wire wire : toBeGrabbed.getPegs().get(0).getWires())
 			{
@@ -774,9 +775,7 @@ public class RenderPlane3D implements RenderPlane
 				lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
 				secondaryMesh.addComponent(toBeGrabbed, board.getSimulation());
 				grabRotation = 0;
-				grabbedComponent = toBeGrabbed;
-				grabbedParent = parent;
-				grabbedWires = wires;
+				grabData = new GrabData(parent, toBeGrabbed, wires);
 			});
 		});
 	}
@@ -784,8 +783,9 @@ public class RenderPlane3D implements RenderPlane
 	public void deleteGrabbed()
 	{
 		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
-			List<Wire> wireCopy = grabbedWires;
-			Component compCopy = grabbedComponent;
+			GrabData grabDataCopy = grabData;
+			List<Wire> wireCopy = grabDataCopy.getWires();
+			Component compCopy = grabDataCopy.getComponent();
 			if(wireCopy == null || compCopy == null)
 			{
 				//Was aborted. But data is no longer valid.
@@ -814,9 +814,7 @@ public class RenderPlane3D implements RenderPlane
 				secondaryMesh.removeComponent(compCopy, board.getSimulation());
 				
 				//That's pretty much it. Just make the clipboard invisible:
-				grabbedWires = null;
-				grabbedComponent = null;
-				grabbedParent = null;
+				grabData = null;
 				
 				if(compCopy instanceof CompLabel)
 				{
@@ -829,6 +827,9 @@ public class RenderPlane3D implements RenderPlane
 	public void abortGrabbing()
 	{
 		gpuTasks.add((unused) -> {
+			List<Wire> grabbedWires = grabData.getWires();
+			Component grabbedComponent = grabData.getComponent();
+			CompContainer grabbedParent = grabData.getParent();
 			//TODO: Thread-safety. Add check if currently grabbing. Else NPE. (Or disable grabbed state more early?)
 			//TODO: board.getComponentsToRender().add(grabbedComponent);
 			for(Wire wire : grabbedWires)
@@ -849,9 +850,7 @@ public class RenderPlane3D implements RenderPlane
 			secondaryMesh.removeComponent(grabbedComponent, board.getSimulation());
 			worldMesh.addComponent(grabbedComponent, board.getSimulation());
 			
-			grabbedComponent = null;
-			grabbedWires = null;
-			grabbedParent = null;
+			grabData = null;
 		});
 	}
 	
@@ -1049,7 +1048,7 @@ public class RenderPlane3D implements RenderPlane
 		Vector3 placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
 		CompBoard placementBoard = board;
 		
-		if(sharedData.getCurrentPlaceable() == CompBoard.info && grabbedComponent == null)
+		if(sharedData.getCurrentPlaceable() == CompBoard.info && grabData == null) //TODO: Ehhh? What ahsdouahwfoahw -> English: This section has to be overhauled as soon as grabbed board adding will be added.
 		{
 			//Boards have their center within, thus the offset needs to be adjusted:
 			placementPosition = placementPosition.add(placementNormal.multiply(placeableBoardIsLaying ? 0.15 : (0.15 + 0.075)));
@@ -1170,6 +1169,9 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(isGrabbing())
 		{
+			Component grabbedComponent = grabData.getComponent();
+			List<Wire> grabbedWires = grabData.getWires();
+			
 			//Calculate the new alignment:
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
 			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
