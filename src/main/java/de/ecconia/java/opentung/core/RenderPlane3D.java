@@ -43,6 +43,7 @@ import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -329,27 +330,23 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
 			
 			Component grabbedComponent = grabData.getComponent();
-			List<Wire> grabbedWires = grabData.getWires();
 			
 			//Update positions and alignment of wires, they inherit the position from the grabbed component.
 			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(finalAlignment);
 			Vector3 newPosition = placementData.getPosition();
 			Vector3 oldPosition = grabbedComponent.getPosition();
-			for(Wire wire : grabbedWires)
+			for(GrabData.WireContainer wireContainer : grabData.getWiresWithSides())
 			{
-				if(wire instanceof HiddenWire)
-				{
-					continue;
-				}
+				Wire wire = wireContainer.wire;
 				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
 				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
-				if(wire.getConnectorA().getParent() == grabbedComponent)
+				if(wireContainer.isGrabbedOnASide)
 				{
 					thisPos = thisPos.subtract(oldPosition);
 					thisPos = newDeltaAlignment.inverse().multiply(thisPos);
 					thisPos = thisPos.add(newPosition);
 				}
-				if(wire.getConnectorB().getParent() == grabbedComponent)
+				else
 				{
 					thatPos = thatPos.subtract(oldPosition);
 					thatPos = newDeltaAlignment.inverse().multiply(thatPos);
@@ -366,28 +363,63 @@ public class RenderPlane3D implements RenderPlane
 				cWire.setRotation(rotation);
 				cWire.setLength((float) distance * 2f);
 			}
+			if(grabData instanceof GrabContainerData)
+			{
+				GrabContainerData grabContainerData = (GrabContainerData) grabData;
+				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
+				{
+					alignComponent(wire, oldPosition, newPosition, newDeltaAlignment);
+				}
+				for(CompWireRaw wire : grabContainerData.getInternalWires())
+				{
+					alignComponent(wire, oldPosition, newPosition, newDeltaAlignment);
+				}
+			}
+			
+			for(Component component : grabData.getComponents())
+			{
+				alignComponent(component, oldPosition, newPosition, newDeltaAlignment);
+			}
 			
 			gpuTasks.add((unused) -> {
 				//Apply new position and alignment:
 				grabbedComponent.setPosition(placement.getPosition()); //New position
 				grabbedComponent.setRotation(finalAlignment);
 				//Move to new meshes:
-				secondaryMesh.removeComponent(grabbedComponent, board.getSimulation());
-				worldMesh.addComponent(grabbedComponent, board.getSimulation());
+				for(Component component : grabData.getComponents())
+				{
+					secondaryMesh.removeComponent(component, board.getSimulation());
+					worldMesh.addComponent(component, board.getSimulation());
+					if(component instanceof CompLabel && ((CompLabel) component).hasTexture())
+					{
+						board.getLabelsToRender().add((CompLabel) component);
+					}
+				}
+				
 				grabbedComponent.setParent(placement.getParentBoard());
 				placement.getParentBoard().addChild(grabbedComponent);
 				grabbedComponent.updateBoundsDeep();
 				placement.getParentBoard().updateBounds();
-				for(Wire wire : grabbedWires)
+				for(Wire wire : grabData.getWires())
 				{
 					CompWireRaw cWire = (CompWireRaw) wire;
-					board.getWiresToRender().add(cWire);
 					worldMesh.addComponent(cWire, board.getSimulation());
 					wireRayCaster.addWire(cWire);
 				}
-				if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
+				if(grabData instanceof GrabContainerData)
 				{
-					board.getLabelsToRender().add((CompLabel) grabbedComponent);
+					GrabContainerData grabContainerData = (GrabContainerData) grabData;
+					for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
+					{
+						secondaryMesh.removeComponent(wire, board.getSimulation());
+						worldMesh.addComponent(wire, board.getSimulation());
+					}
+					for(CompWireRaw wire : grabContainerData.getInternalWires())
+					{
+						secondaryMesh.removeComponent(wire, board.getSimulation());
+						wireRayCaster.addWire(wire);
+						worldMesh.addComponent(wire, board.getSimulation());
+					}
 				}
 				
 				grabData = null;
@@ -528,6 +560,15 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		return false;
+	}
+	
+	private void alignComponent(Component component, Vector3 oldPosition, Vector3 newPosition, Quaternion deltaRotation)
+	{
+		component.setRotation(component.getRotation().multiply(deltaRotation));
+		Vector3 newPos = component.getPosition().subtract(oldPosition);
+		newPos = deltaRotation.inverse().multiply(newPos);
+		newPos = newPos.add(newPosition);
+		component.setPosition(newPos);
 	}
 	
 	public void delete(Part toBeDeleted)
@@ -692,12 +733,6 @@ public class RenderPlane3D implements RenderPlane
 			return;
 		}
 		
-		if(toBeGrabbed instanceof CompContainer)
-		{
-			System.out.println("Cannot grab containers - yet.");
-			return;
-		}
-		
 		CompContainer parent = (CompContainer) toBeGrabbed.getParent();
 		if(parent == null)
 		{
@@ -706,8 +741,132 @@ public class RenderPlane3D implements RenderPlane
 		}
 		toBeGrabbed.setParent(null);
 		
+		if(toBeGrabbed instanceof CompContainer)
+		{
+			System.out.println("Starting highly experimental board grabbing.");
+			CompContainer container = (CompContainer) toBeGrabbed;
+			gpuTasks.add((unused) -> {
+				//Remove this board from its parent.
+				parent.remove(toBeGrabbed);
+				GrabContainerData newGrabData = new GrabContainerData(parent, toBeGrabbed);
+				
+				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
+				List<CompWireRaw> internalWires = new ArrayList<>();
+				Map<Wire, Boolean> outgoingWires = new HashMap<>();
+				{
+					LinkedList<Component> queue = new LinkedList<>();
+					queue.addLast(container);
+					while(!queue.isEmpty())
+					{
+						Component component = queue.removeFirst();
+						newGrabData.addComponent(component);
+						worldMesh.removeComponent(component, board.getSimulation());
+						secondaryMesh.addComponent(component, board.getSimulation());
+						
+						if(component instanceof CompLabel)
+						{
+							board.getLabelsToRender().remove(component);
+						}
+						
+						for(Connector connector : component.getConnectors())
+						{
+							for(Wire wire : connector.getWires())
+							{
+								if(outgoingWires.remove(wire) != null)
+								{
+									if(wire instanceof CompSnappingWire)
+									{
+										internalSnappingWires.add((CompSnappingWire) wire);
+									}
+									else if(wire instanceof CompWireRaw)
+									{
+										internalWires.add((CompWireRaw) wire);
+									}
+									else if(wire instanceof HiddenWire)
+									{
+										//Ignore this wire. Its not exposed to anything.
+									}
+									else
+									{
+										throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
+									}
+								}
+								else
+								{
+									outgoingWires.put(wire, wire.getConnectorA() == connector);
+								}
+							}
+						}
+						
+						if(component instanceof CompContainer)
+						{
+							for(Component child : ((CompContainer) component).getChildren())
+							{
+								queue.addLast(child);
+							}
+						}
+					}
+				}
+				
+				for(CompWireRaw wire : internalWires)
+				{
+					worldMesh.removeComponent(wire, board.getSimulation());
+					wireRayCaster.removeWire(wire);
+					secondaryMesh.addComponent(wire, board.getSimulation());
+				}
+				newGrabData.setInternalWires(internalWires);
+				for(CompSnappingWire wire : internalSnappingWires)
+				{
+					worldMesh.removeComponent(wire, board.getSimulation());
+					secondaryMesh.addComponent(wire, board.getSimulation());
+				}
+				newGrabData.setInternalSnappingWires(internalSnappingWires);
+				List<CompSnappingWire> snappingWiresToRemove = new ArrayList<>();
+				for(Map.Entry<Wire, Boolean> outgoingWireEntry : outgoingWires.entrySet())
+				{
+					Wire outgoingWire = outgoingWireEntry.getKey();
+					worldMesh.removeComponent((Component) outgoingWire, board.getSimulation());
+					if(outgoingWire instanceof CompSnappingWire)
+					{
+						snappingWiresToRemove.add((CompSnappingWire) outgoingWire);
+					}
+					else
+					{
+						//Snapping peg wires should not and technically can't be in the wire ray-caster...
+						wireRayCaster.removeWire((CompWireRaw) outgoingWire);
+						newGrabData.addWire(outgoingWire, outgoingWireEntry.getValue());
+					}
+				}
+				
+				fixXAxis = container.getRotation().inverse().multiply(Vector3.xp);
+				lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
+				grabRotation = 0;
+				//Activate grabbing:
+				grabData = newGrabData;
+				
+				board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+					Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+					for(CompSnappingWire wire : snappingWiresToRemove)
+					{
+						CompSnappingPeg aSide = (CompSnappingPeg) wire.getConnectorA().getParent();
+						CompSnappingPeg bSide = (CompSnappingPeg) wire.getConnectorA().getParent();
+						aSide.setPartner(null);
+						bSide.setPartner(null);
+						ClusterHelper.removeWire(simulation, wire, updates);
+					}
+					gpuTasks.add((unused2) -> {
+						System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+						for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+						{
+							entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+						}
+					});
+				});
+			});
+			return;
+		}
 		//Remove the snapping wire fully. TODO: Restore snapping peg wire when aborting grabbing.
-		if(toBeGrabbed instanceof CompSnappingPeg)
+		else if(toBeGrabbed instanceof CompSnappingPeg)
 		{
 			for(Wire wire : toBeGrabbed.getPegs().get(0).getWires())
 			{
@@ -735,14 +894,15 @@ public class RenderPlane3D implements RenderPlane
 		
 		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
 			//Collect wires:
-			List<Wire> wires = new ArrayList<>();
+			GrabData newGrabData = new GrabData(parent, toBeGrabbed);
+			newGrabData.addComponent(toBeGrabbed); //Must be done manually
 			for(Connector connector : toBeGrabbed.getConnectors())
 			{
 				for(Wire wire : connector.getWires())
 				{
 					if(wire instanceof CompWireRaw)
 					{
-						wires.add(wire);
+						newGrabData.addWire(wire, wire.getConnectorA() == connector);
 					}
 				}
 			}
@@ -759,7 +919,7 @@ public class RenderPlane3D implements RenderPlane
 				}
 				//Remove from meshes on render thread
 				worldMesh.removeComponent(toBeGrabbed, board.getSimulation());
-				for(Wire wire : wires)
+				for(Wire wire : newGrabData.getWires())
 				{
 					board.getWiresToRender().remove(wire);
 					worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
@@ -775,7 +935,7 @@ public class RenderPlane3D implements RenderPlane
 				lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
 				secondaryMesh.addComponent(toBeGrabbed, board.getSimulation());
 				grabRotation = 0;
-				grabData = new GrabData(parent, toBeGrabbed, wires);
+				grabData = newGrabData;
 			});
 		});
 	}
@@ -784,25 +944,41 @@ public class RenderPlane3D implements RenderPlane
 	{
 		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
 			GrabData grabDataCopy = grabData;
-			List<Wire> wireCopy = grabDataCopy.getWires();
-			Component compCopy = grabDataCopy.getComponent();
-			if(wireCopy == null || compCopy == null)
+			if(grabDataCopy == null)
 			{
-				//Was aborted. But data is no longer valid.
+				System.out.println("Attempted to delete grabbed, while currently not grabbing.");
+				//Was deleted. But data is no longer valid/present - how though?.
 				return;
 			}
 			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-			for(Wire wire : wireCopy)
+			//TBI: Removing wires first? Or just all blots/pegs?
+			for(Wire wire : grabDataCopy.getWires())
 			{
+				//Outgoing wires:
 				ClusterHelper.removeWire(board.getSimulation(), wire, updates);
 			}
-			for(Peg peg : compCopy.getPegs())
+			if(grabDataCopy instanceof GrabContainerData)
 			{
-				ClusterHelper.removePeg(board.getSimulation(), peg, updates);
+				GrabContainerData grabContainerData = (GrabContainerData) grabDataCopy;
+				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
+				{
+					ClusterHelper.removeWire(board.getSimulation(), wire, updates);
+				}
+				for(CompWireRaw wire : grabContainerData.getInternalWires())
+				{
+					ClusterHelper.removeWire(board.getSimulation(), wire, updates);
+				}
 			}
-			for(Blot blot : compCopy.getBlots())
+			for(Component component : grabDataCopy.getComponents())
 			{
-				ClusterHelper.removeBlot(board.getSimulation(), blot, updates);
+				for(Peg peg : component.getPegs())
+				{
+					ClusterHelper.removePeg(board.getSimulation(), peg, updates);
+				}
+				for(Blot blot : component.getBlots())
+				{
+					ClusterHelper.removeBlot(board.getSimulation(), blot, updates);
+				}
 			}
 			
 			gpuTasks.add((unused2) -> {
@@ -811,15 +987,29 @@ public class RenderPlane3D implements RenderPlane
 				{
 					entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
 				}
-				secondaryMesh.removeComponent(compCopy, board.getSimulation());
+				for(Component component : grabDataCopy.getComponents())
+				{
+					secondaryMesh.removeComponent(component, board.getSimulation());
+					if(component instanceof CompLabel)
+					{
+						((CompLabel) component).unload();
+					}
+				}
+				if(grabDataCopy instanceof GrabContainerData)
+				{
+					GrabContainerData grabContainerData = (GrabContainerData) grabDataCopy;
+					for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
+					{
+						secondaryMesh.removeComponent(wire, board.getSimulation());
+					}
+					for(CompWireRaw wire : grabContainerData.getInternalWires())
+					{
+						secondaryMesh.removeComponent(wire, board.getSimulation());
+					}
+				}
 				
 				//That's pretty much it. Just make the clipboard invisible:
 				grabData = null;
-				
-				if(compCopy instanceof CompLabel)
-				{
-					((CompLabel) compCopy).unload();
-				}
 			});
 		});
 	}
@@ -827,28 +1017,56 @@ public class RenderPlane3D implements RenderPlane
 	public void abortGrabbing()
 	{
 		gpuTasks.add((unused) -> {
-			List<Wire> grabbedWires = grabData.getWires();
-			Component grabbedComponent = grabData.getComponent();
-			CompContainer grabbedParent = grabData.getParent();
-			//TODO: Thread-safety. Add check if currently grabbing. Else NPE. (Or disable grabbed state more early?)
-			//TODO: board.getComponentsToRender().add(grabbedComponent);
-			for(Wire wire : grabbedWires)
+			if(grabData == null)
 			{
-				CompWireRaw cwire = (CompWireRaw) wire;
-				board.getWiresToRender().add(cwire);
-				worldMesh.addComponent(cwire, board.getSimulation());
-				wireRayCaster.addWire(cwire);
+				System.out.println("Attempted to abort grabbing, while currently not grabbing.");
+				return; //Lol how did we even got here?
 			}
-			if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
+			System.out.println("Abort grabbing...");
+			
+			for(Component component : grabData.getComponents())
 			{
-				board.getLabelsToRender().add((CompLabel) grabbedComponent);
+				secondaryMesh.removeComponent(component, board.getSimulation());
+				worldMesh.addComponent(component, board.getSimulation());
+				if(component instanceof CompLabel)
+				{
+					if(((CompLabel) component).hasTexture())
+					{
+						board.getLabelsToRender().add((CompLabel) component);
+					}
+				}
 			}
 			
+			for(Wire wire : grabData.getWires())
+			{
+				CompWireRaw cWire = (CompWireRaw) wire;
+				worldMesh.addComponent(cWire, board.getSimulation());
+				//Snapping peg wires should not and technically can't be in the wire ray-caster...
+				wireRayCaster.addWire(cWire);
+			}
+			if(grabData instanceof GrabContainerData)
+			{
+				GrabContainerData grabContainerData = (GrabContainerData) grabData;
+				for(CompWireRaw wire : grabContainerData.getInternalWires())
+				{
+					CompWireRaw compWireRaw = wire;
+					secondaryMesh.removeComponent(compWireRaw, board.getSimulation());
+					wireRayCaster.addWire(compWireRaw);
+					worldMesh.addComponent(compWireRaw, board.getSimulation());
+				}
+				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
+				{
+					secondaryMesh.removeComponent(wire, board.getSimulation());
+					worldMesh.addComponent(wire, board.getSimulation());
+				}
+			}
+			
+			//Update parent relation:
+			Component grabbedComponent = grabData.getComponent();
+			CompContainer grabbedParent = grabData.getParent();
 			grabbedParent.addChild(grabbedComponent);
 			grabbedParent.updateBounds();
 			grabbedComponent.setParent(grabbedParent);
-			secondaryMesh.removeComponent(grabbedComponent, board.getSimulation());
-			worldMesh.addComponent(grabbedComponent, board.getSimulation());
 			
 			grabData = null;
 		});
@@ -1170,7 +1388,7 @@ public class RenderPlane3D implements RenderPlane
 		if(isGrabbing())
 		{
 			Component grabbedComponent = grabData.getComponent();
-			List<Wire> grabbedWires = grabData.getWires();
+			List<GrabData.WireContainer> grabbedWires = grabData.getWiresWithSides();
 			
 			//Calculate the new alignment:
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
@@ -1214,18 +1432,18 @@ public class RenderPlane3D implements RenderPlane
 			visibleCube.use();
 			
 			Matrix m = new Matrix();
-			for(Wire wire : grabbedWires)
+			for(GrabData.WireContainer wireContainer : grabbedWires)
 			{
-				//TODO: When collecting outgoing wires from the board, they need to be separated into A and B side attached to grabbed.
+				Wire wire = wireContainer.wire;
 				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
 				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
-				if(wire.getConnectorA().getParent() == grabbedComponent)
+				if(wireContainer.isGrabbedOnASide)
 				{
 					thisPos = thisPos.subtract(oldPosition);
 					thisPos = newDeltaAlignment.inverse().multiply(thisPos);
 					thisPos = thisPos.add(newPosition);
 				}
-				if(wire.getConnectorB().getParent() == grabbedComponent)
+				else
 				{
 					thatPos = thatPos.subtract(oldPosition);
 					thatPos = newDeltaAlignment.inverse().multiply(thatPos);
