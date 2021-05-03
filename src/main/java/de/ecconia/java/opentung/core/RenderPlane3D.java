@@ -13,6 +13,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
@@ -331,7 +332,13 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
 			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placement);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
+			newAlignment = newAlignment.multiply(normalAxisRotation);
+			if(grabData instanceof GrabContainerData && !placeableBoardIsLaying)
+			{
+				Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
+				newAlignment = boardAlignment.multiply(newAlignment);
+			}
+			Quaternion finalAlignment = newAlignment;
 			
 			Component grabbedComponent = grabData.getComponent();
 			
@@ -1399,6 +1406,11 @@ public class RenderPlane3D implements RenderPlane
 			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
 			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
 			newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
+			if(grabData instanceof GrabContainerData && !placeableBoardIsLaying)
+			{
+				Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
+				newAlignment = boardAlignment.multiply(newAlignment);
+			}
 			
 			//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
 			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(newAlignment);
@@ -1668,11 +1680,12 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawHighlight(float[] view)
 	{
-		if(isGrabbing())
+		boolean grabTrue = grabData != null && grabData instanceof GrabContainerData && placementData != null;
+		if(grabData != null && !grabTrue)
 		{
 			return;
 		}
-		if(currentlySelected == null)
+		if(!grabTrue && currentlySelected == null)
 		{
 			return;
 		}
@@ -1682,9 +1695,10 @@ public class RenderPlane3D implements RenderPlane
 		boolean isBoard = part instanceof CompBoard;
 		boolean isWire = part instanceof CompWireRaw;
 		if(
-				isBoard && !Settings.highlightBoards
+				!grabTrue && (
+						isBoard && !Settings.highlightBoards
 						|| isWire && !Settings.highlightWires
-						|| !(isBoard || isWire) && !Settings.highlightComponents
+						|| !(isBoard || isWire) && !Settings.highlightComponents)
 		)
 		{
 			return;
@@ -1695,7 +1709,36 @@ public class RenderPlane3D implements RenderPlane
 		
 		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
 		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
-		if(part instanceof Component)
+		if(grabTrue)
+		{
+			//Do very very ugly drawing of board:
+			Component grabbedComponent = grabData.getComponent();
+			Meshable meshable = grabbedComponent.getModelHolder().getSolid().get(0); //Grabbed board or mount, either way -> solid
+			Quaternion rotation = grabbedComponent.getRotation();
+			{
+				//Calculate the new alignment:
+				Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
+				double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
+				Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
+				Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
+				if(!placeableBoardIsLaying)
+				{
+					Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
+					finalAlignment = boardAlignment.multiply(finalAlignment);
+				}
+				
+				//Update positions and alignment of wires, they inherit the position from the grabbed component.
+				Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(finalAlignment);
+				
+				rotation = rotation.multiply(newDeltaAlignment);
+			}
+			
+			invisibleCubeShader.use();
+			invisibleCubeShader.setUniformM4(1, view);
+			invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
+			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, placementData.getPosition(), grabbedComponent, rotation, grabbedComponent.getModelHolder().getPlacementOffset(), new Matrix());
+		}
+		else if(part instanceof Component)
 		{
 			World3DHelper.drawStencilComponent(invisibleCubeShader, invisibleCube, (Component) part, view);
 		}

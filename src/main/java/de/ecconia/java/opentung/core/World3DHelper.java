@@ -106,4 +106,30 @@ public class World3DHelper
 		invisibleCube.use();
 		invisibleCube.draw();
 	}
+	
+	public static void drawCubeFull(ShaderProgram invisibleCubeShader, GenericVAO invisibleCube, CubeFull cube, Vector3 position, Part part, Quaternion quaternion, Vector3 placementOffset, Matrix matrix)
+	{
+		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
+		matrix.identity();
+		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+		Matrix rotMat = new Matrix(quaternion.createMatrix());
+		matrix.multiply(rotMat);
+		Vector3 size = cube.getSize();
+		if(cube.getMapper() != null)
+		{
+			size = cube.getMapper().getMappedSize(size, part);
+		}
+		matrix.translate((float) placementOffset.getX(), (float) placementOffset.getY(), (float) placementOffset.getZ());
+		if(cube instanceof CubeOpenRotated)
+		{
+			matrix.multiply(new Matrix(((CubeOpenRotated) cube).getRotation().inverse().createMatrix()));
+		}
+		position = cube.getPosition();
+		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+		matrix.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
+		invisibleCubeShader.setUniformM4(2, matrix.getMat());
+		
+		invisibleCube.use();
+		invisibleCube.draw();
+	}
 }
