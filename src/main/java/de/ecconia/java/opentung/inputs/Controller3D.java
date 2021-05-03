@@ -134,7 +134,7 @@ public class Controller3D implements Controller
 		{
 			if(renderPlane3D.isGrabbing())
 			{
-				renderPlane3D.deleteGrabbed();
+				renderPlane3D.abortGrabbing();
 			}
 			else
 			{
@@ -362,15 +362,6 @@ public class Controller3D implements Controller
 	
 	private void mouseRightUp()
 	{
-		if(renderPlane3D.isGrabbing())
-		{
-			renderPlane3D.abortGrabbing();
-			mouseRightDown = 0;
-			mouseRightDownOnConnector = false;
-			mouseRightConnectorMode = false;
-			return;
-		}
-		
 		Part mouseRightDownOn = renderPlane3D.getCursorObject();
 		if(mouseRightConnectorMode)
 		{
@@ -382,6 +373,10 @@ public class Controller3D implements Controller
 			{
 				renderPlane3D.rightDragOnConnectorStop(null);
 			}
+		}
+		else if(renderPlane3D.isInBoardPlacementMode())
+		{
+			renderPlane3D.flipBoard();
 		}
 		else
 		{

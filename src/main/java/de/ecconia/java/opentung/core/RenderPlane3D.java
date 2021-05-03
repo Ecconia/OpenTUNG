@@ -141,7 +141,19 @@ public class RenderPlane3D implements RenderPlane
 		return grabData != null;
 	}
 	
+	public boolean isInBoardPlacementMode()
+	{
+		//Only flip, when looking at a board. Or grabbing. Cause one might use right click to interact with something else.
+		return (grabData instanceof GrabContainerData) || (currentlySelected instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info && !boardIsBeingDragged);
+	}
+	
 	//Click events:
+	
+	public void flipBoard()
+	{
+		//Right clicked while placing a board -> change layout:
+		placeableBoardIsLaying = !placeableBoardIsLaying;
+	}
 	
 	public void componentLeftClicked(Part part)
 	{
@@ -160,14 +172,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void componentRightClicked(Part part)
 	{
-		//TODO: Move this somewhere more generic.
-		if(part instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info && !boardIsBeingDragged)
-		{
-			//Right clicked while placing a board -> change layout:
-			placeableBoardIsLaying = !placeableBoardIsLaying;
-			return;
-		}
-		
 		clusterHighlighter.componentRightClicked(part);
 	}
 	
