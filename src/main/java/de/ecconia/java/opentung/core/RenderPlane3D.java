@@ -1489,7 +1489,7 @@ public class RenderPlane3D implements RenderPlane
 					position = position.subtract(oldPosition);
 					position = newRelativeAlignment.inverse().multiply(position);
 					position = position.add(newPosition);
-					Quaternion alignment = label.getRotation();//.multiply(newRelativeAlignment);
+					Quaternion alignment = label.getRotation().multiply(newRelativeAlignment);
 					
 					m.identity();
 					m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
