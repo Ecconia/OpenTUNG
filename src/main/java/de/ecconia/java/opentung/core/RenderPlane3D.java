@@ -761,6 +761,7 @@ public class RenderPlane3D implements RenderPlane
 						if(component instanceof CompLabel)
 						{
 							board.getLabelsToRender().remove(component);
+							newGrabData.addLabel((CompLabel) component);
 						}
 						
 						for(Connector connector : component.getConnectors())
@@ -891,6 +892,10 @@ public class RenderPlane3D implements RenderPlane
 			//Collect wires:
 			GrabData newGrabData = new GrabData(parent, toBeGrabbed);
 			newGrabData.addComponent(toBeGrabbed); //Must be done manually
+			if(toBeGrabbed instanceof CompLabel)
+			{
+				newGrabData.addLabel((CompLabel) toBeGrabbed);
+			}
 			for(Connector connector : toBeGrabbed.getConnectors())
 			{
 				for(Wire wire : connector.getWires())
@@ -1473,20 +1478,27 @@ public class RenderPlane3D implements RenderPlane
 				visibleCube.draw();
 			}
 			
-			//TODO: Iterate over all labels in the secondary mesh. (Currently only one).
-			//TODO: Per Label on grabbed board, undo old board location, apply new board location. (If board that is).
-			if(grabbedComponent instanceof CompLabel && ((CompLabel) grabbedComponent).hasTexture())
+			if(grabData.hasLabels())
 			{
 				ShaderProgram sdfShader = shaderStorage.getSdfShader();
-				CompLabel label = (CompLabel) grabbedComponent;
 				sdfShader.use();
 				sdfShader.setUniformM4(1, view);
-				label.activate();
-				m.identity();
-				m.translate((float) newPosition.getX(), (float) newPosition.getY(), (float) newPosition.getZ());
-				m.multiply(new Matrix(newAlignment.getAbsolute().createMatrix()));
-				sdfShader.setUniformM4(2, m.getMat());
-				label.getModelHolder().drawTextures();
+				for(CompLabel label : grabData.getLabels())
+				{
+					Vector3 position = label.getPosition();
+					position = position.subtract(oldPosition);
+					position = newRelativeAlignment.inverse().multiply(position);
+					position = position.add(newPosition);
+					Quaternion alignment = label.getRotation();//.multiply(newRelativeAlignment);
+					
+					m.identity();
+					m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+					m.multiply(new Matrix(alignment.createMatrix()));
+					sdfShader.setUniformM4(2, m.getMat());
+					
+					label.activate();
+					label.getModelHolder().drawTextures();
+				}
 			}
 			
 			return;

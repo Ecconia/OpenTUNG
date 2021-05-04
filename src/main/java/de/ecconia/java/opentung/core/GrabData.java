@@ -1,9 +1,11 @@
 package de.ecconia.java.opentung.core;
 
+import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class GrabData
@@ -14,6 +16,8 @@ public class GrabData
 	//Currently wires are stored redundantly, but convenience. TODO to be improved
 	private final List<WireContainer> grabbedWiresWithSide = new ArrayList<>();
 	private final List<Wire> grabbedWires = new ArrayList<>();
+	//Grabbed labels:
+	private final LinkedList<CompLabel> labels = new LinkedList<>();
 	
 	public GrabData(CompContainer grabbedParent, Component grabbedComponent)
 	{
@@ -35,6 +39,21 @@ public class GrabData
 	{
 		grabbedWiresWithSide.add(new WireContainer(wire, isGrabSideA));
 		grabbedWires.add(wire);
+	}
+	
+	public void addLabel(CompLabel label)
+	{
+		labels.addLast(label);
+	}
+	
+	public LinkedList<CompLabel> getLabels()
+	{
+		return labels;
+	}
+	
+	public boolean hasLabels()
+	{
+		return !labels.isEmpty();
 	}
 	
 	public Component getComponent()
