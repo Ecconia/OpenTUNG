@@ -328,22 +328,9 @@ public class RenderPlane3D implements RenderPlane
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
 		if(isGrabbing())
 		{
-			//Calculate the new alignment:
-			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
-			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placement);
-			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-			newAlignment = newAlignment.multiply(normalAxisRotation);
-			if(grabData instanceof GrabContainerData && !placeableBoardIsLaying)
-			{
-				Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
-				newAlignment = boardAlignment.multiply(newAlignment);
-			}
-			Quaternion finalAlignment = newAlignment;
-			
 			Component grabbedComponent = grabData.getComponent();
+			Quaternion newRelativeAlignment = getDeltaGrabRotation(grabbedComponent).getRelative();
 			
-			//Update positions and alignment of wires, they inherit the position from the grabbed component.
-			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(finalAlignment);
 			Vector3 newPosition = placementData.getPosition();
 			Vector3 oldPosition = grabbedComponent.getPosition();
 			for(GrabData.WireContainer wireContainer : grabData.getWiresWithSides())
@@ -354,13 +341,13 @@ public class RenderPlane3D implements RenderPlane
 				if(wireContainer.isGrabbedOnASide)
 				{
 					thisPos = thisPos.subtract(oldPosition);
-					thisPos = newDeltaAlignment.inverse().multiply(thisPos);
+					thisPos = newRelativeAlignment.inverse().multiply(thisPos);
 					thisPos = thisPos.add(newPosition);
 				}
 				else
 				{
 					thatPos = thatPos.subtract(oldPosition);
-					thatPos = newDeltaAlignment.inverse().multiply(thatPos);
+					thatPos = newRelativeAlignment.inverse().multiply(thatPos);
 					thatPos = thatPos.add(newPosition);
 				}
 				
@@ -379,23 +366,20 @@ public class RenderPlane3D implements RenderPlane
 				GrabContainerData grabContainerData = (GrabContainerData) grabData;
 				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
 				{
-					alignComponent(wire, oldPosition, newPosition, newDeltaAlignment);
+					alignComponent(wire, oldPosition, newPosition, newRelativeAlignment);
 				}
 				for(CompWireRaw wire : grabContainerData.getInternalWires())
 				{
-					alignComponent(wire, oldPosition, newPosition, newDeltaAlignment);
+					alignComponent(wire, oldPosition, newPosition, newRelativeAlignment);
 				}
 			}
 			
 			for(Component component : grabData.getComponents())
 			{
-				alignComponent(component, oldPosition, newPosition, newDeltaAlignment);
+				alignComponent(component, oldPosition, newPosition, newRelativeAlignment);
 			}
 			
 			gpuTasks.add((unused) -> {
-				//Apply new position and alignment:
-				grabbedComponent.setPosition(placement.getPosition()); //New position
-				grabbedComponent.setRotation(finalAlignment);
 				//Move to new meshes:
 				for(Component component : grabData.getComponents())
 				{
@@ -1083,6 +1067,25 @@ public class RenderPlane3D implements RenderPlane
 		});
 	}
 	
+	public GrabAlignment getDeltaGrabRotation(Component component) //Could be accessed globally, but for thread-reasons don't.
+	{
+		//Calculate the new alignment:
+		Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
+		double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
+		Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
+		newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
+		if(grabData instanceof GrabContainerData && !placeableBoardIsLaying)
+		{
+			Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
+			newAlignment = boardAlignment.multiply(newAlignment);
+		}
+		
+		//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
+		Quaternion newDeltaAlignment = component.getRotation().inverse().multiply(newAlignment);
+		
+		return new GrabAlignment(newAlignment, newDeltaAlignment);
+	}
+	
 	//Setup and stuff:
 	
 	@Override
@@ -1401,19 +1404,8 @@ public class RenderPlane3D implements RenderPlane
 			Component grabbedComponent = grabData.getComponent();
 			List<GrabData.WireContainer> grabbedWires = grabData.getWiresWithSides();
 			
-			//Calculate the new alignment:
-			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
-			double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
-			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
-			newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
-			if(grabData instanceof GrabContainerData && !placeableBoardIsLaying)
-			{
-				Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
-				newAlignment = boardAlignment.multiply(newAlignment);
-			}
-			
-			//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
-			Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(newAlignment);
+			GrabAlignment newAlignment = getDeltaGrabRotation(grabbedComponent);
+			Quaternion newRelativeAlignment = newAlignment.getRelative();
 			
 			Matrix modelMatrix = new Matrix();
 			
@@ -1427,7 +1419,7 @@ public class RenderPlane3D implements RenderPlane
 			modelMatrix.multiply(tmpMat);
 			
 			//Rotate the mesh to new direction/rotation:
-			modelMatrix.multiply(new Matrix(newDeltaAlignment.createMatrix()));
+			modelMatrix.multiply(new Matrix(newRelativeAlignment.createMatrix()));
 			
 			//Move the component back to the world-origin:
 			Vector3 oldPosition = grabbedComponent.getPosition();
@@ -1456,13 +1448,13 @@ public class RenderPlane3D implements RenderPlane
 				if(wireContainer.isGrabbedOnASide)
 				{
 					thisPos = thisPos.subtract(oldPosition);
-					thisPos = newDeltaAlignment.inverse().multiply(thisPos);
+					thisPos = newRelativeAlignment.inverse().multiply(thisPos);
 					thisPos = thisPos.add(newPosition);
 				}
 				else
 				{
 					thatPos = thatPos.subtract(oldPosition);
-					thatPos = newDeltaAlignment.inverse().multiply(thatPos);
+					thatPos = newRelativeAlignment.inverse().multiply(thatPos);
 					thatPos = thatPos.add(newPosition);
 				}
 				
@@ -1492,7 +1484,7 @@ public class RenderPlane3D implements RenderPlane
 				label.activate();
 				m.identity();
 				m.translate((float) newPosition.getX(), (float) newPosition.getY(), (float) newPosition.getZ());
-				m.multiply(new Matrix(newAlignment.createMatrix()));
+				m.multiply(new Matrix(newAlignment.getAbsolute().createMatrix()));
 				sdfShader.setUniformM4(2, m.getMat());
 				label.getModelHolder().drawTextures();
 			}
@@ -1714,24 +1706,8 @@ public class RenderPlane3D implements RenderPlane
 			//Do very very ugly drawing of board:
 			Component grabbedComponent = grabData.getComponent();
 			Meshable meshable = grabbedComponent.getModelHolder().getSolid().get(0); //Grabbed board or mount, either way -> solid
-			Quaternion rotation = grabbedComponent.getRotation();
-			{
-				//Calculate the new alignment:
-				Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-				double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
-				Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-				Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
-				if(!placeableBoardIsLaying)
-				{
-					Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
-					finalAlignment = boardAlignment.multiply(finalAlignment);
-				}
-				
-				//Update positions and alignment of wires, they inherit the position from the grabbed component.
-				Quaternion newDeltaAlignment = grabbedComponent.getRotation().inverse().multiply(finalAlignment);
-				
-				rotation = rotation.multiply(newDeltaAlignment);
-			}
+			
+			Quaternion rotation = grabbedComponent.getRotation().multiply(getDeltaGrabRotation(grabbedComponent).getRelative());
 			
 			invisibleCubeShader.use();
 			invisibleCubeShader.setUniformM4(1, view);
