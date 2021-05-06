@@ -265,23 +265,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void rotatePlacement(double degrees)
 	{
-		if(isGrabbingBoard())
-		{
-			GrabContainerData grabContainerData = (GrabContainerData) grabData;
-			
-			if(placementData != null)
-			{
-				Quaternion rotator = Quaternion.angleAxis(-90, Vector3.yp);//placementData.getNormal());
-				Quaternion newAlignment = grabContainerData.getAlignment();
-				newAlignment = newAlignment.multiply(rotator);
-				grabContainerData.setAlignment(newAlignment);
-			}
-			else
-			{
-				System.out.println("Please look at some board, before attempting to rotate the grabbed board. [No placement normal vector else].");
-			}
-		}
-		else if(isGrabbing())
+		if(isGrabbing())
 		{
 			grabRotation += degrees;
 			if(grabRotation >= 360)
@@ -304,6 +288,37 @@ public class RenderPlane3D implements RenderPlane
 			{
 				placementRotation += 360;
 			}
+		}
+	}
+	
+	public void rotateGrabbedBoardX()
+	{
+		rotateGrabbedBoard(Quaternion.angleAxis(-90, Vector3.xp));
+	}
+	
+	public void rotateGrabbedBoardY()
+	{
+		rotateGrabbedBoard(Quaternion.angleAxis(-90, Vector3.yp));
+	}
+	
+	public void rotateGrabbedBoardZ()
+	{
+		rotateGrabbedBoard(Quaternion.angleAxis(-90, Vector3.zp));
+	}
+	
+	public void rotateGrabbedBoard(Quaternion rotator)
+	{
+		GrabContainerData grabContainerData = (GrabContainerData) grabData;
+		
+		if(placementData != null)
+		{
+			Quaternion newAlignment = grabContainerData.getAlignment();
+			newAlignment = newAlignment.multiply(rotator);
+			grabContainerData.setAlignment(newAlignment);
+		}
+		else
+		{
+			System.out.println("Please look at some board, before attempting to rotate the grabbed board. [No placement normal vector else].");
 		}
 	}
 	
@@ -1131,6 +1146,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	private double getBoardDistance(Quaternion alignment, CompBoard board)
 	{
+		alignment = alignment.inverse();
 		double distance = 0;
 		if(isAlignedWithYAxis(alignment, Vector3.xp))
 		{

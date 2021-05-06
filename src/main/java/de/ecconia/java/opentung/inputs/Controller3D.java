@@ -102,7 +102,11 @@ public class Controller3D implements Controller
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_R)
 		{
-			if((mods & GLFW.GLFW_MOD_CONTROL) != 0)
+			if(renderPlane3D.isGrabbingBoard())
+			{
+				renderPlane3D.rotateGrabbedBoardY();
+			}
+			else if((mods & GLFW.GLFW_MOD_CONTROL) != 0)
 			{
 				renderPlane3D.rotatePlacement(22.5);
 			}
@@ -143,13 +147,24 @@ public class Controller3D implements Controller
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_F)
 		{
-			if(renderPlane3D.isGrabbing())
+			if(renderPlane3D.isGrabbingBoard())
+			{
+				renderPlane3D.rotateGrabbedBoardX();
+			}
+			else if(renderPlane3D.isGrabbing())
 			{
 				renderPlane3D.abortGrabbing();
 			}
 			else
 			{
 				grab();
+			}
+		}
+		else if(keyIndex == GLFW.GLFW_KEY_G)
+		{
+			if(renderPlane3D.isGrabbingBoard())
+			{
+				renderPlane3D.rotateGrabbedBoardZ();
 			}
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_F1)
