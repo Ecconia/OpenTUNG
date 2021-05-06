@@ -92,7 +92,7 @@ It will automatically reload the content once you saved. Some settings only appl
 
 ## Collaborate/Contact
 
-This project has an [Discord-Server (OpenTUNG)](https://discord.gg/C5Qkk53).
+This project has an [Discord-Server (OpenTUNG)](https://discord.gg/W7ukHBn).
 
 You may always contact developers and users there, if you wish to improve something, seek help or just to talk about/discuss this project.
 
