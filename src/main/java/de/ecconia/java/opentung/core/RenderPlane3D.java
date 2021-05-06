@@ -148,6 +148,11 @@ public class RenderPlane3D implements RenderPlane
 		return (grabData instanceof GrabContainerData) || (currentlySelected instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info && !boardIsBeingDragged);
 	}
 	
+	public boolean isGrabbingBoard()
+	{
+		return (grabData != null) && (grabData.getComponent() instanceof CompBoard);
+	}
+	
 	//Click events:
 	
 	public void flipBoard()
@@ -260,7 +265,23 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void rotatePlacement(double degrees)
 	{
-		if(isGrabbing())
+		if(isGrabbingBoard())
+		{
+			GrabContainerData grabContainerData = (GrabContainerData) grabData;
+			
+			if(placementData != null)
+			{
+				Quaternion rotator = Quaternion.angleAxis(-90, Vector3.yp);//placementData.getNormal());
+				Quaternion newAlignment = grabContainerData.getAlignment();
+				newAlignment = newAlignment.multiply(rotator);
+				grabContainerData.setAlignment(newAlignment);
+			}
+			else
+			{
+				System.out.println("Please look at some board, before attempting to rotate the grabbed board. [No placement normal vector else].");
+			}
+		}
+		else if(isGrabbing())
 		{
 			grabRotation += degrees;
 			if(grabRotation >= 360)
@@ -269,8 +290,8 @@ public class RenderPlane3D implements RenderPlane
 			}
 			if(grabRotation <= 0)
 			{
-				grabRotation += 360;
-			}
+					grabRotation += 360;
+				}
 		}
 		else
 		{
@@ -332,6 +353,13 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion newRelativeAlignment = getDeltaGrabRotation(grabbedComponent).getRelative();
 			
 			Vector3 newPosition = placementData.getPosition();
+			if(isGrabbingBoard())
+			{
+				Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
+				CompBoard board = (CompBoard) grabData.getComponent();
+				//Calculate distance of grabbed board to parent board:
+				newPosition = newPosition.add(placementData.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
+			}
 			Vector3 oldPosition = grabbedComponent.getPosition();
 			for(GrabData.WireContainer wireContainer : grabData.getWiresWithSides())
 			{
@@ -745,6 +773,9 @@ public class RenderPlane3D implements RenderPlane
 				parent.remove(toBeGrabbed);
 				GrabContainerData newGrabData = new GrabContainerData(parent, toBeGrabbed);
 				
+				//TODO: Figure out a way to preserve parent-child relation...
+//				newGrabData.setRotation(toBeGrabbed.getRotation().multiply(parent.getRotation().inverse()));
+				
 				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
 				List<CompWireRaw> internalWires = new ArrayList<>();
 				Map<Wire, Boolean> outgoingWires = new HashMap<>();
@@ -1074,21 +1105,57 @@ public class RenderPlane3D implements RenderPlane
 	
 	public GrabAlignment getDeltaGrabRotation(Component component) //Could be accessed globally, but for thread-reasons don't.
 	{
+		boolean isGrabbingBoard = isGrabbingBoard();
+		
 		//Calculate the new alignment:
 		Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
-		double normalAxisRotationAngle = -grabRotation + calculateFixRotationOffset(newAlignment, placementData);
+		double normalAxisRotationAngle = calculateFixRotationOffset(newAlignment, placementData);
+		if(!isGrabbingBoard)
+		{
+			normalAxisRotationAngle -= grabRotation;
+		}
 		Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
 		newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
-		if(grabData instanceof GrabContainerData && !placeableBoardIsLaying)
+		
+		if(isGrabbingBoard)
 		{
-			Quaternion boardAlignment = Quaternion.angleAxis(90, Vector3.xn);
-			newAlignment = boardAlignment.multiply(newAlignment);
+			Quaternion currentAlignment = ((GrabContainerData) grabData).getAlignment();
+			newAlignment = currentAlignment.multiply(newAlignment);
 		}
 		
 		//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
 		Quaternion newDeltaAlignment = component.getRotation().inverse().multiply(newAlignment);
 		
 		return new GrabAlignment(newAlignment, newDeltaAlignment);
+	}
+	
+	private double getBoardDistance(Quaternion alignment, CompBoard board)
+	{
+		double distance = 0;
+		if(isAlignedWithYAxis(alignment, Vector3.xp))
+		{
+			distance = (double) board.getX() * 0.15D;
+		}
+		else if(isAlignedWithYAxis(alignment, Vector3.yp))
+		{
+			distance = 0.075;
+		}
+		else if(isAlignedWithYAxis(alignment, Vector3.zp))
+		{
+			distance = (double) board.getZ() * 0.15D;
+		}
+		else
+		{
+			System.out.println("WARNING, no axis of the grabbed board matches the Y-Axis. Abort.");
+		}
+		return distance;
+	}
+	
+	private boolean isAlignedWithYAxis(Quaternion alignment, Vector3 probe)
+	{
+		//Apply the rotation onto the vector, and check if the result is aligned with the Y-Axis.
+		Vector3 changed = alignment.multiply(probe);
+		return changed.getY() > 0.98D || changed.getY() < -0.98D;
 	}
 	
 	//Setup and stuff:
@@ -1416,6 +1483,13 @@ public class RenderPlane3D implements RenderPlane
 			
 			//Move the component to the new placement position;
 			Vector3 newPosition = placementData.getPosition();
+			if(isGrabbingBoard())
+			{
+				Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
+				CompBoard board = (CompBoard) grabData.getComponent();
+				//Calculate distance of grabbed board to parent board:
+				newPosition = newPosition.add(placementData.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
+			}
 			Matrix tmpMat = new Matrix();
 			tmpMat.translate(
 					(float) newPosition.getX(),
@@ -1684,7 +1758,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawHighlight(float[] view)
 	{
-		boolean grabTrue = grabData != null && grabData instanceof GrabContainerData && placementData != null;
+		boolean grabTrue = isGrabbingBoard() && placementData != null;
 		if(grabData != null && !grabTrue)
 		{
 			return;
@@ -1721,10 +1795,18 @@ public class RenderPlane3D implements RenderPlane
 			
 			Quaternion rotation = grabbedComponent.getRotation().multiply(getDeltaGrabRotation(grabbedComponent).getRelative());
 			
+			Vector3 position = placementData.getPosition();
+			{
+				Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
+				CompBoard board = (CompBoard) grabData.getComponent();
+				//Calculate distance of grabbed board to parent board:
+				position = position.add(placementData.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
+			}
+
 			invisibleCubeShader.use();
 			invisibleCubeShader.setUniformM4(1, view);
 			invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
-			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, placementData.getPosition(), grabbedComponent, rotation, grabbedComponent.getModelHolder().getPlacementOffset(), new Matrix());
+			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, (CubeFull) meshable, position, grabbedComponent, rotation, grabbedComponent.getModelHolder().getPlacementOffset(), new Matrix());
 		}
 		else if(part instanceof Component)
 		{
