@@ -93,7 +93,17 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void prepareSaving(AtomicInteger pauseArrived)
 	{
+		//TBI: May skip the execution of some simulation tasks with external source, problem?
 		board.getSimulation().pauseSimulation(pauseArrived);
+		gpuTasks.add((unused) -> {
+			if(isGrabbing())
+			{
+				//Grab aborting does not need the simulation thread, so it won't create new tasks there.
+				abortGrabbing();
+			}
+		});
+		//Following task is appended to the end of the task-queue and will allow saving.
+		//TBI: Assumes that the interface is open and thus no new GPU tasks had been added.
 		gpuTasks.add((unused) -> {
 			currentlySelected = null;
 			placementData = null;
