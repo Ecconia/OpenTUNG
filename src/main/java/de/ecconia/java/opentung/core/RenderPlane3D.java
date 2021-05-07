@@ -724,8 +724,10 @@ public class RenderPlane3D implements RenderPlane
 					}
 					for(Wire wire : wiresToRemove)
 					{
+						//At this point snapping wires are already removed, since at this point the simulation task already ran.
 						if(wire.getClass() == HiddenWire.class)
 						{
+							//Ignore hidden wires, they won't be saved/loaded/displayed.
 							continue;
 						}
 						board.getWiresToRender().remove(wire); //Non-Visible wires got filtered before.
@@ -781,7 +783,6 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(toBeGrabbed instanceof CompContainer)
 		{
-			System.out.println("Starting highly experimental board grabbing.");
 			CompContainer container = (CompContainer) toBeGrabbed;
 			gpuTasks.add((unused) -> {
 				//Remove this board from its parent.
@@ -946,6 +947,7 @@ public class RenderPlane3D implements RenderPlane
 			{
 				for(Wire wire : connector.getWires())
 				{
+					//Skip HiddenWires, snapping wires have already been removed in a previous simulation task.
 					if(wire instanceof CompWireRaw)
 					{
 						newGrabData.addWire(wire, wire.getConnectorA() == connector);
@@ -967,7 +969,6 @@ public class RenderPlane3D implements RenderPlane
 				worldMesh.removeComponent(toBeGrabbed, board.getSimulation());
 				for(Wire wire : newGrabData.getWires())
 				{
-					board.getWiresToRender().remove(wire);
 					worldMesh.removeComponent((CompWireRaw) wire, board.getSimulation());
 					wireRayCaster.removeWire((CompWireRaw) wire);
 				}
@@ -1051,7 +1052,13 @@ public class RenderPlane3D implements RenderPlane
 					for(CompWireRaw wire : grabContainerData.getInternalWires())
 					{
 						secondaryMesh.removeComponent(wire, board.getSimulation());
+						board.getWiresToRender().remove(wire);
 					}
+				}
+				for(Wire wire : grabDataCopy.getWires())
+				{
+					//Now snapping nor hidden wires at this point.
+					board.getWiresToRender().remove(wire);
 				}
 				
 				//That's pretty much it. Just make the clipboard invisible:
