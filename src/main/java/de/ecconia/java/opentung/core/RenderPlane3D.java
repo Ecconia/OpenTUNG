@@ -320,7 +320,11 @@ public class RenderPlane3D implements RenderPlane
 	{
 		GrabContainerData grabContainerData = (GrabContainerData) grabData;
 		
-		if(placementData != null)
+		if(grabContainerData.getAlignment() == null)
+		{
+			System.out.println("You must first find any placement position, before rotating.");
+		}
+		else if(placementData != null)
 		{
 			Quaternion newAlignment = grabContainerData.getAlignment();
 			newAlignment = newAlignment.multiply(rotator);
@@ -799,9 +803,6 @@ public class RenderPlane3D implements RenderPlane
 				parent.remove(toBeGrabbed);
 				GrabContainerData newGrabData = new GrabContainerData(parent, toBeGrabbed);
 				
-				//TODO: Figure out a way to preserve parent-child relation...
-//				newGrabData.setRotation(toBeGrabbed.getRotation().multiply(parent.getRotation().inverse()));
-				
 				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
 				List<CompWireRaw> internalWires = new ArrayList<>();
 				Map<Wire, Boolean> outgoingWires = new HashMap<>();
@@ -1152,6 +1153,12 @@ public class RenderPlane3D implements RenderPlane
 		if(isGrabbingBoard)
 		{
 			Quaternion currentAlignment = ((GrabContainerData) grabData).getAlignment();
+			if(currentAlignment == null)
+			{
+				//Generate the alignment:
+				currentAlignment = component.getRotation().multiply(newAlignment.inverse());
+				((GrabContainerData) grabData).setAlignment(currentAlignment);
+			}
 			newAlignment = currentAlignment.multiply(newAlignment);
 		}
 		

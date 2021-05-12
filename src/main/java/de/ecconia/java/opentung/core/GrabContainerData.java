@@ -11,7 +11,7 @@ public class GrabContainerData extends GrabData
 {
 	private List<CompWireRaw> internalWires;
 	private List<CompSnappingWire> internalSnappingWires;
-	private Quaternion grabRotation = Quaternion.zero;
+	private Quaternion grabRotation = null;
 	
 	public GrabContainerData(CompContainer parent, Component component)
 	{
