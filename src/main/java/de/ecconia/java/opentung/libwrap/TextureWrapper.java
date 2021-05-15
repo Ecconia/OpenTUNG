@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.libwrap;
 
 import java.awt.image.BufferedImage;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30;
@@ -159,7 +160,7 @@ public class TextureWrapper
 				}
 			}
 		}
-		buffer.flip();
+		((Buffer) buffer).flip();
 		return buffer;
 	}
 	

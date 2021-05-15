@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.libwrap;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.channels.Channels;
@@ -94,7 +95,7 @@ public class SWindowWrapper
 				}
 			}
 			
-			buffer.flip();
+			((Buffer) buffer).flip();
 			return buffer;
 		}
 	}
