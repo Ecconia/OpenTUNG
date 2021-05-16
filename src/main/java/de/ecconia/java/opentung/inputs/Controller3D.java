@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.core.Camera;
-import de.ecconia.java.opentung.core.RenderPlane3D;
-import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
+import de.ecconia.java.opentung.core.Camera;
+import de.ecconia.java.opentung.core.RenderPlane3D;
+import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.glfw.GLFW;
 
@@ -273,7 +274,7 @@ public class Controller3D implements Controller
 	{
 		mouseLeftDown = System.currentTimeMillis();
 		mouseLeftDownOn = renderPlane3D.getCursorObject();
-		if(mouseLeftDownOn instanceof CompBoard)
+		if(mouseLeftDownOn instanceof CompContainer)
 		{
 			//TODO: Proper abort of the placement mode, once started.
 			renderPlane3D.placementStart();
@@ -377,12 +378,13 @@ public class Controller3D implements Controller
 	
 	private void mouseRightUp()
 	{
-		Part mouseRightDownOn = renderPlane3D.getCursorObject();
+		Hitpoint hitpoint = renderPlane3D.getHitpoint();
+		Part mouseRightDownOn = hitpoint.getHitPart();
 		if(mouseRightConnectorMode)
 		{
 			if(mouseRightDownOn instanceof Connector)
 			{
-				renderPlane3D.rightDragOnConnectorStop((Connector) mouseRightDownOn);
+				renderPlane3D.rightDragOnConnectorStop(hitpoint);
 			}
 			else
 			{

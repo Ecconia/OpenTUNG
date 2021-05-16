@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.core;
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
@@ -17,8 +18,12 @@ import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.data.Hitpoint;
+import de.ecconia.java.opentung.core.data.HitpointBoard;
+import de.ecconia.java.opentung.core.data.HitpointContainer;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -59,6 +64,7 @@ public class RenderPlane3D implements RenderPlane
 	private final InputProcessor inputHandler;
 	
 	private final MeshBagContainer worldMesh;
+	private final MeshBagContainer secondaryMesh; //Used for grabbing
 	
 	private final List<Vector3> wireEndsToRender = new ArrayList<>();
 	private final LabelToolkit labelToolkit = new LabelToolkit();
@@ -72,8 +78,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	//TODO: Remove this thing again from here. But later when there is more management.
 	private final BoardUniverse board;
-	
-	private Part currentlySelected; //What the camera is currently looking at.
 	
 	public RenderPlane3D(InputProcessor inputHandler, BoardUniverse board, SharedData sharedData)
 	{
@@ -105,9 +109,8 @@ public class RenderPlane3D implements RenderPlane
 		//Following task is appended to the end of the task-queue and will allow saving.
 		//TBI: Assumes that the interface is open and thus no new GPU tasks had been added.
 		gpuTasks.add((unused) -> {
-			currentlySelected = null;
-			placementData = null;
-			boardIsBeingDragged = false;
+			hitpoint = null;
+			boardDrawStartingPoint = null;
 			wireStartPoint = null;
 			pauseArrived.incrementAndGet();
 		});
@@ -120,31 +123,40 @@ public class RenderPlane3D implements RenderPlane
 	
 	//Other:
 	
-	private PlacementData placementData; //Scope purely render, read by copy.
-	private boolean fullyLoaded;
+	private Hitpoint hitpoint = new Hitpoint(); //What the camera is currently looking at.
+	private PlaceableInfo currentPlaceable = null; //Backup variable, to keep the value constant while render-cycle.
 	
-	//Rotation fix variables:
-	private Vector3 fixXAxis = Vector3.xp; //Never NPE, use +X as default.
-	private Vector3 lastUpNormal = Vector3.yp; //Used whenever an item is shadow drawn, to use more natural rotations.
-	
-	//Board specific values:
+	//STATES (And their data):
+	//Is not ready yet:
+	private boolean fullyLoaded; //Unset, if loading not yet done. Prevents initial interactions.
+	//Is drawing a wire:
+	private Connector wireStartPoint; //Selected by dragging from a connector.
+	//Is drawing a board:
+	private HitpointContainer boardDrawStartingPoint = null; //Scope input/(render), read on many places.
+	//Is in normal placement mode:
 	private boolean placeableBoardIsLaying = true;
-	private boolean boardIsBeingDragged = false; //Scope input/(render), read on many places.
-	
-	//Grabbing stuff:
+	private double placementRotation = 0;
+	//Is grabbing:
 	private GrabData grabData;
 	private double grabRotation;
-	private final MeshBagContainer secondaryMesh;
+	
+	//Rotation fix variables (Pretty much used everywhere):
+	private Vector3 fixXAxis = Vector3.xp; //Never NPE, use +X as default.
+	private Vector3 lastUpNormal = Vector3.yp; //Used whenever an item is shadow drawn, to use more natural rotations.
 	
 	//Input handling:
 	
 	private Controller3D controller;
-	private Connector wireStartPoint; //Selected by dragging from a connector.
-	private double placementRotation;
 	
 	public Part getCursorObject()
 	{
-		return currentlySelected;
+		Hitpoint hitpoint = this.hitpoint;
+		return hitpoint != null ? hitpoint.getHitPart() : null;
+	}
+	
+	public Hitpoint getHitpoint()
+	{
+		return hitpoint;
 	}
 	
 	public boolean isGrabbing()
@@ -154,8 +166,10 @@ public class RenderPlane3D implements RenderPlane
 	
 	public boolean isInBoardPlacementMode()
 	{
-		//Only flip, when looking at a board. Or grabbing. Cause one might use right click to interact with something else.
-		return (grabData instanceof GrabContainerData) || (currentlySelected instanceof CompBoard && sharedData.getCurrentPlaceable() == CompBoard.info && !boardIsBeingDragged);
+		return grabData == null //Do not flip board while currently grabbing.
+				&& sharedData.getCurrentPlaceable() == CompBoard.info //Only flip a board, when actually holding a board.
+				&& boardDrawStartingPoint == null //Board is currently being drawn, so do not flip it anymore.
+				&& hitpoint.canBePlacedOn(); //We might want to interact with a component. So only flip when placing is possible.
 	}
 	
 	public boolean isGrabbingBoard()
@@ -196,81 +210,79 @@ public class RenderPlane3D implements RenderPlane
 		wireStartPoint = connector;
 	}
 	
-	public void rightDragOnConnectorStop(Connector connector)
+	public void rightDragOnConnectorStop(Hitpoint hitpoint)
 	{
-		Connector from = wireStartPoint;
-		wireStartPoint = null;
+		//TODO: WireStartPoint is not threadsafe yet.
+		Connector from = this.wireStartPoint;
+		this.wireStartPoint = null;
 		
+		if(hitpoint == null)
+		{
+			return; //Abort, did not stop on a connector.
+		}
 		if(!fullyLoaded)
 		{
 			return;
 		}
 		
-		if(connector != null)
+		Vector3 position = hitpoint.getWireCenterPosition();
+		if(position == null)
 		{
-			Connector to = connector;
-			if(from instanceof Blot && to instanceof Blot)
+			System.out.println("ERROR: Wire dragging stopped on a connector, but there is no wire-placement data cached. Render thread stuck or human too fast?");
+		}
+		Quaternion alignment = hitpoint.getWireAlignment();
+		double length = hitpoint.getWireDistance();
+		
+		Connector to = (Connector) hitpoint.getHitPart();
+		if(from instanceof Blot && to instanceof Blot)
+		{
+			System.out.println("Blot-Blot connections are not allowed, cause pointless.");
+			return;
+		}
+		
+		for(Wire wire : from.getWires())
+		{
+			if(wire.getOtherSide(from) == to)
 			{
-				System.out.println("Blot-Blot connections are not allowed, cause pointless.");
+				System.out.println("Already connected.");
 				return;
 			}
-			
-			for(Wire wire : from.getWires())
-			{
-				if(wire.getOtherSide(from) == to)
-				{
-					System.out.println("Already connected.");
-					return;
-				}
-			}
-			
-			clusterHighlighter.clusterChanged(from.getCluster());
-			clusterHighlighter.clusterChanged(to.getCluster());
-			
-			//Add wire:
-			CompWireRaw newWire;
-			{
-				newWire = new CompWireRaw(board.getPlaceboWireParent());
-				
-				Vector3 fromPos = from.getConnectionPoint();
-				Vector3 toPos = to.getConnectionPoint();
-				
-				//Pos + Rot
-				Vector3 direction = fromPos.subtract(toPos).divide(2);
-				double distance = direction.length();
-				Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-				Vector3 position = toPos.add(direction);
-				newWire.setRotation(rotation);
-				newWire.setPosition(position);
-				newWire.setLength((float) distance * 2f);
-			}
-			
-			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-				//Places the wires and updates clusters as needed. Also finishes the wire linking.
-				ClusterHelper.placeWire(simulation, board, from, to, newWire, updates);
-				
-				//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
-				try
-				{
-					gpuTasks.put((ignored) -> {
-						System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
-						for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
-						{
-							entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
-						}
-						//Add the wire to the mesh sources
-						board.getWiresToRender().add(newWire);
-						wireRayCaster.addWire(newWire);
-						worldMesh.addComponent(newWire, board.getSimulation());
-					});
-				}
-				catch(InterruptedException e)
-				{
-					e.printStackTrace();
-				}
-			});
 		}
+		
+		clusterHighlighter.clusterChanged(from.getCluster());
+		clusterHighlighter.clusterChanged(to.getCluster());
+		
+		//Add wire:
+		CompWireRaw newWire = new CompWireRaw(board.getPlaceboWireParent());
+		newWire.setRotation(alignment);
+		newWire.setPosition(position);
+		newWire.setLength((float) length * 2f);
+		
+		board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+			//Places the wires and updates clusters as needed. Also finishes the wire linking.
+			ClusterHelper.placeWire(simulation, board, from, to, newWire, updates);
+			
+			//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
+			try
+			{
+				gpuTasks.put((ignored) -> {
+					System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+					{
+						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+					}
+					//Add the wire to the mesh sources
+					board.getWiresToRender().add(newWire);
+					wireRayCaster.addWire(newWire);
+					worldMesh.addComponent(newWire, board.getSimulation());
+				});
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	public void rotatePlacement(double degrees)
@@ -284,8 +296,8 @@ public class RenderPlane3D implements RenderPlane
 			}
 			if(grabRotation <= 0)
 			{
-					grabRotation += 360;
-				}
+				grabRotation += 360;
+			}
 		}
 		else
 		{
@@ -324,7 +336,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			System.out.println("You must first find any placement position, before rotating.");
 		}
-		else if(placementData != null)
+		else if(hitpoint.canBePlacedOn())
 		{
 			Quaternion newAlignment = grabContainerData.getAlignment();
 			newAlignment = newAlignment.multiply(rotator);
@@ -332,16 +344,27 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else
 		{
-			System.out.println("Please look at some board, before attempting to rotate the grabbed board. [No placement normal vector else].");
+			System.out.println("Please look at some container, before attempting to rotate the grabbed board. [No placement normal vector else].");
 		}
 	}
 	
 	public void placementStart()
 	{
-		if(placementData != null && sharedData.getCurrentPlaceable() == CompBoard.info)
+		Hitpoint hitpoint = this.hitpoint; //Create copy of hitpoint reference, to stay thread-safe.
+		//Only called when looking at a container.
+		if(hitpoint.canBePlacedOn() && currentPlaceable == CompBoard.info)
 		{
-			//Start dragging until end.
-			boardIsBeingDragged = true; //It is unsure, if the last or new frames placement position will be used...
+			gpuTasks.add((unused) -> {
+				//Start dragging until end.
+				if(boardDrawStartingPoint != null)
+				{
+					System.out.println("Warning: Cannot start board dragging, while already dragging a board...");
+				}
+				else
+				{
+					boardDrawStartingPoint = (HitpointContainer) hitpoint;
+				}
+			});
 		}
 	}
 	
@@ -352,8 +375,11 @@ public class RenderPlane3D implements RenderPlane
 	
 	public boolean attemptPlacement(boolean abortPlacement)
 	{
-		PlacementData placement = placementData;
-		boardIsBeingDragged = false; //Resets this boolean, if for a reason it is not reset - ugly.
+		//TODO: All these values are not fully thread-safe, either wrap in one object, or make thread-safe.
+		Hitpoint hitpoint = this.hitpoint;
+		HitpointContainer boardDrawStartingPoint = this.boardDrawStartingPoint;
+		PlaceableInfo currentPlaceable = this.currentPlaceable;
+		final GrabData grabData = this.grabData;
 		
 		if(wireStartPoint != null)
 		{
@@ -365,30 +391,64 @@ public class RenderPlane3D implements RenderPlane
 			return false;
 		}
 		
-		if(placement == null)
+		if(boardDrawStartingPoint != null)
 		{
+			if(currentPlaceable != CompBoard.info)
+			{
+				System.out.println("ERROR: Called normal placement code without board selected, while boardDrawStartingPoint was not null.");
+				return true;
+			}
+			
+			CompContainer parent = (CompContainer) boardDrawStartingPoint.getHitPart();
+			if(parent != board.getRootBoard() && parent == null)
+			{
+				System.out.println("Board attempted to draw board on is deleted/gone.");
+				return false;
+			}
+			int x = boardDrawStartingPoint.getBoardX();
+			int z = boardDrawStartingPoint.getBoardZ();
+			Component newComponent = new CompBoard(parent, x, z);
+			newComponent.setRotation(boardDrawStartingPoint.getAlignment());
+			newComponent.setPosition(boardDrawStartingPoint.getBoardCenterPosition());
+			
+			try
+			{
+				gpuTasks.put((ignored) -> {
+					parent.addChild(newComponent);
+					parent.updateBounds();
+					worldMesh.addComponent(newComponent, board.getSimulation());
+					this.boardDrawStartingPoint = null;
+				});
+			}
+			catch(InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+			return true; //Don't do all the other checks, obsolete.
+		}
+		
+		if(!hitpoint.canBePlacedOn())
+		{
+			//If not looking at a container abort.
 			return false;
 		}
-		if(placement.getParentBoard() != board.getRootBoard() && placement.getParentBoard().getParent() == null)
+		CompContainer parent = (CompContainer) hitpoint.getHitPart();
+		if(parent != board.getRootBoard() && parent.getParent() == null)
 		{
 			System.out.println("Board attempted to place on is deleted/gone.");
 			return false;
 		}
 		
-		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
-		if(isGrabbing())
+		//TODO: Make controller listen to right click to abort the next attemptPlacement thingy and reset the state.
+		
+		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
+		
+		if(grabData != null)
 		{
 			Component grabbedComponent = grabData.getComponent();
-			Quaternion newRelativeAlignment = getDeltaGrabRotation(grabbedComponent).getRelative();
 			
-			Vector3 newPosition = placementData.getPosition();
-			if(isGrabbingBoard())
-			{
-				Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
-				CompBoard board = (CompBoard) grabData.getComponent();
-				//Calculate distance of grabbed board to parent board:
-				newPosition = newPosition.add(placementData.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
-			}
+			Quaternion deltaAlignment = hitpointContainer.getAlignment();
+			Vector3 newPosition = hitpointContainer.getPosition();
 			Vector3 oldPosition = grabbedComponent.getPosition();
 			for(GrabData.WireContainer wireContainer : grabData.getWiresWithSides())
 			{
@@ -398,13 +458,13 @@ public class RenderPlane3D implements RenderPlane
 				if(wireContainer.isGrabbedOnASide)
 				{
 					thisPos = thisPos.subtract(oldPosition);
-					thisPos = newRelativeAlignment.inverse().multiply(thisPos);
+					thisPos = deltaAlignment.inverse().multiply(thisPos);
 					thisPos = thisPos.add(newPosition);
 				}
 				else
 				{
 					thatPos = thatPos.subtract(oldPosition);
-					thatPos = newRelativeAlignment.inverse().multiply(thatPos);
+					thatPos = deltaAlignment.inverse().multiply(thatPos);
 					thatPos = thatPos.add(newPosition);
 				}
 				
@@ -423,17 +483,17 @@ public class RenderPlane3D implements RenderPlane
 				GrabContainerData grabContainerData = (GrabContainerData) grabData;
 				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
 				{
-					alignComponent(wire, oldPosition, newPosition, newRelativeAlignment);
+					alignComponent(wire, oldPosition, newPosition, deltaAlignment);
 				}
 				for(CompWireRaw wire : grabContainerData.getInternalWires())
 				{
-					alignComponent(wire, oldPosition, newPosition, newRelativeAlignment);
+					alignComponent(wire, oldPosition, newPosition, deltaAlignment);
 				}
 			}
 			
 			for(Component component : grabData.getComponents())
 			{
-				alignComponent(component, oldPosition, newPosition, newRelativeAlignment);
+				alignComponent(component, oldPosition, newPosition, deltaAlignment);
 			}
 			
 			gpuTasks.add((unused) -> {
@@ -448,10 +508,10 @@ public class RenderPlane3D implements RenderPlane
 					}
 				}
 				
-				grabbedComponent.setParent(placement.getParentBoard());
-				placement.getParentBoard().addChild(grabbedComponent);
+				grabbedComponent.setParent(parent);
+				parent.addChild(grabbedComponent);
 				grabbedComponent.updateBoundsDeep();
-				placement.getParentBoard().updateBounds();
+				parent.updateBounds();
 				for(Wire wire : grabData.getWires())
 				{
 					CompWireRaw cWire = (CompWireRaw) wire;
@@ -474,92 +534,24 @@ public class RenderPlane3D implements RenderPlane
 					}
 				}
 				
-				grabData = null;
+				this.grabData = null;
 			});
 			
 			return true;
 		}
-		//TODO: Ugly, not thread-safe enough for my taste. Might even cause bugs. So eventually it has to be changed.
 		else if(currentPlaceable != null)
 		{
-			boolean isPlacingBoard = currentPlaceable == CompBoard.info;
-			//Control is down, just don't place:
-			if(abortPlacement)
+			if(currentPlaceable == CompBoard.info)
 			{
+				//System.out.println("WARNING: Called normal placement code with board selected, while boardDrawStartingPoint was null.");
+				//Board was very likely dragged from air to placeable location, happens. Else uff.
+				//TODO: Differentiate between these two cases.
 				return true;
 			}
-			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placement.getNormal());
-			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placement);
-			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-			Quaternion finalAlignment = newAlignment.multiply(normalAxisRotation);
-			if(isPlacingBoard)
-			{
-				Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIsLaying ? 0 : 90, Vector3.xn);
-				finalAlignment = boardAlignment.multiply(finalAlignment);
-			}
 			
-			Vector3 position = placement.getPosition();
-			Component newComponent;
-			if(isPlacingBoard)
-			{
-				int x = 1;
-				int z = 1;
-				
-				//TODO: Using camera position on the non-render thread is not okay.
-				
-				//Get camera position and ray and convert them into board space:
-				Vector3 cameraPosition = camera.getPosition();
-				Vector3 cameraRay = Vector3.zp;
-				cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
-				cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
-				Vector3 cameraRayBoardSpace = finalAlignment.multiply(cameraRay);
-				Vector3 cameraPositionBoardSpace = finalAlignment.multiply(cameraPosition.subtract(position));
-				
-				//Get collision point with area Y=0:
-				double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
-				double cameraDistance = cameraRayBoardSpace.length();
-				Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
-				double dragDistance = distanceVector.length();
-				if(dragDistance - cameraDistance > 20)
-				{
-					//TBI: Is this okay?
-					distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 20);
-				}
-				Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
-				if(distance >= 0)
-				{
-					//Y should be at 0 or very close to it - x and z can be used as are.
-					x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
-					z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
-					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
-					position = position.add(finalAlignment.inverse().multiply(roundedCollisionPoint));
-				}
-				newComponent = new CompBoard(placement.getParentBoard(), x, z);
-			}
-			else
-			{
-				newComponent = currentPlaceable.instance(placement.getParentBoard());
-			}
-			newComponent.setRotation(finalAlignment);
-			newComponent.setPosition(position);
-			
-			if(isPlacingBoard)
-			{
-				try
-				{
-					gpuTasks.put((ignored) -> {
-						placement.getParentBoard().addChild(newComponent);
-						placement.getParentBoard().updateBounds();
-						worldMesh.addComponent(newComponent, board.getSimulation());
-					});
-				}
-				catch(InterruptedException e)
-				{
-					e.printStackTrace();
-				}
-				return true; //Don't do all the other checks, obsolete.
-			}
-			
+			Component newComponent = currentPlaceable.instance(parent);
+			newComponent.setRotation(hitpointContainer.getAlignment());
+			newComponent.setPosition(hitpointContainer.getPosition());
 			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
 			//TODO: Make generic
@@ -599,8 +591,8 @@ public class RenderPlane3D implements RenderPlane
 			try
 			{
 				gpuTasks.put((ignored) -> {
-					placement.getParentBoard().addChild(newComponent);
-					placement.getParentBoard().updateBounds();
+					parent.addChild(newComponent);
+					parent.updateBounds();
 					worldMesh.addComponent(newComponent, board.getSimulation());
 				});
 			}
@@ -610,6 +602,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			return true;
 		}
+		//Else, placing nothing, thus return false.
 		
 		return false;
 	}
@@ -629,7 +622,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return;
 		}
-		if(boardIsBeingDragged)
+		if(boardDrawStartingPoint != null)
 		{
 			return;
 		}
@@ -1136,36 +1129,35 @@ public class RenderPlane3D implements RenderPlane
 		});
 	}
 	
-	public GrabAlignment getDeltaGrabRotation(Component component) //Could be accessed globally, but for thread-reasons don't.
+	public Quaternion getDeltaGrabRotation(HitpointContainer hitpoint)
 	{
-		boolean isGrabbingBoard = isGrabbingBoard();
+		Component component = grabData.getComponent();
+		boolean grabbingBoard = component instanceof CompBoard;
 		
 		//Calculate the new alignment:
-		Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal()); //Get the direction of the new placement position (with invalid rotation).
-		double normalAxisRotationAngle = calculateFixRotationOffset(newAlignment, placementData);
-		if(!isGrabbingBoard)
+		Quaternion absAlignment = MathHelper.rotationFromVectors(Vector3.yp, hitpoint.getNormal()); //Get the direction of the new placement position (with invalid rotation).
+		double normalAxisRotationAngle = calculateFixRotationOffset(absAlignment, hitpoint);
+		if(!grabbingBoard)
 		{
 			normalAxisRotationAngle -= grabRotation;
 		}
-		Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal()); //Create rotation Quaternion.
-		newAlignment = newAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
+		Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, hitpoint.getNormal()); //Create rotation Quaternion.
+		absAlignment = absAlignment.multiply(normalAxisRotation); //Apply rotation onto new direction to get alignment.
 		
-		if(isGrabbingBoard)
+		if(grabbingBoard)
 		{
 			Quaternion currentAlignment = ((GrabContainerData) grabData).getAlignment();
 			if(currentAlignment == null)
 			{
 				//Generate the alignment:
-				currentAlignment = component.getRotation().multiply(newAlignment.inverse());
+				currentAlignment = component.getRotation().multiply(absAlignment.inverse());
 				((GrabContainerData) grabData).setAlignment(currentAlignment);
 			}
-			newAlignment = currentAlignment.multiply(newAlignment);
+			absAlignment = currentAlignment.multiply(absAlignment);
 		}
 		
 		//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
-		Quaternion newDeltaAlignment = component.getRotation().inverse().multiply(newAlignment);
-		
-		return new GrabAlignment(newAlignment, newDeltaAlignment);
+		return component.getRotation().inverse().multiply(absAlignment);
 	}
 	
 	private double getBoardDistance(Quaternion alignment, CompBoard board)
@@ -1251,185 +1243,55 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("[MeshDebug] P-W-L Done.");
 	}
 	
-	public void calculatePlacementPosition()
-	{
-		if(boardIsBeingDragged)
-		{
-			return; //Don't change anything, the camera may look somewhere else in the meantime.
-		}
-		
-		if(currentlySelected == null)
-		{
-			placementData = null; //Nothing to place on.
-			return;
-		}
-		
-		//TODO: Also allow the tip of Mounts :)
-		
-		//If looking at a board
-		Part part = currentlySelected;
-		if(!(part instanceof CompBoard))
-		{
-			placementData = null; //Only place on boards.
-			return;
-		}
-		
-		CompBoard board = (CompBoard) part;
-		
-		//TODO: Another ungeneric access
-		CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
-		Vector3 position = board.getPosition();
-		Quaternion rotation = board.getRotation();
-		Vector3 size = shape.getSize();
-		if(shape.getMapper() != null)
-		{
-			size = shape.getMapper().getMappedSize(size, board);
-		}
-		
-		Vector3 cameraPosition = camera.getPosition();
-		
-		Vector3 cameraRay = Vector3.zp;
-		cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
-		cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
-		Vector3 cameraRayBoardSpace = rotation.multiply(cameraRay);
-		
-		Vector3 cameraPositionBoardSpace = rotation.multiply(cameraPosition.subtract(position)); //Convert the camera position, in the board space.
-		
-		double distanceLocalMin = (size.getX() - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
-		double distanceLocalMax = ((-size.getX()) - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
-		double distanceGlobal;
-		Vector3 normalGlobal;
-		if(distanceLocalMin < distanceLocalMax)
-		{
-			distanceGlobal = distanceLocalMin;
-			normalGlobal = Vector3.xp;
-		}
-		else
-		{
-			distanceGlobal = distanceLocalMax;
-			normalGlobal = Vector3.xn;
-		}
-		
-		distanceLocalMin = (size.getY() - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
-		distanceLocalMax = ((-size.getY()) - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
-		double distanceLocal;
-		Vector3 normalLocal;
-		if(distanceLocalMin < distanceLocalMax)
-		{
-			distanceLocal = distanceLocalMin;
-			normalLocal = Vector3.yp;
-		}
-		else
-		{
-			distanceLocal = distanceLocalMax;
-			normalLocal = Vector3.yn;
-		}
-		if(distanceGlobal < distanceLocal)
-		{
-			distanceGlobal = distanceLocal;
-			normalGlobal = normalLocal;
-		}
-		
-		distanceLocalMin = (size.getZ() - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
-		distanceLocalMax = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
-		if(distanceLocalMin < distanceLocalMax)
-		{
-			distanceLocal = distanceLocalMin;
-			normalLocal = Vector3.zp;
-		}
-		else
-		{
-			distanceLocal = distanceLocalMax;
-			normalLocal = Vector3.zn;
-		}
-		if(distanceGlobal < distanceLocal)
-		{
-			distanceGlobal = distanceLocal;
-			normalGlobal = normalLocal;
-		}
-		
-		boolean isSide = normalGlobal.getY() == 0;
-		int sign = normalGlobal.oneNegative() ? -1 : 1;
-		Vector3 collisionPointBoardSpace = cameraPositionBoardSpace.add(cameraRayBoardSpace.multiply(distanceGlobal));
-		if(isSide)
-		{
-			double x = collisionPointBoardSpace.getX();
-			double z = collisionPointBoardSpace.getZ();
-			if(normalGlobal.getX() == 0)
-			{
-				double xHalf = board.getX() * 0.15;
-				double xcp = x + xHalf;
-				int xSteps = (int) (xcp / 0.3);
-				x = (xSteps) * 0.3 - xHalf + 0.15;
-				z -= sign * 0.075;
-			}
-			else
-			{
-				double zHalf = board.getZ() * 0.15;
-				double zcp = z + zHalf;
-				int zSteps = (int) (zcp / 0.3);
-				z = zSteps * 0.3 - zHalf + 0.15;
-				x -= sign * 0.075;
-			}
-			
-			collisionPointBoardSpace = new Vector3(x, 0, z);
-		}
-		else
-		{
-			double xHalf = board.getX() * 0.15;
-			double zHalf = board.getZ() * 0.15;
-			
-			double xcp = collisionPointBoardSpace.getX() + xHalf;
-			double zcp = collisionPointBoardSpace.getZ() + zHalf;
-			
-			int xSteps = (int) (xcp / 0.3);
-			int zSteps = (int) (zcp / 0.3);
-			
-			collisionPointBoardSpace = new Vector3(xSteps * 0.3 + 0.15 - xHalf, 0, zSteps * 0.3 + 0.15 - zHalf);
-		}
-		
-		Vector3 placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
-		Vector3 placementNormal = board.getRotation().inverse().multiply(normalGlobal).normalize(); //Safety normalization.
-		CompBoard placementBoard = board;
-		
-		if(sharedData.getCurrentPlaceable() == CompBoard.info && grabData == null) //TODO: Ehhh? What ahsdouahwfoahw -> English: This section has to be overhauled as soon as grabbed board adding will be added.
-		{
-			//Boards have their center within, thus the offset needs to be adjusted:
-			placementPosition = placementPosition.add(placementNormal.multiply(placeableBoardIsLaying ? 0.15 : (0.15 + 0.075)));
-		}
-		
-		placementData = new PlacementData(placementPosition, placementNormal, placementBoard, normalGlobal);
-	}
-	
 	@Override
 	public void render()
 	{
+		//Handle jobs passed from other threads:
 		while(!gpuTasks.isEmpty())
 		{
 			gpuTasks.poll().execute(this);
 		}
 		
+		//Cleanup all meshes before using them:
 		worldMesh.rebuildDirty(board.getSimulation());
 		secondaryMesh.rebuildDirty(board.getSimulation());
 		
+		//Handle inputs:
 		camera.lockLocation();
 		controller.doFrameCycle();
-		
 		float[] view = camera.getMatrix();
-		if(Settings.doRaycasting && !sharedData.isSaving() && fullyLoaded)
-		{
-			currentlySelected = cpuRaycast.cpuRaycast(camera, board.getRootBoard(), wireStartPoint != null, wireRayCaster);
-		}
-		calculatePlacementPosition();
+		
+		//Use current camera to find the thing its pointing at:
+		doPlacementStuff();
+		
+		//Actually draw the world:
 		if(Settings.drawWorld)
 		{
 			OpenTUNG.setBackgroundColor();
 			OpenTUNG.clear();
 			
 			drawDynamic(view);
-			drawPlacementPosition(view); //Must be called before drawWireToBePlaced, currently!!!
+			if(wireStartPoint != null)
+			{
+				drawWireToBePlaced(view);
+			}
+			else if(boardDrawStartingPoint != null)
+			{
+				drawBoardToBePlaced(view);
+			}
+			else if(grabData != null)
+			{
+				if(hitpoint.canBePlacedOn())
+				{
+					drawGrabbed(view);
+				}
+			}
+			else if(hitpoint.canBePlacedOn())
+			{
+				drawPlacementPosition(view);
+			}
+			
 			clusterHighlighter.highlightCluster(view);
-			drawWireToBePlaced(view);
 			drawHighlight(view);
 			
 			ShaderProgram lineShader = shaderStorage.getLineShader();
@@ -1449,44 +1311,311 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
-	private void drawWireToBePlaced(float[] view)
+	private void doPlacementStuff()
 	{
-		if(wireStartPoint == null)
+		if(!fullyLoaded)
 		{
+			//The world is not fully loaded yet, thus prevent any interaction (by never looking at anything).
+			return;
+		}
+		if(sharedData.isSaving())
+		{
+			//Currently saving, that means - leave everything as is, do not touch anything.
 			return;
 		}
 		
-		Vector3 startingPos = wireStartPoint.getConnectionPoint();
+		//TODO: Raycasting setting where and how? Well not now.
 		
-		Vector3 toPos;
-		if(placementData == null)
+		Hitpoint hitpoint = calculateHitpoint();
+		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
+		
+		//Always calculate the hitpoint, if things could be placed on, regardless of used. It always has to be ready to be used in the next cycle and between.
+		if(hitpoint.canBePlacedOn())
 		{
-			toPos = null;
-			Part currentlyLookingAt = getCursorObject();
-			if(currentlyLookingAt instanceof Connector)
+			//TBI: When drawing, the hitpoint is inaccurate, cause it might consider the wrong target position (when control).
+			HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
+			
+			//Calculate normal (it is almost always required for later rotation steps):
+			if(hitpoint.isBoard())
 			{
-				toPos = ((Connector) currentlyLookingAt).getConnectionPoint();
+				HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
+				hitpointBoard.setNormal(hitpoint.getHitPart().getRotation().inverse().multiply(hitpointBoard.getLocalNormal()).normalize());
+			}
+			else //TBI: Currently just assume Y-Pos
+			{
+				hitpointContainer.setNormal(hitpoint.getHitPart().getRotation().inverse().multiply(Vector3.yp).normalize());
+			}
+			
+			if(grabData != null)
+			{
+				Quaternion deltaAlignment = getDeltaGrabRotation(hitpointContainer);
+				hitpointContainer.setAlignment(deltaAlignment);
+				
+				//Figure out the base position:
+				Vector3 position;
+				{
+					//Calculate new position:
+					CompContainer parent = (CompContainer) hitpoint.getHitPart();
+					if(hitpoint.isBoard())
+					{
+						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
+						//TODO: Replace with outsources center code (needs to use the rotation of the board for fine-positioning):
+						position = centerPosition((CompBoard) parent, hitpointBoard.getCollisionPointBoardSpace(), hitpointBoard.getLocalNormal());
+						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+					}
+					else //Mount:
+					{
+						position = parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT));
+					}
+				}
+				
+				Component grabComponent = grabData.getComponent();
+				if(grabComponent instanceof CompBoard)
+				{
+					//Grabbing board:
+					Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
+					CompBoard board = (CompBoard) grabData.getComponent();
+					//Calculate distance of grabbed board to parent board:
+					position = position.add(hitpointContainer.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
+				}
+				hitpointContainer.setPosition(position);
+			}
+			else //Normal placement (drawPlacementPosition)
+			{
+				if(currentPlaceable == null)
+				{
+					//TBI: Offset here or when drawing?
+					//Not attempting to draw anything, thus only prepare for drawing the cross, that means lifting the position up to surface:
+					CompContainer parent = (CompContainer) hitpoint.getHitPart();
+					if(hitpoint.isBoard())
+					{
+						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
+						//TODO: Replace with outsources center code:
+						Vector3 collisionPointBoardSpace = centerPosition((CompBoard) parent, hitpointBoard.getCollisionPointBoardSpace(), hitpointBoard.getLocalNormal());
+						hitpointContainer.setPosition(parent.getRotation().inverse().multiply(collisionPointBoardSpace)
+								.add(parent.getPosition())
+								.add(hitpointContainer.getNormal().multiply(0.075)));
+					}
+					else //Mount:
+					{
+						double liftLevel = 0.075; //Lift to surface distance.
+						if(!hitpoint.isBoard()) //TBI: Not board, thus mount?
+						{
+							liftLevel += CompMount.MOUNT_HEIGHT;
+						}
+						hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(liftLevel)));
+					}
+				}
+				else //Placing something:
+				{
+					//Calculate new alignment:
+					Quaternion alignment = MathHelper.rotationFromVectors(Vector3.yp, hitpointContainer.getNormal());
+					double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(alignment, hitpoint);
+					Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, hitpointContainer.getNormal());
+					alignment = alignment.multiply(normalAxisRotation);
+					if(currentPlaceable == CompBoard.info)
+					{
+						//Specific board rotation:
+						Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIsLaying ? 0 : 90, Vector3.xn);
+						alignment = boardAlignment.multiply(alignment);
+					}
+					hitpointContainer.setAlignment(alignment);
+					
+					//Calculate new position:
+					CompContainer parent = (CompContainer) hitpoint.getHitPart();
+					if(hitpoint.isBoard())
+					{
+						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
+						//TODO: Replace with outsources center code:
+						Vector3 position = centerPosition((CompBoard) parent, hitpointBoard.getCollisionPointBoardSpace(), hitpointBoard.getLocalNormal());
+						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+						if(currentPlaceable == CompBoard.info)
+						{
+							position = position.add(hitpointContainer.getNormal().multiply(0.15D));
+						}
+						hitpointContainer.setPosition(position);
+					}
+					else //Mount:
+					{
+						//TODO: Also outsource.
+						ModelHolder model = currentPlaceable.getModel();
+						if(currentPlaceable == CompBoard.info)
+						{
+							double extraY = 0.15;
+							if(!placeableBoardIsLaying)
+							{
+								extraY += 0.075;
+							}
+							hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT + extraY)));
+						}
+						else
+						{
+							hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT)));
+						}
+					}
+				}
+			}
+		}
+		
+		if(boardDrawStartingPoint != null)
+		{
+			//Drawing a board:
+			Quaternion alignment = boardDrawStartingPoint.getAlignment();
+			Vector3 position = boardDrawStartingPoint.getPosition();
+			int x = 1;
+			int z = 1;
+			
+			//Calculate the camera ray in board space:
+			Vector3 cameraPosition = camera.getPosition();
+			Vector3 cameraRay = Vector3.zp;
+			cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+			cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
+			Vector3 cameraRayBoardSpace = alignment.multiply(cameraRay);
+			Vector3 cameraPositionBoardSpace = alignment.multiply(cameraPosition.subtract(position));
+			
+			//Get collision point with area Y=0:
+			double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
+			double cameraDistance = cameraRayBoardSpace.length();
+			Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
+			double dragDistance = distanceVector.length();
+			if(dragDistance - cameraDistance > 20)
+			{
+				//TBI: Is this okay?
+				distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 20);
+			}
+			Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
+			if(distance >= 0)
+			{
+				//Y should be at 0 or very close to it - x and z can be used as are.
+				x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
+				z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
+				Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
+				position = position.add(alignment.inverse().multiply(roundedCollisionPoint));
+			}
+			
+			boardDrawStartingPoint.setBoardData(position, x, z);
+		}
+		else if(wireStartPoint != null)
+		{
+			//Drawing a wire:
+			Vector3 toPos = null;
+			if(hitpoint.canBePlacedOn())
+			{
+				HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
+				toPos = hitpointContainer.getPosition();
+				//Move placement position to the surface (it is always below it):
+				toPos = toPos.add(hitpointContainer.getNormal().multiply(0.075));
+			}
+			else if(!hitpoint.isEmpty())
+			{
+				Part lookingAt = hitpoint.getHitPart();
+				if(lookingAt instanceof Connector)
+				{
+					toPos = ((Connector) lookingAt).getConnectionPoint();
+				}
+			}
+			
+			if(toPos != null)
+			{
+				//Draw wire between placementPosition and startingPos:
+				Vector3 startingPos = wireStartPoint.getConnectionPoint();
+				Vector3 direction = toPos.subtract(startingPos).divide(2);
+				double distance = direction.length();
+				Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+				Vector3 position = startingPos.add(direction);
+				hitpoint.setWireData(alignment, position, distance);
+			}
+			else
+			{
+				hitpoint.setWireData(null, null, 0);
+			}
+		}
+		
+		this.currentPlaceable = currentPlaceable;
+		this.hitpoint = hitpoint;
+	}
+	
+	private Vector3 centerPosition(CompBoard board, Vector3 collisionPointBoardSpace, Vector3 localNormal)
+	{
+		//Adjust placement position according to component properties:
+		boolean isSide = localNormal.getY() == 0;
+		
+		//Get the radius's of the board:
+		double xHalf = board.getX() * 0.15;
+		double zHalf = board.getZ() * 0.15;
+		
+		//Move the center of the board into one corner, so that the collision point is in the positive quarter:
+		double x = collisionPointBoardSpace.getX();
+		double z = collisionPointBoardSpace.getZ();
+		double xcp = x + xHalf;
+		double zcp = z + zHalf;
+		
+		//Get the amount of squares until you get to the collision square:
+		int xSquareOffset = (int) (xcp / 0.3);
+		int zSquareOffset = (int) (zcp / 0.3);
+		
+		int sign = localNormal.oneNegative() ? -1 : 1;
+		if(isSide)
+		{
+			if(localNormal.getX() == 0) // Z side
+			{
+				//Calculate the center pos:
+				x = xSquareOffset * 0.3 - xHalf + 0.15;
+				z -= sign * 0.075;
+			}
+			else // X side
+			{
+				//Calculate the center pos:
+				z = zSquareOffset * 0.3 - zHalf + 0.15;
+				x -= sign * 0.075;
+			}
+			return new Vector3(x, 0, z);
+		}
+		else //Square side - bottom/top
+		{
+			return new Vector3(xSquareOffset * 0.3 + 0.15 - xHalf, 0, zSquareOffset * 0.3 + 0.15 - zHalf);
+		}
+	}
+	
+	private Hitpoint calculateHitpoint()
+	{
+		Part lookingAt = cpuRaycast.cpuRaycast(camera, board.getRootBoard(), wireStartPoint != null, wireRayCaster);
+		if(lookingAt == null)
+		{
+			return new Hitpoint(null);
+		}
+		
+		if(lookingAt instanceof CompContainer)
+		{
+			if(lookingAt instanceof CompBoard)
+			{
+				CPURaycast.CollisionResult result = CPURaycast.collisionPoint((CompBoard) lookingAt, camera);
+				return new HitpointBoard(lookingAt, result.getLocalNormal(), result.getCollisionPointBoardSpace());
+			}
+			else
+			{
+				return new HitpointContainer(lookingAt);
 			}
 		}
 		else
 		{
-			toPos = placementData.getPosition();
-			//Fix offset.
-			toPos = toPos.add(placementData.getNormal().multiply(0.075));
+			return new Hitpoint(lookingAt);
 		}
-		
-		if(toPos != null)
+	}
+	
+	private void drawWireToBePlaced(float[] view)
+	{
+		Vector3 position = hitpoint.getWireCenterPosition();
+		if(position != null)
 		{
-			//Draw wire between placementPosition and startingPos:
-			Vector3 direction = toPos.subtract(startingPos).divide(2);
-			double distance = direction.length();
-			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+			Quaternion alignment = hitpoint.getWireAlignment();
+			double length = hitpoint.getWireDistance();
 			
+			//Draw wire:
 			Matrix model = new Matrix();
-			Vector3 position = startingPos.add(direction);
 			model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-			model.multiply(new Matrix(rotation.createMatrix()));
-			Vector3 size = new Vector3(0.025, 0.01, distance);
+			model.multiply(new Matrix(alignment.createMatrix()));
+			Vector3 size = new Vector3(0.025, 0.01, length);
 			model.scale((float) size.getX(), (float) size.getY(), (float) size.getZ());
 			
 			ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
@@ -1500,125 +1629,134 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
-	private void drawPlacementPosition(float[] view)
+	private void drawGrabbed(float[] view)
 	{
-		if(wireStartPoint != null)
+		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
+		
+		Matrix modelMatrix = new Matrix();
+		
+		//Move the component to the new placement position;
+		Vector3 newPosition = hitpointContainer.getPosition();
+		Matrix tmpMat = new Matrix();
+		tmpMat.translate(
+				(float) newPosition.getX(),
+				(float) newPosition.getY(),
+				(float) newPosition.getZ());
+		modelMatrix.multiply(tmpMat);
+		
+		//Rotate the mesh to new direction/rotation:
+		Quaternion newRelativeAlignment = hitpointContainer.getAlignment();
+		modelMatrix.multiply(new Matrix(newRelativeAlignment.createMatrix()));
+		
+		//Move the component back to the world-origin:
+		Component grabbedComponent = grabData.getComponent();
+		Vector3 oldPosition = grabbedComponent.getPosition();
+		modelMatrix.translate(
+				(float) -oldPosition.getX(),
+				(float) -oldPosition.getY(),
+				(float) -oldPosition.getZ()
+		);
+		
+		//Set delta-model matrix (moves the component from prev to new pos, including all children.
+		secondaryMesh.setModelMatrix(modelMatrix);
+		secondaryMesh.draw(view);
+		
+		ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
+		visibleCubeShader.use();
+		visibleCubeShader.setUniformM4(1, view);
+		GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
+		visibleCube.use();
+		
+		Matrix m = new Matrix();
+		List<GrabData.WireContainer> grabbedWires = grabData.getWiresWithSides();
+		for(GrabData.WireContainer wireContainer : grabbedWires)
 		{
-			return; //Don't draw the placement, while dragging a wire - its annoying.
-		}
-		if(placementData == null)
-		{
-			return;
+			Wire wire = wireContainer.wire;
+			Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
+			Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
+			if(wireContainer.isGrabbedOnASide)
+			{
+				thisPos = thisPos.subtract(oldPosition);
+				thisPos = newRelativeAlignment.inverse().multiply(thisPos);
+				thisPos = thisPos.add(newPosition);
+			}
+			else
+			{
+				thatPos = thatPos.subtract(oldPosition);
+				thatPos = newRelativeAlignment.inverse().multiply(thatPos);
+				thatPos = thatPos.add(newPosition);
+			}
+			
+			Vector3 direction = thisPos.subtract(thatPos).divide(2);
+			double distance = direction.length();
+			Quaternion wireAlignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+			Vector3 position = thatPos.add(direction);
+			
+			m.identity();
+			m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			m.multiply(new Matrix(wireAlignment.createMatrix()));
+			m.scale(0.025f, 0.01f, (float) distance);
+			//TODO: The color appears raw using this shader, as in unshaded.
+			visibleCubeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
+			visibleCubeShader.setUniformM4(2, m.getMat());
+			visibleCube.draw();
 		}
 		
-		if(isGrabbing())
+		if(grabData.hasLabels())
 		{
-			Component grabbedComponent = grabData.getComponent();
-			List<GrabData.WireContainer> grabbedWires = grabData.getWiresWithSides();
-			
-			GrabAlignment newAlignment = getDeltaGrabRotation(grabbedComponent);
-			Quaternion newRelativeAlignment = newAlignment.getRelative();
-			
-			Matrix modelMatrix = new Matrix();
-			
-			//Move the component to the new placement position;
-			Vector3 newPosition = placementData.getPosition();
-			if(isGrabbingBoard())
+			ShaderProgram sdfShader = shaderStorage.getSdfShader();
+			sdfShader.use();
+			sdfShader.setUniformM4(1, view);
+			for(CompLabel label : grabData.getLabels())
 			{
-				Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
-				CompBoard board = (CompBoard) grabData.getComponent();
-				//Calculate distance of grabbed board to parent board:
-				newPosition = newPosition.add(placementData.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
-			}
-			Matrix tmpMat = new Matrix();
-			tmpMat.translate(
-					(float) newPosition.getX(),
-					(float) newPosition.getY(),
-					(float) newPosition.getZ());
-			modelMatrix.multiply(tmpMat);
-			
-			//Rotate the mesh to new direction/rotation:
-			modelMatrix.multiply(new Matrix(newRelativeAlignment.createMatrix()));
-			
-			//Move the component back to the world-origin:
-			Vector3 oldPosition = grabbedComponent.getPosition();
-			modelMatrix.translate(
-					(float) -oldPosition.getX(),
-					(float) -oldPosition.getY(),
-					(float) -oldPosition.getZ()
-			);
-			
-			//Set delta-model matrix (moves the component from prev to new pos, including all children.
-			secondaryMesh.setModelMatrix(modelMatrix);
-			secondaryMesh.draw(view);
-			
-			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
-			visibleCubeShader.use();
-			visibleCubeShader.setUniformM4(1, view);
-			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
-			visibleCube.use();
-			
-			Matrix m = new Matrix();
-			for(GrabData.WireContainer wireContainer : grabbedWires)
-			{
-				Wire wire = wireContainer.wire;
-				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
-				Vector3 thatPos = wire.getConnectorB().getConnectionPoint();
-				if(wireContainer.isGrabbedOnASide)
-				{
-					thisPos = thisPos.subtract(oldPosition);
-					thisPos = newRelativeAlignment.inverse().multiply(thisPos);
-					thisPos = thisPos.add(newPosition);
-				}
-				else
-				{
-					thatPos = thatPos.subtract(oldPosition);
-					thatPos = newRelativeAlignment.inverse().multiply(thatPos);
-					thatPos = thatPos.add(newPosition);
-				}
-				
-				Vector3 direction = thisPos.subtract(thatPos).divide(2);
-				double distance = direction.length();
-				Quaternion wireAlignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-				Vector3 position = thatPos.add(direction);
+				Vector3 position = label.getPosition();
+				position = position.subtract(oldPosition);
+				position = newRelativeAlignment.inverse().multiply(position);
+				position = position.add(newPosition);
+				Quaternion alignment = label.getRotation().multiply(newRelativeAlignment);
 				
 				m.identity();
 				m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-				m.multiply(new Matrix(wireAlignment.createMatrix()));
-				m.scale(0.025f, 0.01f, (float) distance);
-				//TODO: The color appears raw using this shader, as in unshaded.
-				visibleCubeShader.setUniformV4(3, (wire.getCluster().isActive() ? Color.circuitON : Color.circuitOFF).asArray());
-				visibleCubeShader.setUniformM4(2, m.getMat());
-				visibleCube.draw();
+				m.multiply(new Matrix(alignment.createMatrix()));
+				sdfShader.setUniformM4(2, m.getMat());
+				
+				label.activate();
+				label.getModelHolder().drawTextures();
 			}
-			
-			if(grabData.hasLabels())
-			{
-				ShaderProgram sdfShader = shaderStorage.getSdfShader();
-				sdfShader.use();
-				sdfShader.setUniformM4(1, view);
-				for(CompLabel label : grabData.getLabels())
-				{
-					Vector3 position = label.getPosition();
-					position = position.subtract(oldPosition);
-					position = newRelativeAlignment.inverse().multiply(position);
-					position = position.add(newPosition);
-					Quaternion alignment = label.getRotation().multiply(newRelativeAlignment);
-					
-					m.identity();
-					m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-					m.multiply(new Matrix(alignment.createMatrix()));
-					sdfShader.setUniformM4(2, m.getMat());
-					
-					label.activate();
-					label.getModelHolder().drawTextures();
-				}
-			}
-			
-			return;
 		}
+	}
+	
+	private void drawBoardToBePlaced(float[] view)
+	{
+		Quaternion alignment = boardDrawStartingPoint.getAlignment();
+		Vector3 position = boardDrawStartingPoint.getBoardCenterPosition();
+		int x = boardDrawStartingPoint.getBoardX();
+		int z = boardDrawStartingPoint.getBoardZ();
 		
-		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
+		//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW).
+		Matrix matrix = new Matrix();
+		//Apply global position:
+		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+		matrix.multiply(new Matrix(alignment.createMatrix())); //Apply global rotation.
+		//The cube is centered, no translation.
+		matrix.scale((float) x * 0.15f, 0.075f, (float) z * 0.15f);
+		
+		//Draw the board:
+		shaderStorage.getBoardTexture().activate();
+		ShaderProgram textureCubeShader = shaderStorage.getTextureCubeShader();
+		textureCubeShader.use();
+		textureCubeShader.setUniformM4(1, view);
+		textureCubeShader.setUniformM4(2, matrix.getMat());
+		textureCubeShader.setUniformV2(3, new float[]{x, z});
+		textureCubeShader.setUniformV4(4, Color.boardDefault.asArray());
+		GenericVAO textureCube = shaderStorage.getVisibleOpTexCube();
+		textureCube.use();
+		textureCube.draw();
+	}
+	
+	private void drawPlacementPosition(float[] view)
+	{
+		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 		if(currentPlaceable == null)
 		{
 			ShaderProgram lineShader = shaderStorage.getLineShader();
@@ -1628,7 +1766,7 @@ public class RenderPlane3D implements RenderPlane
 			GL30.glLineWidth(5f);
 			Matrix model = new Matrix();
 			model.identity();
-			Vector3 datPos = placementData.getPosition().add(placementData.getNormal().multiply(0.075));
+			Vector3 datPos = hitpointContainer.getPosition();
 			model.translate((float) datPos.getX(), (float) datPos.getY(), (float) datPos.getZ());
 			lineShader.setUniformM4(2, model.getMat());
 			GenericVAO crossyIndicator = shaderStorage.getCrossyIndicator();
@@ -1637,55 +1775,15 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else if(currentPlaceable == CompBoard.info)
 		{
-			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placementData);
-			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-			newAlignment = newAlignment.multiply(normalAxisRotation);
-			//Specific board rotation:
-			Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIsLaying ? 0 : 90, Vector3.xn);
-			Quaternion finalRotation = boardAlignment.multiply(newAlignment);
-			
 			int x = 1;
 			int z = 1;
-			Vector3 position = placementData.getPosition();
-			if(boardIsBeingDragged)
-			{
-				//Adjust position and size according to camera.
-				
-				//Get camera position and ray and convert them into board space:
-				Vector3 cameraPosition = camera.getPosition();
-				Vector3 cameraRay = Vector3.zp;
-				cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
-				cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
-				Vector3 cameraRayBoardSpace = finalRotation.multiply(cameraRay);
-				Vector3 cameraPositionBoardSpace = finalRotation.multiply(cameraPosition.subtract(position));
-				
-				//Get collision point with area Y=0:
-				double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
-				double cameraDistance = cameraRayBoardSpace.length();
-				Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
-				double dragDistance = distanceVector.length();
-				if(dragDistance - cameraDistance > 20)
-				{
-					//TBI: Is this okay?
-					distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 20);
-				}
-				Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
-				if(distance >= 0)
-				{
-					//Y should be at 0 or very close to it - x and z can be used as are.
-					x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
-					z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
-					Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
-					position = position.add(finalRotation.inverse().multiply(roundedCollisionPoint));
-				}
-			}
-			
-			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW.
+			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW).
 			Matrix matrix = new Matrix();
 			//Apply global position:
+			Vector3 position = hitpointContainer.getPosition();
 			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-			matrix.multiply(new Matrix(finalRotation.createMatrix())); //Apply global rotation.
+			Quaternion newAlignment = hitpointContainer.getAlignment();
+			matrix.multiply(new Matrix(newAlignment.createMatrix())); //Apply global rotation.
 			//The cube is centered, no translation.
 			matrix.scale((float) x * 0.15f, 0.075f, (float) z * 0.15f); //Just use the right size from the start... At this point in code it always has that size.
 			
@@ -1703,20 +1801,17 @@ public class RenderPlane3D implements RenderPlane
 		}
 		else
 		{
-			Quaternion newAlignment = MathHelper.rotationFromVectors(Vector3.yp, placementData.getNormal());
-			double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(newAlignment, placementData);
-			Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, placementData.getNormal());
-			newAlignment = newAlignment.multiply(normalAxisRotation);
 			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
 			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
-			World3DHelper.drawModel(visibleCubeShader, visibleCube, currentPlaceable.getModel(), placementData.getPosition(), newAlignment, view);
+			World3DHelper.drawModel(visibleCubeShader, visibleCube, currentPlaceable.getModel(), hitpointContainer.getPosition(), hitpointContainer.getAlignment(), view);
 		}
 	}
 	
-	private double calculateFixRotationOffset(Quaternion newGlobalAlignment, PlacementData placementData)
+	private double calculateFixRotationOffset(Quaternion newGlobalAlignment, Hitpoint hitpoint)
 	{
+		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 		//TODO: Thread-safe properly, this gets called on render and input thread. (As in don't make it overwrite the variables when called on input thread).
-		FourDirections axes = new FourDirections(placementData.getLocalNormal(), placementData.getParentBoard().getRotation());
+		FourDirections axes = new FourDirections(hitpoint.isBoard() ? ((HitpointBoard) hitpoint).getLocalNormal() : Vector3.yp, hitpoint.getHitPart().getRotation());
 		
 		//Get the angle, from the new X axis, to an "optimal" X axis.
 		Vector3 newVirtualXAxis = newGlobalAlignment.inverse().multiply(Vector3.xp);
@@ -1726,7 +1821,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			//All angles are 90° case. Rotate old axis.
 			//TBI: Target * inverse(Source) = diff //Will that work, cause rotation?
-			Quaternion normalRotation = MathHelper.rotationFromVectors(lastUpNormal, placementData.getNormal()).inverse();
+			Quaternion normalRotation = MathHelper.rotationFromVectors(lastUpNormal, hitpointContainer.getNormal()).inverse();
 			//TBI: Rotation may be 180° in that case its pretty much random, but reliably in most cases.
 			newRandomXAxis = normalRotation.multiply(fixXAxis);
 			Vector3 fallbackAxis = newRandomXAxis;
@@ -1734,7 +1829,7 @@ public class RenderPlane3D implements RenderPlane
 			if(newRandomXAxis == null)
 			{
 				System.out.println(Ansi.red + "[ERROR] ROTATION CODE FAILED!" + Ansi.r
-						+ "\n Placement-Vector: " + placementData.getNormal()
+						+ "\n Placement-Vector: " + hitpointContainer.getNormal()
 						+ "\n LastNormal: " + lastUpNormal
 						+ "\n RotationResult: " + fallbackAxis);
 				//ChooseAnyAlternative:
@@ -1798,51 +1893,53 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawHighlight(float[] view)
 	{
-		boolean grabTrue = isGrabbingBoard() && placementData != null;
-		if(grabData != null && !grabTrue)
+		boolean grabBoardHighlight = false;
+		if(grabData != null)
+		{
+			grabBoardHighlight = (grabData.getComponent() instanceof CompBoard) && hitpoint.canBePlacedOn();
+			if(!grabBoardHighlight)
+			{
+				return;
+			}
+		}
+		else if(hitpoint.isEmpty())
 		{
 			return;
 		}
-		if(!grabTrue && currentlySelected == null)
+		else
 		{
-			return;
+			Part part = hitpoint.getHitPart();
+			
+			boolean isBoard = part instanceof CompBoard;
+			boolean isWire = part instanceof CompWireRaw;
+			if(
+					isBoard && !Settings.highlightBoards
+							|| isWire && !Settings.highlightWires
+							|| !(isBoard || isWire) && !Settings.highlightComponents
+			)
+			{
+				return;
+			}
 		}
 		
-		Part part = currentlySelected;
-		
-		boolean isBoard = part instanceof CompBoard;
-		boolean isWire = part instanceof CompWireRaw;
-		if(
-				!grabTrue && (
-						isBoard && !Settings.highlightBoards
-						|| isWire && !Settings.highlightWires
-						|| !(isBoard || isWire) && !Settings.highlightComponents)
-		)
-		{
-			return;
-		}
+		Part part = hitpoint.getHitPart();
 		
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
 		
 		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
 		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
-		if(grabTrue)
+		if(grabBoardHighlight)
 		{
 			//Do very very ugly drawing of board:
 			Component grabbedComponent = grabData.getComponent();
 			Meshable meshable = grabbedComponent.getModelHolder().getSolid().get(0); //Grabbed board or mount, either way -> solid
 			
-			Quaternion rotation = grabbedComponent.getRotation().multiply(getDeltaGrabRotation(grabbedComponent).getRelative());
+			HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
+			Vector3 position = hitpointContainer.getPosition();
+			//Construct absolute rotation again...
+			Quaternion rotation = grabbedComponent.getRotation().multiply(hitpointContainer.getAlignment());
 			
-			Vector3 position = placementData.getPosition();
-			{
-				Quaternion alignment = ((GrabContainerData) grabData).getAlignment();
-				CompBoard board = (CompBoard) grabData.getComponent();
-				//Calculate distance of grabbed board to parent board:
-				position = position.add(placementData.getNormal().multiply(getBoardDistance(alignment, board) + 0.075D));
-			}
-
 			invisibleCubeShader.use();
 			invisibleCubeShader.setUniformM4(1, view);
 			invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
@@ -1896,41 +1993,5 @@ public class RenderPlane3D implements RenderPlane
 	public Camera getCamera()
 	{
 		return camera;
-	}
-	
-	private static class PlacementData
-	{
-		private final Vector3 normal;
-		private final Vector3 position;
-		private final CompBoard parentBoard;
-		private final Vector3 localNormal;
-		
-		public PlacementData(Vector3 position, Vector3 normal, CompBoard parentBoard, Vector3 localNormal)
-		{
-			this.normal = normal;
-			this.position = position;
-			this.parentBoard = parentBoard;
-			this.localNormal = localNormal;
-		}
-		
-		public Vector3 getNormal()
-		{
-			return normal;
-		}
-		
-		public Vector3 getPosition()
-		{
-			return position;
-		}
-		
-		public CompBoard getParentBoard()
-		{
-			return parentBoard;
-		}
-		
-		public Vector3 getLocalNormal()
-		{
-			return localNormal;
-		}
 	}
 }

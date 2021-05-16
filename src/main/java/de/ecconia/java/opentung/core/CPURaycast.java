@@ -210,4 +210,104 @@ public class CPURaycast
 		
 		return tMin;
 	}
+	
+	public static CollisionResult collisionPoint(CompBoard board, Camera camera)
+	{
+		//TODO: Another ungeneric access
+		CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
+		Vector3 position = board.getPosition();
+		Quaternion rotation = board.getRotation();
+		Vector3 size = shape.getSize();
+		if(shape.getMapper() != null)
+		{
+			size = shape.getMapper().getMappedSize(size, board);
+		}
+		
+		Vector3 cameraPosition = camera.getPosition();
+		
+		Vector3 cameraRay = Vector3.zp;
+		cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+		cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
+		Vector3 cameraRayBoardSpace = rotation.multiply(cameraRay);
+		
+		Vector3 cameraPositionBoardSpace = rotation.multiply(cameraPosition.subtract(position)); //Convert the camera position, in the board space.
+		
+		double distanceLocalMin = (size.getX() - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
+		double distanceLocalMax = ((-size.getX()) - cameraPositionBoardSpace.getX()) / cameraRayBoardSpace.getX();
+		double distanceGlobal;
+		Vector3 normalGlobal;
+		if(distanceLocalMin < distanceLocalMax)
+		{
+			distanceGlobal = distanceLocalMin;
+			normalGlobal = Vector3.xp;
+		}
+		else
+		{
+			distanceGlobal = distanceLocalMax;
+			normalGlobal = Vector3.xn;
+		}
+		
+		distanceLocalMin = (size.getY() - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
+		distanceLocalMax = ((-size.getY()) - cameraPositionBoardSpace.getY()) / cameraRayBoardSpace.getY();
+		double distanceLocal;
+		Vector3 normalLocal;
+		if(distanceLocalMin < distanceLocalMax)
+		{
+			distanceLocal = distanceLocalMin;
+			normalLocal = Vector3.yp;
+		}
+		else
+		{
+			distanceLocal = distanceLocalMax;
+			normalLocal = Vector3.yn;
+		}
+		if(distanceGlobal < distanceLocal)
+		{
+			distanceGlobal = distanceLocal;
+			normalGlobal = normalLocal;
+		}
+		
+		distanceLocalMin = (size.getZ() - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
+		distanceLocalMax = ((-size.getZ()) - cameraPositionBoardSpace.getZ()) / cameraRayBoardSpace.getZ();
+		if(distanceLocalMin < distanceLocalMax)
+		{
+			distanceLocal = distanceLocalMin;
+			normalLocal = Vector3.zp;
+		}
+		else
+		{
+			distanceLocal = distanceLocalMax;
+			normalLocal = Vector3.zn;
+		}
+		if(distanceGlobal < distanceLocal)
+		{
+			distanceGlobal = distanceLocal;
+			normalGlobal = normalLocal;
+		}
+		
+		Vector3 collisionPointBoardSpace = cameraPositionBoardSpace.add(cameraRayBoardSpace.multiply(distanceGlobal));
+		return new CollisionResult(normalGlobal, collisionPointBoardSpace);
+	}
+	
+	public static class CollisionResult
+	{
+		private final Vector3 localNormal;
+		private final Vector3 collisionPointBoardSpace;
+		
+		public CollisionResult(Vector3 normalGlobal, Vector3 collisionPointBoardSpace)
+		{
+			this.localNormal = normalGlobal;
+			this.collisionPointBoardSpace = collisionPointBoardSpace;
+		}
+		
+		public Vector3 getLocalNormal()
+		{
+			return localNormal;
+		}
+		
+		public Vector3 getCollisionPointBoardSpace()
+		{
+			return collisionPointBoardSpace;
+		}
+	}
 }
