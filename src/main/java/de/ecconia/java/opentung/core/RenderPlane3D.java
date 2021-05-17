@@ -1448,9 +1448,14 @@ public class RenderPlane3D implements RenderPlane
 							}
 							hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT + extraY)));
 						}
-						else
+						else if(model.canBePlacedOnMounts())
 						{
 							hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT)));
+						}
+						else
+						{
+							//TBI: Is this an okay-ish solution to prevent placement? Or set currentPlaceable to nothing? But then its a cross...
+							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
 						}
 					}
 				}

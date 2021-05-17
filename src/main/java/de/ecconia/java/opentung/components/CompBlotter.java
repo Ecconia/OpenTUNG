@@ -1,7 +1,5 @@
 package de.ecconia.java.opentung.components;
 
-import de.ecconia.java.opentung.components.meta.ModelBuilder;
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.Color;
@@ -10,11 +8,15 @@ import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
-import de.ecconia.java.opentung.util.math.Vector3;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class CompBlotter extends Component implements Powerable, Updateable
 {
@@ -23,6 +25,9 @@ public class CompBlotter extends Component implements Powerable, Updateable
 			.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material))
 			.addPeg(new CubeOpen(new Vector3(0.0, 0.0, +0.15 + 0.15), new Vector3(0.09, 0.09, 0.30), Direction.ZNeg, Color.circuitOFF))
 			.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos, Color.circuitOFF))
+			.setMountPlaceable(true)
+			.setBoardSidePlacementOption(PlacementSettingBoardSide.None)
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Blotter", "0.2.6", CompBlotter.class, CompBlotter::new);
 	

@@ -11,6 +11,8 @@ import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
@@ -24,6 +26,9 @@ public class CompButton extends Component implements Powerable, Updateable, Hold
 			.addBlot(new CubeOpen(new Vector3(0.0, 0.0, -0.15 - 0.06), new Vector3(0.15, 0.15, 0.12), Direction.ZPos, Color.circuitOFF))
 			//TODO: Open bottom
 			.addSolid(new CubeFull(new Vector3(0.0, 0.15 + 0.03, 0.0), new Vector3(0.18, 0.06, 0.18), Color.interactable))
+			.setMountPlaceable(true)
+			.setBoardSidePlacementOption(PlacementSettingBoardSide.None)
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Button", "0.2.6", CompButton.class, CompButton::new);
 	

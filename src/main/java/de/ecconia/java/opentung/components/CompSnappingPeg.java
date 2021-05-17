@@ -7,6 +7,8 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
 import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Vector3;
@@ -15,8 +17,11 @@ import java.util.List;
 public class CompSnappingPeg extends Component
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
-			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
+			.setPlacementOffset(new Vector3(0.0, 0.075, -0.06))
 			.addColoredPegModel(new CubeFull(new Vector3(0.0, 0.15, 0.0), new Vector3(0.09, 0.3, 0.09), Color.snappingPeg))
+			.setMountPlaceable(false)
+			.setBoardSidePlacementOption(PlacementSettingBoardSide.None) //Could theoretically be placed in the middle, but not with all 4 rotations, thus prevent for now.
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Cross)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-SnappingPeg", "0.2.6", CompSnappingPeg.class, CompSnappingPeg::new);
 	

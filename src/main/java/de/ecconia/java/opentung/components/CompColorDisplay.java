@@ -11,6 +11,8 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Updateable;
@@ -24,6 +26,9 @@ public class CompColorDisplay extends Component implements Updateable, Colorable
 			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.09, 0.1), new Vector3(0.1, 0.18, 0.1), Direction.YPos, Color.circuitOFF))
 			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF))
 			.addPeg(new CubeOpen(new Vector3(0.0, 0.24, -0.1), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF))
+			.setMountPlaceable(false) //In TUNG it cannot be on a mount, and its layout does not connect to the mount, thus no.
+			.setBoardSidePlacementOption(PlacementSettingBoardSide.None)
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-ColorDisplay", "0.2.6", CompColorDisplay.class, CompColorDisplay::new);
 	

@@ -10,6 +10,8 @@ import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.util.io.ByteReader;
@@ -22,6 +24,9 @@ public class CompLabel extends Component implements CustomData
 			.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075, 0.0))
 			.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Color.material))
 			.addTexture(new TexturedFace(new Vector3(0.0, 0.0, 0.0), new Vector3(0.3, 0.3, 0.3), Direction.YPos))
+			.setMountPlaceable(true)
+			.setBoardSidePlacementOption(PlacementSettingBoardSide.None)
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Label", "0.2.6", CompLabel.class, CompLabel::new);
 	

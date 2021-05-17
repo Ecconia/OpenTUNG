@@ -68,4 +68,24 @@ public class ModelBuilder
 		modelHolder.addColoredPegModel(coloredPegModel);
 		return this;
 	}
+	
+	//Placement settings:
+	
+	public ModelBuilder setMountPlaceable(boolean canBePlacedOnMounts)
+	{
+		modelHolder.setCanBePlacedOnMounts(canBePlacedOnMounts);
+		return this;
+	}
+	
+	public ModelBuilder setBoardPlacementOption(PlacementSettingBoardSquare placementSettingBoardSquare)
+	{
+		modelHolder.setPlacementSettingBoardSquare(placementSettingBoardSquare);
+		return this;
+	}
+	
+	public ModelBuilder setBoardSidePlacementOption(PlacementSettingBoardSide placementSettingBoardSide)
+	{
+		modelHolder.setPlacementSettingBoardSide(placementSettingBoardSide);
+		return this;
+	}
 }

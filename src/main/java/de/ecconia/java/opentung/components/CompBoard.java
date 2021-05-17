@@ -28,6 +28,8 @@ public class CompBoard extends CompContainer implements CustomData
 					return new Vector3(size.getX() * board.getX() * 0.15, size.getY(), size.getZ() * board.getZ() * 0.15);
 				}
 			})) //1 gets replaced in shader. no color cause texture.
+			.setMountPlaceable(true) //Just added for consistency, it is not required.
+			//Skipping other placement settings, since it is controlled by custom code.
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Board", "0.2.6", CompBoard.class, CompBoard::new);
 	

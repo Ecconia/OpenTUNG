@@ -205,4 +205,40 @@ public class ModelHolder
 			return "Val: " + value;
 		}
 	}
+	
+	//PlacementSettings:
+	
+	private boolean canBePlacedOnMounts = true;
+	private PlacementSettingBoardSquare placementSettingBoardSquare = PlacementSettingBoardSquare.Middle;
+	private PlacementSettingBoardSide placementSettingBoardSide = PlacementSettingBoardSide.None;
+	
+	public boolean canBePlacedOnMounts()
+	{
+		return canBePlacedOnMounts;
+	}
+	
+	public void setCanBePlacedOnMounts(boolean canBePlacedOnMounts)
+	{
+		this.canBePlacedOnMounts = canBePlacedOnMounts;
+	}
+	
+	public void setPlacementSettingBoardSide(PlacementSettingBoardSide placementSettingBoardSide)
+	{
+		this.placementSettingBoardSide = placementSettingBoardSide;
+	}
+	
+	public PlacementSettingBoardSide getPlacementSettingBoardSide()
+	{
+		return placementSettingBoardSide;
+	}
+	
+	public void setPlacementSettingBoardSquare(PlacementSettingBoardSquare placementSettingBoardSquare)
+	{
+		this.placementSettingBoardSquare = placementSettingBoardSquare;
+	}
+	
+	public PlacementSettingBoardSquare getPlacementSettingBoardSquare()
+	{
+		return placementSettingBoardSquare;
+	}
 }
