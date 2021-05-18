@@ -174,6 +174,11 @@ public class InputProcessor implements Controller
 		return controller2D;
 	}
 	
+	public Controller3D getController3D()
+	{
+		return controller3D;
+	}
+	
 	//Controller commands:
 	
 	public void issueShutdown()

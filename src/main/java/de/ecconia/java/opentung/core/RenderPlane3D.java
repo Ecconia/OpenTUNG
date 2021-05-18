@@ -109,7 +109,7 @@ public class RenderPlane3D implements RenderPlane
 		//Following task is appended to the end of the task-queue and will allow saving.
 		//TBI: Assumes that the interface is open and thus no new GPU tasks had been added.
 		gpuTasks.add((unused) -> {
-			hitpoint = null;
+			hitpoint = new Hitpoint();
 			boardDrawStartingPoint = null;
 			wireStartPoint = null;
 			pauseArrived.incrementAndGet();
@@ -1391,26 +1391,23 @@ public class RenderPlane3D implements RenderPlane
 			{
 				if(currentPlaceable == null)
 				{
-					//TBI: Offset here or when drawing?
+					//TBI: 0.075 Offset here or when drawing?
 					//Not attempting to draw anything, thus only prepare for drawing the cross, that means lifting the position up to surface:
 					CompContainer parent = (CompContainer) hitpoint.getHitPart();
 					if(hitpoint.isBoard())
 					{
 						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
-						//TODO: Replace with outsources center code:
-						Vector3 collisionPointBoardSpace = centerPosition((CompBoard) parent, hitpointBoard.getCollisionPointBoardSpace(), hitpointBoard.getLocalNormal());
+						OnBoardPlacementHelper helper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
+						Vector3 collisionPointBoardSpace = helper.middleEither();
 						hitpointContainer.setPosition(parent.getRotation().inverse().multiply(collisionPointBoardSpace)
 								.add(parent.getPosition())
-								.add(hitpointContainer.getNormal().multiply(0.075)));
+								.add(hitpointContainer.getNormal().multiply(0.075))
+						);
 					}
 					else //Mount:
 					{
-						double liftLevel = 0.075; //Lift to surface distance.
-						if(!hitpoint.isBoard()) //TBI: Not board, thus mount?
-						{
-							liftLevel += CompMount.MOUNT_HEIGHT;
-						}
-						hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(liftLevel)));
+						hitpointContainer.setPosition(parent.getPosition()
+								.add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT + 0.075D)));
 					}
 				}
 				else //Placing something:
@@ -1433,18 +1430,30 @@ public class RenderPlane3D implements RenderPlane
 					if(hitpoint.isBoard())
 					{
 						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
-						//TODO: Replace with outsources center code:
-						Vector3 position = centerPosition((CompBoard) parent, hitpointBoard.getCollisionPointBoardSpace(), hitpointBoard.getLocalNormal());
-						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
-						if(currentPlaceable == CompBoard.info)
+						OnBoardPlacementHelper placementHelper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
+						Vector3 position = placementHelper.auto(currentPlaceable.getModel(), inputHandler.getController3D().isAlt(), alignment); //TODO: isControl
+						if(position == null)
 						{
-							position = position.add(hitpointContainer.getNormal().multiply(0.15D));
+							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
 						}
-						hitpointContainer.setPosition(position);
+						else
+						{
+							position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+							if(currentPlaceable == CompBoard.info)
+							{
+								//TODO: Fine placement
+								double distance = 0.15D;
+								if(!placeableBoardIsLaying)
+								{
+									distance += 0.075D;
+								}
+								position = position.add(hitpointContainer.getNormal().multiply(distance));
+							}
+							hitpointContainer.setPosition(position);
+						}
 					}
 					else //Mount:
 					{
-						//TODO: Also outsource.
 						ModelHolder model = currentPlaceable.getModel();
 						if(currentPlaceable == CompBoard.info)
 						{
@@ -1461,7 +1470,6 @@ public class RenderPlane3D implements RenderPlane
 						}
 						else
 						{
-							//TBI: Is this an okay-ish solution to prevent placement? Or set currentPlaceable to nothing? But then its a cross...
 							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
 						}
 					}

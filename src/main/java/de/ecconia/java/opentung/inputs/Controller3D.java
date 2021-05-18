@@ -458,7 +458,7 @@ public class Controller3D implements Controller
 		inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
 	}
 	
-	private boolean isControl()
+	public boolean isControl()
 	{
 		boolean control = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
 		return control | GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
@@ -472,6 +472,7 @@ public class Controller3D implements Controller
 			part = part.getParent();
 		}
 		
+		//TODO: Control for configuration grabbing.
 		if(part == null)
 		{
 			inputProcessor.get2DController().forwardInfoToHotbar(null);
@@ -480,5 +481,11 @@ public class Controller3D implements Controller
 		{
 			inputProcessor.get2DController().forwardInfoToHotbar(part.getInfo());
 		}
+	}
+	
+	public boolean isAlt()
+	{
+		boolean alt = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS;
+		return alt | GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
 	}
 }

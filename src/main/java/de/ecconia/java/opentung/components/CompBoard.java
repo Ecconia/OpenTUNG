@@ -10,6 +10,8 @@ import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
+import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.util.io.ByteReader;
@@ -28,8 +30,10 @@ public class CompBoard extends CompContainer implements CustomData
 					return new Vector3(size.getX() * board.getX() * 0.15, size.getY(), size.getZ() * board.getZ() * 0.15);
 				}
 			})) //1 gets replaced in shader. no color cause texture.
-			.setMountPlaceable(true) //Just added for consistency, it is not required.
-			//Skipping other placement settings, since it is controlled by custom code.
+			//The following settings will be ignored in the actual code, since boards get special treatment. But for testing they remain:
+			.setMountPlaceable(true)
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)
+			.setBoardSidePlacementOption(PlacementSettingBoardSide.Middle)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Board", "0.2.6", CompBoard.class, CompBoard::new);
 	

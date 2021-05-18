@@ -4,10 +4,13 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
+import de.ecconia.java.opentung.util.math.MathHelper;
+import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 
 public class OnBoardPlacementHelper
 {
+	private final Quaternion alignment;
 	private final boolean isSide;
 	private final Boolean isSideX;
 	private final Boolean isSideFar;
@@ -20,6 +23,8 @@ public class OnBoardPlacementHelper
 	
 	public OnBoardPlacementHelper(CompBoard board, Vector3 localNormal, Vector3 collisionPointBoardSpace)
 	{
+		this.alignment = board.getRotation();
+		
 		//Adjust placement position according to component properties:
 		isSide = localNormal.getY() == 0;
 		
@@ -31,40 +36,35 @@ public class OnBoardPlacementHelper
 		//Move the center of the board into one corner, so that the collision point is in the positive quarter:
 		double x = collisionPointBoardSpace.getX() + xHalf;
 		double z = collisionPointBoardSpace.getZ() + zHalf;
-
-//		if(isSide)
-//		{
-//			if(localNormal.getX() == 0) // Z side
-//			{
-//				//Get the amount of squares until you get to the collision square:
-//				zSquareOffset = null;
-//				xSquareOffset = (int) (x / 0.3);
-//				//Calculate the center pos:
-//				xOffset = xSquareOffset * 0.3 + 0.15;
-//				zOffset = localNormal.getZ() < 0 ? -0.075 : 0.075;
-//			}
-//			else // X side
-//			{
-//				//Get the amount of squares until you get to the collision square:
-//				xSquareOffset = null;
-//				zSquareOffset = (int) (z / 0.3);
-//				//Calculate the center pos:
-//				xOffset = localNormal.getX() < 0 ? -0.075 : 0.075;
-//				zOffset = zSquareOffset * 0.3 + 0.15;
-//			}
-//		}
-//		else //Square side - bottom/top
-//		{
-		//Get the amount of squares until you get to the collision square:
-		xSquareOffset = (int) (x / 0.3);
-		zSquareOffset = (int) (z / 0.3);
-		//Calculate the position within a square:
-		xOffset = x - (double) xSquareOffset * 0.3D;
-		zOffset = z - (double) zSquareOffset * 0.3D;
 		
+		//Calculate the amount of squares to the collision point:
+		int xSquareOffset = (int) (x / 0.3);
+		int zSquareOffset = (int) (z / 0.3);
+		//Calculate the distance of the collision point within a square:
+		double xOffset = x - (double) xSquareOffset * 0.3D;
+		double zOffset = z - (double) zSquareOffset * 0.3D;
+		
+		//The 0.3 division does not properly work cause of rounding errors, when the number which clearly should be 0.3 is 0.29999999.
+		if(xOffset > 0.299999)
+		{
+			xSquareOffset++;
+			xOffset = 0;
+		}
+		if(zOffset > 0.299999)
+		{
+			zSquareOffset++;
+			zOffset = 0;
+		}
+		
+		//Apply values to fields:
+		this.xSquareOffset = xSquareOffset;
+		this.zSquareOffset = zSquareOffset;
+		this.xOffset = xOffset;
+		this.zOffset = zOffset;
+		
+		//Calculate side booleans:
 		isSideX = isSide ? localNormal.getZ() == 0 : null;
 		isSideFar = isSide ? (isSideX ? localNormal.getX() : localNormal.getZ()) >= 0 : null;
-//		}
 	}
 	
 	public Vector3 middleEither()
@@ -79,25 +79,30 @@ public class OnBoardPlacementHelper
 		}
 	}
 	
-	public Vector3 auto(ModelHolder model, boolean isControl)
+	public Vector3 auto(ModelHolder model, boolean isControl, Quaternion alignment)
 	{
 		//Placing non-board component onto a board:
 		if(isSide)
 		{
 			if(model.getPlacementSettingBoardSide() == PlacementSettingBoardSide.Middle)
 			{
-			
+				return sideMiddle();
 			}
 			else if(model.getPlacementSettingBoardSide() == PlacementSettingBoardSide.All)
 			{
-			
+				if(isControl)
+				{
+					return sideAll();
+				}
+				else
+				{
+					return sideMiddle();
+				}
 			}
 			else
 			{
-			
+				return null; //Do not place it.
 			}
-			//TODO: Change to correct:
-			return squareMiddle(); //Totally wrong here, lol.
 		}
 		else //Is top/bottom:
 		{
@@ -115,7 +120,7 @@ public class OnBoardPlacementHelper
 				if(isControl)
 				{
 					//Calculate the alignment of a snapping peg:
-					return squareCross();
+					return squareCross(alignment);
 				}
 				else
 				{
@@ -137,9 +142,42 @@ public class OnBoardPlacementHelper
 		}
 	}
 	
-	private Vector3 squareCross()
+	private Vector3 squareCross(Quaternion alignment)
 	{
-		throw new RuntimeException("Not implemented yet.");
+		final double squareThird = 0.1D;
+		int xFineStep = (int) (xOffset / squareThird);
+		int zFineStep = (int) (zOffset / squareThird);
+		
+		Quaternion fixedAlignment = this.alignment.multiply(alignment.inverse()).inverse();
+		Vector3 orientation = fixedAlignment.multiply(Vector3.zn);
+		
+		double angle = MathHelper.angleFromVectors(orientation, Vector3.zn);
+		boolean x = angle >= -0.001 && angle <= 0.001 || angle >= 179.999 && angle <= 180.001;
+		angle = MathHelper.angleFromVectors(orientation, Vector3.xn);
+		boolean z = angle >= -0.001 && angle <= 0.001 || angle >= 179.999 && angle <= 180.001;
+		
+		if(!x && !z)
+		{
+			//Non 90° rotation, reject.
+			return null;
+		}
+		
+		if(z)
+		{
+			return new Vector3(
+					-xHalf + xSquareOffset * 0.3 + 0.15D,
+					0,
+					-zHalf + zSquareOffset * 0.3 + zFineStep * squareThird + 0.05D
+			);
+		}
+		else
+		{
+			return new Vector3(
+					-xHalf + xSquareOffset * 0.3 + xFineStep * squareThird + 0.05D,
+					0,
+					-zHalf + zSquareOffset * 0.3 + 0.15D
+			);
+		}
 	}
 	
 	private Vector3 squareAll()
@@ -224,130 +262,31 @@ public class OnBoardPlacementHelper
 	{
 		double xExtra = xSquareOffset * 0.3;
 		double zExtra = zSquareOffset * 0.3;
-		
+		double belowSurface = isSideFar ? -0.075 : +0.075;
 		if(isSideX)
 		{
-			if(isSideFar)
-			{
-				System.out.println("X+");
-				return new Vector3(-xHalf + xExtra, 0, -zHalf + zExtra + 0.15);
-			}
-			else
-			{
-				System.out.println("X-");
-				return new Vector3(-xHalf + xExtra, 0, -zHalf + zExtra + 0.15);
-			}
-			
-//			double flip = isSideFar ? 1 : -1;
-//			return new Vector3(xSquareOffset * 0.3 - xHalf + flip * 0.15, 0, zSquareOffset * 0.3 - zHalf + 0.15);
+			return new Vector3(-xHalf + xExtra + belowSurface, 0, -zHalf + zExtra + 0.15);
 		}
 		else
 		{
-//			double flip = isSideFar ? 1 : -1;
-//			double x = xSquareOffset * 0.3 - xHalf;
-//			double z = zSquareOffset * 0.3 - zHalf;
-//			System.out.println(xSquareOffset + " | " + zSquareOffset);
-//			return new Vector3(x, 0, z + flip * 0.075);
-			
-			if(isSideFar)
-			{
-				System.out.println("Z+");
-				return new Vector3(-xHalf + xExtra + 0.15, 0, -zHalf + zExtra);
-			}
-			else
-			{
-				System.out.println("Z-");
-				return new Vector3(-xHalf + xExtra + 0.15, 0, -zHalf + zExtra);
-			}
-//			return new Vector3(xSquareOffset * 0.3 - xHalf + 0.15, 0, zSquareOffset * 0.3 - zHalf + 0.075);
+			return new Vector3(-xHalf + xExtra + 0.15, 0, -zHalf + zExtra + belowSurface);
+		}
+	}
+	
+	private Vector3 sideAll()
+	{
+		double xExtra = xSquareOffset * 0.3;
+		double zExtra = zSquareOffset * 0.3;
+		double belowSurface = isSideFar ? -0.075 : +0.075;
+		if(isSideX)
+		{
+			int steps = (int) (zOffset / 0.1);
+			return new Vector3(-xHalf + xExtra + belowSurface, 0, -zHalf + zExtra + (steps * 0.1) + 0.05);
+		}
+		else
+		{
+			int steps = (int) (xOffset / 0.1);
+			return new Vector3(-xHalf + xExtra + (steps * 0.1) + 0.05, 0, -zHalf + zExtra + belowSurface);
 		}
 	}
 }
-
-//	public void calculatePlacementPosition()
-//	{
-//		//If looking at a board
-//		Part part = currentlySelected;
-//
-//		if(part instanceof CompMount)
-//		{
-//			CompMount parent = (CompMount) part;
-//			//Is placement of the current component on a Mount allowed?
-//			if(isGrabbing())
-//			{
-//
-//			}
-//			else //Normal placement:
-//			{
-//				PlaceableInfo placeable = sharedData.getCurrentPlaceable();
-//				if(placeable != null)
-//				{
-//					ModelHolder model = placeable.getModel();
-//					if(placeable == CompBoard.info)
-//					{
-//						double extraY = 0.15;
-//						if(!placeableBoardIsLaying)
-//						{
-//							extraY += 0.075;
-//						}
-//						Vector3 placementNormal = parent.getRotation().inverse().multiply(Vector3.yp).normalize();
-//						Vector3 placementPosition = parent.getPosition().add(placementNormal.multiply(CompMount.MOUNT_HEIGHT).addY(extraY));
-//						placementData = new PlacementData(placementPosition, placementNormal, parent, Vector3.yp);
-//						return;
-//					}
-//					else if(model.canBePlacedOnMounts())
-//					{
-//						Vector3 placementNormal = parent.getRotation().inverse().multiply(Vector3.yp).normalize();
-//						Vector3 placementPosition = parent.getPosition().add(placementNormal.multiply(CompMount.MOUNT_HEIGHT));
-//						placementData = new PlacementData(placementPosition, placementNormal, parent, Vector3.yp);
-//						return;
-//					}
-//				}
-//			}
-//		}
-//		else if(part instanceof CompBoard) //If parent container is a board
-//		{
-//			CompBoard board = (CompBoard) part;
-//			//Calculate the collision point and face vector in board space:
-//			CPURaycast.CollisionResult result = CPURaycast.collisionPoint(board, camera);
-//			Vector3 localNormal = result.getLocalNormal();
-//			Vector3 collisionPointBoardSpace = result.getCollisionPointBoardSpace();
-//
-//			PlacementHelper placer = new PlacementHelper(board, localNormal, collisionPointBoardSpace);
-//
-//			if(isGrabbing())
-//			{
-//
-//			}
-//			else //Normal placement:
-//			{
-//				PlaceableInfo placeable = sharedData.getCurrentPlaceable();
-//				if(placeable != null)
-//				{
-//					ModelHolder model = placeable.getModel();
-//					if(placeable == CompBoard.info) //If placing a board
-//					{
-////						collisionPointBoardSpace = placer.middleEither();
-//						//Boards have their center within, thus the offset needs to be adjusted:
-//						collisionPointBoardSpace = collisionPointBoardSpace.add(localNormal.multiply(placeableBoardIsLaying ? 0.15 : (0.15 + 0.075)));
-//					}
-//					else //if placing any new component
-//					{
-//						//TODO: Move placement abort to right click, and replace ALT with CONTROL here.
-//						collisionPointBoardSpace = placer.auto(model, inputHandler.getController3D().isAlt());
-//					}
-//				}
-//			}
-//
-//			//Convert values back to global space and apply:
-//			Vector3 placementPosition = board.getRotation().inverse().multiply(collisionPointBoardSpace).add(board.getPosition());
-//			Vector3 placementNormal = board.getRotation().inverse().multiply(localNormal).normalize(); //Safety normalization.
-//			CompBoard placementBoard = board;
-//
-//			placementData = new PlacementData(placementPosition, placementNormal, placementBoard, localNormal);
-//			return;
-//		}
-//
-//		//Fallback case:
-//		placementData = null; //Only place on boards.
-//	}
