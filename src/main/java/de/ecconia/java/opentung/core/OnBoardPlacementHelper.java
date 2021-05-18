@@ -67,6 +67,11 @@ public class OnBoardPlacementHelper
 		isSideFar = isSide ? (isSideX ? localNormal.getX() : localNormal.getZ()) >= 0 : null;
 	}
 	
+	public boolean isSide()
+	{
+		return isSide;
+	}
+	
 	public Vector3 middleEither()
 	{
 		if(isSide)

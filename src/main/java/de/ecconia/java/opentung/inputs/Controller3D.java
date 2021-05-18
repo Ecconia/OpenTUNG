@@ -439,7 +439,14 @@ public class Controller3D implements Controller
 	
 	private void scrollY(int val)
 	{
-		inputProcessor.get2DController().forwardScrollingToHotbar(val);
+		if(renderPlane3D.isPlacingBoard(isAlt()))
+		{
+			renderPlane3D.boardOffset(val, isControl(), isAlt());
+		}
+		else
+		{
+			inputProcessor.get2DController().forwardScrollingToHotbar(val);
+		}
 	}
 	
 	private void numberPressed(int index)

@@ -140,6 +140,10 @@ public class RenderPlane3D implements RenderPlane
 	private GrabData grabData;
 	private double grabRotation;
 	
+	//Board placement offset:
+	private double xBoardOffset;
+	private double zBoardOffset;
+	
 	//Rotation fix variables (Pretty much used everywhere):
 	private Vector3 fixXAxis = Vector3.xp; //Never NPE, use +X as default.
 	private Vector3 lastUpNormal = Vector3.yp; //Used whenever an item is shadow drawn, to use more natural rotations.
@@ -175,6 +179,38 @@ public class RenderPlane3D implements RenderPlane
 	public boolean isGrabbingBoard()
 	{
 		return (grabData != null) && (grabData.getComponent() instanceof CompBoard);
+	}
+	
+	public boolean isPlacingBoard(boolean finePlacement)
+	{
+		GrabData grabData = this.grabData;
+		return (grabData != null && grabData.getComponent() instanceof CompBoard) || (finePlacement && boardDrawStartingPoint == null && currentPlaceable == CompBoard.info);
+	}
+	
+	public void boardOffset(int amount, boolean control, boolean alt)
+	{
+		gpuTasks.add((unused) -> {
+			if(grabData != null)
+			{
+				//Rough and fine offset:
+			}
+			else
+			{
+				//Only fine offset:
+				if(alt)
+				{
+					xBoardOffset += amount * 0.075;
+					if(xBoardOffset > 0.1511)
+					{
+						xBoardOffset = 0.15;
+					}
+					else if(xBoardOffset < -0.1511)
+					{
+						xBoardOffset = -0.15;
+					}
+				}
+			}
+		});
 	}
 	
 	//Click events:
@@ -425,6 +461,7 @@ public class RenderPlane3D implements RenderPlane
 					parent.updateBounds();
 					worldMesh.addComponent(newComponent, board.getSimulation());
 					this.boardDrawStartingPoint = null;
+					this.xBoardOffset = 0;
 				});
 			}
 			catch(InterruptedException e)
@@ -1441,11 +1478,27 @@ public class RenderPlane3D implements RenderPlane
 							position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
 							if(currentPlaceable == CompBoard.info)
 							{
-								//TODO: Fine placement
 								double distance = 0.15D;
 								if(!placeableBoardIsLaying)
 								{
 									distance += 0.075D;
+									if(!placementHelper.isSide() && xBoardOffset != 0)
+									{
+										Vector3 offset = new Vector3(0, xBoardOffset, 0);
+										offset = alignment.inverse().multiply(offset);
+										position = position.add(offset);
+									}
+								}
+								else
+								{
+									if(placementHelper.isSide() && xBoardOffset != 0)
+									{
+										//TODO: This code depends on where the normal of the parent points, instead of the rotation of the child.
+										//Code should work like the one above, the problem is, that the offset has to be applied to either X or Z depending on rotation.
+										Vector3 offset = new Vector3(0, xBoardOffset, 0); //In parent board space, thus only up/down = Y.
+										offset = parent.getRotation().inverse().multiply(offset);
+										position = position.add(offset);
+									}
 								}
 								position = position.add(hitpointContainer.getNormal().multiply(distance));
 							}
