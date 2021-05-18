@@ -214,7 +214,10 @@ public class RenderPlane3D implements RenderPlane
 	{
 		//TODO: WireStartPoint is not threadsafe yet.
 		Connector from = this.wireStartPoint;
-		this.wireStartPoint = null;
+		gpuTasks.add((unused) -> {
+			//Clear this on the render thread, to prevent any state changes while rendering.
+			this.wireStartPoint = null;
+		});
 		
 		if(hitpoint == null)
 		{
@@ -225,6 +228,11 @@ public class RenderPlane3D implements RenderPlane
 			return;
 		}
 		
+		Connector to = (Connector) hitpoint.getHitPart();
+		if(to == from)
+		{
+			return; //Aborted on original connector, never create such a wire.
+		}
 		Vector3 position = hitpoint.getWireCenterPosition();
 		if(position == null)
 		{
@@ -233,7 +241,6 @@ public class RenderPlane3D implements RenderPlane
 		Quaternion alignment = hitpoint.getWireAlignment();
 		double length = hitpoint.getWireDistance();
 		
-		Connector to = (Connector) hitpoint.getHitPart();
 		if(from instanceof Blot && to instanceof Blot)
 		{
 			System.out.println("Blot-Blot connections are not allowed, cause pointless.");
@@ -1520,7 +1527,7 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
-			if(toPos != null)
+			if(toPos != null && wireStartPoint != hitpoint.getHitPart())
 			{
 				//Draw wire between placementPosition and startingPos:
 				Vector3 startingPos = wireStartPoint.getConnectionPoint();
