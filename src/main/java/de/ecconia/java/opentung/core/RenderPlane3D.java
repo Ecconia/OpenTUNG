@@ -141,6 +141,7 @@ public class RenderPlane3D implements RenderPlane
 	private double grabRotation;
 	
 	//Board placement offset:
+	private double fineBoardOffset;
 	private double xBoardOffset;
 	private double zBoardOffset;
 	
@@ -190,23 +191,46 @@ public class RenderPlane3D implements RenderPlane
 	public void boardOffset(int amount, boolean control, boolean alt)
 	{
 		gpuTasks.add((unused) -> {
-			if(grabData != null)
+			if(grabData != null && !control)
 			{
-				//Rough and fine offset:
+				CompBoard board = (CompBoard) grabData.getComponent();
+				double actualAmount = amount * 0.3;
+				if(alt)
+				{
+					int z = board.getZ() - 1;
+					double min = z * -0.15 - 0.00000001;
+					double max = z * 0.15 + 0.00000001;
+					double willBeOffset = zBoardOffset + actualAmount;
+					if(willBeOffset >= min && willBeOffset <= max)
+					{
+						zBoardOffset += actualAmount;
+					}
+				}
+				else
+				{
+					int x = board.getX() - 1;
+					double min = x * -0.15 - 0.00000001;
+					double max = x * 0.15 + 0.00000001;
+					double willBeOffset = xBoardOffset + actualAmount;
+					if(willBeOffset >= min && willBeOffset <= max)
+					{
+						xBoardOffset += actualAmount;
+					}
+				}
 			}
 			else
 			{
 				//Only fine offset:
-				if(alt)
+				if(control)
 				{
-					xBoardOffset += amount * 0.075;
-					if(xBoardOffset > 0.1511)
+					fineBoardOffset += amount * 0.075;
+					if(fineBoardOffset > 0.1511)
 					{
-						xBoardOffset = 0.15;
+						fineBoardOffset = 0.15;
 					}
-					else if(xBoardOffset < -0.1511)
+					else if(fineBoardOffset < -0.1511)
 					{
-						xBoardOffset = -0.15;
+						fineBoardOffset = -0.15;
 					}
 				}
 			}
@@ -248,7 +272,6 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void rightDragOnConnectorStop(Hitpoint hitpoint)
 	{
-		//TODO: WireStartPoint is not threadsafe yet.
 		Connector from = this.wireStartPoint;
 		gpuTasks.add((unused) -> {
 			//Clear this on the render thread, to prevent any state changes while rendering.
@@ -461,7 +484,7 @@ public class RenderPlane3D implements RenderPlane
 					parent.updateBounds();
 					worldMesh.addComponent(newComponent, board.getSimulation());
 					this.boardDrawStartingPoint = null;
-					this.xBoardOffset = 0;
+					this.fineBoardOffset = 0;
 				});
 			}
 			catch(InterruptedException e)
@@ -933,7 +956,19 @@ public class RenderPlane3D implements RenderPlane
 				lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
 				grabRotation = 0;
 				//Activate grabbing:
-				grabData = newGrabData;
+				if(container instanceof CompBoard)
+				{
+					CompBoard board = (CompBoard) container;
+					this.xBoardOffset = ((board.getX() & 1) == 0) ? -0.15 : 0;
+					this.zBoardOffset = ((board.getZ() & 1) == 0) ? -0.15 : 0;
+				}
+				else //Mount:
+				{
+					this.xBoardOffset = 0;
+					this.zBoardOffset = 0;
+				}
+				this.grabData = newGrabData;
+				this.fineBoardOffset = 0;
 				
 				board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 					Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
@@ -1030,6 +1065,9 @@ public class RenderPlane3D implements RenderPlane
 				lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
 				secondaryMesh.addComponent(toBeGrabbed, board.getSimulation());
 				grabRotation = 0;
+				this.xBoardOffset = 0;
+				this.zBoardOffset = 0;
+				this.fineBoardOffset = 0;
 				grabData = newGrabData;
 			});
 		});
@@ -1403,9 +1441,45 @@ public class RenderPlane3D implements RenderPlane
 					if(hitpoint.isBoard())
 					{
 						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
-						//TODO: Replace with outsources center code (needs to use the rotation of the board for fine-positioning):
-						position = centerPosition((CompBoard) parent, hitpointBoard.getCollisionPointBoardSpace(), hitpointBoard.getLocalNormal());
+						OnBoardPlacementHelper placementHelper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
+						position = placementHelper.middleEither();
 						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+						if(grabData.getComponent() instanceof CompBoard)
+						{
+							boolean isLaying;
+							boolean isSideX = false; //Which the top/bottom is not facing.
+							{
+								Vector3 rotated = ((GrabContainerData) grabData).getAlignment().multiply(Vector3.yp);
+								isLaying = rotated.getY() > 0.9 || rotated.getY() < -0.9;
+								if(!isLaying)
+								{
+									isSideX = rotated.getZ() > 0.9 || rotated.getZ() < -0.9;
+								}
+							}
+							
+							double x = isLaying || isSideX ? xBoardOffset : 0;
+							double y = 0;
+							double z = isLaying || !isSideX ? zBoardOffset : 0;
+							if(placementHelper.isSide())
+							{
+								if(isLaying)
+								{
+									//TODO: This code depends on where the normal of the parent points, instead of the rotation of the child.
+									//Code should work like the one above, the problem is, that the offset has to be applied to either X or Z depending on rotation.
+									Vector3 offset = new Vector3(0, fineBoardOffset, 0); //In parent board space, thus only up/down = Y.
+									offset = parent.getRotation().inverse().multiply(offset);
+									position = position.add(offset);
+								}
+							}
+							else if(!isLaying) //isTop/Bottom and standing
+							{
+								y = fineBoardOffset;
+							}
+							Vector3 offset = new Vector3(x, y, z);
+							Quaternion absAlignment = grabData.getComponent().getRotation().multiply(deltaAlignment);
+							offset = absAlignment.inverse().multiply(offset);
+							position = position.add(offset);
+						}
 					}
 					else //Mount:
 					{
@@ -1468,7 +1542,7 @@ public class RenderPlane3D implements RenderPlane
 					{
 						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
 						OnBoardPlacementHelper placementHelper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
-						Vector3 position = placementHelper.auto(currentPlaceable.getModel(), inputHandler.getController3D().isAlt(), alignment); //TODO: isControl
+						Vector3 position = placementHelper.auto(currentPlaceable.getModel(), inputHandler.getController3D().isControl(), alignment);
 						if(position == null)
 						{
 							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
@@ -1482,20 +1556,20 @@ public class RenderPlane3D implements RenderPlane
 								if(!placeableBoardIsLaying)
 								{
 									distance += 0.075D;
-									if(!placementHelper.isSide() && xBoardOffset != 0)
+									if(!placementHelper.isSide() && fineBoardOffset != 0)
 									{
-										Vector3 offset = new Vector3(0, xBoardOffset, 0);
+										Vector3 offset = new Vector3(0, fineBoardOffset, 0);
 										offset = alignment.inverse().multiply(offset);
 										position = position.add(offset);
 									}
 								}
 								else
 								{
-									if(placementHelper.isSide() && xBoardOffset != 0)
+									if(placementHelper.isSide() && fineBoardOffset != 0)
 									{
 										//TODO: This code depends on where the normal of the parent points, instead of the rotation of the child.
 										//Code should work like the one above, the problem is, that the offset has to be applied to either X or Z depending on rotation.
-										Vector3 offset = new Vector3(0, xBoardOffset, 0); //In parent board space, thus only up/down = Y.
+										Vector3 offset = new Vector3(0, fineBoardOffset, 0); //In parent board space, thus only up/down = Y.
 										offset = parent.getRotation().inverse().multiply(offset);
 										position = position.add(offset);
 									}
@@ -1606,48 +1680,6 @@ public class RenderPlane3D implements RenderPlane
 		
 		this.currentPlaceable = currentPlaceable;
 		this.hitpoint = hitpoint;
-	}
-	
-	private Vector3 centerPosition(CompBoard board, Vector3 collisionPointBoardSpace, Vector3 localNormal)
-	{
-		//Adjust placement position according to component properties:
-		boolean isSide = localNormal.getY() == 0;
-		
-		//Get the radius's of the board:
-		double xHalf = board.getX() * 0.15;
-		double zHalf = board.getZ() * 0.15;
-		
-		//Move the center of the board into one corner, so that the collision point is in the positive quarter:
-		double x = collisionPointBoardSpace.getX();
-		double z = collisionPointBoardSpace.getZ();
-		double xcp = x + xHalf;
-		double zcp = z + zHalf;
-		
-		//Get the amount of squares until you get to the collision square:
-		int xSquareOffset = (int) (xcp / 0.3);
-		int zSquareOffset = (int) (zcp / 0.3);
-		
-		int sign = localNormal.oneNegative() ? -1 : 1;
-		if(isSide)
-		{
-			if(localNormal.getX() == 0) // Z side
-			{
-				//Calculate the center pos:
-				x = xSquareOffset * 0.3 - xHalf + 0.15;
-				z -= sign * 0.075;
-			}
-			else // X side
-			{
-				//Calculate the center pos:
-				z = zSquareOffset * 0.3 - zHalf + 0.15;
-				x -= sign * 0.075;
-			}
-			return new Vector3(x, 0, z);
-		}
-		else //Square side - bottom/top
-		{
-			return new Vector3(xSquareOffset * 0.3 + 0.15 - xHalf, 0, zSquareOffset * 0.3 + 0.15 - zHalf);
-		}
 	}
 	
 	private Hitpoint calculateHitpoint()
@@ -1883,7 +1915,6 @@ public class RenderPlane3D implements RenderPlane
 	private double calculateFixRotationOffset(Quaternion newGlobalAlignment, Hitpoint hitpoint)
 	{
 		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
-		//TODO: Thread-safe properly, this gets called on render and input thread. (As in don't make it overwrite the variables when called on input thread).
 		FourDirections axes = new FourDirections(hitpoint.isBoard() ? ((HitpointBoard) hitpoint).getLocalNormal() : Vector3.yp, hitpoint.getHitPart().getRotation());
 		
 		//Get the angle, from the new X axis, to an "optimal" X axis.
