@@ -465,6 +465,22 @@ public class RenderPlane3D implements RenderPlane
 				return true;
 			}
 			
+			if(abortPlacement)
+			{
+				try
+				{
+					gpuTasks.put((ignored) -> {
+						this.boardDrawStartingPoint = null;
+						this.fineBoardOffset = 0;
+					});
+				}
+				catch(InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+				return true;
+			}
+			
 			CompContainer parent = (CompContainer) boardDrawStartingPoint.getHitPart();
 			if(parent != board.getRootBoard() && parent == null)
 			{
@@ -613,6 +629,11 @@ public class RenderPlane3D implements RenderPlane
 				//System.out.println("WARNING: Called normal placement code with board selected, while boardDrawStartingPoint was null.");
 				//Board was very likely dragged from air to placeable location, happens. Else uff.
 				//TODO: Differentiate between these two cases.
+				return true;
+			}
+			
+			if(abortPlacement)
+			{
 				return true;
 			}
 			

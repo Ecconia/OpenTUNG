@@ -283,7 +283,7 @@ public class Controller3D implements Controller
 	
 	private void mouseLeftUp()
 	{
-		if(renderPlane3D.attemptPlacement(isControl()))
+		if(renderPlane3D.attemptPlacement(mouseRightDown != 0))
 		{
 			mouseLeftDown = 0;
 			return;
