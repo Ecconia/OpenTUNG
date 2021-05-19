@@ -296,6 +296,7 @@ public class RenderPlane3D implements RenderPlane
 		if(position == null)
 		{
 			System.out.println("ERROR: Wire dragging stopped on a connector, but there is no wire-placement data cached. Render thread stuck or human too fast?");
+			return;
 		}
 		Quaternion alignment = hitpoint.getWireAlignment();
 		double length = hitpoint.getWireDistance();
@@ -1690,8 +1691,16 @@ public class RenderPlane3D implements RenderPlane
 				Vector3 direction = toPos.subtract(startingPos).divide(2);
 				double distance = direction.length();
 				Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-				Vector3 position = startingPos.add(direction);
-				hitpoint.setWireData(alignment, position, distance);
+				if(Double.isNaN(alignment.getA()))
+				{
+					System.out.println("[WARNING] Cannot place wire, cause start- and end-point are the same... Please try to not abuse OpenTUNG. Ignore stacktrace above and do not report it.");
+					hitpoint.setWireData(null, null, 0);
+				}
+				else
+				{
+					Vector3 position = startingPos.add(direction);
+					hitpoint.setWireData(alignment, position, distance);
+				}
 			}
 			else
 			{
