@@ -1962,12 +1962,19 @@ public class RenderPlane3D implements RenderPlane
 			newRandomXAxis = axes.getFitting(newRandomXAxis); //Replace with one of the 4, axes, although only minor change.
 			if(newRandomXAxis == null)
 			{
-				System.out.println(Ansi.red + "[ERROR] ROTATION CODE FAILED!" + Ansi.r
-						+ "\n Placement-Vector: " + hitpointContainer.getNormal()
-						+ "\n LastNormal: " + lastUpNormal
-						+ "\n RotationResult: " + fallbackAxis);
-				//ChooseAnyAlternative:
-				newRandomXAxis = axes.getA();
+				//Still fails, could be a 45° angle. For that rotate the last fixXAxis and get an axis for that.
+				normalRotation = Quaternion.angleAxis(2, hitpointContainer.getNormal());
+				Vector3 slightlyRotated = normalRotation.multiply(fixXAxis);
+				newRandomXAxis = axes.getFitting(slightlyRotated);
+				if(newRandomXAxis == null)
+				{
+					System.out.println(Ansi.red + "[ERROR] ROTATION CODE FAILED!" + Ansi.r
+							+ "\n Placement-Vector: " + hitpointContainer.getNormal()
+							+ "\n LastNormal: " + lastUpNormal
+							+ "\n RotationResult: " + fallbackAxis);
+					//ChooseAnyAlternative:
+					newRandomXAxis = axes.getA();
+				}
 			}
 		}
 		fixXAxis = newRandomXAxis;
