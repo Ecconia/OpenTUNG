@@ -116,10 +116,6 @@ public class OnBoardPlacementHelper
 			{
 				return squareMiddle();
 			}
-			else if(model.getPlacementSettingBoardSquare() == PlacementSettingBoardSquare.AlsoBorders)
-			{
-				return squareMiddleAlsoBorders();
-			}
 			else if(model.getPlacementSettingBoardSquare() == PlacementSettingBoardSquare.Cross)
 			{
 				if(isControl)
@@ -194,67 +190,6 @@ public class OnBoardPlacementHelper
 				-xHalf + xSquareOffset * 0.3 + xFineStep * squareThird + 0.05D,
 				0,
 				-zHalf + zSquareOffset * 0.3 + zFineStep * squareThird + 0.05D
-		);
-	}
-	
-	private Vector3 squareMiddleAlsoBorders()
-	{
-		final double squareQuad = 0.075;
-		int xFineStep = (int) (xOffset / squareQuad);
-		int zFineStep = (int) (zOffset / squareQuad);
-		if(xFineStep == 1)
-		{
-			//Move up in the middle
-			xFineStep = 2;
-		}
-		else if(xFineStep == 3)
-		{
-			//Move up onto the border
-			xFineStep = 4;
-		}
-		if(zFineStep == 1)
-		{
-			//Move up in the middle
-			zFineStep = 2;
-		}
-		else if(zFineStep == 3)
-		{
-			//Move up onto the border
-			zFineStep = 4;
-		}
-		if((xFineStep == 0 || xFineStep == 4) && (zFineStep == 0 || zFineStep == 4))
-		{
-			Vector3 position = new Vector3(xOffset, 0, zOffset);
-			//We are in a corner of the 4² grid: Check which border is closest:
-			Vector3 px = new Vector3(0.3, 0, 0.15);
-			double minDistance = px.subtract(position).lengthSqared();
-			Vector3 ret = px;
-			Vector3 nx = new Vector3(0, 0, 0.15);
-			double dist = nx.subtract(position).lengthSqared();
-			if(dist < minDistance)
-			{
-				minDistance = dist;
-				ret = nx;
-			}
-			Vector3 pz = new Vector3(0.15, 0, 0.3);
-			dist = pz.subtract(position).lengthSqared();
-			if(dist < minDistance)
-			{
-				minDistance = dist;
-				ret = pz;
-			}
-			Vector3 nz = new Vector3(0.15, 0, 0);
-			dist = nz.subtract(position).lengthSqared();
-			if(dist < minDistance)
-			{
-				ret = nz;
-			}
-			return ret.add(new Vector3(-xHalf + xSquareOffset * 0.3, 0, -zHalf + zSquareOffset * 0.3));
-		}
-		return new Vector3(
-				-xHalf + xSquareOffset * 0.3 + xFineStep * squareQuad,
-				0,
-				-zHalf + zSquareOffset * 0.3 + zFineStep * squareQuad
 		);
 	}
 	

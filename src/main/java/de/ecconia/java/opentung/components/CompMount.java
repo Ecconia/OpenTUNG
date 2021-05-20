@@ -19,7 +19,7 @@ public class CompMount extends CompContainer
 			.addSolid(new CubeFull(new Vector3(0.0, 0.0, 0.0), new Vector3(0.15, MOUNT_HEIGHT, 0.1), Color.material))
 			.setMountPlaceable(true)
 			.setBoardSidePlacementOption(PlacementSettingBoardSide.Middle)
-			.setBoardPlacementOption(PlacementSettingBoardSquare.AlsoBorders)
+			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)
 			.build();
 	public static final PlaceableInfo info = new PlaceableInfo(modelHolder, "TUNG-Mount", "0.2.6", CompMount.class, CompMount::new);
 	

@@ -1502,6 +1502,16 @@ public class RenderPlane3D implements RenderPlane
 							offset = absAlignment.inverse().multiply(offset);
 							position = position.add(offset);
 						}
+						else if(grabData.getComponent() instanceof CompMount)
+						{
+							if(!placementHelper.isSide() && !inputHandler.getController3D().isControl())
+							{
+								//Apply offset:
+								Vector3 offset = new Vector3(0, 0, -0.15);
+								Quaternion absAlignment = grabData.getComponent().getRotation().multiply(deltaAlignment);
+								position = position.add(absAlignment.inverse().multiply(offset));
+							}
+						}
 					}
 					else //Mount:
 					{
@@ -1572,7 +1582,16 @@ public class RenderPlane3D implements RenderPlane
 						else
 						{
 							position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
-							if(currentPlaceable == CompBoard.info)
+							if(currentPlaceable == CompMount.info)
+							{
+								if(!placementHelper.isSide() && !inputHandler.getController3D().isControl())
+								{
+									//Apply offset:
+									Vector3 offset = new Vector3(0, 0, -0.15);
+									position = position.add(alignment.inverse().multiply(offset));
+								}
+							}
+							else if(currentPlaceable == CompBoard.info)
 							{
 								double distance = 0.15D;
 								if(!placeableBoardIsLaying)
