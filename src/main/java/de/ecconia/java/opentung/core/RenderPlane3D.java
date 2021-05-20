@@ -531,8 +531,6 @@ public class RenderPlane3D implements RenderPlane
 			return false;
 		}
 		
-		//TODO: Make controller listen to right click to abort the next attemptPlacement thingy and reset the state.
-		
 		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 		
 		if(grabData != null)

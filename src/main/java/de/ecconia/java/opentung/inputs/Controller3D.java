@@ -11,13 +11,22 @@ import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.glfw.GLFW;
 
-//TODO: Let both mouse buttons abort pending click, for placement e.g.
 public class Controller3D implements Controller
 {
 	private final RenderPlane3D renderPlane3D;
 	private final Camera camera;
 	
 	private InputProcessor inputProcessor;
+	
+	private final int KEY_A = GLFW.GLFW_KEY_A; //Left
+	private final int KEY_S = GLFW.GLFW_KEY_S; //Back
+	private final int KEY_D = GLFW.GLFW_KEY_D; //Right
+	private final int KEY_W = GLFW.GLFW_KEY_W; //Front
+	private final int KEY_R = GLFW.GLFW_KEY_R; //Rotate/GrabRotateY
+	private final int KEY_E = GLFW.GLFW_KEY_E; //Delete
+	private final int KEY_Q = GLFW.GLFW_KEY_Q; //Abort
+	private final int KEY_F = GLFW.GLFW_KEY_F; //Grab/GrabRotateX
+	private final int KEY_G = GLFW.GLFW_KEY_G; //GrabRotateZ
 	
 	public Controller3D(RenderPlane3D renderPlane3D)
 	{
@@ -35,10 +44,10 @@ public class Controller3D implements Controller
 	public void inputInterval()
 	{
 		long windowID = inputProcessor.getWindowID();
-		boolean isA = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS;
-		boolean isS = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
-		boolean isD = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS;
-		boolean isW = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS;
+		boolean isA = GLFW.glfwGetKey(windowID, KEY_A) == GLFW.GLFW_PRESS;
+		boolean isS = GLFW.glfwGetKey(windowID, KEY_S) == GLFW.GLFW_PRESS;
+		boolean isD = GLFW.glfwGetKey(windowID, KEY_D) == GLFW.GLFW_PRESS;
+		boolean isW = GLFW.glfwGetKey(windowID, KEY_W) == GLFW.GLFW_PRESS;
 		boolean isSp = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
 		boolean isSh = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS;
 		boolean isControl = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
@@ -101,7 +110,7 @@ public class Controller3D implements Controller
 		{
 			inputProcessor.get2DController().openComponentList();
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_R)
+		else if(keyIndex == KEY_R)
 		{
 			if(renderPlane3D.isGrabbingBoard())
 			{
@@ -112,7 +121,7 @@ public class Controller3D implements Controller
 				renderPlane3D.rotatePlacement(isControl());
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_E)
+		else if(keyIndex == KEY_E)
 		{
 			if(isControl())
 			{
@@ -131,7 +140,7 @@ public class Controller3D implements Controller
 				}
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_Q)
+		else if(keyIndex == KEY_Q)
 		{
 			if(renderPlane3D.isGrabbing())
 			{
@@ -142,7 +151,7 @@ public class Controller3D implements Controller
 				inputProcessor.get2DController().dropHotbarEntry();
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_F)
+		else if(keyIndex == KEY_F)
 		{
 			if(renderPlane3D.isGrabbingBoard())
 			{
@@ -157,7 +166,7 @@ public class Controller3D implements Controller
 				grab();
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_G)
+		else if(keyIndex == KEY_G)
 		{
 			if(renderPlane3D.isGrabbingBoard())
 			{
