@@ -107,13 +107,9 @@ public class Controller3D implements Controller
 			{
 				renderPlane3D.rotateGrabbedBoardY();
 			}
-			else if((mods & GLFW.GLFW_MOD_CONTROL) != 0)
-			{
-				renderPlane3D.rotatePlacement(22.5);
-			}
 			else
 			{
-				renderPlane3D.rotatePlacement(90);
+				renderPlane3D.rotatePlacement(isControl());
 			}
 		}
 		else if(keyIndex == GLFW.GLFW_KEY_E)

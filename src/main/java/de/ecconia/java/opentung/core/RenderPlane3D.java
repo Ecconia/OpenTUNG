@@ -352,32 +352,40 @@ public class RenderPlane3D implements RenderPlane
 		});
 	}
 	
-	public void rotatePlacement(double degrees)
+	public void rotatePlacement(boolean control)
 	{
-		if(isGrabbing())
-		{
-			grabRotation += degrees;
-			if(grabRotation >= 360)
+		gpuTasks.add((unused) -> {
+			double degrees = control ? 22.5 : 90;
+			if(isGrabbing())
 			{
-				grabRotation -= 360;
+				grabRotation += degrees;
+				if(grabRotation >= 360)
+				{
+					grabRotation -= 360;
+				}
+				if(grabRotation <= 0)
+				{
+					grabRotation += 360;
+				}
 			}
-			if(grabRotation <= 0)
+			else
 			{
-				grabRotation += 360;
+				if(this.currentPlaceable == CompBoard.info)
+				{
+					//Boards cannot be fine rotated, thus when pressing control, rotate roughly.
+					degrees = 90;
+				}
+				placementRotation += degrees;
+				if(placementRotation >= 360)
+				{
+					placementRotation -= 360;
+				}
+				if(placementRotation <= 0)
+				{
+					placementRotation += 360;
+				}
 			}
-		}
-		else
-		{
-			placementRotation += degrees;
-			if(placementRotation >= 360)
-			{
-				placementRotation -= 360;
-			}
-			if(placementRotation <= 0)
-			{
-				placementRotation += 360;
-			}
-		}
+		});
 	}
 	
 	public void rotateGrabbedBoardX()
@@ -1557,7 +1565,16 @@ public class RenderPlane3D implements RenderPlane
 				{
 					//Calculate new alignment:
 					Quaternion alignment = MathHelper.rotationFromVectors(Vector3.yp, hitpointContainer.getNormal());
-					double normalAxisRotationAngle = -placementRotation + calculateFixRotationOffset(alignment, hitpoint);
+					double rotation = placementRotation;
+					if(currentPlaceable == CompBoard.info)
+					{
+						rotation = toRoughRotation();
+					}
+					else if(currentPlaceable == CompMount.info)
+					{
+					
+					}
+					double normalAxisRotationAngle = -rotation + calculateFixRotationOffset(alignment, hitpoint);
 					Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, hitpointContainer.getNormal());
 					alignment = alignment.multiply(normalAxisRotation);
 					if(currentPlaceable == CompBoard.info)
@@ -1729,6 +1746,13 @@ public class RenderPlane3D implements RenderPlane
 		
 		this.currentPlaceable = currentPlaceable;
 		this.hitpoint = hitpoint;
+	}
+	
+	private double toRoughRotation()
+	{
+		double rotation = placementRotation;
+		double remains = rotation % 90;
+		return rotation - remains;
 	}
 	
 	private Hitpoint calculateHitpoint()
