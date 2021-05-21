@@ -1,10 +1,12 @@
 package de.ecconia.java.opentung.core;
 
+import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.util.math.Quaternion;
+import java.util.Collection;
 import java.util.List;
 
 public class GrabContainerData extends GrabData
@@ -12,6 +14,7 @@ public class GrabContainerData extends GrabData
 	private List<CompWireRaw> internalWires;
 	private List<CompSnappingWire> internalSnappingWires;
 	private Quaternion grabRotation = null;
+	private Collection<CompSnappingPeg> unconnectedSnappingPegs;
 	
 	public GrabContainerData(CompContainer parent, Component component)
 	{
@@ -46,5 +49,15 @@ public class GrabContainerData extends GrabData
 	public void setAlignment(Quaternion grabRotation)
 	{
 		this.grabRotation = grabRotation;
+	}
+	
+	public Collection<CompSnappingPeg> getSnappingPegs()
+	{
+		return unconnectedSnappingPegs;
+	}
+	
+	public void setUnconnectedSnappingPegs(Collection<CompSnappingPeg> unconnectedSnappingPegs)
+	{
+		this.unconnectedSnappingPegs = unconnectedSnappingPegs;
 	}
 }

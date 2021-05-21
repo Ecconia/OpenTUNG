@@ -31,6 +31,7 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
+import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -49,6 +50,7 @@ import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -622,6 +624,15 @@ public class RenderPlane3D implements RenderPlane
 						wireRayCaster.addWire(wire);
 						worldMesh.addComponent(wire, board.getSimulation());
 					}
+					
+					for(CompSnappingPeg snappingPeg : grabContainerData.getSnappingPegs())
+					{
+						snapSnappingPeg(snappingPeg);
+					}
+				}
+				else if(grabData.getComponent() instanceof CompSnappingPeg)
+				{
+					snapSnappingPeg((CompSnappingPeg) grabData.getComponent());
 				}
 				
 				this.grabData = null;
@@ -689,6 +700,12 @@ public class RenderPlane3D implements RenderPlane
 					parent.addChild(newComponent);
 					parent.updateBounds();
 					worldMesh.addComponent(newComponent, board.getSimulation());
+					
+					//Link snapping peg:
+					if(currentPlaceable == CompSnappingPeg.info)
+					{
+						snapSnappingPeg((CompSnappingPeg) newComponent);
+					}
 				});
 			}
 			catch(InterruptedException e)
@@ -700,6 +717,55 @@ public class RenderPlane3D implements RenderPlane
 		//Else, placing nothing, thus return false.
 		
 		return false;
+	}
+	
+	//Must be run from render thread.
+	private void snapSnappingPeg(CompSnappingPeg snappingPegA)
+	{
+		//Raycast and see which component gets hit:
+		Vector3 snappingPegAConnectionPoint = snappingPegA.getConnectionPoint();
+		Vector3 rayA = snappingPegA.getRotation().inverse().multiply(Vector3.zn);
+		RayCastResult result = cpuRaycast.cpuRaycast(snappingPegAConnectionPoint, rayA, board.getRootBoard());
+		//Check if the result is not null, and a SnappingPeg within 0.2 distance.
+		if(result.getMatch() != null && result.getMatch() instanceof Connector && result.getMatch().getParent() instanceof CompSnappingPeg && result.getDistance() <= 0.2)
+		{
+			CompSnappingPeg snappingPegB = (CompSnappingPeg) result.getMatch().getParent();
+			if(!snappingPegB.hasPartner()) //Do not process it further, if it is already connected to somewhere.
+			{
+				//Calculate their angles to each other:
+				Vector3 rayB = snappingPegB.getRotation().inverse().multiply(Vector3.zn);
+				double angle = MathHelper.angleFromVectors(rayA, rayB);
+				if(angle > 178 && angle < 182)
+				{
+					//Angles and ray-cast match, now perform the actual linking:
+					Vector3 snappingPegBConnectionPoint = snappingPegB.getConnectionPoint();
+					Vector3 diff = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
+					double distance = Math.sqrt(diff.dot(diff));
+					
+					snappingPegB.setPartner(snappingPegA);
+					snappingPegA.setPartner(snappingPegB);
+					CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
+					wire.setLength((float) distance);
+					Vector3 direction = snappingPegB.getConnectionPoint().subtract(snappingPegAConnectionPoint).divide(2); //Get half of it.
+					wire.setPosition(snappingPegAConnectionPoint.add(direction));
+					wire.setRotation(Quaternion.angleAxis(Math.toDegrees(Math.asin(direction.getX() / direction.length())), Vector3.yp));
+					
+					worldMesh.addComponent(wire, board.getSimulation());
+					
+					board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+						ClusterHelper.placeWire(simulation, board, snappingPegA.getPegs().get(0), snappingPegB.getPegs().get(0), wire, updates);
+						gpuTasks.add((unused) -> {
+							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+							{
+								entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+							}
+						});
+					});
+				}
+			}
+		}
 	}
 	
 	private void alignComponent(Component component, Vector3 oldPosition, Vector3 newPosition, Quaternion deltaRotation)
@@ -892,6 +958,7 @@ public class RenderPlane3D implements RenderPlane
 				GrabContainerData newGrabData = new GrabContainerData(parent, toBeGrabbed);
 				
 				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
+				HashSet<CompSnappingPeg> unconnectedSnappingPegs = new HashSet<>();
 				List<CompWireRaw> internalWires = new ArrayList<>();
 				Map<Wire, Boolean> outgoingWires = new HashMap<>();
 				{
@@ -908,6 +975,10 @@ public class RenderPlane3D implements RenderPlane
 						{
 							board.getLabelsToRender().remove(component);
 							newGrabData.addLabel((CompLabel) component);
+						}
+						else if(component instanceof CompSnappingPeg)
+						{
+							unconnectedSnappingPegs.add((CompSnappingPeg) component);
 						}
 						
 						for(Connector connector : component.getConnectors())
@@ -959,9 +1030,12 @@ public class RenderPlane3D implements RenderPlane
 				newGrabData.setInternalWires(internalWires);
 				for(CompSnappingWire wire : internalSnappingWires)
 				{
+					unconnectedSnappingPegs.remove(wire.getConnectorA().getParent());
+					unconnectedSnappingPegs.remove(wire.getConnectorB().getParent());
 					worldMesh.removeComponent(wire, board.getSimulation());
 					secondaryMesh.addComponent(wire, board.getSimulation());
 				}
+				newGrabData.setUnconnectedSnappingPegs(unconnectedSnappingPegs);
 				newGrabData.setInternalSnappingWires(internalSnappingWires);
 				List<CompSnappingWire> snappingWiresToRemove = new ArrayList<>();
 				for(Map.Entry<Wire, Boolean> outgoingWireEntry : outgoingWires.entrySet())
@@ -1003,7 +1077,7 @@ public class RenderPlane3D implements RenderPlane
 					for(CompSnappingWire wire : snappingWiresToRemove)
 					{
 						CompSnappingPeg aSide = (CompSnappingPeg) wire.getConnectorA().getParent();
-						CompSnappingPeg bSide = (CompSnappingPeg) wire.getConnectorA().getParent();
+						CompSnappingPeg bSide = (CompSnappingPeg) wire.getConnectorB().getParent();
 						aSide.setPartner(null);
 						bSide.setPartner(null);
 						ClusterHelper.removeWire(simulation, wire, updates);
@@ -1019,36 +1093,41 @@ public class RenderPlane3D implements RenderPlane
 			});
 			return;
 		}
-		//Remove the snapping wire fully. TODO: Restore snapping peg wire when aborting grabbing.
-		else if(toBeGrabbed instanceof CompSnappingPeg)
+		
+		GrabData newGrabData = new GrabData(parent, toBeGrabbed);
+		
+		//Remove the snapping wire fully.
+		if(toBeGrabbed instanceof CompSnappingPeg)
 		{
-			for(Wire wire : toBeGrabbed.getPegs().get(0).getWires())
+			CompSnappingPeg snappingPeg = (CompSnappingPeg) toBeGrabbed;
+			if(snappingPeg.hasPartner())
 			{
-				if(wire instanceof CompSnappingWire)
+				for(Wire wire : toBeGrabbed.getPegs().get(0).getWires())
 				{
-					CompSnappingPeg sPeg = (CompSnappingPeg) toBeGrabbed;
-					board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-						ClusterHelper.removeWire(simulation, wire, updates);
-						sPeg.getPartner().setPartner(null);
-						sPeg.setPartner(null);
-						gpuTasks.add((unused) -> {
-							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
-							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
-							{
-								entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
-							}
-							worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
+					if(wire instanceof CompSnappingWire)
+					{
+						board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+							Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+							ClusterHelper.removeWire(simulation, wire, updates);
+							snappingPeg.getPartner().setPartner(null);
+							snappingPeg.setPartner(null);
+							gpuTasks.add((unused) -> {
+								System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+								for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+								{
+									entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+								}
+								worldMesh.removeComponent((CompSnappingWire) wire, board.getSimulation());
+							});
 						});
-					});
-					break;
+						break;
+					}
 				}
 			}
 		}
 		
 		board.getSimulation().updateJobNextTickThreadSafe((unused) -> {
 			//Collect wires:
-			GrabData newGrabData = new GrabData(parent, toBeGrabbed);
 			newGrabData.addComponent(toBeGrabbed); //Must be done manually
 			if(toBeGrabbed instanceof CompLabel)
 			{

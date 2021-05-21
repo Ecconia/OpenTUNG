@@ -45,6 +45,16 @@ public class CPURaycast
 		return match;
 	}
 	
+	public RayCastResult cpuRaycast(Vector3 position, Vector3 ray, CompBoard rootBoard)
+	{
+		match = null;
+		dist = Double.MAX_VALUE;
+		
+		focusProbe(rootBoard, position, ray);
+		
+		return new RayCastResult(dist, match);
+	}
+	
 	private void focusProbe(Component component, Vector3 camPos, Vector3 camRay)
 	{
 		if(component instanceof CompSnappingWire)
