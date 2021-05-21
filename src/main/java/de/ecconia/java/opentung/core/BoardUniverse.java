@@ -442,16 +442,21 @@ public class BoardUniverse
 					{
 						//Angles and ray-cast match, now perform the actual linking:
 						Vector3 snappingPegBConnectionPoint = snappingPegB.getConnectionPoint();
-						Vector3 diff = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
-						double distance = Math.sqrt(diff.dot(diff));
+						Vector3 direction = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
+						double distance = direction.length();
+						Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+						if(Double.isNaN(alignment.getA()))
+						{
+							System.out.println("[ERROR] Cannot place snapping peg wire, cause start- and end-point are probably the same... Please try to not abuse OpenTUNG. If you did not intentionally cause this, send your save to a developer.");
+							continue; //Do not connect these, there is something horribly wrong here.
+						}
 						
 						snappingPegB.setPartner(snappingPegA);
 						snappingPegA.setPartner(snappingPegB);
 						CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
 						wire.setLength((float) distance);
-						Vector3 direction = snappingPegB.getConnectionPoint().subtract(snappingPegAConnectionPoint).divide(2); //Get half of it.
-						wire.setPosition(snappingPegAConnectionPoint.add(direction));
-						wire.setRotation(Quaternion.angleAxis(Math.toDegrees(Math.asin(direction.getX() / direction.length())), Vector3.yp));
+						wire.setPosition(snappingPegAConnectionPoint.add(direction.divide(2)));
+						wire.setRotation(alignment);
 						
 						componentsToRender.add(wire);
 						
