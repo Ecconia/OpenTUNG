@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.util.MinMaxBox;
@@ -11,8 +10,6 @@ import java.util.List;
 public abstract class CompContainer extends Component
 {
 	//Bounds:
-	protected MinMaxBox snappingPegBounds;
-	
 	private MinMaxBox bounds;
 	
 	@Override
@@ -90,65 +87,6 @@ public abstract class CompContainer extends Component
 			else
 			{
 				connectorBounds.expand(child.connectorBounds);
-			}
-		}
-	}
-	
-	public void createSnappingPegBounds()
-	{
-		for(Component child : children)
-		{
-			if(child instanceof CompSnappingPeg)
-			{
-				CompSnappingPeg peg = (CompSnappingPeg) child;
-				
-				peg.createSnappingPegBounds();
-				if(snappingPegBounds == null)
-				{
-					snappingPegBounds = new MinMaxBox(peg.getSnappingPegBounds());
-				}
-				else
-				{
-					snappingPegBounds.expand(peg.getSnappingPegBounds());
-				}
-			}
-			else if(child instanceof CompContainer)
-			{
-				CompContainer cont = (CompContainer) child;
-				
-				cont.createSnappingPegBounds();
-				if(cont.snappingPegBounds != null)
-				{
-					if(snappingPegBounds == null)
-					{
-						snappingPegBounds = new MinMaxBox(cont.snappingPegBounds);
-					}
-					else
-					{
-						snappingPegBounds.expand(cont.snappingPegBounds);
-					}
-				}
-			}
-		}
-	}
-	
-	public void getSnappingPegsAt(Vector3 absolutePoint, List<CompSnappingPeg> collector)
-	{
-		if(snappingPegBounds == null || !snappingPegBounds.contains(absolutePoint))
-		{
-			return;
-		}
-		
-		for(Component child : children)
-		{
-			//TODO: Add interface.
-			if(child instanceof CompSnappingPeg)
-			{
-				((CompSnappingPeg) child).getSnappingPegsAt(absolutePoint, collector);
-			}
-			else if(child instanceof CompContainer)
-			{
-				((CompContainer) child).getSnappingPegsAt(absolutePoint, collector);
 			}
 		}
 	}

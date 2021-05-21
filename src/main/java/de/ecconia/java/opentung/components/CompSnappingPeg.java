@@ -10,9 +10,7 @@ import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
-import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.List;
 
 public class CompSnappingPeg extends Component
 {
@@ -73,39 +71,12 @@ public class CompSnappingPeg extends Component
 		}
 	}
 	
-	//Bounding:
-	protected MinMaxBox snappingPegBounds;
-	
-	public void getSnappingPegsAt(Vector3 absolutePoint, List<CompSnappingPeg> collector)
-	{
-		if(snappingPegBounds.contains(absolutePoint))
-		{
-			collector.add(this);
-		}
-	}
-	
 	public Vector3 getConnectionPoint()
 	{
 		Vector3 connectionPos = modelHolder.getPlacementOffset().add(new Vector3(0, 0.3 * 0.9, 0)); //Connection point in model
 		connectionPos = getRotation().inverse().multiply(connectionPos); //Rotate connection point to absolute grid
 		connectionPos = connectionPos.add(getPosition()); //Move connection point to absolute grid
 		return connectionPos;
-	}
-	
-	public void createSnappingPegBounds()
-	{
-		Vector3 connectionPos = getConnectionPoint();
-		double bounds = 0.21; //Ensures 0.205
-		Vector3 boundsVec = new Vector3(bounds, bounds, bounds);
-		Vector3 min = connectionPos.subtract(boundsVec);
-		Vector3 max = connectionPos.add(boundsVec);
-		
-		snappingPegBounds = new MinMaxBox(min, max);
-	}
-	
-	public MinMaxBox getSnappingPegBounds()
-	{
-		return snappingPegBounds;
 	}
 	
 	//Simulation:

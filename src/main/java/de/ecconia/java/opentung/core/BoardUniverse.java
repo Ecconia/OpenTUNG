@@ -11,6 +11,7 @@ import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.PlaceboParent;
+import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.savefile.BoardAndWires;
 import de.ecconia.java.opentung.settings.Settings;
@@ -22,6 +23,7 @@ import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.Ansi;
+import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
@@ -69,9 +71,6 @@ public class BoardUniverse
 			((CompContainer) wire.getParent()).remove(wire);
 			wire.setParent(placeboWireParent);
 		}
-		
-		System.out.println("[BoardImport] Creating SnappingPeg bounds.");
-		board.createSnappingPegBounds();
 		
 		System.out.println("[BoardImport] Linking SnappingPegs.");
 		//Connect snapping pegs:
@@ -412,59 +411,57 @@ public class BoardUniverse
 				snappingPegs.add((CompSnappingPeg) comp);
 			}
 		}
-		List<CompSnappingPeg> collector = new ArrayList<>();
-		for(CompSnappingPeg peg : snappingPegs)
+		
+		if(snappingPegs.isEmpty())
 		{
-			if(peg.hasPartner())
+			return;
+		}
+		
+		CPURaycast raycaster = new CPURaycast();
+		for(CompSnappingPeg snappingPegA : snappingPegs)
+		{
+			if(snappingPegA.hasPartner())
 			{
 				continue;
 			}
 			
-			Vector3 connectionPoint = peg.getConnectionPoint();
-			board.getSnappingPegsAt(connectionPoint, collector);
-			collector.remove(peg); //A peg should always find itself.
-			if(!collector.isEmpty())
+			Vector3 snappingPegAConnectionPoint = snappingPegA.getConnectionPoint();
+			Vector3 rayA = snappingPegA.getRotation().inverse().multiply(Vector3.zn);
+			RayCastResult result = raycaster.cpuRaycast(snappingPegAConnectionPoint, rayA, rootBoard);
+			
+			//Check if the result is not null, and a SnappingPeg within 0.2 distance.
+			if(result.getMatch() != null && result.getMatch() instanceof Connector && result.getMatch().getParent() instanceof CompSnappingPeg && result.getDistance() <= 0.2)
 			{
-				double maxDist = 10;
-				CompSnappingPeg other = null;
-				for(CompSnappingPeg otherPeg : collector)
+				CompSnappingPeg snappingPegB = (CompSnappingPeg) result.getMatch().getParent();
+				if(!snappingPegB.hasPartner()) //Do not process it further, if it is already connected to somewhere.
 				{
-					Vector3 otherConnectionPoint = otherPeg.getConnectionPoint();
-					Vector3 diff = otherConnectionPoint.subtract(connectionPoint);
-					double distance = Math.sqrt(diff.dot(diff));
-					
-					if(distance < maxDist)
+					//Calculate their angles to each other:
+					Vector3 rayB = snappingPegB.getRotation().inverse().multiply(Vector3.zn);
+					double angle = MathHelper.angleFromVectors(rayA, rayB);
+					if(angle > 178 && angle < 182)
 					{
-						other = otherPeg;
-						maxDist = distance;
-					}
-				}
-				
-				if(other != null && maxDist < 0.21) //Leave some room for the 0.205 case for now...
-				{
-					if(other.hasPartner())
-					{
-						System.out.println("!!!! Some snapping peg already has a partner!");
-					}
-					else
-					{
-						other.setPartner(peg);
-						peg.setPartner(other);
-						CompSnappingWire wire = new CompSnappingWire(peg.getParent());
-						wire.setConnectorA(peg.getPegs().get(0));
-						wire.setConnectorB(other.getPegs().get(0));
-						wire.setLength((float) maxDist);
-						Vector3 direction = other.getConnectionPoint().subtract(connectionPoint).divide(2); //Get half of it.
-						wire.setPosition(connectionPoint.add(direction));
+						//Angles and ray-cast match, now perform the actual linking:
+						Vector3 snappingPegBConnectionPoint = snappingPegB.getConnectionPoint();
+						Vector3 diff = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
+						double distance = Math.sqrt(diff.dot(diff));
+						
+						snappingPegB.setPartner(snappingPegA);
+						snappingPegA.setPartner(snappingPegB);
+						CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
+						wire.setLength((float) distance);
+						Vector3 direction = snappingPegB.getConnectionPoint().subtract(snappingPegAConnectionPoint).divide(2); //Get half of it.
+						wire.setPosition(snappingPegAConnectionPoint.add(direction));
 						wire.setRotation(Quaternion.angleAxis(Math.toDegrees(Math.asin(direction.getX() / direction.length())), Vector3.yp));
+						
 						componentsToRender.add(wire);
-						//Do here. Since no reference afterwards.
+						
+						//Currently no cluster has been created, thus link the wires manually, for the cluster creation to use it.
+						wire.setConnectorA(snappingPegA.getPegs().get(0));
+						wire.setConnectorB(snappingPegB.getPegs().get(0));
 						wire.getConnectorA().addWire(wire);
 						wire.getConnectorB().addWire(wire);
 					}
 				}
-				
-				collector.clear();
 			}
 		}
 	}
