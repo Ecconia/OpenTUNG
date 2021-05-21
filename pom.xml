@@ -5,6 +5,7 @@
 
 	<groupId>de.ecconia.java.opentung</groupId>
 	<artifactId>OpenTUNG</artifactId>
+	<packaging>jar</packaging>
 	<version>0-WIP</version>
 
 	<properties>
@@ -180,6 +181,36 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>pl.project13.maven</groupId>
+				<artifactId>git-commit-id-plugin</artifactId>
+				<version>4.0.4</version>
+				<executions>
+					<execution>
+						<id>get-the-git-infos</id>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+						<phase>initialize</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<dateFormatTimeZone>UTC</dateFormatTimeZone>
+					<dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat>
+					<format>json</format>
+					<generateGitPropertiesFile>true</generateGitPropertiesFile>
+					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+					<includeOnlyProperties>
+						<includeOnlyProperty>git.dirty</includeOnlyProperty>
+						<includeOnlyProperty>git.branch</includeOnlyProperty>
+						<includeOnlyProperty>git.build.time</includeOnlyProperty>
+						<includeOnlyProperty>git.commit.id</includeOnlyProperty>
+					</includeOnlyProperties>
+					<failOnNoGitDirectory>true</failOnNoGitDirectory>
+					<failOnUnableToExtractRepoInfo>true</failOnUnableToExtractRepoInfo>
+					<offline>true</offline>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

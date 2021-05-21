@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung;
 
 import de.ecconia.java.opentung.core.BoardUniverse;
+import de.ecconia.java.opentung.core.OpenTUNGVersion;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.core.SharedData;
@@ -53,6 +54,10 @@ public class OpenTUNG
 			e.printStackTrace(System.out);
 			JOptionPane.showMessageDialog(null, new JLabel(threadCrashMessage + "\nSee console for stacktrace, please report it."));
 		});
+		
+		//Load version information:
+		OpenTUNGVersion version = new OpenTUNGVersion();
+		System.out.println("Running OpenTUNG Version: git-" + version.getGitCommitHash() + (version.isGitDirty() ? "-dirty" : "") + (!version.getGitBranch().equals("master") ? " (" + version.getGitBranch() + ")" : ""));
 		
 		try
 		{
