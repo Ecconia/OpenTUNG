@@ -2,27 +2,28 @@ package de.ecconia.java.opentung.settings;
 
 import de.ecconia.java.opentung.util.Ansi;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class SettingsIO
 {
-	private final File file;
+	private final Path path;
 	private final Node root = new Node("root");
 	
-	public SettingsIO(File file, DataFolderWatcher watcher, Class<?> settingsClass)
+	public SettingsIO(Path path, DataFolderWatcher watcher, Class<?> settingsClass)
 	{
-		this.file = file;
+		this.path = path;
 		
 		createSettingsNode(settingsClass);
 		
-		if(file.exists())
+		if(Files.exists(path))
 		{
 			loadFile();
 		}
@@ -31,8 +32,8 @@ public class SettingsIO
 			writeDefaultFile();
 		}
 		
-		if(!watcher.register(file.getName(), () -> {
-			if(file.length() == 0)
+		if(!watcher.register(path.getFileName().toString(), () -> {
+			if(path.toString().isEmpty())
 			{
 				//File is for weird reasons empty, ignore (happens on Windows edited with IntelliJ).
 				return;
@@ -102,7 +103,7 @@ public class SettingsIO
 	{
 		try
 		{
-			BufferedReader reader = new BufferedReader(new FileReader(file));
+			BufferedReader reader = new BufferedReader(new FileReader(path.toFile()));
 			
 			String line = getNextValidLine(reader);
 			if(line != null)
@@ -272,7 +273,7 @@ public class SettingsIO
 		
 		try
 		{
-			FileWriter writer = new FileWriter(file, false);
+			FileWriter writer = new FileWriter(path.toFile(), false);
 			writer.write(builder.toString());
 			writer.flush();
 			writer.close();

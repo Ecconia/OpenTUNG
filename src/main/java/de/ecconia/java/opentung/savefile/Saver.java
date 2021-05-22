@@ -13,7 +13,7 @@ import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.io.ByteWriter;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class Saver
 {
-	public static void save(BoardUniverse boardWrapper, File saveFile)
+	public static void save(BoardUniverse boardWrapper, Path saveFile)
 	{
 		//Getting:
 		List<CompWireRaw> wires = boardWrapper.getWiresToRender();

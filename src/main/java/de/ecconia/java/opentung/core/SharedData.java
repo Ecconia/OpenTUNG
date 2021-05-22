@@ -1,7 +1,7 @@
 package de.ecconia.java.opentung.core;
 
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
 
 public class SharedData
@@ -10,14 +10,14 @@ public class SharedData
 	private BlockingQueue<GPUTask> gpuTasks;
 	private boolean saving;
 	private RenderPlane3D renderPlane3D;
-	private File currentBoardFile;
+	private Path currentBoardFile;
 	private boolean simulationLoaded;
 	private ShaderStorage shaderStorage;
 	private int lastFPS;
 	
 	private final BoardUniverse boardUniverse;
 	
-	public SharedData(BoardUniverse boardUniverse, File boardFile)
+	public SharedData(BoardUniverse boardUniverse, Path boardFile)
 	{
 		this.currentBoardFile = boardFile;
 		this.boardUniverse = boardUniverse;
@@ -73,12 +73,12 @@ public class SharedData
 		saving = false;
 	}
 	
-	public File getCurrentBoardFile()
+	public Path getCurrentBoardFile()
 	{
 		return currentBoardFile;
 	}
 	
-	public void setCurrentBoardFile(File currentBoardFile)
+	public void setCurrentBoardFile(Path currentBoardFile)
 	{
 		this.currentBoardFile = currentBoardFile;
 	}

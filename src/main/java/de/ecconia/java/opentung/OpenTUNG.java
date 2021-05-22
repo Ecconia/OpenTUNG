@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung;
 
+import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.OpenTUNGVersion;
 import de.ecconia.java.opentung.core.RenderPlane3D;
@@ -13,14 +14,18 @@ import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.SettingsIO;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import org.lwjgl.Version;
@@ -29,9 +34,11 @@ import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
-	public static final File dataFolder = new File("OpenTUNG");
-	public static final File boardFolder = new File(dataFolder, "boards");
+	public static Path dataFolder;
+	public static Path boardFolder;
+	public static Path settingsPath;
 	
+	//TODO: Load from settings:
 	private static final int initialWidth = 800;
 	private static final int initialHeight = 600;
 	
@@ -40,7 +47,6 @@ public class OpenTUNG
 	private static RenderPlane2D interactables;
 	private static RenderPlane3D worldView;
 	
-	private static File boardFile;
 	private static BoardUniverse boardUniverse;
 	
 	private static ShaderStorage shaderStorage;
@@ -59,48 +65,42 @@ public class OpenTUNG
 		OpenTUNGVersion version = new OpenTUNGVersion();
 		System.out.println("Running OpenTUNG Version: git-" + version.getGitCommitHash() + (version.isGitDirty() ? "-dirty" : "") + (!version.getGitBranch().equals("master") ? " (" + version.getGitBranch() + ")" : ""));
 		
-		try
-		{
-			System.out.println("Using data folder at: " + dataFolder.getCanonicalPath());
-			Files.createDirectories(dataFolder.toPath());
-		}
-		catch(IOException e)
-		{
-			throw new RuntimeException("Could not create data folder.", e);
-		}
+		parsePreSetupArguments(args);
+		setupDataFolder();
+		Path toLoadFile = parsePostSetupArguments(args);
 		
 		//Create DataFolderWatcher, used for generic callbacks on file change.
 		DataFolderWatcher watcher = new DataFolderWatcher(dataFolder);
 		//Create the initial Settings loader, it uses the watcher to keep the settings up to date.
-		new SettingsIO(new File(dataFolder, "settings.txt"), watcher, Settings.class);
+		new SettingsIO(settingsPath, watcher, Settings.class);
 		
-		try
+		String fileName;
+		if(toLoadFile == null)
 		{
-			parseArguments(args);
-		}
-		catch(IOException e)
-		{
-			System.out.println("Issues accessing/using data folder, please report stacktrace.");
-			e.printStackTrace();
-		}
-		
-		if(boardFile.getName().endsWith(".opentung"))
-		{
-			boardUniverse = new BoardUniverse(Loader.load(boardFile));
+			fileName = "<unsaved>";
+			boardUniverse = new BoardUniverse(generateStartingBoard());
 		}
 		else
 		{
-			boardUniverse = new BoardUniverse(TungBoardLoader.importTungBoard(boardFile));
+			fileName = toLoadFile.getFileName().toString();
+			if(fileName.endsWith(".opentung"))
+			{
+				boardUniverse = new BoardUniverse(Loader.load(toLoadFile));
+			}
+			else
+			{
+				boardUniverse = new BoardUniverse(TungBoardLoader.importTungBoard(toLoadFile));
+			}
 		}
 		
-		SharedData sharedData = new SharedData(boardUniverse, boardFile);
+		SharedData sharedData = new SharedData(boardUniverse, toLoadFile);
 		
 		System.out.println("Starting GUI...");
 		try
 		{
 			System.out.println("LWJGL version: " + Version.getVersion());
 			
-			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ? | " + boardFile.getName());
+			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ? | " + fileName);
 			inputHandler = new InputProcessor(window.getID());
 			
 			Thread graphicsThread = new Thread(() -> {
@@ -191,7 +191,8 @@ public class OpenTUNG
 			//Let main-thread execute the input handler:
 			Thread.currentThread().setName("Main/Input");
 			inputHandler.eventPollEntry(() -> {
-				window.setTitle("OpenTUNG FPS: " + sharedData.getFPS() + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad() + " | " + sharedData.getCurrentBoardFile().getName());
+				Path savePath = sharedData.getCurrentBoardFile();
+				window.setTitle("OpenTUNG FPS: " + sharedData.getFPS() + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad() + " | " + (savePath == null ? "<unsaved>" : savePath.getFileName().toString()));
 			});
 			System.out.println("Main/Input thread has turned off.");
 		}
@@ -203,74 +204,193 @@ public class OpenTUNG
 		}
 	}
 	
-	private static void parseArguments(String[] args) throws IOException
+	private static void setupDataFolder()
 	{
-		if(!boardFolder.exists())
+		try
 		{
-			Files.createDirectory(boardFolder.toPath());
+			dataFolder = Paths.get("OpenTUNG").toRealPath(LinkOption.NOFOLLOW_LINKS);
+			boardFolder = dataFolder.resolve("boards");
+			System.out.println("[FilesInit] Using data folder at: " + dataFolder);
+			
+			if(!Files.exists(dataFolder))
+			{
+				System.out.println("[FilesInit] Data folder does not exist, creating.");
+				Files.createDirectories(dataFolder);
+			}
+			else if(!Files.isDirectory(dataFolder))
+			{
+				System.out.println("[FilesInit] ERROR: Data folder is a file, thus cannot be used. Please remove data file: '" + dataFolder + "'.");
+				System.exit(1);
+			}
+			
+			if(!Files.exists(boardFolder))
+			{
+				System.out.println("[FilesInit] Board folder does not exist, creating.");
+				Files.createDirectory(boardFolder);
+			}
+			else if(!Files.isDirectory(boardFolder))
+			{
+				System.out.println("[FilesInit] [ERROR] Board folder is a file, thus cannot be used. Please remove board file: '" + boardFolder + "'.");
+				System.exit(1);
+			}
+			
+			settingsPath = dataFolder.resolve("settings.txt");
+			if(Files.isDirectory(settingsPath))
+			{
+				System.out.println("[FilesInit] Settings file is a directory, thus cannot be used. Please remove settings folder: '" + settingsPath + "'.");
+				System.exit(1);
+			}
 		}
-		if(!boardFolder.isDirectory())
+		catch(IOException e)
 		{
-			System.out.println("Could not create 'boards' folder inside data folder. Please remove board file: " + boardFolder.getAbsolutePath());
+			System.out.println("[FilesInit] Failed to create data folder. Please report stacktrace, if you have no clue why:");
+			e.printStackTrace(System.out);
+			JOptionPane.showMessageDialog(null, new JLabel("Could not create data folders. Please see console for error details. Report this issue, if it does not make sense to you."));
 			System.exit(1);
 		}
-		
-		String defaultBoardName = null;
-		if(args.length != 0)
+	}
+	
+	private static void parsePreSetupArguments(String... arguments)
+	{
+		if(arguments.length > 1)
 		{
-			if(args.length != 1)
+			System.out.println("[ArgumentParser] OpenTUNG allows at most 1 argument. If you supplied an argument with spaces wrap it up in quotes: \"<your argument with spaces>\"");
+			System.exit(1);
+		}
+		else if(arguments.length == 1)
+		{
+			String argument = arguments[0];
+			if(argument.toLowerCase().matches("(--?)?(help|\\?|h)"))
 			{
-				System.out.println("If you have multiple board files in your 'boards' folder, only supply the filename of one.");
-				System.out.println(" It mustn't contain spaces and must end on '.tungboard' or '.opentung'. You may not provide relative/absolute paths."); //Cause I am too lazy to add a command parsing framework or write one myself - rn.
-				System.out.println();
-				System.exit(1);
+				printHelp();
+				System.exit(0);
+			}
+		}
+	}
+	
+	private static Path parsePostSetupArguments(String... arguments)
+	{
+		Path toLoadFile = null;
+		if(arguments.length == 1)
+		{
+			String argument = arguments[0];
+			//Well multiple arguments for the same stuff and even Regex, not cool. Going to be obsolete anyway.
+			if(argument.toLowerCase().matches("(--?)?(load|window|gui)"))
+			{
+				File file = loadFileGUI();
+				if(file == null)
+				{
+					System.exit(1);
+					return null; //Satisfy compiler.
+				}
+				toLoadFile = file.toPath();
 			}
 			else
 			{
-				String argument = args[0];
-				if(argument.endsWith(".tungboard") || argument.endsWith(".opentung"))
+				//Attempt to parse as filepath
+				if(canBeLoaded(argument))
 				{
-					defaultBoardName = argument;
+					try
+					{
+						toLoadFile = FileSystems.getDefault().getPath(argument);
+					}
+					catch(InvalidPathException e)
+					{
+						System.out.println("[ArgumentParser] Failed parse file to load. Supplied: '" + argument + "'.");
+						e.printStackTrace(System.out);
+						System.exit(1);
+						return null; //Satisfy compiler.
+					}
+					
+					if(!toLoadFile.isAbsolute())
+					{
+						//Try to use from root and from the board folder.
+						Path withRelativePrefix = boardFolder.resolve(toLoadFile);
+						if(Files.exists(withRelativePrefix))
+						{
+							toLoadFile = withRelativePrefix;
+						}
+					}
+					
+					if(!Files.exists(toLoadFile))
+					{
+						System.out.println("[ArgumentParser] Could not find file at: '" + toLoadFile + "'.");
+						System.exit(1);
+						return null; //Satisfy compiler.
+					}
+					try
+					{
+						toLoadFile = toLoadFile.toRealPath(LinkOption.NOFOLLOW_LINKS);
+					}
+					catch(IOException e)
+					{
+						System.out.println("[ArgumentParser] Failed to resolve provided file path to full path. File path: '" + toLoadFile + "'.");
+						e.printStackTrace(System.out);
+						System.exit(1);
+						return null; //Satisfy compiler.
+					}
+				}
+				else
+				{
+					System.out.println("[ArgumentParser] Your argument is not a known command, nor a file OpenTUNG can open. Supplied: '" + argument + "'.");
+					printHelp();
+					System.exit(1);
 				}
 			}
 		}
-		
-		if(defaultBoardName != null)
+		//else - No input file or other instruction.
+		return toLoadFile;
+	}
+	
+	private static void printHelp()
+	{
+		System.out.println(
+				"[HELP] Following commands are supported:\n"
+						+ "[HELP] - You can use 'load', 'window', 'gui' to open a window for choosing a file to load.\n"
+						+ "[HELP] - You can supply one file to load, but it must end on '.tungboard' or '.opentung'.");
+	}
+	
+	private static File loadFileGUI()
+	{
+		JFileChooser fileChooser = new JFileChooser(boardFolder.toFile());
+		int result = fileChooser.showSaveDialog(null);
+		if(result != JFileChooser.APPROVE_OPTION)
 		{
-			File boardFile = new File(boardFolder, defaultBoardName);
-			if(!boardFile.exists())
-			{
-				System.out.println("TungBoard/OpenTUNG file " + boardFile.getAbsolutePath() + " cannot be found.");
-				System.exit(1);
-			}
-			OpenTUNG.boardFile = boardFile;
+			System.out.println("Nothing chosen, terminating.");
+			return null;
+		}
+		File currentSaveFile = fileChooser.getSelectedFile();
+		
+		if(canBeLoaded(currentSaveFile.getName()))
+		{
+			return currentSaveFile;
 		}
 		else
 		{
-			List<File> tungboardFiles = Arrays.stream(boardFolder.listFiles())
-					.filter((File file) ->
-							file.getName().endsWith(".tungboard") | file.getName().endsWith(".opentung"))
-					.collect(Collectors.toList());
-			if(tungboardFiles.isEmpty())
-			{
-				String defaultFileName = "emptyBoard.opentung";
-				File target = new File(boardFolder, defaultFileName);
-				InputStream link = (OpenTUNG.class.getClassLoader().getResourceAsStream(defaultFileName));
-				Files.copy(link, target.getAbsoluteFile().toPath());
-				System.out.println("Created and using default board: " + defaultFileName);
-				boardFile = target;
-			}
-			else if(tungboardFiles.size() == 1)
-			{
-				boardFile = tungboardFiles.get(0);
-			}
-			else
-			{
-				System.out.println("Found more than one board file in the 'boards' folder.");
-				System.out.println("Rename others or supply the filename of the desired '.tungboard'/'.opentung' file as argument.");
-				System.exit(1);
-			}
+			System.out.println("Choose '" + currentSaveFile.getAbsolutePath() + "', missing or incorrect file ending.");
+			JOptionPane.showMessageDialog(null, "File-ending must be '.opentung' or '.tungboard'.", "Can only load TUNG and OpenTUNG files.", JOptionPane.ERROR_MESSAGE, null);
+			return null;
 		}
+	}
+	
+	private static boolean canBeLoaded(String filename)
+	{
+		int endingIndex = filename.lastIndexOf('.');
+		if(endingIndex < 0)
+		{
+			//No dot in name.
+			return false;
+		}
+		String ending = filename.substring(endingIndex + 1).toLowerCase();
+		return ending.equals("opentung") || ending.equals("tungboard");
+	}
+	
+	private static CompBoard generateStartingBoard()
+	{
+		CompBoard board = new CompBoard(null, 10, 10);
+		board.setPosition(Vector3.zero);
+		board.setRotation(Quaternion.zero);
+		return board;
 	}
 	
 	private static void init(SharedData sharedData)

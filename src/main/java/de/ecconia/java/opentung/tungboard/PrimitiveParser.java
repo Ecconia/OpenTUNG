@@ -9,7 +9,8 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class PrimitiveParser
 		highlightNormals("boards/Highlighted.tungboard", "boards/16Bit-Paralell-CLA-ALU.tungboard");
 	}
 	
-	public static TungBoard importTungBoard(File file)
+	public static TungBoard importTungBoard(Path file)
 	{
 		NRFile pf = NRParser.parse(file);
 		
@@ -53,9 +54,9 @@ public class PrimitiveParser
 	
 	private static void highlightNormals(String out, String in)
 	{
-		TungBoard board = importTungBoard(new File(in));
+		TungBoard board = importTungBoard(Paths.get(in));
 		highlightNormals(board);
-		new Exporter(new File(out), board);
+		new Exporter(Paths.get(out), board);
 	}
 	
 	private static void highlightNormals(TungChildable childable)

@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.settings;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -17,15 +16,14 @@ public class DataFolderWatcher
 	private final boolean watcherActive;
 	private final Map<String, Callback> callbacks = new HashMap<>();
 	
-	public DataFolderWatcher(File dataFolder)
+	public DataFolderWatcher(Path dataFolder)
 	{
 		boolean javaIsBadBoi = false;
 		try
 		{
 			//Create a canonical copy, to set the parents etc.
-			Path dir = dataFolder.toPath();
 			WatchService watcher = FileSystems.getDefault().newWatchService();
-			dir.register(watcher, ENTRY_MODIFY);
+			dataFolder.register(watcher, ENTRY_MODIFY);
 			
 			Thread watchThread = new Thread(() -> {
 				while(true)
@@ -64,7 +62,7 @@ public class DataFolderWatcher
 					}
 				}
 				System.out.println("DataFolderWatcher thread has turned off.");
-			}, "FileWatchThread:" + dataFolder.getName());
+			}, "FileWatchThread:" + dataFolder.getFileName());
 			watchThread.setDaemon(true);
 			watchThread.start();
 			javaIsBadBoi = true;

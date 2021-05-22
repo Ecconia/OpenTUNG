@@ -1,22 +1,22 @@
 package de.ecconia.java.opentung.util.io;
 
 import de.ecconia.java.opentung.savefile.CompactText;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 public class ByteWriter
 {
 	private final OutputStream fos;
 	
-	public ByteWriter(File file)
+	public ByteWriter(Path file)
 	{
 		try
 		{
-			fos = new FileOutputStream(file, false);
+			fos = new FileOutputStream(file.toFile(), false);
 		}
 		catch(FileNotFoundException e)
 		{

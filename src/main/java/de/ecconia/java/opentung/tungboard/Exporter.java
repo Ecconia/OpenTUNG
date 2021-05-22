@@ -27,7 +27,7 @@ import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import de.ecconia.java.opentung.util.io.ByteWriter;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,7 +54,7 @@ public class Exporter
 	
 	private Integer libID;
 	
-	public Exporter(File file, TungBoard rootBoard)
+	public Exporter(Path file, TungBoard rootBoard)
 	{
 		w = new ByteWriter(file);
 		

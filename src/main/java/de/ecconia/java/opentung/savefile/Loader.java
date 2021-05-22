@@ -13,20 +13,20 @@ import de.ecconia.java.opentung.util.io.ByteReader;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Loader
 {
-	public static BoardAndWires load(File savefile)
+	public static BoardAndWires load(Path savefile)
 	{
 		try
 		{
-			System.out.println("[OpenTUNG-Loading] Parsing savefile: " + savefile.getAbsolutePath());
-			byte[] data = Files.readAllBytes(savefile.toPath());
+			System.out.println("[OpenTUNG-Loading] Parsing savefile: '" + savefile + "'.");
+			byte[] data = Files.readAllBytes(savefile);
 			System.out.println("[OpenTUNG-Loading] Read savefile to memory.");
 			ByteReader reader = new ByteReader(data);
 			return parseBoard(reader);

@@ -8,17 +8,17 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRProperDefinedClass;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRReferencedClass;
 import de.ecconia.java.opentung.util.io.ByteReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class NRParser
 {
-	public static NRFile parse(File file)
+	public static NRFile parse(Path file)
 	{
 		try
 		{
-			byte[] data = Files.readAllBytes(file.toPath());
+			byte[] data = Files.readAllBytes(file);
 			ByteReader reader = new ByteReader(data);
 			return parse(reader);
 		}

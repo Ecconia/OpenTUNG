@@ -24,8 +24,6 @@ import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBlotter;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungBoard;
@@ -53,11 +51,13 @@ import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColor;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungColorEnum;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
-import java.io.File;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
+import java.nio.file.Path;
 
 public class TungBoardLoader
 {
-	private static CompBoard convertTungBoard(File file)
+	private static CompBoard convertTungBoard(Path file)
 	{
 		System.out.println("[BoardImport] Started reading file.");
 		TungBoard importedBoard = PrimitiveParser.importTungBoard(file);
@@ -67,7 +67,7 @@ public class TungBoardLoader
 		return (CompBoard) importChild(null, importedBoard, new Vector3(Settings.rootBoardOffsetX, Settings.rootBoardOffsetY, Settings.rootBoardOffsetZ), Quaternion.angleAxis(0, Vector3.yp));
 	}
 	
-	public static CompBoard importTungBoard(File file)
+	public static CompBoard importTungBoard(Path file)
 	{
 		CompBoard board = convertTungBoard(file);
 		
