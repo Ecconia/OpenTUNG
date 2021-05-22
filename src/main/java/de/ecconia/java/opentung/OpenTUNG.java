@@ -17,7 +17,6 @@ import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.awt.Dimension;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -51,6 +50,11 @@ public class OpenTUNG
 	
 	private static ShaderStorage shaderStorage;
 	
+	private static boolean x11LoadLaterFix;
+	//Currently stored here, until X11 is workarounded (as in AWT removed):
+	private static SharedData sharedData;
+	private static String fileName = "<unknown>";
+	
 	public static void main(String[] args)
 	{
 		//Catch if any thread shuts down unexpectedly. Print on output stream to get the exact time.
@@ -74,26 +78,10 @@ public class OpenTUNG
 		//Create the initial Settings loader, it uses the watcher to keep the settings up to date.
 		new SettingsIO(settingsPath, watcher, Settings.class);
 		
-		String fileName;
-		if(toLoadFile == null)
+		if(!x11LoadLaterFix)
 		{
-			fileName = "<unsaved>";
-			boardUniverse = new BoardUniverse(generateStartingBoard());
+			populateBoard(toLoadFile);
 		}
-		else
-		{
-			fileName = toLoadFile.getFileName().toString();
-			if(fileName.endsWith(".opentung"))
-			{
-				boardUniverse = new BoardUniverse(Loader.load(toLoadFile));
-			}
-			else
-			{
-				boardUniverse = new BoardUniverse(TungBoardLoader.importTungBoard(toLoadFile));
-			}
-		}
-		
-		SharedData sharedData = new SharedData(boardUniverse, toLoadFile);
 		
 		System.out.println("Starting GUI...");
 		try
@@ -119,6 +107,18 @@ public class OpenTUNG
 					//TODO: Load a placeholder texture here... Just the logo with some background.
 					//Run initially, to reduce weird visible crap.
 					window.update();
+					
+					if(x11LoadLaterFix)
+					{
+						//Since AWT makes OpenGL crash if you use it before the call of GL.createCapabilities, move it to here.
+						Path path = loadFileGUI();
+						if(path == null)
+						{
+							System.exit(1);
+							return; //Satisfy compiler.
+						}
+						populateBoard(path);
+					}
 					
 					init(sharedData);
 					
@@ -191,6 +191,11 @@ public class OpenTUNG
 			//Let main-thread execute the input handler:
 			Thread.currentThread().setName("Main/Input");
 			inputHandler.eventPollEntry(() -> {
+				if(sharedData == null)
+				{
+					//If the window is not yet ready, this would cause issues.
+					return;
+				}
 				Path savePath = sharedData.getCurrentBoardFile();
 				window.setTitle("OpenTUNG FPS: " + sharedData.getFPS() + " | TPS: " + boardUniverse.getSimulation().getTPS() + " | avg. UPT: " + boardUniverse.getSimulation().getLoad() + " | " + (savePath == null ? "<unsaved>" : savePath.getFileName().toString()));
 			});
@@ -202,6 +207,29 @@ public class OpenTUNG
 			inputHandler.stop();
 			System.exit(1); //Throw 1;
 		}
+	}
+	
+	private static void populateBoard(Path toLoadFile)
+	{
+		if(toLoadFile == null)
+		{
+			fileName = "<unsaved>";
+			boardUniverse = new BoardUniverse(generateStartingBoard());
+		}
+		else
+		{
+			fileName = toLoadFile.getFileName().toString();
+			if(fileName.endsWith(".opentung"))
+			{
+				boardUniverse = new BoardUniverse(Loader.load(toLoadFile));
+			}
+			else
+			{
+				boardUniverse = new BoardUniverse(TungBoardLoader.importTungBoard(toLoadFile));
+			}
+		}
+		
+		sharedData = new SharedData(boardUniverse, toLoadFile);
 	}
 	
 	private static void setupDataFolder()
@@ -277,13 +305,19 @@ public class OpenTUNG
 			//Well multiple arguments for the same stuff and even Regex, not cool. Going to be obsolete anyway.
 			if(argument.toLowerCase().matches("(--?)?(load|window|gui)"))
 			{
-				File file = loadFileGUI();
-				if(file == null)
+				String osName = System.getProperty("os.name").toLowerCase();
+				System.out.println("[Debug] Os-Name: " + osName);
+				if(osName.contains("nix") || osName.contains("nux") || osName.indexOf("aix") > 0) //Detect Linux
+				{
+					x11LoadLaterFix = true;
+					return null;
+				}
+				toLoadFile = loadFileGUI();
+				if(toLoadFile == null)
 				{
 					System.exit(1);
 					return null; //Satisfy compiler.
 				}
-				toLoadFile = file.toPath();
 			}
 			else
 			{
@@ -350,7 +384,7 @@ public class OpenTUNG
 						+ "[HELP] - You can supply one file to load, but it must end on '.tungboard' or '.opentung'.");
 	}
 	
-	private static File loadFileGUI()
+	private static Path loadFileGUI()
 	{
 		JFileChooser fileChooser = new JFileChooser(boardFolder.toFile());
 		int result = fileChooser.showSaveDialog(null);
@@ -359,15 +393,15 @@ public class OpenTUNG
 			System.out.println("Nothing chosen, terminating.");
 			return null;
 		}
-		File currentSaveFile = fileChooser.getSelectedFile();
+		Path currentSaveFile = fileChooser.getSelectedFile().toPath();
 		
-		if(canBeLoaded(currentSaveFile.getName()))
+		if(canBeLoaded(currentSaveFile.getFileName().toString()))
 		{
 			return currentSaveFile;
 		}
 		else
 		{
-			System.out.println("Choose '" + currentSaveFile.getAbsolutePath() + "', missing or incorrect file ending.");
+			System.out.println("Choose '" + currentSaveFile + "', missing or incorrect file ending.");
 			JOptionPane.showMessageDialog(null, "File-ending must be '.opentung' or '.tungboard'.", "Can only load TUNG and OpenTUNG files.", JOptionPane.ERROR_MESSAGE, null);
 			return null;
 		}
