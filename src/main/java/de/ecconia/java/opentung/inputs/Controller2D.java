@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import org.lwjgl.glfw.GLFW;
 
 public class Controller2D implements Controller
@@ -89,7 +90,7 @@ public class Controller2D implements Controller
 				openPauseMenu();
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_TAB)
+		else if(scancode == Keybindings.KeyToggleComponentsList)
 		{
 			if(!renderPlane2D.toggleComponentList())
 			{
@@ -97,8 +98,9 @@ public class Controller2D implements Controller
 				inputProcessor.switchTo3D(); //If closed just go here.
 			}
 		}
-		else if(keyIndex == GLFW.GLFW_KEY_F1)
+		else if(scancode == Keybindings.KeyUnlockMouseCursor)
 		{
+			//The cursor is already unlocked, thus here it just closes the window...
 			renderPlane2D.closeWindows();
 		}
 	}

@@ -13,6 +13,8 @@ import de.ecconia.java.opentung.savefile.Loader;
 import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.SettingsIO;
+import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
+import de.ecconia.java.opentung.settings.keybinds.manager.KeybindingManager;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
@@ -36,18 +38,16 @@ public class OpenTUNG
 	public static Path dataFolder;
 	public static Path boardFolder;
 	public static Path settingsPath;
+	public static Path keybindPath;
 	
 	//TODO: Load from settings:
 	private static final int initialWidth = 800;
 	private static final int initialHeight = 600;
 	
 	private static InputProcessor inputHandler;
-	
 	private static RenderPlane2D interactables;
 	private static RenderPlane3D worldView;
-	
 	private static BoardUniverse boardUniverse;
-	
 	private static ShaderStorage shaderStorage;
 	
 	private static boolean x11LoadLaterFix;
@@ -71,7 +71,19 @@ public class OpenTUNG
 		
 		parsePreSetupArguments(args);
 		setupDataFolder();
-		Path toLoadFile = parsePostSetupArguments(args);
+		Path toLoadFile;
+		try
+		{
+			toLoadFile = parsePostSetupArguments(args);
+		}
+		catch(RuntimeException e)
+		{
+			if("Stop.".equals(e.getMessage()))
+			{
+				return;
+			}
+			throw e;
+		}
 		
 		//Create DataFolderWatcher, used for generic callbacks on file change.
 		DataFolderWatcher watcher = new DataFolderWatcher(dataFolder);
@@ -90,6 +102,9 @@ public class OpenTUNG
 			
 			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ? | " + fileName);
 			inputHandler = new InputProcessor(window.getID());
+			
+			//Has to be done now, since before here scancode resolving does not work.
+			new KeybindingsIO(keybindPath, watcher);
 			
 			Thread graphicsThread = new Thread(() -> {
 				try
@@ -268,6 +283,12 @@ public class OpenTUNG
 				System.out.println("[FilesInit] Settings file is a directory, thus cannot be used. Please remove settings folder: '" + settingsPath + "'.");
 				System.exit(1);
 			}
+			keybindPath = dataFolder.resolve("keybindings.txt");
+			if(Files.isDirectory(keybindPath))
+			{
+				System.out.println("[FilesInit] Keybindings file is a directory, thus cannot be used. Please remove keybindings folder: '" + keybindPath + "'.");
+				System.exit(1);
+			}
 		}
 		catch(IOException e)
 		{
@@ -303,7 +324,12 @@ public class OpenTUNG
 		{
 			String argument = arguments[0];
 			//Well multiple arguments for the same stuff and even Regex, not cool. Going to be obsolete anyway.
-			if(argument.toLowerCase().matches("(--?)?(load|window|gui)"))
+			if(argument.toLowerCase().matches("(--?)?(key|keyhelper|keycode)"))
+			{
+				new KeybindingManager(keybindPath);
+				throw new RuntimeException("Stop.");
+			}
+			else if(argument.toLowerCase().matches("(--?)?(load|window|gui)"))
 			{
 				String osName = System.getProperty("os.name").toLowerCase();
 				System.out.println("[Debug] Os-Name: " + osName);

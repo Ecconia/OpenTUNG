@@ -184,6 +184,11 @@ public class RenderPlane3D implements RenderPlane
 		return (grabData != null) && (grabData.getComponent() instanceof CompBoard);
 	}
 	
+	public GrabData getGrabData()
+	{
+		return grabData;
+	}
+	
 	public boolean isPlacingBoard(boolean finePlacement)
 	{
 		GrabData grabData = this.grabData;

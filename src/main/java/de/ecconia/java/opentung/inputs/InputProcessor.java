@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.core.SimpleCallback;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import org.lwjgl.glfw.GLFW;
 
 public class InputProcessor implements Controller
@@ -24,6 +25,15 @@ public class InputProcessor implements Controller
 	private Controller activeController = this;
 	
 	private Long escapeDown;
+	
+	//Fly key state:
+	public boolean flyForward;
+	public boolean flyBackward;
+	public boolean flyLeft;
+	public boolean flyRight;
+	public boolean flyUp;
+	public boolean flyDown;
+	public boolean flyBoost;
 	
 	public InputProcessor(long windowID)
 	{
@@ -102,6 +112,7 @@ public class InputProcessor implements Controller
 	
 	public void keyPressed(int key, int scancode, int mods)
 	{
+		assignFlyKeys(scancode, true);
 		if(key == GLFW.GLFW_KEY_ESCAPE)
 		{
 			escapeDown = System.currentTimeMillis();
@@ -111,6 +122,7 @@ public class InputProcessor implements Controller
 	
 	public void keyReleased(int key, int scancode, int mods)
 	{
+		assignFlyKeys(scancode, false);
 		if(key == GLFW.GLFW_KEY_ESCAPE)
 		{
 			//I cannot guarantee random updates by OS, thus this test.
@@ -122,6 +134,38 @@ public class InputProcessor implements Controller
 			escapeDown = null;
 		}
 		activeController.keyUp(key, scancode, mods);
+	}
+	
+	private void assignFlyKeys(int scancode, boolean state)
+	{
+		if(scancode == Keybindings.KeyFlyForward)
+		{
+			flyForward = state;
+		}
+		else if(scancode == Keybindings.KeyFlyBackward)
+		{
+			flyBackward = state;
+		}
+		else if(scancode == Keybindings.KeyFlyLeft)
+		{
+			flyLeft = state;
+		}
+		else if(scancode == Keybindings.KeyFlyRight)
+		{
+			flyRight = state;
+		}
+		else if(scancode == Keybindings.KeyFlyDown)
+		{
+			flyDown = state;
+		}
+		else if(scancode == Keybindings.KeyFlyUp)
+		{
+			flyUp = state;
+		}
+		else if(scancode == Keybindings.KeyFlyBoost)
+		{
+			flyBoost = state;
+		}
 	}
 	
 	public void mouseScrolled(double xScroll, double yScroll)

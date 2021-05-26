@@ -1,14 +1,17 @@
 package de.ecconia.java.opentung.inputs;
 
+import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.core.Camera;
+import de.ecconia.java.opentung.core.GrabData;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import org.lwjgl.glfw.GLFW;
 
 public class Controller3D implements Controller
@@ -17,16 +20,6 @@ public class Controller3D implements Controller
 	private final Camera camera;
 	
 	private InputProcessor inputProcessor;
-	
-	private final int KEY_A = GLFW.GLFW_KEY_A; //Left
-	private final int KEY_S = GLFW.GLFW_KEY_S; //Back
-	private final int KEY_D = GLFW.GLFW_KEY_D; //Right
-	private final int KEY_W = GLFW.GLFW_KEY_W; //Front
-	private final int KEY_R = GLFW.GLFW_KEY_R; //Rotate/GrabRotateY
-	private final int KEY_E = GLFW.GLFW_KEY_E; //Delete
-	private final int KEY_Q = GLFW.GLFW_KEY_Q; //Abort
-	private final int KEY_F = GLFW.GLFW_KEY_F; //Grab/GrabRotateX
-	private final int KEY_G = GLFW.GLFW_KEY_G; //GrabRotateZ
 	
 	public Controller3D(RenderPlane3D renderPlane3D)
 	{
@@ -43,16 +36,15 @@ public class Controller3D implements Controller
 	@Override
 	public void inputInterval()
 	{
-		long windowID = inputProcessor.getWindowID();
-		boolean isA = GLFW.glfwGetKey(windowID, KEY_A) == GLFW.GLFW_PRESS;
-		boolean isS = GLFW.glfwGetKey(windowID, KEY_S) == GLFW.GLFW_PRESS;
-		boolean isD = GLFW.glfwGetKey(windowID, KEY_D) == GLFW.GLFW_PRESS;
-		boolean isW = GLFW.glfwGetKey(windowID, KEY_W) == GLFW.GLFW_PRESS;
-		boolean isSp = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
-		boolean isSh = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS;
-		boolean isControl = GLFW.glfwGetKey(windowID, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS;
-		
-		camera.movement(inputProcessor.getMouseXChange(), inputProcessor.getMouseYChange(), isA, isD, isW, isS, isSp, isSh, isControl);
+		camera.movement(inputProcessor.getMouseXChange(), inputProcessor.getMouseYChange(),
+				inputProcessor.flyLeft,
+				inputProcessor.flyRight,
+				inputProcessor.flyForward,
+				inputProcessor.flyBackward,
+				inputProcessor.flyUp,
+				inputProcessor.flyDown,
+				inputProcessor.flyBoost
+		);
 	}
 	
 	@Override
@@ -100,84 +92,102 @@ public class Controller3D implements Controller
 	{
 		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
-			switchToInterface();
-		}
-		else if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
-		{
-			numberPressed(keyIndex - GLFW.GLFW_KEY_0);
-		}
-		else if(keyIndex == GLFW.GLFW_KEY_TAB)
-		{
-			inputProcessor.get2DController().openComponentList();
-		}
-		else if(keyIndex == KEY_R)
-		{
-			if(renderPlane3D.isGrabbingBoard())
-			{
-				renderPlane3D.rotateGrabbedBoardY();
-			}
-			else
-			{
-				renderPlane3D.rotatePlacement(isControl());
-			}
-		}
-		else if(keyIndex == KEY_E)
-		{
-			if(isControl())
-			{
-				renderPlane3D.stopClusterHighlighting();
-			}
-			else if(renderPlane3D.isGrabbing())
-			{
-				renderPlane3D.deleteGrabbed();
-			}
-			else
-			{
-				Part toBeDeleted = renderPlane3D.getCursorObject();
-				if(toBeDeleted != null)
-				{
-					renderPlane3D.delete(toBeDeleted);
-				}
-			}
-		}
-		else if(keyIndex == KEY_Q)
-		{
+			//Abort grabbing, before opening the main menu:
+			//TBI: Do not open the pause-menu, if aborted grabbing?
 			if(renderPlane3D.isGrabbing())
 			{
 				renderPlane3D.abortGrabbing();
 			}
-			else
-			{
-				inputProcessor.get2DController().dropHotbarEntry();
-			}
+			switchToInterface();
 		}
-		else if(keyIndex == KEY_F)
-		{
-			if(renderPlane3D.isGrabbingBoard())
-			{
-				renderPlane3D.rotateGrabbedBoardX();
-			}
-			else if(renderPlane3D.isGrabbing())
-			{
-				renderPlane3D.abortGrabbing();
-			}
-			else
-			{
-				grab();
-			}
-		}
-		else if(keyIndex == KEY_G)
-		{
-			if(renderPlane3D.isGrabbingBoard())
-			{
-				renderPlane3D.rotateGrabbedBoardZ();
-			}
-		}
-		else if(keyIndex == GLFW.GLFW_KEY_F1)
+		else if(scancode == Keybindings.KeyUnlockMouseCursor)
 		{
 			inputProcessor.switchTo2D();
 			checkMouseLeft(false);
 			checkMouseRight(false);
+		}
+		else
+		{
+			GrabData grabData = renderPlane3D.getGrabData();
+			if(grabData != null)
+			{
+				//Currently grabbing:
+				if(scancode == Keybindings.KeyGrabAbort)
+				{
+					renderPlane3D.abortGrabbing();
+				}
+				else if(scancode == Keybindings.KeyGrabDelete)
+				{
+					renderPlane3D.deleteGrabbed();
+				}
+				else
+				{
+					if(grabData.getComponent() instanceof CompBoard)
+					{
+						//Grabbing board:
+						if(scancode == Keybindings.KeyGrabRotateY)
+						{
+							renderPlane3D.rotateGrabbedBoardY();
+						}
+						else if(scancode == Keybindings.KeyGrabRotateX)
+						{
+							renderPlane3D.rotateGrabbedBoardX();
+						}
+						else if(scancode == Keybindings.KeyGrabRotateZ)
+						{
+							renderPlane3D.rotateGrabbedBoardZ();
+						}
+					}
+					else
+					{
+						//Grabbing other:
+						if(scancode == Keybindings.KeyGrabRotate)
+						{
+							renderPlane3D.rotatePlacement(isControl());
+						}
+					}
+				}
+			}
+			else
+			{
+				//Not grabbing:
+				if(keyIndex >= GLFW.GLFW_KEY_0 && scancode <= GLFW.GLFW_KEY_1)
+				{
+					numberPressed(keyIndex - GLFW.GLFW_KEY_0);
+				}
+				else if(scancode == Keybindings.KeyToggleComponentsList)
+				{
+					inputProcessor.get2DController().openComponentList();
+				}
+				else if(scancode == Keybindings.KeyRotate)
+				{
+					renderPlane3D.rotatePlacement(isControl());
+				}
+				else if(scancode == Keybindings.KeyDelete)
+				{
+					if(isControl())
+					{
+						//TODO: Q - as in, either move to Q, or somewhere else. Current solution is confusing.
+						renderPlane3D.stopClusterHighlighting();
+					}
+					else
+					{
+						Part toBeDeleted = renderPlane3D.getCursorObject();
+						if(toBeDeleted != null)
+						{
+							renderPlane3D.delete(toBeDeleted);
+						}
+					}
+				}
+				else if(scancode == Keybindings.KeyHotbarDrop)
+				{
+					inputProcessor.get2DController().dropHotbarEntry();
+				}
+				else if(scancode == Keybindings.KeyGrab)
+				{
+					grab();
+				}
+			}
 		}
 	}
 	
