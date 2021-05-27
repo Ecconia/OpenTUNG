@@ -6,8 +6,8 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
+import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
@@ -15,10 +15,9 @@ import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
-import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompButton extends Component implements Powerable, Updateable, Holdable
+public class CompButton extends LogicComponent implements Powerable, Holdable
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.15f + 0.075f, 0.0))

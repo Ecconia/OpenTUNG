@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -138,9 +139,12 @@ public class ConductorMeshBag extends MeshBag
 		{
 			componentClusters.add(((CompWireRaw) component).getCluster());
 		}
-		for(Connector connector : component.getConnectors())
+		else if(component instanceof ConnectedComponent) //TBI: Is this type-check required, either wire or ConnectedComponent...
 		{
-			componentClusters.add(connector.getCluster());
+			for(Connector connector : ((ConnectedComponent) component).getConnectors())
+			{
+				componentClusters.add(connector.getCluster());
+			}
 		}
 		return componentClusters;
 	}
@@ -199,10 +203,13 @@ public class ConductorMeshBag extends MeshBag
 		int indicesAmount = 0;
 		for(Component component : components)
 		{
-			for(Connector connector : component.getConnectors())
+			if(component instanceof ConnectedComponent)
 			{
-				verticesAmount += connector.getWholeMeshEntryVCount(type);
-				indicesAmount += connector.getWholeMeshEntryICount(type);
+				for(Connector connector : ((ConnectedComponent) component).getConnectors())
+				{
+					verticesAmount += connector.getWholeMeshEntryVCount(type);
+					indicesAmount += connector.getWholeMeshEntryICount(type);
+				}
 			}
 			for(Meshable m : component.getModelHolder().getConductors())
 			{
@@ -222,16 +229,19 @@ public class ConductorMeshBag extends MeshBag
 		for(Component comp : components)
 		{
 			//TODO: Ungeneric:
-			for(Connector connector : comp.getConnectors())
+			if(comp instanceof ConnectedComponent)
 			{
-				connector.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, type);
-				int clusterID = getClusterID(connector);
-				for(int i = 0; i < connector.getModel().getFacesCount() * 4; i++)
+				for(Connector connector : ((ConnectedComponent) comp).getConnectors())
 				{
-					clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+					connector.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, type);
+					int clusterID = getClusterID(connector);
+					for(int i = 0; i < connector.getModel().getFacesCount() * 4; i++)
+					{
+						clusterIDs[clusterIDIndex.getAndInc()] = clusterID;
+					}
 				}
 			}
-			if(comp instanceof CompWireRaw)
+			else if(comp instanceof CompWireRaw)
 			{
 				comp.insertMeshData(vertices, verticesOffset, indices, indicesOffset, vertexCounter, type);
 				//TODO: Ungeneric:

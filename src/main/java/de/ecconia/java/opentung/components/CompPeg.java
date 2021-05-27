@@ -3,7 +3,7 @@ package de.ecconia.java.opentung.components;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
@@ -11,7 +11,7 @@ import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompPeg extends Component
+public class CompPeg extends ConnectedComponent
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, +0.15 + 0.075, 0.0))

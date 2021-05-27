@@ -7,8 +7,8 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
+import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
@@ -16,13 +16,12 @@ import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
-import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.util.io.ByteReader;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompDelayer extends Component implements Powerable, Updateable, CustomData
+public class CompDelayer extends LogicComponent implements Powerable, CustomData
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.15 + 0.075f, 0.0))

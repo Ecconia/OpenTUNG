@@ -17,6 +17,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
@@ -670,8 +671,9 @@ public class RenderPlane3D implements RenderPlane
 			{
 				//TODO: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
 				Cluster cluster = new InheritingCluster();
-				Peg first = newComponent.getPegs().get(0);
-				Peg second = newComponent.getPegs().get(1);
+				CompThroughPeg throughPeg = (CompThroughPeg) newComponent;
+				Peg first = throughPeg.getPegs().get(0);
+				Peg second = throughPeg.getPegs().get(1);
 				cluster.addConnector(first);
 				first.setCluster(cluster);
 				cluster.addConnector(second);
@@ -680,17 +682,21 @@ public class RenderPlane3D implements RenderPlane
 			}
 			else
 			{
-				for(Peg peg : newComponent.getPegs())
+				if(newComponent instanceof ConnectedComponent)
 				{
-					Cluster cluster = new InheritingCluster();
-					cluster.addConnector(peg);
-					peg.setCluster(cluster);
-				}
-				for(Blot blot : newComponent.getBlots())
-				{
-					Cluster cluster = new SourceCluster(blot);
-					cluster.addConnector(blot);
-					blot.setCluster(cluster);
+					ConnectedComponent con = (ConnectedComponent) newComponent;
+					for(Peg peg : con.getPegs())
+					{
+						Cluster cluster = new InheritingCluster();
+						cluster.addConnector(peg);
+						peg.setCluster(cluster);
+					}
+					for(Blot blot : con.getBlots())
+					{
+						Cluster cluster = new SourceCluster(blot);
+						cluster.addConnector(blot);
+						blot.setCluster(cluster);
+					}
 				}
 			}
 			
@@ -821,9 +827,9 @@ public class RenderPlane3D implements RenderPlane
 			CompContainer container = (CompContainer) toBeDeleted;
 			gpuTasks.add((unused) -> {
 				worldMesh.removeComponent(container, board.getSimulation());
-				CompContainer parentConainer = (CompContainer) parent;
-				parentConainer.remove(container);
-				parentConainer.updateBounds();
+				CompContainer parentContainer = (CompContainer) parent;
+				parentContainer.remove(container);
+				parentContainer.updateBounds();
 			});
 		}
 		else if(toBeDeleted instanceof CompWireRaw)
@@ -852,7 +858,7 @@ public class RenderPlane3D implements RenderPlane
 			final Component component = (Component) toBeDeleted;
 			if(toBeDeleted instanceof CompSnappingPeg)
 			{
-				for(Wire wire : component.getPegs().get(0).getWires())
+				for(Wire wire : ((ConnectedComponent) component).getPegs().get(0).getWires())
 				{
 					if(wire instanceof CompSnappingWire)
 					{
@@ -879,15 +885,19 @@ public class RenderPlane3D implements RenderPlane
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
 				List<Wire> wiresToRemove = new ArrayList<>();
 				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-				for(Blot blot : component.getBlots())
+				if(component instanceof ConnectedComponent)
 				{
-					ClusterHelper.removeBlot(simulation, blot, updates);
-					wiresToRemove.addAll(blot.getWires());
-				}
-				for(Peg peg : component.getPegs())
-				{
-					ClusterHelper.removePeg(simulation, peg, updates);
-					wiresToRemove.addAll(peg.getWires());
+					ConnectedComponent con = (ConnectedComponent) component;
+					for(Blot blot : con.getBlots())
+					{
+						ClusterHelper.removeBlot(simulation, blot, updates);
+						wiresToRemove.addAll(blot.getWires());
+					}
+					for(Peg peg : con.getPegs())
+					{
+						ClusterHelper.removePeg(simulation, peg, updates);
+						wiresToRemove.addAll(peg.getWires());
+					}
 				}
 				
 				gpuTasks.add((unused) -> {
@@ -896,9 +906,12 @@ public class RenderPlane3D implements RenderPlane
 					{
 						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
 					}
-					for(Connector connector : component.getConnectors())
+					if(component instanceof ConnectedComponent)
 					{
-						clusterHighlighter.clusterChanged(connector.getCluster());
+						for(Connector connector : ((ConnectedComponent) component).getConnectors())
+						{
+							clusterHighlighter.clusterChanged(connector.getCluster());
+						}
 					}
 					for(Wire wire : wiresToRemove)
 					{
@@ -991,37 +1004,39 @@ public class RenderPlane3D implements RenderPlane
 							unconnectedSnappingPegs.add((CompSnappingPeg) component);
 						}
 						
-						for(Connector connector : component.getConnectors())
+						if(component instanceof ConnectedComponent)
 						{
-							for(Wire wire : connector.getWires())
+							for(Connector connector : ((ConnectedComponent) component).getConnectors())
 							{
-								if(outgoingWires.remove(wire) != null)
+								for(Wire wire : connector.getWires())
 								{
-									if(wire instanceof CompSnappingWire)
+									if(outgoingWires.remove(wire) != null)
 									{
-										internalSnappingWires.add((CompSnappingWire) wire);
-									}
-									else if(wire instanceof CompWireRaw)
-									{
-										internalWires.add((CompWireRaw) wire);
-									}
-									else if(wire instanceof HiddenWire)
-									{
-										//Ignore this wire. Its not exposed to anything.
+										if(wire instanceof CompSnappingWire)
+										{
+											internalSnappingWires.add((CompSnappingWire) wire);
+										}
+										else if(wire instanceof CompWireRaw)
+										{
+											internalWires.add((CompWireRaw) wire);
+										}
+										else if(wire instanceof HiddenWire)
+										{
+											//Ignore this wire. Its not exposed to anything.
+										}
+										else
+										{
+											throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
+										}
 									}
 									else
 									{
-										throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
+										outgoingWires.put(wire, wire.getConnectorA() == connector);
 									}
-								}
-								else
-								{
-									outgoingWires.put(wire, wire.getConnectorA() == connector);
 								}
 							}
 						}
-						
-						if(component instanceof CompContainer)
+						else if(component instanceof CompContainer)
 						{
 							for(Component child : ((CompContainer) component).getChildren())
 							{
@@ -1112,7 +1127,7 @@ public class RenderPlane3D implements RenderPlane
 			CompSnappingPeg snappingPeg = (CompSnappingPeg) toBeGrabbed;
 			if(snappingPeg.hasPartner())
 			{
-				for(Wire wire : toBeGrabbed.getPegs().get(0).getWires())
+				for(Wire wire : ((ConnectedComponent) toBeGrabbed).getPegs().get(0).getWires())
 				{
 					if(wire instanceof CompSnappingWire)
 					{
@@ -1143,22 +1158,28 @@ public class RenderPlane3D implements RenderPlane
 			{
 				newGrabData.addLabel((CompLabel) toBeGrabbed);
 			}
-			for(Connector connector : toBeGrabbed.getConnectors())
+			if(toBeGrabbed instanceof ConnectedComponent)
 			{
-				for(Wire wire : connector.getWires())
+				for(Connector connector : ((ConnectedComponent) toBeGrabbed).getConnectors())
 				{
-					//Skip HiddenWires, snapping wires have already been removed in a previous simulation task.
-					if(wire instanceof CompWireRaw)
+					for(Wire wire : connector.getWires())
 					{
-						newGrabData.addWire(wire, wire.getConnectorA() == connector);
+						//Skip HiddenWires, snapping wires have already been removed in a previous simulation task.
+						if(wire instanceof CompWireRaw)
+						{
+							newGrabData.addWire(wire, wire.getConnectorA() == connector);
+						}
 					}
 				}
 			}
 			
 			gpuTasks.add((unused2) -> {
-				for(Connector connector : toBeGrabbed.getConnectors())
+				if(toBeGrabbed instanceof ConnectedComponent)
 				{
-					clusterHighlighter.clusterChanged(connector.getCluster());
+					for(Connector connector : ((ConnectedComponent) toBeGrabbed).getConnectors())
+					{
+						clusterHighlighter.clusterChanged(connector.getCluster());
+					}
 				}
 				if(toBeGrabbed instanceof CompLabel)
 				{
@@ -1221,13 +1242,17 @@ public class RenderPlane3D implements RenderPlane
 			}
 			for(Component component : grabDataCopy.getComponents())
 			{
-				for(Peg peg : component.getPegs())
+				if(component instanceof ConnectedComponent)
 				{
-					ClusterHelper.removePeg(board.getSimulation(), peg, updates);
-				}
-				for(Blot blot : component.getBlots())
-				{
-					ClusterHelper.removeBlot(board.getSimulation(), blot, updates);
+					ConnectedComponent con = (ConnectedComponent) component;
+					for(Peg peg : con.getPegs())
+					{
+						ClusterHelper.removePeg(board.getSimulation(), peg, updates);
+					}
+					for(Blot blot : con.getBlots())
+					{
+						ClusterHelper.removeBlot(board.getSimulation(), blot, updates);
+					}
 				}
 			}
 			

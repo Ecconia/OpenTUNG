@@ -6,7 +6,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
@@ -16,7 +16,7 @@ import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompThroughPeg extends Component
+public class CompThroughPeg extends ConnectedComponent
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.0, 0.0))

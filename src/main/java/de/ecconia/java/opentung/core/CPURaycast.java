@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
@@ -89,28 +90,31 @@ public class CPURaycast
 		Vector3 cameraPositionComponentSpace = componentRotation.multiply(camPos.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
 		Vector3 cameraRayComponentSpace = componentRotation.multiply(camRay);
 		
-		for(Connector connector : component.getConnectors())
+		if(component instanceof ConnectedComponent)
 		{
-			CubeFull shape = connector.getModel();
-			Vector3 size = shape.getSize();
-			Vector3 cameraRayPegSpace = cameraRayComponentSpace;
-			Vector3 cameraPositionPeg = cameraPositionComponentSpace;
-			if(shape instanceof CubeOpenRotated)
+			for(Connector connector : ((ConnectedComponent) component).getConnectors())
 			{
-				Quaternion rotation = ((CubeOpenRotated) shape).getRotation().inverse();
-				cameraRayPegSpace = rotation.multiply(cameraRayPegSpace);
-				cameraPositionPeg = rotation.multiply(cameraPositionPeg);
+				CubeFull shape = connector.getModel();
+				Vector3 size = shape.getSize();
+				Vector3 cameraRayPegSpace = cameraRayComponentSpace;
+				Vector3 cameraPositionPeg = cameraPositionComponentSpace;
+				if(shape instanceof CubeOpenRotated)
+				{
+					Quaternion rotation = ((CubeOpenRotated) shape).getRotation().inverse();
+					cameraRayPegSpace = rotation.multiply(cameraRayPegSpace);
+					cameraPositionPeg = rotation.multiply(cameraPositionPeg);
+				}
+				cameraPositionPeg = cameraPositionPeg.subtract(connector.getModel().getPosition());
+				
+				double distance = distance(size, size.invert(), cameraPositionPeg, cameraRayPegSpace);
+				if(distance < 0 || distance >= dist)
+				{
+					continue;
+				}
+				
+				match = connector;
+				dist = distance;
 			}
-			cameraPositionPeg = cameraPositionPeg.subtract(connector.getModel().getPosition());
-			
-			double distance = distance(size, size.invert(), cameraPositionPeg, cameraRayPegSpace);
-			if(distance < 0 || distance >= dist)
-			{
-				continue;
-			}
-			
-			match = connector;
-			dist = distance;
 		}
 		
 		for(Meshable meshable : component.getModelHolder().getSolid())

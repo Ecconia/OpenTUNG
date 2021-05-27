@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ComponentAwareness;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.simulation.Powerable;
@@ -143,9 +144,12 @@ public class Loader
 			{
 				((CompContainer) parent).addChild(component);
 			}
-			for(Connector connector : component.getConnectors())
+			if(component instanceof ConnectedComponent)
 			{
-				connectors[connectorIndex++] = connector;
+				for(Connector connector : ((ConnectedComponent) component).getConnectors())
+				{
+					connectors[connectorIndex++] = connector;
+				}
 			}
 			components[i] = component;
 		}

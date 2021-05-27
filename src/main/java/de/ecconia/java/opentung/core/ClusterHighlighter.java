@@ -5,7 +5,7 @@ import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -42,7 +42,7 @@ public class ClusterHighlighter
 		}
 		else if(part instanceof CompThroughPeg || part instanceof CompPeg || part instanceof CompSnappingPeg)
 		{
-			cluster = ((Component) part).getPegs().get(0).getCluster();
+			cluster = ((ConnectedComponent) part).getPegs().get(0).getCluster();
 		}
 		else if(part instanceof Connector)
 		{

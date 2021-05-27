@@ -91,7 +91,8 @@ public abstract class CompContainer extends Component
 		}
 	}
 	
-	public Connector getConnectorAt(String debug, Vector3 absolutePoint)
+	@Override
+	public Connector getConnectorAt(Vector3 absolutePoint)
 	{
 		if(connectorBounds == null || !connectorBounds.contains(absolutePoint))
 		{
@@ -103,7 +104,7 @@ public abstract class CompContainer extends Component
 		{
 			if(!(child instanceof CompWireRaw))
 			{
-				Connector curConnector = child.getConnectorAt(debug + "  ", absolutePoint);
+				Connector curConnector = child.getConnectorAt(absolutePoint);
 				if(curConnector != null)
 				{
 					if(foundConnector != null)

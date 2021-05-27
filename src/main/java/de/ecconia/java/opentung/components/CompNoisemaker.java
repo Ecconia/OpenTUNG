@@ -7,8 +7,8 @@ import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
+import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
@@ -16,12 +16,11 @@ import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
 import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
 import de.ecconia.java.opentung.simulation.SimulationManager;
-import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.util.io.ByteReader;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompNoisemaker extends Component implements Updateable, Colorable, CustomData
+public class CompNoisemaker extends LogicComponent implements Colorable, CustomData
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))

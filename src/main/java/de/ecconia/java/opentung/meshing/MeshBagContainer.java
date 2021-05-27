@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -274,7 +275,7 @@ public class MeshBagContainer
 		}
 		else if(component instanceof CompSnappingPeg)
 		{
-			Peg mainPeg = component.getPegs().get(0);
+			Peg mainPeg = ((ConnectedComponent) component).getPegs().get(0);
 			for(Wire rWire : mainPeg.getWires())
 			{
 				if(rWire instanceof CompSnappingWire)

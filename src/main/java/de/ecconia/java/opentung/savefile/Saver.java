@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.core.BoardUniverse;
@@ -73,9 +74,12 @@ public class Saver
 				dictionary.put(info, data);
 			}
 			data.incrementCounter();
-			for(Connector connector : component.getConnectors())
+			if(component instanceof ConnectedComponent)
 			{
-				connectorIDs.put(connector, connectorID++);
+				for(Connector connector : ((ConnectedComponent) component).getConnectors())
+				{
+					connectorIDs.put(connector, connectorID++);
+				}
 			}
 		}
 		
@@ -152,9 +156,12 @@ public class Saver
 				writer.writeDouble(v.getZ());
 				writer.writeDouble(a);
 				//Blots:
-				for(Blot blot : component.getBlots())
+				if(component instanceof ConnectedComponent)
 				{
-					writer.writeBoolean(blot.getCluster().isActive());
+					for(Blot blot : ((ConnectedComponent) component).getBlots())
+					{
+						writer.writeBoolean(blot.getCluster().isActive());
+					}
 				}
 				//Custom-Data:
 				if(data.hasCustomData())

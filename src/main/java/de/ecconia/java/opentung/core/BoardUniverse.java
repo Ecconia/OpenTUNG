@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.PlaceboParent;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
@@ -105,18 +106,24 @@ public class BoardUniverse
 			//Create blot clusters:
 			for(Component comp : componentsToRender)
 			{
-				for(Blot blot : comp.getBlots())
+				if(comp instanceof ConnectedComponent)
 				{
-					createBlottyCluster(blot);
+					for(Blot blot : ((ConnectedComponent) comp).getBlots())
+					{
+						createBlottyCluster(blot);
+					}
 				}
 			}
 			for(Component comp : componentsToRender)
 			{
-				for(Peg peg : comp.getPegs())
+				if(comp instanceof ConnectedComponent)
 				{
-					if(!peg.hasCluster())
+					for(Peg peg : ((ConnectedComponent) comp).getPegs())
 					{
-						createPeggyCluster(peg);
+						if(!peg.hasCluster())
+						{
+							createPeggyCluster(peg);
+						}
 					}
 				}
 			}
@@ -264,8 +271,8 @@ public class BoardUniverse
 			{
 				continue; //Already processed -> Skip.
 			}
-			Connector connectorA = scannable.getConnectorAt("", wire.getEnd1());
-			Connector connectorB = scannable.getConnectorAt("", wire.getEnd2());
+			Connector connectorA = scannable.getConnectorAt(wire.getEnd1());
+			Connector connectorB = scannable.getConnectorAt(wire.getEnd2());
 			if(!maintenance)
 			{
 				if(connectorA == null || connectorB == null)
