@@ -8,4 +8,20 @@ public abstract class LogicComponent extends ConnectedComponent implements Updat
 	{
 		super(parent);
 	}
+	
+	//Is queued for update?
+	
+	private boolean isQueuedForUpdate;
+	
+	@Override
+	public boolean isQueuedForUpdate()
+	{
+		return isQueuedForUpdate;
+	}
+	
+	@Override
+	public void setQueuedForUpdate(boolean queuedForUpdate)
+	{
+		isQueuedForUpdate = queuedForUpdate;
+	}
 }

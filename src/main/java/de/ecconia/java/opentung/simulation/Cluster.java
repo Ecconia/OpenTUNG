@@ -80,4 +80,18 @@ public abstract class Cluster implements Updateable
 		//TODO: Store and remove the reference instead.
 		conductorMeshBags.removeIf(meshBagReference -> meshBagReference.getConductorMeshBag() == conductorMeshBagOriginal);
 	}
+	
+	//Is queued for update?
+	//TODO: Implement this, if you have clusters with 10k and more components, it will be relevant. Smaller cases are not relevant. For testing purposes not yet implemented.
+	
+	@Override
+	public boolean isQueuedForUpdate()
+	{
+		return false;
+	}
+	
+	@Override
+	public void setQueuedForUpdate(boolean state)
+	{
+	}
 }

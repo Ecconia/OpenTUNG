@@ -24,8 +24,6 @@ public class SimulationManager extends Thread
 	private boolean paused;
 	private AtomicInteger pauseArrived;
 	
-	private long tickLoopIndex;
-	
 	public SimulationManager()
 	{
 		super("Simulation-Thread");
@@ -107,6 +105,8 @@ public class SimulationManager extends Thread
 		System.out.println("Simulation thread has turned off.");
 	}
 	
+	//Used by inputs like Buttons/Switches, when interacted with.
+	//Used to prime new components.
 	public void updateNextTickThreadSafe(Updateable updateable)
 	{
 		synchronized(this)
@@ -115,6 +115,7 @@ public class SimulationManager extends Thread
 		}
 	}
 	
+	//Used by a lot, whenever there are edits to the clusters.
 	public void updateJobNextTickThreadSafe(UpdateJob updateJob)
 	{
 		synchronized(this)
@@ -123,20 +124,30 @@ public class SimulationManager extends Thread
 		}
 	}
 	
+	//Used for priming a new cluster
+	//Used to schedule a component again (delayer)
+	//Used to add components if a cluster state changed.
 	public void updateNextTick(Updateable updateable)
 	{
-		updateNextTick.add(updateable);
+		if(!updateable.isQueuedForUpdate()) //Already queued, no need to queue again. [Primary for Delayers]
+		{
+			updateable.setQueuedForUpdate(true);
+			updateNextTick.add(updateable);
+		}
 	}
 	
+	//Called if a components output state changes (if component updated by simulation).
+	//Called by inheriting-clusters, if the user changed the cluster network.
 	public void updateNextStage(Cluster cluster)
 	{
 		updateClusterNextStage.add(cluster);
 	}
 	
-	public void updateThisStage(Cluster cluster)
-	{
-		updateClusterThisStage.add(cluster);
-	}
+	//Not called at all.
+//	public void updateThisStage(Cluster cluster)
+//	{
+//		updateClusterThisStage.add(cluster);
+//	}
 	
 	private void doTick()
 	{
@@ -156,8 +167,6 @@ public class SimulationManager extends Thread
 				updateJob.update(this);
 			}
 		}
-		
-		tickLoopIndex++;
 		
 		{
 			List<Updateable> tmp = updateThisTick;
@@ -186,10 +195,12 @@ public class SimulationManager extends Thread
 		
 		for(Updateable updateable : updateThisTick)
 		{
+			updateable.setQueuedForUpdate(false);
 			updateable.update(this);
 		}
 		
 		{
+			//TODO: Swap very likely obsolete and should be removed - improves semantic.
 			List<Cluster> tmp = updateClusterThisStage;
 			updateClusterThisStage = updateClusterNextStage;
 			updateClusterNextStage = tmp;
@@ -215,11 +226,6 @@ public class SimulationManager extends Thread
 		{
 			updateClusterNextStage.clear();
 		}
-	}
-	
-	public long getTickLoopIndex()
-	{
-		return tickLoopIndex;
 	}
 	
 	public int getTPS()
