@@ -4,6 +4,9 @@ import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.simulation.Cluster;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
+import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
@@ -34,6 +37,26 @@ public abstract class ConnectedComponent extends Component
 			Blot blot = new Blot(this, i, cube);
 			blots.add(blot);
 			connectors.add(blot);
+		}
+	}
+	
+	@Override
+	public void init()
+	{
+		//Super does nothing do not call it.
+		//TBI: This form of initialization more the whole initial cluster situation onto the components.
+		// Works well for default components. But modders would have to write that too...
+		for(Peg peg : pegs)
+		{
+			Cluster cluster = new InheritingCluster();
+			cluster.addConnector(peg);
+			peg.setCluster(cluster);
+		}
+		for(Blot blot : blots)
+		{
+			Cluster cluster = new SourceCluster(blot);
+			cluster.addConnector(blot);
+			blot.setCluster(cluster);
 		}
 	}
 	

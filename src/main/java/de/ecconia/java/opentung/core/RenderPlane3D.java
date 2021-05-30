@@ -7,7 +7,6 @@ import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompPanelLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
-import de.ecconia.java.opentung.components.CompThroughPeg;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
@@ -35,11 +34,8 @@ import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
-import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.HiddenWire;
-import de.ecconia.java.opentung.simulation.InheritingCluster;
-import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.units.IconGeneration;
@@ -665,32 +661,6 @@ public class RenderPlane3D implements RenderPlane
 			newComponent.setRotation(hitpointContainer.getAlignment());
 			newComponent.setPosition(hitpointContainer.getPosition());
 			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
-			
-			if(newComponent instanceof ConnectedComponent)
-			{
-				//TBI: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
-				// Currently the task has just been moved to init(). But that is maybe not the best way to deal with it. But performing cluster exploration every time?
-				//Currently skips connectors which have already been initialized. That should work quite well for some time.
-				ConnectedComponent con = (ConnectedComponent) newComponent;
-				for(Peg peg : con.getPegs())
-				{
-					if(!peg.hasCluster())
-					{
-						Cluster cluster = new InheritingCluster();
-						cluster.addConnector(peg);
-						peg.setCluster(cluster);
-					}
-				}
-				for(Blot blot : con.getBlots())
-				{
-					if(!blot.hasCluster())
-					{
-						Cluster cluster = new SourceCluster(blot);
-						cluster.addConnector(blot);
-						blot.setCluster(cluster);
-					}
-				}
-			}
 			
 			if(newComponent instanceof Updateable)
 			{
