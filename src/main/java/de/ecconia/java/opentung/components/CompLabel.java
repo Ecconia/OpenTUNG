@@ -123,7 +123,14 @@ public class CompLabel extends Component implements CustomData
 	@Override
 	public byte[] getCustomData()
 	{
-		byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
+		String textCopy = text;
+		if(textCopy == null)
+		{
+			//TODO: Once Label editing is implemented, this will not be required anymore.
+			//Cannot initialize the variable with it, since then there still is not texture generated for it.
+			textCopy = "";
+		}
+		byte[] textBytes = textCopy.getBytes(StandardCharsets.UTF_8);
 		int textSize = textBytes.length;
 		int textOffset = ByteLevelHelper.sizeOfUnsignedInt(textSize) + 4;
 		byte[] bytes = new byte[textOffset + textSize];
