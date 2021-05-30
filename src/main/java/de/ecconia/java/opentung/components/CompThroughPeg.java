@@ -12,7 +12,9 @@ import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
+import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.HiddenWire;
+import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.math.Vector3;
 
@@ -51,12 +53,22 @@ public class CompThroughPeg extends ConnectedComponent
 	@Override
 	public void init()
 	{
+		Peg first = pegs.get(0);
+		Peg second = pegs.get(1);
+		
+		//Physically connect the two pegs:
 		Wire internalWire = new HiddenWire();
-		Peg peg = pegs.get(0);
-		internalWire.setConnectorA(peg);
-		peg.addWire(internalWire);
-		peg = pegs.get(1);
-		internalWire.setConnectorB(peg);
-		peg.addWire(internalWire);
+		internalWire.setConnectorA(first);
+		first.addWire(internalWire);
+		internalWire.setConnectorB(second);
+		second.addWire(internalWire);
+		
+		//Create initial cluster for this component, since normal cluster initialization does not support internal wires:
+		Cluster cluster = new InheritingCluster();
+		cluster.addConnector(first);
+		first.setCluster(cluster);
+		cluster.addConnector(second);
+		second.setCluster(cluster);
+		cluster.addWire(internalWire);
 	}
 }

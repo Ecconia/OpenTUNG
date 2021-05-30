@@ -666,32 +666,24 @@ public class RenderPlane3D implements RenderPlane
 			newComponent.setPosition(hitpointContainer.getPosition());
 			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
 			
-			//TODO: Make generic
-			if(currentPlaceable == CompThroughPeg.info)
+			if(newComponent instanceof ConnectedComponent)
 			{
-				//TODO: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
-				Cluster cluster = new InheritingCluster();
-				CompThroughPeg throughPeg = (CompThroughPeg) newComponent;
-				Peg first = throughPeg.getPegs().get(0);
-				Peg second = throughPeg.getPegs().get(1);
-				cluster.addConnector(first);
-				first.setCluster(cluster);
-				cluster.addConnector(second);
-				second.setCluster(cluster);
-				cluster.addWire(first.getWires().get(0));
-			}
-			else
-			{
-				if(newComponent instanceof ConnectedComponent)
+				//TBI: Especially with modded components, this init here has to function generically for all components. (Perform cluster exploration).
+				// Currently the task has just been moved to init(). But that is maybe not the best way to deal with it. But performing cluster exploration every time?
+				//Currently skips connectors which have already been initialized. That should work quite well for some time.
+				ConnectedComponent con = (ConnectedComponent) newComponent;
+				for(Peg peg : con.getPegs())
 				{
-					ConnectedComponent con = (ConnectedComponent) newComponent;
-					for(Peg peg : con.getPegs())
+					if(!peg.hasCluster())
 					{
 						Cluster cluster = new InheritingCluster();
 						cluster.addConnector(peg);
 						peg.setCluster(cluster);
 					}
-					for(Blot blot : con.getBlots())
+				}
+				for(Blot blot : con.getBlots())
+				{
+					if(!blot.hasCluster())
 					{
 						Cluster cluster = new SourceCluster(blot);
 						cluster.addConnector(blot);
