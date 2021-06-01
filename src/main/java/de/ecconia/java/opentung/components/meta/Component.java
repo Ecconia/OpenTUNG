@@ -53,6 +53,11 @@ public abstract class Component extends Part
 		//Can be used my components to setup internal wires.
 	}
 	
+	public void initClusters()
+	{
+		//Used when copying components and creating new components (but not on save-file load).
+	}
+	
 	//Meshable section:
 	
 	@Override

@@ -62,6 +62,14 @@ public class CompThroughPeg extends ConnectedComponent
 		first.addWire(internalWire);
 		internalWire.setConnectorB(second);
 		second.addWire(internalWire);
+	}
+	
+	@Override
+	public void initClusters()
+	{
+		Peg first = pegs.get(0);
+		Peg second = pegs.get(1);
+		Wire internalWire = first.getWires().get(0);
 		
 		//Create initial cluster for this component, since normal cluster initialization does not support internal wires:
 		Cluster cluster = new InheritingCluster();

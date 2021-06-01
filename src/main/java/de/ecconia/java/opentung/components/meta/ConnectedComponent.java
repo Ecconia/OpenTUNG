@@ -41,9 +41,8 @@ public abstract class ConnectedComponent extends Component
 	}
 	
 	@Override
-	public void init()
+	public void initClusters()
 	{
-		//Super does nothing do not call it.
 		//TBI: This form of initialization more the whole initial cluster situation onto the components.
 		// Works well for default components. But modders would have to write that too...
 		for(Peg peg : pegs)

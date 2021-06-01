@@ -660,7 +660,8 @@ public class RenderPlane3D implements RenderPlane
 			Component newComponent = currentPlaceable.instance(parent);
 			newComponent.setRotation(hitpointContainer.getAlignment());
 			newComponent.setPosition(hitpointContainer.getPosition());
-			newComponent.init(); //Inits components such as the ThroughPeg (needs to be called after position is set).
+			newComponent.init(); //Initializes components such as the ThroughPeg (needs to be called after position is set). TBI: Does it?
+			newComponent.initClusters(); //Creates clusters for connectors of the component.
 			
 			if(newComponent instanceof Updateable)
 			{
