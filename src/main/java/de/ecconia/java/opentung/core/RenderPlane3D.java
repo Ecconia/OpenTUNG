@@ -431,7 +431,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		Hitpoint hitpoint = this.hitpoint; //Create copy of hitpoint reference, to stay thread-safe.
 		//Only called when looking at a container.
-		if(hitpoint.canBePlacedOn() && currentPlaceable == CompBoard.info)
+		if(hitpoint.canBePlacedOn() && currentPlaceable == CompBoard.info && grabData == null)
 		{
 			gpuTasks.add((unused) -> {
 				//Start dragging until end.
