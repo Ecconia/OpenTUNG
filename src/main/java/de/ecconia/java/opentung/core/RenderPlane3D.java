@@ -179,9 +179,9 @@ public class RenderPlane3D implements RenderPlane
 				&& hitpoint.canBePlacedOn(); //We might want to interact with a component. So only flip when placing is possible.
 	}
 	
-	public boolean isDragging()
+	public boolean isDraggingOrGrabbing()
 	{
-		return wireStartPoint != null || boardDrawStartingPoint != null;
+		return wireStartPoint != null || boardDrawStartingPoint != null || grabData != null;
 	}
 	
 	public boolean isGrabbingBoard()

@@ -467,7 +467,7 @@ public class Controller3D implements Controller
 		}
 		else
 		{
-			if(!renderPlane3D.isDragging())
+			if(!renderPlane3D.isDraggingOrGrabbing())
 			{
 				inputProcessor.get2DController().forwardScrollingToHotbar(val);
 			}
@@ -487,7 +487,7 @@ public class Controller3D implements Controller
 			index += 10;
 		}
 		
-		if(!renderPlane3D.isDragging())
+		if(!renderPlane3D.isDraggingOrGrabbing())
 		{
 			inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
 		}
@@ -501,7 +501,7 @@ public class Controller3D implements Controller
 	
 	private void middleMouseDown()
 	{
-		if(renderPlane3D.isDragging())
+		if(renderPlane3D.isDraggingOrGrabbing())
 		{
 			//Has the potential to change hotbar slot.
 			return;
