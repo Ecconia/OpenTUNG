@@ -467,7 +467,10 @@ public class Controller3D implements Controller
 		}
 		else
 		{
-			inputProcessor.get2DController().forwardScrollingToHotbar(val);
+			if(!renderPlane3D.isDragging())
+			{
+				inputProcessor.get2DController().forwardScrollingToHotbar(val);
+			}
 		}
 	}
 	
@@ -484,7 +487,10 @@ public class Controller3D implements Controller
 			index += 10;
 		}
 		
-		inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
+		if(!renderPlane3D.isDragging())
+		{
+			inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
+		}
 	}
 	
 	public boolean isControl()
@@ -495,6 +501,12 @@ public class Controller3D implements Controller
 	
 	private void middleMouseDown()
 	{
+		if(renderPlane3D.isDragging())
+		{
+			//Has the potential to change hotbar slot.
+			return;
+		}
+		
 		Part part = renderPlane3D.getCursorObject();
 		if(part instanceof Connector)
 		{

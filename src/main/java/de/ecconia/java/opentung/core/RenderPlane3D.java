@@ -179,6 +179,11 @@ public class RenderPlane3D implements RenderPlane
 				&& hitpoint.canBePlacedOn(); //We might want to interact with a component. So only flip when placing is possible.
 	}
 	
+	public boolean isDragging()
+	{
+		return wireStartPoint != null || boardDrawStartingPoint != null;
+	}
+	
 	public boolean isGrabbingBoard()
 	{
 		return (grabData != null) && (grabData.getComponent() instanceof CompBoard);
@@ -475,10 +480,11 @@ public class RenderPlane3D implements RenderPlane
 		
 		if(boardDrawStartingPoint != null)
 		{
+			//TBI: Maybe just get rid of this piece of code, then it is not required to prevent hotbar changes once dragging.
 			if(currentPlaceable != CompBoard.info)
 			{
-				System.out.println("ERROR: Called normal placement code without board selected, while boardDrawStartingPoint was not null.");
-				return true;
+				System.out.println("WARNING: Called normal placement code without board selected, while boardDrawStartingPoint was not null.");
+//				return true;
 			}
 			
 			if(abortPlacement)
