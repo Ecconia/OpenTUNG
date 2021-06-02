@@ -33,6 +33,18 @@ public class LabelTextureWrapper extends TextureWrapper
 	}
 	
 	@Override
+	public void upload()
+	{
+		if(usages != null && usages == 0)
+		{
+			//The Labels using this texture was already deleted. Do not upload this texture.
+			return;
+		}
+		super.upload();
+		//TBI: While uploading the id is already set, so there is a small time window where it could be deleted while it is still uploading. Handle that!
+	}
+	
+	@Override
 	public void unload()
 	{
 		if(usages != null)
@@ -44,6 +56,11 @@ public class LabelTextureWrapper extends TextureWrapper
 			}
 		}
 		
+		if(id == 0)
+		{
+			System.out.println("WARNING: Deleted texture before it was fully uploaded to GPU. Might cause it to not being unloaded properly.");
+			return;
+		}
 		GL30.glDeleteTextures(id);
 	}
 	
@@ -52,6 +69,7 @@ public class LabelTextureWrapper extends TextureWrapper
 	{
 		if(usages == null)
 		{
+			//Because this is the loading texture...
 			System.out.println("[LABEL-COPY/WARNING] You copied a board, while a label on it was not generated yet, please wait a bit and try again.");
 			return this;
 		}
