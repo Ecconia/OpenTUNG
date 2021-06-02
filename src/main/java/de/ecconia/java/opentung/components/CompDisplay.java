@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
@@ -128,5 +129,13 @@ public class CompDisplay extends LogicComponent implements Colorable, CustomData
 	public void setCustomData(byte[] data)
 	{
 		colorRaw = new Color((int) data[0] & 255, (int) data[1] & 255, (int) data[2] & 255);
+	}
+	
+	@Override
+	public Component copy()
+	{
+		CompDisplay copy = (CompDisplay) super.copy();
+		copy.setColorRaw(colorRaw);
+		return copy;
 	}
 }

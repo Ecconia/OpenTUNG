@@ -147,4 +147,14 @@ public class CompLabel extends Component implements CustomData
 		fontSize = reader.readFloatLE();
 		text = new String(reader.readBytes(reader.readVariableInt()), StandardCharsets.UTF_8);
 	}
+	
+	@Override
+	public Component copy()
+	{
+		CompLabel copy = (CompLabel) super.copy();
+		copy.setText(text);
+		copy.setFontSize(fontSize);
+		copy.texture = texture.copy();
+		return copy;
+	}
 }

@@ -76,6 +76,22 @@ public class GrabData
 		return grabbedWires;
 	}
 	
+	//Copy code:
+	
+	private boolean isCopy;
+	
+	public void setCopy()
+	{
+		isCopy = true;
+	}
+	
+	public boolean isCopy()
+	{
+		return isCopy;
+	}
+	
+	//Classes:
+	
 	public static class WireContainer
 	{
 		public Wire wire;

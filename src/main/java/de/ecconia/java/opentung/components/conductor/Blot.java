@@ -26,4 +26,10 @@ public class Blot extends Connector
 	{
 		return ((Powerable) getParent()).isPowered(index);
 	}
+	
+	//Needed when copying, to get the copied blot.
+	public int getIndex()
+	{
+		return index;
+	}
 }

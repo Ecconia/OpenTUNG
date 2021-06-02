@@ -40,6 +40,7 @@ public class CompWireRaw extends Component implements Wire
 	//### Non-Static ###
 	
 	private float length;
+	//TODO: Remove this redundancy: (Wires do not have to store their powered state, why save it then?)
 	private boolean powered;
 	
 	public CompWireRaw(Component parent)
@@ -156,5 +157,15 @@ public class CompWireRaw extends Component implements Wire
 		{
 			System.out.println("Drain#" + cluster.hashCode() + " Sources: " + ((InheritingCluster) cluster).getSources().size() + " Active: " + cluster.isActive());
 		}
+	}
+	
+	@Override
+	public Component copy()
+	{
+		CompWireRaw copy = new CompWireRaw(null);
+		copy.setRotation(rotation);
+		copy.setPosition(position);
+		copy.setLength(length);
+		return copy;
 	}
 }

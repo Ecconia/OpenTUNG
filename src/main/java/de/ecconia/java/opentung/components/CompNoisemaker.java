@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
@@ -124,5 +125,13 @@ public class CompNoisemaker extends LogicComponent implements Colorable, CustomD
 	{
 		ByteReader reader = new ByteReader(data);
 		frequency = reader.readFloatLE();
+	}
+	
+	@Override
+	public Component copy()
+	{
+		CompNoisemaker copy = (CompNoisemaker) super.copy();
+		copy.setFrequency(frequency);
+		return copy;
 	}
 }

@@ -46,4 +46,16 @@ public class LabelTextureWrapper extends TextureWrapper
 		
 		GL30.glDeleteTextures(id);
 	}
+	
+	@Override
+	public TextureWrapper copy()
+	{
+		if(usages == null)
+		{
+			System.out.println("[LABEL-COPY/WARNING] You copied a board, while a label on it was not generated yet, please wait a bit and try again.");
+			return this;
+		}
+		usages++;
+		return this;
+	}
 }

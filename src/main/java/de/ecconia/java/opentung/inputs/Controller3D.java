@@ -207,7 +207,14 @@ public class Controller3D implements Controller
 				part = part.getParent();
 			}
 			
-			renderPlane3D.grab((Component) part);
+			if(isControl())
+			{
+				renderPlane3D.copy((Component) part);
+			}
+			else
+			{
+				renderPlane3D.grab((Component) part);
+			}
 		}
 	}
 	

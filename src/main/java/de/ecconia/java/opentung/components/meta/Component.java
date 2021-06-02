@@ -276,4 +276,13 @@ public abstract class Component extends Part
 	{
 		this.colorMeshBag = colorMeshBag;
 	}
+	
+	public Component copy()
+	{
+		Component copy = getInfo().instance(null);
+		copy.setRotation(rotation);
+		copy.setPosition(position);
+		copy.init();
+		return copy;
+	}
 }

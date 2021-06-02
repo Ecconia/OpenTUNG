@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
 import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
@@ -138,5 +139,13 @@ public class CompDelayer extends LogicComponent implements Powerable, CustomData
 	{
 		ByteReader reader = new ByteReader(data);
 		delayCount = reader.readVariableInt();
+	}
+	
+	@Override
+	public Component copy()
+	{
+		CompDelayer copy = (CompDelayer) super.copy();
+		copy.setDelayCount(delayCount);
+		return copy;
 	}
 }

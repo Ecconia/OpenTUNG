@@ -173,4 +173,10 @@ public class TextureWrapper
 	{
 		GL30.glDeleteTextures(id);
 	}
+	
+	public TextureWrapper copy()
+	{
+		//We do not copy this.
+		return this;
+	}
 }

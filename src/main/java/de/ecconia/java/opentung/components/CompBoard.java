@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.components.fragments.CubeBoard;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.ModelMapper;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
@@ -120,5 +121,16 @@ public class CompBoard extends CompContainer implements CustomData
 		int g = reader.readUnsignedByte();
 		int b = reader.readUnsignedByte();
 		color = new Color(r, g, b);
+	}
+	
+	@Override
+	public Component copy()
+	{
+		CompBoard copy = new CompBoard(null, x, z);
+		copy.setPosition(position);
+		copy.setRotation(rotation);
+		copy.init(); //Does nothing but better be sure.
+		copy.setColor(color);
+		return copy;
 	}
 }
