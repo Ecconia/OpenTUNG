@@ -184,20 +184,32 @@ public class RenderPlane3D implements RenderPlane
 		return wireStartPoint != null || boardDrawStartingPoint != null || grabData != null;
 	}
 	
-	public boolean isGrabbingBoard()
-	{
-		return (grabData != null) && (grabData.getComponent() instanceof CompBoard);
-	}
-	
 	public GrabData getGrabData()
 	{
 		return grabData;
 	}
 	
-	public boolean isPlacingBoard(boolean finePlacement)
+	public boolean allowBoardOffset(boolean finePlacement)
 	{
+		//TBI: Maybe also disallow it, while movement keys WASD are pressed.
 		GrabData grabData = this.grabData;
-		return (grabData != null && grabData.getComponent() instanceof CompBoard) || (finePlacement && boardDrawStartingPoint == null && currentPlaceable == CompBoard.info);
+		if(grabData != null && grabData.getComponent() instanceof CompBoard)
+		{
+			return true; //When grabbing/copying a board, allow board offset
+		}
+		Hitpoint hitpoint = this.hitpoint;
+		if(finePlacement //Must only allow fine-offset.
+				&& boardDrawStartingPoint == null //Must not drag boards.
+				&& wireStartPoint == null //Must not draw wire.
+				&& currentPlaceable == CompBoard.info //Must be a board selected in hotbar.
+				&& hitpoint.getHitPart() instanceof CompBoard //Must be placed on a board.
+		)
+		{
+			HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
+			return (!placeableBoardIsLaying && hitpointBoard.getLocalNormal().getY() != 0)
+					|| (placeableBoardIsLaying && hitpointBoard.getLocalNormal().getY() == 0);
+		}
+		return false;
 	}
 	
 	public void boardOffset(int amount, boolean control, boolean alt)

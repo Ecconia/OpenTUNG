@@ -461,7 +461,7 @@ public class Controller3D implements Controller
 	
 	private void scrollY(int val)
 	{
-		if(renderPlane3D.isPlacingBoard(isControl()))
+		if(renderPlane3D.allowBoardOffset(isControl()))
 		{
 			renderPlane3D.boardOffset(val, isControl(), isAlt());
 		}
