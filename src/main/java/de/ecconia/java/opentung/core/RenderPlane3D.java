@@ -1984,11 +1984,8 @@ public class RenderPlane3D implements RenderPlane
 					double rotation = placementRotation;
 					if(currentPlaceable == CompBoard.info)
 					{
+						//Boards cannot be fine-rotated.
 						rotation = toRoughRotation();
-					}
-					else if(currentPlaceable == CompMount.info)
-					{
-					
 					}
 					double normalAxisRotationAngle = -rotation + calculateFixRotationOffset(alignment, hitpoint);
 					Quaternion normalAxisRotation = Quaternion.angleAxis(normalAxisRotationAngle, hitpointContainer.getNormal());
