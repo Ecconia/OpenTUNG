@@ -2008,6 +2008,11 @@ public class RenderPlane3D implements RenderPlane
 						HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
 						OnBoardPlacementHelper placementHelper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
 						Vector3 position = placementHelper.auto(currentPlaceable.getModel(), inputHandler.getController3D().isControl(), alignment);
+						if(position == null && currentPlaceable == CompSnappingPeg.info)
+						{
+							//Attempt again without control: (Should center it).
+							position = placementHelper.auto(currentPlaceable.getModel(), false, alignment);
+						}
 						if(position == null)
 						{
 							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
