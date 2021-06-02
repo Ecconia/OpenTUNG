@@ -633,6 +633,7 @@ public class RenderPlane3D implements RenderPlane
 					{
 						for(CompWireRaw wire : grabContainerData.getInternalWires())
 						{
+							wire.setParent(board.getPlaceboWireParent());
 							board.getWiresToRender().add(wire);
 						}
 					}
