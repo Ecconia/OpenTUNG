@@ -10,9 +10,9 @@ public class HitpointContainer extends Hitpoint
 	private Vector3 normal;
 	private Quaternion alignment;
 	
-	public HitpointContainer(Part hitPart)
+	public HitpointContainer(Part hitPart, double distance)
 	{
-		super(hitPart);
+		super(hitPart, distance);
 	}
 	
 	public void setPosition(Vector3 position)
@@ -54,12 +54,35 @@ public class HitpointContainer extends Hitpoint
 	//Board placement data:
 	private Vector3 boardCenterPosition;
 	private int boardX, boardZ;
+	private Vector3 cameraPosition;
+	private Vector3 cameraRay;
 	
 	public void setBoardData(Vector3 boardCenterPosition, int boardX, int boardZ)
 	{
 		this.boardCenterPosition = boardCenterPosition;
 		this.boardX = boardX;
 		this.boardZ = boardZ;
+	}
+	
+	public void setCamera(Vector3 cameraPosition, Vector3 cameraRay)
+	{
+		this.cameraPosition = cameraPosition;
+		this.cameraRay = cameraRay;
+	}
+	
+	public void setCameraRay(Vector3 cameraRay)
+	{
+		this.cameraRay = cameraRay;
+	}
+	
+	public Vector3 getCameraPosition()
+	{
+		return cameraPosition;
+	}
+	
+	public Vector3 getCameraRay()
+	{
+		return cameraRay;
 	}
 	
 	public Vector3 getBoardCenterPosition()

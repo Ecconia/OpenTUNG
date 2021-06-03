@@ -7,20 +7,28 @@ import de.ecconia.java.opentung.util.math.Vector3;
 public class Hitpoint
 {
 	private final Part hitPart;
+	private final double distance;
 	
-	public Hitpoint(Part hitPart)
+	public Hitpoint(Part hitPart, double distance)
 	{
 		this.hitPart = hitPart;
+		this.distance = distance;
 	}
 	
 	public Hitpoint()
 	{
 		this.hitPart = null;
+		this.distance = Double.MAX_VALUE;
 	}
 	
 	public Part getHitPart()
 	{
 		return hitPart;
+	}
+	
+	public double getDistance()
+	{
+		return distance;
 	}
 	
 	public boolean isEmpty()

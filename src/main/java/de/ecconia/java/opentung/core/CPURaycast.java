@@ -20,7 +20,7 @@ public class CPURaycast
 	private Part match;
 	private double dist;
 	
-	public Part cpuRaycast(Camera camera, CompBoard rootBoard, boolean skipWireCollision, WireRayCaster wireRayCaster)
+	public RaycastResult cpuRaycast(Camera camera, CompBoard rootBoard, boolean skipWireCollision, WireRayCaster wireRayCaster)
 	{
 		Vector3 cameraPosition = camera.getPosition();
 		Vector3 cameraRay = Vector3.zp;
@@ -43,7 +43,7 @@ public class CPURaycast
 		
 		focusProbe(rootBoard, cameraPosition, cameraRay);
 		
-		return match;
+		return new RaycastResult(match, dist);
 	}
 	
 	public RayCastResult cpuRaycast(Vector3 position, Vector3 ray, CompBoard rootBoard)
@@ -322,6 +322,28 @@ public class CPURaycast
 		public Vector3 getCollisionPointBoardSpace()
 		{
 			return collisionPointBoardSpace;
+		}
+	}
+	
+	public static class RaycastResult
+	{
+		private final Part part;
+		private final double distance;
+		
+		public RaycastResult(Part part, double distance)
+		{
+			this.part = part;
+			this.distance = distance;
+		}
+		
+		public Part getPart()
+		{
+			return part;
+		}
+		
+		public double getDistance()
+		{
+			return distance;
 		}
 	}
 }

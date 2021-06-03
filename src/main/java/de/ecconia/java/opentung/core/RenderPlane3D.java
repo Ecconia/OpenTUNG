@@ -2031,7 +2031,7 @@ public class RenderPlane3D implements RenderPlane
 						}
 						if(position == null)
 						{
-							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
+							hitpoint = new Hitpoint(hitpoint.getHitPart(), hitpoint.getDistance()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
 						}
 						else
 						{
@@ -2092,7 +2092,7 @@ public class RenderPlane3D implements RenderPlane
 						}
 						else
 						{
-							hitpoint = new Hitpoint(hitpoint.getHitPart()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
+							hitpoint = new Hitpoint(hitpoint.getHitPart(), hitpoint.getDistance()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
 						}
 					}
 				}
@@ -2115,26 +2115,80 @@ public class RenderPlane3D implements RenderPlane
 			Vector3 cameraRayBoardSpace = alignment.multiply(cameraRay);
 			Vector3 cameraPositionBoardSpace = alignment.multiply(cameraPosition.subtract(position));
 			
-			//Get collision point with area Y=0:
-			double distance = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
-			double cameraDistance = cameraRayBoardSpace.length();
-			Vector3 distanceVector = cameraRayBoardSpace.multiply(distance);
-			double dragDistance = distanceVector.length();
-			if(dragDistance - cameraDistance > 20)
+			boolean calculateSizeAndPos = true;
+			
+			if(boardDrawStartingPoint.getCameraPosition() == null && boardDrawStartingPoint.getCameraRay() == null)
 			{
-				//TBI: Is this okay?
-				distanceVector = distanceVector.multiply(1.0 / distanceVector.length() * 20);
+				//If both values are null, then we are running this code for the very first time. Thus apply the values:
+				boardDrawStartingPoint.setCamera(cameraPositionBoardSpace, cameraRayBoardSpace);
+				calculateSizeAndPos = false; //Once this runs for the very first time, the camera probably has not moved, thus do not grow the board.
 			}
-			Vector3 collisionPoint = cameraPositionBoardSpace.add(distanceVector);
-			if(distance >= 0)
+			else if(boardDrawStartingPoint.getCameraRay() != null)
 			{
-				//Y should be at 0 or very close to it - x and z can be used as are.
-				x = (int) ((Math.abs(collisionPoint.getX()) + 0.15f) / 0.3f) + 1;
-				z = (int) ((Math.abs(collisionPoint.getZ()) + 0.15f) / 0.3f) + 1;
-				Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionPoint.getX() >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionPoint.getZ() >= 0 ? 1f : -1f));
-				position = position.add(alignment.inverse().multiply(roundedCollisionPoint));
+				//At least one of the two values is not null, check if camera-ray got reset, which indicates, that the user interacted with the board.
+				//Calculate camera ray angle change and camera position change:
+				double angle = MathHelper.angleFromVectors(cameraRayBoardSpace, boardDrawStartingPoint.getCameraRay());
+				double distance = cameraPositionBoardSpace.subtract(boardDrawStartingPoint.getCameraPosition()).length();
+				
+				if(angle > 1.5 || distance > 0.1)
+				{
+					//User moved enough to disable this check.
+					boardDrawStartingPoint.setCameraRay(null);
+				}
+				else
+				{
+					//User did not move enough, prevent board growing.
+					calculateSizeAndPos = false;
+				}
 			}
 			
+			if(calculateSizeAndPos)
+			{
+				double rayDistanceMultiplicatorUp = -(cameraPositionBoardSpace.getY() + 0.075D) / cameraRayBoardSpace.getY();
+				double rayDistanceMultiplicatorBot = -(cameraPositionBoardSpace.getY() - 0.075D) / cameraRayBoardSpace.getY();
+				if(rayDistanceMultiplicatorUp >= 0 || rayDistanceMultiplicatorBot >= 0) //One of the two values is above or 0.
+				{
+					double rayDistanceMultiplicator;
+					//Choose the shorter multiplicator, to get the nearer plane.
+					if(rayDistanceMultiplicatorUp < 0 //If the Up value is negative, choose the Bottom value, since Bottom must be positive.
+							|| //The Up value is non-negative!
+							(rayDistanceMultiplicatorBot >= 0 //And the Bottom value is non-negative (if it would be negative, choose Up value.
+									&& //Now both values are non-negative.
+									rayDistanceMultiplicatorBot < rayDistanceMultiplicatorUp //Choose Bottom if it is smaller.
+							))
+					{
+						rayDistanceMultiplicator = rayDistanceMultiplicatorBot;
+					}
+					else
+					{
+						rayDistanceMultiplicator = rayDistanceMultiplicatorUp;
+					}
+					
+					Vector3 cameraToCollisionVector = cameraRayBoardSpace.multiply(rayDistanceMultiplicator);
+					double cameraToCollisionVectorLength = cameraToCollisionVector.length();
+					
+					//Abort if one is not looking at the plane, but on the placement parent:
+					if(hitpoint.getHitPart() != boardDrawStartingPoint.getHitPart() || hitpoint.getDistance() >= cameraToCollisionVectorLength)
+					{
+						double unitRayLength = cameraRayBoardSpace.length();
+						if(cameraToCollisionVectorLength - unitRayLength > 20)
+						{
+							//TBI: Is this okay?
+							//Limits the length of the camera to collision vector to 20.
+							cameraToCollisionVector = cameraToCollisionVector.multiply(1.0 / cameraToCollisionVector.length() * 20);
+						}
+						Vector3 collisionPoint = cameraPositionBoardSpace.add(cameraToCollisionVector);
+						double collisionX = collisionPoint.getX();
+						double collisionZ = collisionPoint.getZ();
+						
+						//Y should be at 0 or very close to it - x and z can be used as are.
+						x = (int) ((Math.abs(collisionX) + 0.15f) / 0.3f) + 1;
+						z = (int) ((Math.abs(collisionZ) + 0.15f) / 0.3f) + 1;
+						Vector3 roundedCollisionPoint = new Vector3((x - 1) * 0.15 * (collisionX >= 0 ? 1f : -1f), 0, (z - 1) * 0.15 * (collisionZ >= 0 ? 1f : -1f));
+						position = position.add(alignment.inverse().multiply(roundedCollisionPoint));
+					}
+				}
+			}
 			boardDrawStartingPoint.setBoardData(position, x, z);
 		}
 		else if(wireStartPoint != null)
@@ -2194,10 +2248,11 @@ public class RenderPlane3D implements RenderPlane
 	
 	private Hitpoint calculateHitpoint()
 	{
-		Part lookingAt = cpuRaycast.cpuRaycast(camera, board.getRootBoard(), wireStartPoint != null, wireRayCaster);
+		CPURaycast.RaycastResult raycastResult = cpuRaycast.cpuRaycast(camera, board.getRootBoard(), wireStartPoint != null, wireRayCaster);
+		Part lookingAt = raycastResult.getPart();
 		if(lookingAt == null)
 		{
-			return new Hitpoint(null);
+			return new Hitpoint();
 		}
 		
 		if(lookingAt instanceof CompContainer)
@@ -2205,16 +2260,16 @@ public class RenderPlane3D implements RenderPlane
 			if(lookingAt instanceof CompBoard)
 			{
 				CPURaycast.CollisionResult result = CPURaycast.collisionPoint((CompBoard) lookingAt, camera);
-				return new HitpointBoard(lookingAt, result.getLocalNormal(), result.getCollisionPointBoardSpace());
+				return new HitpointBoard(lookingAt, raycastResult.getDistance(), result.getLocalNormal(), result.getCollisionPointBoardSpace());
 			}
 			else
 			{
-				return new HitpointContainer(lookingAt);
+				return new HitpointContainer(lookingAt, raycastResult.getDistance());
 			}
 		}
 		else
 		{
-			return new Hitpoint(lookingAt);
+			return new Hitpoint(lookingAt, raycastResult.getDistance());
 		}
 	}
 	
