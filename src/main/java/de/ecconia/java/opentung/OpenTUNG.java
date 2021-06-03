@@ -251,10 +251,7 @@ public class OpenTUNG
 	{
 		try
 		{
-			dataFolder = Paths.get("OpenTUNG").toRealPath(LinkOption.NOFOLLOW_LINKS);
-			boardFolder = dataFolder.resolve("boards");
-			System.out.println("[FilesInit] Using data folder at: " + dataFolder);
-			
+			dataFolder = Paths.get("OpenTUNG");
 			if(!Files.exists(dataFolder))
 			{
 				System.out.println("[FilesInit] Data folder does not exist, creating.");
@@ -262,9 +259,14 @@ public class OpenTUNG
 			}
 			else if(!Files.isDirectory(dataFolder))
 			{
+				dataFolder = dataFolder.toRealPath(LinkOption.NOFOLLOW_LINKS);
 				System.out.println("[FilesInit] ERROR: Data folder is a file, thus cannot be used. Please remove data file: '" + dataFolder + "'.");
 				System.exit(1);
 			}
+			
+			dataFolder = dataFolder.toRealPath(LinkOption.NOFOLLOW_LINKS);
+			boardFolder = dataFolder.resolve("boards");
+			System.out.println("[FilesInit] Using data folder at: " + dataFolder);
 			
 			if(!Files.exists(boardFolder))
 			{
