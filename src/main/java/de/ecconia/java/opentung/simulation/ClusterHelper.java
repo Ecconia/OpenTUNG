@@ -285,7 +285,10 @@ public class ClusterHelper
 		}
 		if(sourceActiveCluster.isActive())
 		{
-			newCluster.oneIn(simulation);
+			for(Wire sourceWire : splitted.getBlotWires())
+			{
+				newCluster.oneIn(simulation);
+			}
 		}
 		
 		return sourceBlotCluster;
