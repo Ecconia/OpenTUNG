@@ -267,7 +267,7 @@ public class KeybindingsIO
 		@Override
 		public String toString()
 		{
-			return key + ": " + (keyValue == null ? scancode == defaultScancode ? defaultValue : scancode : keyValue) + (readable == null ? "" : ", " + ((readable.charAt(0) >= 'a' && readable.charAt(0) <= 'z') ? String.valueOf((char) (readable.charAt(0) - 'a' + 'A')) : readable));
+			return key + ": " + (keyValue == null ? scancode == defaultScancode ? defaultValue : scancode : keyValue) + (readable == null || readable.length() != 1 ? "" : ", " + ((readable.charAt(0) >= 'a' && readable.charAt(0) <= 'z') ? String.valueOf((char) (readable.charAt(0) - 'a' + 'A')) : readable));
 		}
 		
 		public String getKey()
