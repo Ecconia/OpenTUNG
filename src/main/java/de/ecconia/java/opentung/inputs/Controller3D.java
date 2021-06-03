@@ -151,7 +151,7 @@ public class Controller3D implements Controller
 			else
 			{
 				//Not grabbing:
-				if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_1)
+				if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
 				{
 					numberPressed(keyIndex - GLFW.GLFW_KEY_0);
 				}
