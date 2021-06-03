@@ -38,8 +38,13 @@ This is nevertheless a Work-In-Progress project which has yet to arrive at the l
 
 Everyone is free to use this program/game/tool/simulator, if he/she doesn't hate Java :P
 
-## Install (Build from source...)
+## Install  
+### Download prebuilt .jar
+ - Go to https://opentung.ecconia.com/
+ - Download the prebuilt .jar
+ - Open with your respective OS's method of running jar files
 
+### Build from Source
 #### Preconditions:
 
 - Java Development Kit of at least version 1.8.0_200, but any newer JDK does the job too (9+).
