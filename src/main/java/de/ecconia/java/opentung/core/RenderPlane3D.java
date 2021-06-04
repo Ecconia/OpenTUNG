@@ -73,6 +73,7 @@ public class RenderPlane3D implements RenderPlane
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
 	private final SharedData sharedData;
 	private final ShaderStorage shaderStorage;
+	private final Skybox skybox;
 	
 	private final WireRayCaster wireRayCaster;
 	private final ClusterHighlighter clusterHighlighter;
@@ -89,6 +90,7 @@ public class RenderPlane3D implements RenderPlane
 		this.inputHandler = inputHandler;
 		this.sharedData = sharedData;
 		this.shaderStorage = sharedData.getShaderStorage();
+		this.skybox = new Skybox(shaderStorage);
 		sharedData.setGPUTasks(gpuTasks);
 		sharedData.setRenderPlane3D(this);
 		this.worldMesh = new MeshBagContainer(shaderStorage);
@@ -1761,6 +1763,8 @@ public class RenderPlane3D implements RenderPlane
 			}
 		}
 		
+		skybox.setup();
+		
 		camera = new Camera();
 		
 		worldMesh.setup(board, board.getWiresToRender(), board.getSimulation());
@@ -1854,6 +1858,12 @@ public class RenderPlane3D implements RenderPlane
 				lineShader.setUniformM4(2, model.getMat());
 				axisIndicator.use();
 				axisIndicator.draw();
+			}
+			
+			if(Settings.drawSkybox)
+			{
+				//Warning this instruction destroys the view-matrix.
+				skybox.render(view);
 			}
 		}
 	}

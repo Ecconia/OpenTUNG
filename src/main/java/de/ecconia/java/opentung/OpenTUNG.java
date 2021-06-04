@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.core.OpenTUNGVersion;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.ShaderStorage;
 import de.ecconia.java.opentung.core.SharedData;
+import de.ecconia.java.opentung.core.Skybox;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
@@ -291,6 +292,8 @@ public class OpenTUNG
 				System.out.println("[FilesInit] Keybindings file is a directory, thus cannot be used. Please remove keybindings folder: '" + keybindPath + "'.");
 				System.exit(1);
 			}
+			
+			Skybox.prepareDataFolder(dataFolder);
 		}
 		catch(IOException e)
 		{

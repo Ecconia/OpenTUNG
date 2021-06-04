@@ -42,6 +42,8 @@ public class ShaderStorage
 	private final InvisibleCubeVAO invisibleCube;
 	private final VisibleCubeVAO visibleOpTexCube;
 	
+	private final ShaderProgram skyboxShader;
+	
 	//Textures:
 	private final TextureWrapper boardTexture;
 	
@@ -107,6 +109,8 @@ public class ShaderStorage
 		crossyIndicator = LineVAO.generateCrossyIndicator();
 		axisIndicator = LineVAO.generateAxisIndicator();
 		
+		skyboxShader = new ShaderProgram("skybox/skybox");
+		
 		//Textures:
 		{
 			int side = 16;
@@ -157,6 +161,9 @@ public class ShaderStorage
 		lineShader.setUniformM4(0, projection);
 		invisibleCubeShader.use();
 		invisibleCubeShader.setUniformM4(0, projection);
+		
+		skyboxShader.use();
+		skyboxShader.setUniformM4(0, projection);
 		
 		//3D/Meshes:
 		meshBoardShader.use();
@@ -246,6 +253,11 @@ public class ShaderStorage
 	public ShaderProgram getSdfShader()
 	{
 		return sdfShader;
+	}
+	
+	public ShaderProgram getSkyboxShader()
+	{
+		return skyboxShader;
 	}
 	
 	//3D/Meshes:

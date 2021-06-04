@@ -114,6 +114,10 @@ public class Settings
 	public static float backgroundColorG = 1f / 255f * 57f;
 	@SettingInfo(key = "settings.graphic.backgroundColor.b")
 	public static float backgroundColorB = 1f / 255f * 63f;
+	@SettingInfo(key = "settings.graphic.skybox", comment = "Draw the skybox, if 'false' you will see the background color.")
+	public static boolean drawSkybox = true;
+	@SettingInfo(key = "settings.graphic.skyboxHotReload", comment = "Warning, performance impact! Keep this off if you do not need it!\nIf you enable HotReloading, every frame OpenTUNG checks if the skybox file has changed and reloads it then, handy if you are currently creating a skybox.")
+	public static boolean skyboxHotReloading = false;
 	
 	//### Other ###
 	
