@@ -103,8 +103,11 @@ public class KeybindingsIO
 				KeyEntry entry = keys.get(key);
 				if(entry == null)
 				{
-					throw new RuntimeException("Key is not used (anymore): " + key);
+					System.out.println("[Keybindings] Key " + key + " is either no longer used, or added by the user. Ignoring.");
+					sourceContent.addLast(line); //Just append the line.
+					continue;
 				}
+				entry.setInSettingsFile();
 				sourceContent.addLast(entry);
 				
 				String value = line.substring(separatorIndex + 2);
@@ -148,6 +151,19 @@ public class KeybindingsIO
 		{
 			throw new RuntimeException("Exception while reading key bindings file", e);
 		}
+		
+		for(KeyEntry entry : keys.values())
+		{
+			if(!entry.isInSettingsFile())
+			{
+				System.out.println("[Keybindings] Key " + entry.getKey() + " is missing in the file, appending default to end.");
+				if(!entry.getComment().isEmpty())
+				{
+					sourceContent.addLast(entry.getComment());
+				}
+				sourceContent.addLast(entry);
+			}
+		}
 	}
 	
 	private void generateDefaultFile(Path path)
@@ -167,6 +183,7 @@ public class KeybindingsIO
 				}
 			}
 			builder.append(entry).append('\n');
+			entry.setInSettingsFile();
 			sourceContent.addLast(entry);
 		}
 		
@@ -247,6 +264,7 @@ public class KeybindingsIO
 		private final int defaultScancode;
 		private final String comment;
 		
+		private boolean inSettingsFile;
 		private String readable;
 		private String keyValue;
 		private int scancode;
@@ -323,6 +341,16 @@ public class KeybindingsIO
 		public void setKeyValue(String keyValue)
 		{
 			this.keyValue = keyValue;
+		}
+		
+		public void setInSettingsFile()
+		{
+			this.inSettingsFile = true;
+		}
+		
+		public boolean isInSettingsFile()
+		{
+			return inSettingsFile;
 		}
 	}
 }
