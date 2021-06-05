@@ -11,6 +11,8 @@ import de.ecconia.java.opentung.interfaces.elements.TextButton;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -20,16 +22,18 @@ public class PauseMenu
 {
 	private static final String labelTextSave = "Save";
 	private static final String labelTextSaveAs = "Save as";
+	private static final String labelTextKeybindings = "Keybindings";
 	private static final String labelTextExit = "Exit";
 	
-	private static final float windowWidth = 500;
-	private static final float windowHeight = 600;
 	private static final int buttonWidth = 400;
 	private static final int buttonHeight = 50;
 	private static final int padding = 20;
+	private static final float windowWidth = 500;
+	private static final float windowHeight = 600 + buttonHeight + padding;
 	
 	private TextButton buttonSave;
 	private TextButton buttonSaveAs;
+	private TextButton buttonKeybindings;
 	private TextButton buttonExit;
 	
 	private final RenderPlane2D renderPlane2D;
@@ -41,6 +45,7 @@ public class PauseMenu
 		MeshText text = renderPlane2D.getText();
 		text.addLetters(labelTextSave);
 		text.addLetters(labelTextSaveAs);
+		text.addLetters(labelTextKeybindings);
 		text.addLetters(labelTextExit);
 	}
 	
@@ -53,9 +58,12 @@ public class PauseMenu
 	public void setup()
 	{
 		MeshText fontUnit = renderPlane2D.getText();
-		float y = 300 - buttonHeight / 2f - 18;
+		float y = windowHeight / 2f - buttonHeight / 2f - 18;
 		buttonExit = new TextButton(fontUnit, labelTextExit, 0, y, buttonWidth, buttonHeight);
 		y -= padding + buttonHeight + padding;
+		buttonKeybindings = new TextButton(fontUnit, labelTextKeybindings, 0, y, buttonWidth, buttonHeight);
+		buttonKeybindings.setDisabled(!isRunningFromJar());
+		y -= padding + buttonHeight;
 		buttonSaveAs = new TextButton(fontUnit, labelTextSaveAs, 0, y, buttonWidth, buttonHeight);
 		y -= padding + buttonHeight;
 		buttonSave = new TextButton(fontUnit, labelTextSave, 0, y, buttonWidth, buttonHeight);
@@ -79,6 +87,7 @@ public class PauseMenu
 		Shapes.drawBox(nvg, middleX, middleY, windowWidth, windowHeight, GUIColors.background, GUIColors.outline);
 		buttonSave.renderFrame(nvg, middleX, middleY);
 		buttonSaveAs.renderFrame(nvg, middleX, middleY);
+		buttonKeybindings.renderFrame(nvg, middleX, middleY);
 		buttonExit.renderFrame(nvg, middleX, middleY);
 	}
 	
@@ -90,7 +99,7 @@ public class PauseMenu
 		ShaderProgram textureShader = shaderStorage.getFlatTextureShader();
 		textureShader.use();
 		textureShader.setUniformV2(1, new float[]{(180) * scale, (180) * scale});
-		textureShader.setUniformV2(2, new float[]{(windowStartX + windowWidth / 1.8f) * scale, (windowStartY + windowHeight / 3.4f) * scale});
+		textureShader.setUniformV2(2, new float[]{(windowStartX + windowWidth / 1.8f) * scale, (windowStartY + windowHeight / 3.8f) * scale});
 		GenericVAO texturePlane = shaderStorage.getFlatTexturePlane();
 		texturePlane.use();
 		texturePlane.draw();
@@ -101,9 +110,10 @@ public class PauseMenu
 		fontUnit.activate();
 		ShaderProgram textShader = shaderStorage.getFlatTextShader();
 		textShader.use();
-		textShader.setUniformV3(2, new float[]{0, 0, 0});
+		textShader.setUniformV3(2, new float[]{0, 0, 0}); //Color
 		buttonSave.renderText(textShader, middleX, middleY);
 		buttonSaveAs.renderText(textShader, middleX, middleY);
+		buttonKeybindings.renderText(textShader, middleX, middleY);
 		buttonExit.renderText(textShader, middleX, middleY);
 	}
 	
@@ -128,6 +138,10 @@ public class PauseMenu
 			{
 				save(true);
 			}
+			else if(buttonKeybindings.inside(xx, yy))
+			{
+				openKeybindings();
+			}
 			else if(buttonExit.inside(xx, yy))
 			{
 				renderPlane2D.issueShutdown();
@@ -137,6 +151,41 @@ public class PauseMenu
 		}
 		
 		return false;
+	}
+	
+	private void openKeybindings()
+	{
+		String path = PauseMenu.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		if(!path.endsWith(".jar"))
+		{
+			System.out.println("[OpenKeybindingsManager] ERROR: Not running from a jar file! Cannot construct run-command for keybinding manager.");
+			return;
+		}
+		System.out.println("[OpenKeybindingsManager] Jar file path: " + path);
+		
+		String jvm_location;
+		if (System.getProperty("os.name").startsWith("Win")) {
+			jvm_location = System.getProperties().getProperty("java.home") + File.separator + "bin" + File.separator + "java.exe";
+		} else {
+			jvm_location = System.getProperties().getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+		}
+		System.out.println("[OpenKeybindingsManager] Java executeable path: " + jvm_location);
+		
+		ProcessBuilder pb = new ProcessBuilder(jvm_location, "-jar", path, "key");
+		pb.directory(OpenTUNG.dataFolder.getParent().toFile());
+		try
+		{
+			pb.start();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private boolean isRunningFromJar()
+	{
+		return PauseMenu.class.getProtectionDomain().getCodeSource().getLocation().getPath().endsWith(".jar");
 	}
 	
 	public void save(boolean chooser)
@@ -239,6 +288,7 @@ public class PauseMenu
 		float yy = sy - middleY;
 		buttonSave.testHover(xx, yy);
 		buttonSaveAs.testHover(xx, yy);
+		buttonKeybindings.testHover(xx, yy);
 		buttonExit.testHover(xx, yy);
 	}
 	
@@ -246,6 +296,7 @@ public class PauseMenu
 	{
 		buttonSave.resetHover();
 		buttonSaveAs.resetHover();
+		buttonKeybindings.resetHover();
 		buttonExit.resetHover();
 	}
 }
