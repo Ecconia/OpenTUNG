@@ -85,7 +85,7 @@ public class KeybindingGUI extends JFrame
 			@Override
 			public void componentResized(ComponentEvent e)
 			{
-				scroller.setPreferredSize(new Dimension(entryPanel.getMinimumSize().width, content.getHeight()));
+				scroller.setPreferredSize(new Dimension(entryPanel.getMinimumSize().width, scroller.getHeight()));
 				scroller.revalidate();
 			}
 			
