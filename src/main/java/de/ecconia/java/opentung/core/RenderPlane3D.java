@@ -991,7 +991,10 @@ public class RenderPlane3D implements RenderPlane
 						if(component instanceof CompLabel)
 						{
 							board.getLabelsToRender().remove(component);
-							newGrabData.addLabel((CompLabel) component);
+							if(((CompLabel) component).hasTexture())
+							{
+								newGrabData.addLabel((CompLabel) component);
+							}
 						}
 						else if(component instanceof CompSnappingPeg)
 						{
@@ -1150,7 +1153,10 @@ public class RenderPlane3D implements RenderPlane
 			newGrabData.addComponent(toBeGrabbed); //Must be done manually
 			if(toBeGrabbed instanceof CompLabel)
 			{
-				newGrabData.addLabel((CompLabel) toBeGrabbed);
+				if(((CompLabel) toBeGrabbed).hasTexture())
+				{
+					newGrabData.addLabel((CompLabel) toBeGrabbed);
+				}
 			}
 			if(toBeGrabbed instanceof ConnectedComponent)
 			{
