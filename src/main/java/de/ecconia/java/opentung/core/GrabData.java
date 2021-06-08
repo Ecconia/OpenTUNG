@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.core;
 
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.simulation.Wire;
@@ -18,6 +19,8 @@ public class GrabData
 	private final List<Wire> grabbedWires = new ArrayList<>();
 	//Grabbed labels:
 	private final LinkedList<CompLabel> labels = new LinkedList<>();
+	
+	private List<CompWireRaw> internalWires;
 	
 	public GrabData(CompContainer grabbedParent, Component grabbedComponent)
 	{
@@ -74,6 +77,16 @@ public class GrabData
 	public List<Wire> getWires()
 	{
 		return grabbedWires;
+	}
+	
+	public void setInternalWires(List<CompWireRaw> internalWires)
+	{
+		this.internalWires = internalWires;
+	}
+	
+	public List<CompWireRaw> getInternalWires()
+	{
+		return internalWires;
 	}
 	
 	//Copy code:
