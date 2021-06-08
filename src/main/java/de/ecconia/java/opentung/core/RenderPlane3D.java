@@ -567,7 +567,7 @@ public class RenderPlane3D implements RenderPlane
 			Quaternion deltaAlignment = hitpointContainer.getAlignment();
 			Vector3 newPosition = hitpointContainer.getPosition();
 			Vector3 oldPosition = grabbedComponent.getPosition();
-			for(GrabData.WireContainer wireContainer : grabData.getWiresWithSides())
+			for(GrabData.WireContainer wireContainer : grabData.getOutgoingWiresWithSides())
 			{
 				Wire wire = wireContainer.wire;
 				Vector3 thisPos = wire.getConnectorA().getConnectionPoint();
@@ -629,7 +629,7 @@ public class RenderPlane3D implements RenderPlane
 				parent.addChild(grabbedComponent);
 				grabbedComponent.updateBoundsDeep();
 				parent.updateBounds();
-				for(Wire wire : grabData.getWires())
+				for(Wire wire : grabData.getOutgoingWires())
 				{
 					CompWireRaw cWire = (CompWireRaw) wire;
 					worldMesh.addComponent(cWire, board.getSimulation());
@@ -964,12 +964,14 @@ public class RenderPlane3D implements RenderPlane
 			System.out.println("Can't grab component, since its either the root board or soon deleted.");
 			return;
 		}
+		//Setting the parent to null is a thread-safe operation. It has to be. Doing this declares this component as "busy", means no other interaction with it should be possible.
 		toBeGrabbed.setParent(null);
 		
 		boolean isContainer = toBeGrabbed instanceof CompContainer;
 		GrabData newGrabData;
 		if(isContainer)
 		{
+			//TBI: Not 100% sure, if this separation is needed, well some data is just additional for containers and even more for boards.
 			newGrabData = new GrabContainerData(parent, toBeGrabbed);
 		}
 		else
@@ -977,32 +979,30 @@ public class RenderPlane3D implements RenderPlane
 			newGrabData = new GrabData(parent, toBeGrabbed);
 		}
 		
+		//Collect components and connectors on the render thread. It should not be done on the other threads. Since Render is the modifying thread. This prevents modification while collecting.
 		gpuTasks.add((unused) -> {
 			//Remove the grabbed component from its parent, and update the parents bounds:
 			parent.remove(toBeGrabbed);
 			parent.updateBounds();
 			
-			//Collect components:
-			List<CompWireRaw> internalWires = new ArrayList<>(); //Wires with both ends grabbed
-			Map<Wire, Boolean> outgoingWires = new HashMap<>(); //Wires with only one end grabbed
-			HashSet<CompSnappingPeg> unconnectedSnappingPegs = new HashSet<>(); //All grabbed snapping pegs
-			List<CompSnappingWire> internalSnappingWires = new ArrayList<>(); //Wires where both snapping pegs are grabbed
+			//Collect connectors: Needed to get the wires from them on the simulation thread.
+			List<Connector> connectors = new ArrayList<>();
+			//Connect all snapping pegs (the unconnected is for later):
+			HashSet<CompSnappingPeg> unconnectedSnappingPegs = new HashSet<>();
 			{
 				LinkedList<Component> queue = new LinkedList<>();
 				queue.addLast(toBeGrabbed);
 				while(!queue.isEmpty())
 				{
 					Component component = queue.removeFirst();
-					//Add component to the list of components of this grab:
+					
+					//Add component to the list of components of this grab, to later move them to the right mesh:
 					newGrabData.addComponent(component);
-					//Move it from primary to secondary mesh:
-					worldMesh.removeComponent(component, board.getSimulation());
-					secondaryMesh.addComponent(component, board.getSimulation());
 					
 					//Handle special components:
 					if(component instanceof CompLabel)
 					{
-						board.getLabelsToRender().remove(component);
+						board.getLabelsToRender().remove(component); //Remove the label from visible labels.
 						if(((CompLabel) component).hasTexture())
 						{
 							newGrabData.addLabel((CompLabel) component);
@@ -1013,38 +1013,10 @@ public class RenderPlane3D implements RenderPlane
 						unconnectedSnappingPegs.add((CompSnappingPeg) component);
 					}
 					
+					//Collect connectors and append children to process:
 					if(component instanceof ConnectedComponent)
 					{
-						for(Connector connector : ((ConnectedComponent) component).getConnectors())
-						{
-							//TBI: This call in particular should be done on the simulation thread, it might cause issues else...
-							for(Wire wire : connector.getWires())
-							{
-								if(outgoingWires.remove(wire) != null)
-								{
-									if(wire instanceof CompSnappingWire)
-									{
-										internalSnappingWires.add((CompSnappingWire) wire);
-									}
-									else if(wire instanceof CompWireRaw)
-									{
-										internalWires.add((CompWireRaw) wire);
-									}
-									else if(wire instanceof HiddenWire)
-									{
-										//Ignore this wire. Its not exposed to anything.
-									}
-									else
-									{
-										throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
-									}
-								}
-								else
-								{
-									outgoingWires.put(wire, wire.getConnectorA() == connector);
-								}
-							}
-						}
+						connectors.addAll(((ConnectedComponent) component).getConnectors());
 					}
 					else if(component instanceof CompContainer)
 					{
@@ -1056,89 +1028,161 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
-			//Go over the wires and update the meshes accordingly:
-			for(CompWireRaw wire : internalWires)
-			{
-				//TODO: Iterate over connectors...
-				clusterHighlighter.clusterChanged(wire.getCluster());
-				worldMesh.removeComponent(wire, board.getSimulation());
-				wireRayCaster.removeWire(wire);
-				secondaryMesh.addComponent(wire, board.getSimulation());
-			}
-			newGrabData.setInternalWires(internalWires);
-			
-			if(isContainer)
-			{
-				//Filter the connected snapping pegs from the list of unconnected ones. And remove the wires connecting them.
-				for(CompSnappingWire wire : internalSnappingWires)
-				{
-					unconnectedSnappingPegs.remove(wire.getConnectorA().getParent());
-					unconnectedSnappingPegs.remove(wire.getConnectorB().getParent());
-					worldMesh.removeComponent(wire, board.getSimulation());
-					secondaryMesh.addComponent(wire, board.getSimulation());
-				}
-				((GrabContainerData) newGrabData).setUnconnectedSnappingPegs(unconnectedSnappingPegs);
-				((GrabContainerData) newGrabData).setInternalSnappingWires(internalSnappingWires);
-			}
-			else if(!internalSnappingWires.isEmpty())
-			{
-				new RuntimeException("Internal snapping peg list was not empty. Although it was not a container. Continuing anyway.").printStackTrace(System.out);
-			}
-			
-			List<CompSnappingWire> snappingWiresToRemove = new ArrayList<>();
-			for(Map.Entry<Wire, Boolean> outgoingWireEntry : outgoingWires.entrySet())
-			{
-				Wire outgoingWire = outgoingWireEntry.getKey();
-				//TODO: Iterate over connectors...
-				clusterHighlighter.clusterChanged(outgoingWire.getCluster());
-				worldMesh.removeComponent((Component) outgoingWire, board.getSimulation());
-				if(outgoingWire instanceof CompSnappingWire)
-				{
-					snappingWiresToRemove.add((CompSnappingWire) outgoingWire);
-				}
-				else
-				{
-					//Snapping peg wires should not and technically can't be in the wire ray-caster...
-					wireRayCaster.removeWire((CompWireRaw) outgoingWire);
-					newGrabData.addWire(outgoingWire, outgoingWireEntry.getValue());
-				}
-			}
-			
-			fixXAxis = toBeGrabbed.getRotation().inverse().multiply(Vector3.xp);
-			lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
-			grabRotation = 0;
-			//Activate grabbing:
-			if(toBeGrabbed instanceof CompBoard)
-			{
-				CompBoard board = (CompBoard) toBeGrabbed;
-				this.xBoardOffset = ((board.getX() & 1) == 0) ? -0.15 : 0;
-				this.zBoardOffset = ((board.getZ() & 1) == 0) ? -0.15 : 0;
-			}
-			else //Any other component:
-			{
-				this.xBoardOffset = 0;
-				this.zBoardOffset = 0;
-			}
-			this.fineBoardOffset = 0;
-			this.grabData = newGrabData;
-			
-			//Remove snapping peg simulation cluster connection:
+			//Collect all wires on the simulation thread, has to be done on it, cause then the simulation thread cannot modify wires and clusters while collecting:
 			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-				for(CompSnappingWire wire : snappingWiresToRemove)
+				//This list serves are temporary list to hold all wires, but all the wires which are connected to the current grab on both sides will be removed again.
+				// This way it is detected if a wire is "internal" or "outgoing".
+				Map<Wire, Boolean> outgoingWires = new HashMap<>();
+				//Normal not outgoing wires:
+				List<CompWireRaw> internalWires = new ArrayList<>();
+				//SnappingPeg not outgoing wires: Used to detect internal snapping pegs later on.
+				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
+				//Iterate over all connectors to capture all wires:
+				for(Connector connector : connectors)
 				{
-					CompSnappingPeg aSide = (CompSnappingPeg) wire.getConnectorA().getParent();
-					CompSnappingPeg bSide = (CompSnappingPeg) wire.getConnectorB().getParent();
-					aSide.setPartner(null);
-					bSide.setPartner(null);
-					ClusterHelper.removeWire(simulation, wire, updates);
+					for(Wire wire : connector.getWires())
+					{
+						//A wire has two ends, thus it can at most be added two times into the outgoingWires set.
+						// If it is removed and 'null' returned it was not in it, it is the first time it got added to the list.
+						// If the result is not 'null', that means it was already added, both ends are somewhere on the grabbed component, thus it is an internal wire which should fully be grabbed.
+						//All wires that remain at the end are outgoing wires which if snapping wire need to be removed, and if normal wire need to be invisible and drawn in a custom way.
+						if(outgoingWires.remove(wire) != null)
+						{
+							if(wire instanceof CompSnappingWire)
+							{
+								internalSnappingWires.add((CompSnappingWire) wire);
+							}
+							else if(wire instanceof CompWireRaw)
+							{
+								internalWires.add((CompWireRaw) wire);
+							}
+							else if(wire instanceof HiddenWire)
+							{
+								//Ignore this wire. Its not exposed to anything.
+							}
+							else
+							{
+								//An issue if someone wants to mod wires in an unexpected way:
+								throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
+							}
+						}
+						else
+						{
+							//For each wire, it is important to remember which side was connected to the connector.
+							outgoingWires.put(wire, wire.getConnectorA() == connector);
+						}
+					}
 				}
+				//Set the current list of internal wires, by now this could be replaced by a method call for each wire once it got detected:
+				// Actually it makes much more sense for the copy to also just set the list. So lets keep it this way.
+				newGrabData.setInternalWires(internalWires);
+				
+				//The snapping peg management can and should be done on the simulation thread as much as possible.
+				// We should never delay the render thread for longer than required, the simulation we can halt as long as we please for bigger things.
+				if(isContainer)
+				{
+					//Filter the connected snapping pegs from the list of unconnected ones.
+					for(CompSnappingWire wire : internalSnappingWires)
+					{
+						unconnectedSnappingPegs.remove(wire.getConnectorA().getParent());
+						unconnectedSnappingPegs.remove(wire.getConnectorB().getParent());
+					}
+					((GrabContainerData) newGrabData).setUnconnectedSnappingPegs(unconnectedSnappingPegs);
+					((GrabContainerData) newGrabData).setInternalSnappingWires(internalSnappingWires);
+				}
+				else if(!internalSnappingWires.isEmpty())
+				{
+					//If we only grab a single component, then that one cannot contain an internal snapping wire, since that requires two grabbed snapping peg components.
+					// So this code is a failsafe, if such a wire is collected nevertheless.
+					new RuntimeException("Internal snapping peg list was not empty. Although it was not a container. Continuing anyway.").printStackTrace(System.out);
+				}
+				
+				//Sort all the outgoing wires to snapping or normal wires:
+				// Snapping wires will have to be removed, since we rip the board with them out of where it used to be.
+				List<CompSnappingWire> snappingWiresToRemove = new ArrayList<>();
+				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>(); //For simulation updates caused by snapping wire removal.
+				for(Map.Entry<Wire, Boolean> outgoingWireEntry : outgoingWires.entrySet())
+				{
+					Wire wire = outgoingWireEntry.getKey();
+					if(wire instanceof CompSnappingWire)
+					{
+						//Remember the snapping wire for visual updates later:
+						snappingWiresToRemove.add((CompSnappingWire) wire);
+						//Actually disconnect the snapping peg connections:
+						CompSnappingPeg aSide = (CompSnappingPeg) wire.getConnectorA().getParent();
+						CompSnappingPeg bSide = (CompSnappingPeg) wire.getConnectorB().getParent();
+						aSide.setPartner(null);
+						bSide.setPartner(null);
+						ClusterHelper.removeWire(simulation, wire, updates);
+					}
+					else
+					{
+						newGrabData.addWire((CompWireRaw) wire, outgoingWireEntry.getValue());
+					}
+				}
+				
+				//Do the finalization on the render thread, that is doing the mesh modification for the most part:
 				gpuTasks.add((unused2) -> {
-					System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+					//Updates caused by the simulation when ripping out snapping wire connections.
+					// In general happens when a cluster gets divided by this action, so that one of the cluster half's is now off.
+					System.out.println("[ClusterUpdateDebug] (Grabbing/SnappingWireRemoval) Updating " + updates.size() + " conductor mesh bags.");
 					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
 					{
 						entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
 					}
+					
+					//If there is a cluster highlighted, for now we want to stop highlighting it, since it might have changed (by ripping snapping connections apart), it is also not possible to highlight the cluster positions if they are on the secondary mesh.
+					for(Connector connector : connectors)
+					{
+						clusterHighlighter.clusterChanged(connector.getCluster());
+					}
+					
+					//Move components into the grab/secondary-mesh: Done in this stage, as a final visual confirmation to the user. Could be done in the first render stage.
+					for(Component component : newGrabData.getComponents())
+					{
+						worldMesh.removeComponent(component, board.getSimulation());
+						secondaryMesh.addComponent(component, board.getSimulation());
+					}
+					//Wires: The general rule for them is, move from primary to secondary mesh. Discard outgoing snapping wires, and remove normal wires from the wire-ray-caster.
+					for(CompSnappingWire wire : snappingWiresToRemove)
+					{
+						worldMesh.removeComponent(wire, board.getSimulation());
+					}
+					for(CompWireRaw wire : newGrabData.getOutgoingWires())
+					{
+						wireRayCaster.removeWire(wire);
+						worldMesh.removeComponent(wire, board.getSimulation());
+					}
+					for(CompSnappingWire wire : internalSnappingWires)
+					{
+						worldMesh.removeComponent(wire, board.getSimulation());
+						secondaryMesh.addComponent(wire, board.getSimulation());
+					}
+					for(CompWireRaw wire : internalWires)
+					{
+						//Also remove these from the ray-caster:
+						wireRayCaster.removeWire(wire);
+						worldMesh.removeComponent(wire, board.getSimulation());
+						secondaryMesh.addComponent(wire, board.getSimulation());
+					}
+					
+					//Finished the processing, now apply the grabbing:
+					fixXAxis = toBeGrabbed.getRotation().inverse().multiply(Vector3.xp);
+					lastUpNormal = toBeGrabbed.getRotation().inverse().multiply(Vector3.yp);
+					grabRotation = 0;
+					if(toBeGrabbed instanceof CompBoard)
+					{
+						CompBoard board = (CompBoard) toBeGrabbed;
+						this.xBoardOffset = ((board.getX() & 1) == 0) ? -0.15 : 0;
+						this.zBoardOffset = ((board.getZ() & 1) == 0) ? -0.15 : 0;
+					}
+					else //Any other component:
+					{
+						this.xBoardOffset = 0;
+						this.zBoardOffset = 0;
+					}
+					this.fineBoardOffset = 0;
+					this.grabData = newGrabData;
 				});
 			});
 		});
@@ -1150,148 +1194,188 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return; //We are dragging a wire, don't grab something!
 		}
+		if(grabData != null)
+		{
+			return;
+		}
 		if(componentToCopy instanceof Wire)
 		{
 			//We don't copy wires.
 			return;
 		}
 		
+		//No need to do the parent check, since we want to copy the component and not change it.
+		
 		gpuTasks.add((unused) -> {
-			Component componentCopy = componentToCopy.copy(); //Copy does not create clusters.
-			
-			HashMap<Component, Component> copiesLookup = new HashMap<>();
-			copiesLookup.put(componentToCopy, componentCopy);
-			
 			boolean isContainer = componentToCopy instanceof CompContainer;
 			GrabData grabData;
 			if(isContainer)
 			{
-				grabData = new GrabContainerData(null, componentCopy);
+				//TBI: Not 100% sure, if this separation is needed, well some data is just additional for containers and even more for boards.
+				grabData = new GrabContainerData(null, null);
 			}
 			else
 			{
-				grabData = new GrabData(null, componentCopy);
+				grabData = new GrabData(null, null);
 			}
-			grabData.setCopy();
+			grabData.setCopy(); //Sets a flag telling the placement code, that this is a copy and not the original. Adds special parents and such. Also totally different abort/delete code.
 			
-			grabData.addComponent(componentCopy);
-			if(componentToCopy instanceof CompLabel)
-			{
-				if(((CompLabel) componentToCopy).hasTexture())
-				{
-					grabData.addLabel((CompLabel) componentToCopy);
-				}
-			}
+			//Later when working with the wires, we will encounter original components which need to be mapped to their copies.
+			// Original => Copy
+			HashMap<Component, Component> copiesLookup = new HashMap<>();
 			
-			if(isContainer)
+			//Collect connectors: Needed to get the wires from them on the simulation thread.
+			List<Connector> connectors = new ArrayList<>();
+			//Connect all snapping pegs (the unconnected is for later):
+			HashSet<CompSnappingPeg> unconnectedSnappingPegs = new HashSet<>();
 			{
-				HashSet<CompSnappingPeg> unconnectedSnappingPegs = new HashSet<>();
-				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
-				List<CompWireRaw> internalWires = new ArrayList<>();
-				Map<Wire, Boolean> outgoingWires = new HashMap<>();
-				
 				LinkedList<Tuple<Component>> queue = new LinkedList<>();
-				//Add the original children to the queue, cannot start with the original, since we already have a copy of the grabbed container.
-				for(Component child : ((CompContainer) componentToCopy).getChildren())
-				{
-					queue.addLast(new Tuple<>(componentCopy, child));
-				}
+				//Add initial component (null parent, since never placed before):
+				// Structure of the tuple is <Parent Copy; Original Component>
+				queue.add(new Tuple<>(null, componentToCopy));
 				while(!queue.isEmpty())
 				{
 					Tuple<Component> tuple = queue.removeFirst();
-					CompContainer parentCopy = (CompContainer) tuple.getFirst();
-					Component comp = tuple.getSecond();
+					CompContainer parentCopy = (CompContainer) tuple.getFirst(); //Null in the very first loop!
+					Component originalComponent = tuple.getSecond();
 					
-					Component compCopy = comp.copy();
-					copiesLookup.put(comp, compCopy);
-					grabData.addComponent(compCopy);
-					//Set parent:
-					compCopy.setParent(parentCopy);
-					parentCopy.addChild(compCopy);
-					
-					if(comp instanceof CompLabel)
+					//Create copy of this component:
+					Component copyComponent = originalComponent.copy();
+					copiesLookup.put(originalComponent, copyComponent); //Add to the lookup map.
+					if(parentCopy != null) //Kind of "uff" that this is only once false (in the first loop).
 					{
-						if(((CompLabel) comp).hasTexture())
+						//Link the copy parent with its copy child:
+						copyComponent.setParent(parentCopy);
+						parentCopy.addChild(copyComponent);
+					}
+					//Add component to the list of components of this copy, to later move them to the right mesh:
+					grabData.addComponent(copyComponent);
+					
+					//Handle special components:
+					if(copyComponent instanceof CompLabel)
+					{
+						if(((CompLabel) copyComponent).hasTexture())
 						{
-							grabData.addLabel((CompLabel) compCopy);
+							grabData.addLabel((CompLabel) copyComponent);
 						}
 					}
-					else if(comp instanceof CompSnappingPeg)
+					else if(copyComponent instanceof CompSnappingPeg)
 					{
-						unconnectedSnappingPegs.add((CompSnappingPeg) compCopy);
+						unconnectedSnappingPegs.add((CompSnappingPeg) copyComponent);
 					}
 					
-					if(comp instanceof ConnectedComponent)
+					//Collect connectors and append children to process:
+					if(copyComponent instanceof ConnectedComponent)
 					{
-						for(Connector connector : ((ConnectedComponent) comp).getConnectors())
+						connectors.addAll(((ConnectedComponent) originalComponent).getConnectors());
+					}
+					else if(copyComponent instanceof CompContainer)
+					{
+						for(Component child : ((CompContainer) originalComponent).getChildren())
 						{
-							for(Wire wire : connector.getWires())
+							queue.addLast(new Tuple<>(copyComponent, child));
+						}
+					}
+				}
+			}
+			//Due to not knowing the copy at the time GrabData got created, it has to be set now - after creating all the copies.
+			// The first copy ever made is the copy of the original to be copied component.
+			grabData.overwriteGrabbedComponent(grabData.getComponents().get(0));
+			
+			//Collect all wires on the simulation thread, has to be done on it, cause then the simulation thread cannot modify wires and clusters while collecting:
+			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				//This list serves are temporary list to hold all wires, but all the wires which are connected to the current grab on both sides will be removed again.
+				// This way it is detected if a wire is "internal" or "outgoing".
+				Map<Wire, Boolean> outgoingWires = new HashMap<>(); //When copying, the outgoing wires are only temporary and ignored later on.
+				//Normal not outgoing wires:
+				List<CompWireRaw> internalWires = new ArrayList<>();
+				//SnappingPeg not outgoing wires: Used to detect internal snapping pegs later on.
+				List<CompSnappingWire> internalSnappingWires = new ArrayList<>();
+				//Iterate over all connectors to capture all wires:
+				for(Connector connector : connectors)
+				{
+					for(Wire wire : connector.getWires())
+					{
+						//A wire has two ends, thus it can at most be added two times into the outgoingWires set.
+						// If it is removed and 'null' returned it was not in it, it is the first time it got added to the list.
+						// If the result is not 'null', that means it was already added, both ends are somewhere on the grabbed component, thus it is an internal wire which should fully be grabbed.
+						//All wires that remain at the end are outgoing wires which if snapping wire need to be removed, and if normal wire need to be invisible and drawn in a custom way.
+						if(outgoingWires.remove(wire) != null)
+						{
+							if(wire instanceof CompSnappingWire)
 							{
-								if(outgoingWires.remove(wire) != null)
-								{
-									if(wire instanceof CompSnappingWire)
-									{
-										internalSnappingWires.add((CompSnappingWire) wire);
-									}
-									else if(wire instanceof CompWireRaw)
-									{
-										internalWires.add((CompWireRaw) wire);
-									}
-									else if(wire instanceof HiddenWire)
-									{
-										//Ignore this wire. Its not exposed to anything.
-									}
-									else
-									{
-										throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
-									}
-								}
-								else
-								{
-									outgoingWires.put(wire, wire.getConnectorA() == connector);
-								}
+								internalSnappingWires.add((CompSnappingWire) wire);
+							}
+							else if(wire instanceof CompWireRaw)
+							{
+								internalWires.add((CompWireRaw) wire);
+							}
+							else if(wire instanceof HiddenWire)
+							{
+								//Ignore this wire. Its not exposed to anything.
+							}
+							else
+							{
+								//An issue if someone wants to mod wires in an unexpected way:
+								throw new RuntimeException("Unexpected wire type received: " + wire.getClass().getSimpleName());
 							}
 						}
-					}
-					else if(comp instanceof CompContainer)
-					{
-						for(Component child : ((CompContainer) comp).getChildren())
+						else
 						{
-							queue.addLast(new Tuple<>(compCopy, child));
+							//For each wire, it is important to remember which side was connected to the connector.
+							outgoingWires.put(wire, wire.getConnectorA() == connector);
 						}
 					}
 				}
+				//Do not set the internal wires yet, they have to be copied first.
 				
-				//Snapping wires:
-				List<CompSnappingWire> internalSnappingWiresCopy = new ArrayList<>(internalSnappingWires.size());
-				for(CompSnappingWire wire : internalSnappingWires)
+				//The snapping peg management can and should be done on the simulation thread as much as possible.
+				// We should never delay the render thread for longer than required, the simulation we can halt as long as we please for bigger things.
+				if(isContainer)
 				{
-					//Get the SnappingPeg copies:
-					CompSnappingPeg copyA = (CompSnappingPeg) copiesLookup.get(wire.getConnectorA().getParent());
-					CompSnappingPeg copyB = (CompSnappingPeg) copiesLookup.get(wire.getConnectorB().getParent());
-					//Copy the wire:
-					CompSnappingWire copy = (CompSnappingWire) wire.copy();
-					internalSnappingWiresCopy.add(copy);
-					//Remove all internally connected snapping pegs:
-					unconnectedSnappingPegs.remove(copyA);
-					unconnectedSnappingPegs.remove(copyB);
-					//Link the two snapping pegs with the new wire:
-					copyA.setPartner(copyB);
-					copyB.setPartner(copyA);
-					copy.setConnectorA(copyA.getPegs().get(0));
-					copy.setConnectorB(copyB.getPegs().get(0));
-					copyA.getPegs().get(0).addWire(copy);
-					copyB.getPegs().get(0).addWire(copy);
+					//All internal snapping peg wires have to be copied:
+					List<CompSnappingWire> internalSnappingWiresCopy = new ArrayList<>(internalSnappingWires.size());
+					for(CompSnappingWire wire : internalSnappingWires)
+					{
+						//Get the SnappingPeg copies, by looking them up using the original parents:
+						CompSnappingPeg copyA = (CompSnappingPeg) copiesLookup.get(wire.getConnectorA().getParent());
+						CompSnappingPeg copyB = (CompSnappingPeg) copiesLookup.get(wire.getConnectorB().getParent());
+						//Copy the snapping wire:
+						CompSnappingWire copy = (CompSnappingWire) wire.copy();
+						internalSnappingWiresCopy.add(copy);
+						//Remove all internally connected snapping pegs:
+						unconnectedSnappingPegs.remove(copyA);
+						unconnectedSnappingPegs.remove(copyB);
+						//Link the two snapping pegs with the new wire:
+						copyA.setPartner(copyB);
+						copyB.setPartner(copyA);
+						copy.setConnectorA(copyA.getPegs().get(0));
+						copy.setConnectorB(copyB.getPegs().get(0));
+						copyA.getPegs().get(0).addWire(copy);
+						copyB.getPegs().get(0).addWire(copy);
+					}
+					//This list is used to connect the snapping pegs on placement:
+					((GrabContainerData) grabData).setUnconnectedSnappingPegs(unconnectedSnappingPegs);
+					//This list is only to place the wires later on, and add them to the secondary mesh:
+					((GrabContainerData) grabData).setInternalSnappingWires(internalSnappingWiresCopy);
 				}
-				((GrabContainerData) grabData).setUnconnectedSnappingPegs(unconnectedSnappingPegs);
-				((GrabContainerData) grabData).setInternalSnappingWires(internalSnappingWiresCopy);
+				else if(!internalSnappingWires.isEmpty())
+				{
+					//If we only grab a single component, then that one cannot contain an internal snapping wire, since that requires two grabbed snapping peg components.
+					// So this code is a failsafe, if such a wire is collected nevertheless.
+					new RuntimeException("Internal snapping peg list was not empty. Although it was not a container. Continuing anyway.").printStackTrace(System.out);
+				}
 				
-				//Normal wires:
+				//All the internal wires have to be copied:
 				List<CompWireRaw> internalWiresCopy = new ArrayList<>(internalWires.size());
 				for(CompWireRaw wire : internalWires)
 				{
+					//Get the copies of the two wire end components:
 					ConnectedComponent copyA = (ConnectedComponent) copiesLookup.get(wire.getConnectorA().getParent());
 					ConnectedComponent copyB = (ConnectedComponent) copiesLookup.get(wire.getConnectorB().getParent());
+					//For both sides perform the same code (with other variables).
+					// Here if the connector was a blot, we access the blots of the copy via index, since blots know their index.
+					// But if it was a peg, we have to compare them, since they are not aware of their index/position.
 					Connector connectorCopyA = null;
 					{
 						if(wire.getConnectorA().getClass() == Blot.class)
@@ -1339,19 +1423,18 @@ public class RenderPlane3D implements RenderPlane
 						}
 					}
 					
+					//Actually copy the wire and set both connectors:
 					CompWireRaw copy = (CompWireRaw) wire.copy();
+					internalWiresCopy.add(copy);
 					copy.setConnectorA(connectorCopyA);
 					copy.setConnectorB(connectorCopyB);
 					connectorCopyA.addWire(copy);
 					connectorCopyB.addWire(copy);
-					internalWiresCopy.add(copy);
 				}
-				((GrabContainerData) grabData).setInternalWires(internalWiresCopy);
-			}
-			
-			board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+				grabData.setInternalWires(internalWiresCopy);
+				
 				//Create clusters for all components:
-				//Done on the simulation thread, to not block the visuals for an even longer time.
+				// Basically the initial cluster creation code is used, the one in charge when loading boards. Same thing happening here.
 				for(Component comp : grabData.getComponents())
 				{
 					if(comp instanceof ConnectedComponent)
@@ -1362,6 +1445,7 @@ public class RenderPlane3D implements RenderPlane
 						}
 					}
 				}
+				//First Blots then Pegs:
 				for(Component comp : grabData.getComponents())
 				{
 					if(comp instanceof ConnectedComponent)
@@ -1376,41 +1460,49 @@ public class RenderPlane3D implements RenderPlane
 					}
 				}
 				
+				//Copy state and prime clusters:
 				for(Map.Entry<Component, Component> entry : copiesLookup.entrySet())
 				{
 					Component original = entry.getKey();
 					Component copy = entry.getValue();
 					if(original instanceof Powerable)
 					{
-						
+						//Component was powerable, that basically means it stores a bit for its Blot output. Copy that bit/state.
 						//TODO: Use the correct index, currently components only have one Blot, if that changes, this code fails.
 						((Powerable) copy).setPowered(0, ((Powerable) original).isPowered(0));
+						//This call tells the Blot/Source-Cluster connected to the component to be updated, this has to be done, since normally blots query the state of the component and not the other way round.
 						((Powerable) copy).forceUpdateOutput();
 					}
 					if(copy instanceof Updateable)
 					{
+						//Each and every component will be queued up in the simulation queue, if it can be updated. They are designed to handle that.
+						// With that, the simulation naturally continues as if the copy never happened.
 						simulation.updateNextTick((Updateable) copy);
 					}
 				}
 				
+				//Do the finalization on the render thread, that is doing the mesh modification for the most part:
 				gpuTasks.add((stillUnused) -> {
-					//Wait until the simulation caught up, before adding to the visible mesh.
+					//Add copied components into the grab/secondary-mesh: Done in this stage, as a final visual confirmation to the user. Could be done in the first render stage.
 					for(Component comp : grabData.getComponents())
 					{
 						secondaryMesh.addComponent(comp, board.getSimulation());
 					}
+					//Wires: The general rule for them is, add them to the secondary mesh. Skip any outgoing wire.
+					for(CompWireRaw wire : internalWiresCopy)
+					{
+						secondaryMesh.addComponent(wire, board.getSimulation());
+					}
 					if(isContainer)
 					{
+						//Has to be wrapped in isContainer, since we need the copy of the list, not the originals.
 						for(CompSnappingWire wire : ((GrabContainerData) grabData).getInternalSnappingWires())
-						{
-							secondaryMesh.addComponent(wire, board.getSimulation());
-						}
-						for(CompWireRaw wire : ((GrabContainerData) grabData).getInternalWires())
 						{
 							secondaryMesh.addComponent(wire, board.getSimulation());
 						}
 					}
 					
+					//Finished the processing, now apply the grabbing:
 					this.fixXAxis = componentToCopy.getRotation().inverse().multiply(Vector3.xp);
 					this.lastUpNormal = componentToCopy.getRotation().inverse().multiply(Vector3.yp);
 					this.grabRotation = 0;
@@ -1420,7 +1512,7 @@ public class RenderPlane3D implements RenderPlane
 						this.xBoardOffset = ((board.getX() & 1) == 0) ? -0.15 : 0;
 						this.zBoardOffset = ((board.getZ() & 1) == 0) ? -0.15 : 0;
 					}
-					else //Something normal:
+					else //Any other component:
 					{
 						this.xBoardOffset = 0;
 						this.zBoardOffset = 0;
@@ -1452,7 +1544,7 @@ public class RenderPlane3D implements RenderPlane
 			}
 			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 			//TBI: Removing wires first? Or just all blots/pegs?
-			for(Wire wire : grabDataCopy.getWires())
+			for(Wire wire : grabDataCopy.getOutgoingWires())
 			{
 				//Outgoing wires:
 				ClusterHelper.removeWire(board.getSimulation(), wire, updates);
@@ -1512,7 +1604,7 @@ public class RenderPlane3D implements RenderPlane
 						board.getWiresToRender().remove(wire);
 					}
 				}
-				for(Wire wire : grabDataCopy.getWires())
+				for(Wire wire : grabDataCopy.getOutgoingWires())
 				{
 					//Now snapping nor hidden wires at this point.
 					board.getWiresToRender().remove(wire);
@@ -1582,7 +1674,7 @@ public class RenderPlane3D implements RenderPlane
 				}
 			}
 			
-			for(Wire wire : grabData.getWires())
+			for(Wire wire : grabData.getOutgoingWires())
 			{
 				CompWireRaw cWire = (CompWireRaw) wire;
 				worldMesh.addComponent(cWire, board.getSimulation());
@@ -2287,7 +2379,7 @@ public class RenderPlane3D implements RenderPlane
 		visibleCube.use();
 		
 		Matrix m = new Matrix();
-		List<GrabData.WireContainer> grabbedWires = grabData.getWiresWithSides();
+		List<GrabData.WireContainer> grabbedWires = grabData.getOutgoingWiresWithSides();
 		for(GrabData.WireContainer wireContainer : grabbedWires)
 		{
 			Wire wire = wireContainer.wire;
