@@ -1,6 +1,6 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.core.SimpleCallback;
+import de.ecconia.java.opentung.core.structs.SimpleCallback;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import org.lwjgl.glfw.GLFW;
 

@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core;
+package de.ecconia.java.opentung.core.systems;
 
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompSnappingWire;
@@ -10,6 +10,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.Part;
+import de.ecconia.java.opentung.core.Camera;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.util.math.Quaternion;

@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core;
+package de.ecconia.java.opentung.core.helper;
 
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;

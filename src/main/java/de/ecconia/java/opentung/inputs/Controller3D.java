@@ -7,7 +7,7 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.core.Camera;
-import de.ecconia.java.opentung.core.GrabData;
+import de.ecconia.java.opentung.core.data.GrabData;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.settings.Settings;

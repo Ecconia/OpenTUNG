@@ -1,5 +1,6 @@
-package de.ecconia.java.opentung.core;
+package de.ecconia.java.opentung.core.systems;
 
+import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.settings.Settings;

@@ -2,7 +2,7 @@ package de.ecconia.java.opentung.units;
 
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
-import de.ecconia.java.opentung.core.ShaderStorage;
+import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;

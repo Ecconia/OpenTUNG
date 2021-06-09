@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core;
+package de.ecconia.java.opentung.core.systems;
 
 import de.ecconia.java.opentung.components.CompPeg;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -7,6 +7,10 @@ import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.Part;
+import de.ecconia.java.opentung.core.structs.GPUTask;
+import de.ecconia.java.opentung.core.data.ShaderStorage;
+import de.ecconia.java.opentung.core.data.SharedData;
+import de.ecconia.java.opentung.core.helper.World3DHelper;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;

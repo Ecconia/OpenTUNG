@@ -12,6 +12,8 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.PlaceboParent;
+import de.ecconia.java.opentung.core.structs.GPUTask;
+import de.ecconia.java.opentung.core.systems.CPURaycast;
 import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.savefile.BoardAndWires;

@@ -1,6 +1,9 @@
-package de.ecconia.java.opentung.core;
+package de.ecconia.java.opentung.core.data;
 
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.BoardUniverse;
+import de.ecconia.java.opentung.core.RenderPlane3D;
+import de.ecconia.java.opentung.core.structs.GPUTask;
 import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
 

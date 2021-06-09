@@ -1,8 +1,8 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
-import de.ecconia.java.opentung.core.ShaderStorage;
-import de.ecconia.java.opentung.core.SharedData;
+import de.ecconia.java.opentung.core.data.ShaderStorage;
+import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompDisplay;

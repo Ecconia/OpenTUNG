@@ -9,7 +9,7 @@ import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.core.BoardUniverse;
-import de.ecconia.java.opentung.core.ShaderStorage;
+import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.settings.Settings;

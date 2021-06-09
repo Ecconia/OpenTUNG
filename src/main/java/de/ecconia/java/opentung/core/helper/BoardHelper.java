@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core;
+package de.ecconia.java.opentung.core.helper;
 
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.util.math.Quaternion;
