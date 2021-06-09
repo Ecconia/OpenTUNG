@@ -26,6 +26,7 @@ import de.ecconia.java.opentung.core.data.GrabData;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.core.data.HitpointBoard;
 import de.ecconia.java.opentung.core.data.HitpointContainer;
+import de.ecconia.java.opentung.core.data.ResizeData;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.helper.OnBoardPlacementHelper;
@@ -154,6 +155,8 @@ public class RenderPlane3D implements RenderPlane
 	//Is grabbing:
 	private GrabData grabData;
 	private double grabRotation;
+	//Is resizing:
+	private ResizeData resizeData;
 	
 	//Board placement offset:
 	private double fineBoardOffset;
@@ -464,7 +467,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		Hitpoint hitpoint = this.hitpoint; //Create copy of hitpoint reference, to stay thread-safe.
 		//Only called when looking at a container.
-		if(hitpoint.canBePlacedOn() && currentPlaceable == CompBoard.info && grabData == null)
+		if(hitpoint.canBePlacedOn() && currentPlaceable == CompBoard.info && grabData == null && resizeData == null)
 		{
 			gpuTasks.add((unused) -> {
 				//Start dragging until end.
@@ -557,6 +560,11 @@ public class RenderPlane3D implements RenderPlane
 			return true; //Don't do all the other checks, obsolete.
 		}
 		
+		//Do not do this check any earlier, cause for whatever reason we might be dragging a board or such.
+		if(resizeData != null && grabData == null) //Just make sure that we are not dragging, if we are then something went wrong and placement should be allowed.
+		{
+			return false;
+		}
 		if(!hitpoint.canBePlacedOn())
 		{
 			//If not looking at a container abort.
@@ -808,6 +816,10 @@ public class RenderPlane3D implements RenderPlane
 		{
 			return;
 		}
+		if(resizeData != null)
+		{
+			return;
+		}
 		if(toBeDeleted instanceof Connector)
 		{
 			toBeDeleted = toBeDeleted.getParent();
@@ -960,6 +972,10 @@ public class RenderPlane3D implements RenderPlane
 			return; //We are dragging a wire, don't grab something!
 		}
 		if(grabData != null)
+		{
+			return;
+		}
+		if(resizeData != null)
 		{
 			return;
 		}
@@ -1206,6 +1222,10 @@ public class RenderPlane3D implements RenderPlane
 			return; //We are dragging a wire, don't grab something!
 		}
 		if(grabData != null)
+		{
+			return;
+		}
+		if(resizeData != null)
 		{
 			return;
 		}
@@ -1781,6 +1801,68 @@ public class RenderPlane3D implements RenderPlane
 		return changed.getY() > 0.98D || changed.getY() < -0.98D;
 	}
 	
+	public boolean isResizing()
+	{
+		return resizeData != null;
+	}
+	
+	public void boardResize()
+	{
+		Hitpoint hitpoint = this.hitpoint; //Save as first action, regardless of state.
+		
+		if(resizeData == null)
+		{
+			//Start resizing
+			if(hitpoint.getHitPart() instanceof CompBoard)
+			{
+				System.out.println("Starting board resizing.");
+				gpuTasks.add((unused) -> {
+					CompBoard board = (CompBoard) hitpoint.getHitPart();
+					worldMesh.removeComponent(board, this.board.getSimulation());
+					resizeData = new ResizeData(board);
+					//TODO: Find minimal expansion for each side.
+				});
+			}
+			else
+			{
+				//TBI: Maybe just loop to the parent until board found?
+				System.out.println("Only boards can be resized, please look at one when starting resizing.");
+			}
+		}
+		else
+		{
+			System.out.println("Stopping board resizing.");
+			//Apply resizing
+			gpuTasks.add((unused) -> {
+				if(resizeData == null)
+				{
+					return; //No resize to apply (anymore).
+				}
+				CompBoard board = resizeData.getBoard();
+				board.setPosition(resizeData.getPosition());
+				board.setSize(resizeData.getBoardX(), resizeData.getBoardZ());
+				board.createOwnBounds(); //The board's own size has changed, update its bounds.
+				board.updateBounds(); //Notify the parents that the bounds of this component changed.
+				worldMesh.addComponent(board, this.board.getSimulation());
+				resizeData = null;
+			});
+		}
+	}
+	
+	public void abortResizing()
+	{
+		System.out.println("Aborting board resizing.");
+		//For now just set the resize data to null, which stops resizing.
+		gpuTasks.add((unused) -> {
+			if(resizeData == null)
+			{
+				return; //Already aborted/finished.
+			}
+			worldMesh.addComponent(resizeData.getBoard(), board.getSimulation());
+			resizeData = null;
+		});
+	}
+	
 	//Setup and stuff:
 	
 	@Override
@@ -1879,6 +1961,10 @@ public class RenderPlane3D implements RenderPlane
 					drawGrabbed(view);
 				}
 			}
+			else if(resizeData != null)
+			{
+				drawBoardResize(view);
+			}
 			else if(hitpoint.canBePlacedOn())
 			{
 				drawPlacementPosition(view);
@@ -1927,6 +2013,73 @@ public class RenderPlane3D implements RenderPlane
 		
 		Hitpoint hitpoint = calculateHitpoint();
 		PlaceableInfo currentPlaceable = sharedData.getCurrentPlaceable();
+		
+		boolean skipHitpoint = false;
+		if(resizeData != null)
+		{
+			//Check collision with drag-area:
+			Quaternion alignment = resizeData.getBoard().getRotation();
+			Vector3 position = resizeData.getPosition();
+			
+			//Calculate the camera ray in board space:
+			Vector3 cameraPosition = camera.getPosition();
+			Vector3 cameraRay = Vector3.zp;
+			cameraRay = Quaternion.angleAxis(camera.getNeck(), Vector3.xn).multiply(cameraRay);
+			cameraRay = Quaternion.angleAxis(camera.getRotation(), Vector3.yn).multiply(cameraRay);
+			Vector3 cameraRayBoardSpace = alignment.multiply(cameraRay);
+			Vector3 cameraPositionBoardSpace = alignment.multiply(cameraPosition.subtract(position));
+			
+			//Calculate hitpoint of Y=0 layer:
+			boolean isMouseDown = controller.isLeftMouseDown();
+			double rayDistanceMultiplicator = -cameraPositionBoardSpace.getY() / cameraRayBoardSpace.getY();
+			if(rayDistanceMultiplicator >= 0)
+			{
+				Vector3 cameraToCollisionVector = cameraRayBoardSpace.multiply(rayDistanceMultiplicator);
+				Vector3 collisionPoint = cameraPositionBoardSpace.add(cameraToCollisionVector);
+				double collisionX = collisionPoint.getX();
+				double collisionZ = collisionPoint.getZ();
+				
+				if(!resizeData.isMouseDown() && isMouseDown)
+				{
+					double xVal = Math.abs(collisionX);
+					double zVal = Math.abs(collisionZ);
+					boolean xMatch = xVal > (double) resizeData.getBoardX() * 0.15;
+					boolean zMatch = zVal > (double) resizeData.getBoardZ() * 0.15;
+					if(xMatch != zMatch)
+					{
+						xVal -= (double) resizeData.getBoardX() * 0.15;
+						zVal -= (double) resizeData.getBoardZ() * 0.15;
+						xMatch &= xVal < 0.6;
+						zMatch &= zVal < 0.6;
+						if(xMatch || zMatch)
+						{
+							skipHitpoint = true;
+							resizeData.setPoints(collisionX, collisionZ);
+							resizeData.setAxisX(xMatch);
+							resizeData.setNegative(xMatch ? collisionX < 0 : collisionZ < 0);
+						}
+					}
+				}
+				else if(resizeData.hasPoints() && isMouseDown)
+				{
+					skipHitpoint = true;
+					double relevantOldAxisPoint = resizeData.isAxisX() ? resizeData.getPointX() : resizeData.getPointZ();
+					double relevantCollisionAxis = resizeData.isAxisX() ? collisionX : collisionZ;
+					double diff = relevantOldAxisPoint - relevantCollisionAxis;
+					if(!resizeData.isNegative())
+					{
+						diff = -diff;
+					}
+					int squareChange = (int) (diff / 0.3);
+					resizeData.adjustSize(squareChange);
+				}
+			}
+			if(resizeData.hasPoints() && !isMouseDown && resizeData.isMouseDown())
+			{
+				resizeData.setPoints(null, null);
+			}
+			resizeData.setMouseDown(isMouseDown);
+		}
 		
 		//Always calculate the hitpoint, if things could be placed on, regardless of used. It always has to be ready to be used in the next cycle and between.
 		if(hitpoint.canBePlacedOn())
@@ -2288,7 +2441,7 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		this.currentPlaceable = currentPlaceable;
-		this.hitpoint = hitpoint;
+		this.hitpoint = skipHitpoint ? new Hitpoint() : hitpoint;
 	}
 	
 	private double toRoughRotation()
@@ -2711,6 +2864,110 @@ public class RenderPlane3D implements RenderPlane
 		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
 		//After clearing, disable usage/writing of/to stencil buffer again.
 		GL30.glStencilMask(0x00);
+	}
+	
+	private void drawBoardResize(float[] view)
+	{
+		CompBoard board = resizeData.getBoard();
+		
+		//Draw board:
+		{
+			Vector3 position = resizeData.getPosition();
+			int x = resizeData.getBoardX();
+			int z = resizeData.getBoardZ();
+			
+			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW).
+			Matrix matrix = new Matrix();
+			//Apply global position:
+			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			matrix.multiply(new Matrix(board.getRotation().createMatrix())); //Apply global rotation.
+			//The cube is centered, no translation.
+			matrix.scale((float) x * 0.15f, 0.075f, (float) z * 0.15f);
+			
+			//Draw the board:
+			shaderStorage.getBoardTexture().activate();
+			ShaderProgram textureCubeShader = shaderStorage.getTextureCubeShader();
+			textureCubeShader.use();
+			textureCubeShader.setUniformM4(1, view);
+			textureCubeShader.setUniformM4(2, matrix.getMat());
+			textureCubeShader.setUniformV2(3, new float[]{x, z});
+			textureCubeShader.setUniformV4(4, board.getColor().asArray());
+			GenericVAO textureCube = shaderStorage.getVisibleOpTexCube();
+			textureCube.use();
+			textureCube.draw();
+		}
+		
+		//Draw outer drag-surfaces:
+		ShaderProgram resizeShader = shaderStorage.getResizeShader();
+		GenericVAO vao = shaderStorage.getResizeSurface();
+		GenericVAO vaoBorder = shaderStorage.getResizeBorder();
+		
+		resizeShader.use();
+		resizeShader.setUniformM4(1, view);
+		
+		Matrix parentRotation = new Matrix(board.getRotation().createMatrix());
+		
+		Matrix modelMatrix = new Matrix();
+		modelMatrix.translate(
+				(float) resizeData.getPosition().getX(),
+				(float) resizeData.getPosition().getY(),
+				(float) resizeData.getPosition().getZ()
+		);
+		modelMatrix.multiply(parentRotation);
+		
+		GL30.glDisable(GL30.GL_CULL_FACE);
+		GL30.glDepthFunc(GL30.GL_ALWAYS);
+		
+		int x = resizeData.getBoardX();
+		int z = resizeData.getBoardZ();
+		
+		//PosX
+		Matrix copyMatrix = modelMatrix.copy();
+		copyMatrix.translate(0, 0, z * 0.15f + 0.3f);
+		copyMatrix.scale(x * 0.30f, 1, 0.6f);
+		resizeShader.setUniformM4(2, copyMatrix.getMat());
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
+		vao.use();
+		vao.draw();
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
+		vaoBorder.use();
+		vaoBorder.draw();
+		//PosZ
+		copyMatrix = modelMatrix.copy();
+		copyMatrix.translate(x * 0.15f + 0.3f, 0, 0);
+		copyMatrix.scale(0.6f, 1, z * 0.30f);
+		resizeShader.setUniformM4(2, copyMatrix.getMat());
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
+		vao.use();
+		vao.draw();
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
+		vaoBorder.use();
+		vaoBorder.draw();
+		//NegX
+		copyMatrix = modelMatrix.copy();
+		copyMatrix.translate(0, 0, -z * 0.15f - 0.3f);
+		copyMatrix.scale(x * 0.30f, 1, 0.6f);
+		resizeShader.setUniformM4(2, copyMatrix.getMat());
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
+		vao.use();
+		vao.draw();
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
+		vaoBorder.use();
+		vaoBorder.draw();
+		//NegZ
+		copyMatrix = modelMatrix.copy();
+		copyMatrix.translate(-x * 0.15f - 0.3f, 0, 0);
+		copyMatrix.scale(0.6f, 1, z * 0.30f);
+		resizeShader.setUniformM4(2, copyMatrix.getMat());
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
+		vao.use();
+		vao.draw();
+		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
+		vaoBorder.use();
+		vaoBorder.draw();
+		
+		GL30.glEnable(GL30.GL_CULL_FACE);
+		GL30.glDepthFunc(GL30.GL_LESS);
 	}
 	
 	@Override

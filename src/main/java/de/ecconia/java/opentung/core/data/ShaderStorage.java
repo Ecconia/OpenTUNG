@@ -44,6 +44,10 @@ public class ShaderStorage
 	
 	private final ShaderProgram skyboxShader;
 	
+	private final ShaderProgram resizeShader;
+	private final GenericVAO resizeSurface;
+	private final GenericVAO resizeBorder;
+	
 	//Textures:
 	private final TextureWrapper boardTexture;
 	
@@ -111,6 +115,46 @@ public class ShaderStorage
 		
 		skyboxShader = new ShaderProgram("skybox/skybox");
 		
+		resizeShader = new ShaderProgram("resize/surface");
+		resizeSurface = new GenericVAO(new float[]{
+				-0.5f, 0, -0.5f,
+				-0.5f, 0, +0.5f,
+				+0.5f, 0, -0.5f,
+				+0.5f, 0, +0.5f,
+		}, new short[]{
+				0, 1, 2,
+				1, 3, 2,
+		})
+		{
+			@Override
+			protected void init()
+			{
+				//Position:
+				GL30.glVertexAttribPointer(0, 3, GL30.GL_FLOAT, false, 3 * Float.BYTES, 0);
+				GL30.glEnableVertexAttribArray(0);
+			}
+		};
+		resizeBorder = new LineVAO(new float[]{
+				-0.5f, 0, -0.5f,
+				-0.5f, 0, +0.5f,
+				+0.5f, 0, -0.5f,
+				+0.5f, 0, +0.5f,
+		}, new short[]{
+				0, 1,
+				1, 3,
+				3, 2,
+				2, 0
+		})
+		{
+			@Override
+			protected void init()
+			{
+				//Position:
+				GL30.glVertexAttribPointer(0, 3, GL30.GL_FLOAT, false, 3 * Float.BYTES, 0);
+				GL30.glEnableVertexAttribArray(0);
+			}
+		};
+		
 		//Textures:
 		{
 			int side = 16;
@@ -164,6 +208,9 @@ public class ShaderStorage
 		
 		skyboxShader.use();
 		skyboxShader.setUniformM4(0, projection);
+		
+		resizeShader.use();
+		resizeShader.setUniformM4(0, projection);
 		
 		//3D/Meshes:
 		meshBoardShader.use();
@@ -258,6 +305,21 @@ public class ShaderStorage
 	public ShaderProgram getSkyboxShader()
 	{
 		return skyboxShader;
+	}
+	
+	public ShaderProgram getResizeShader()
+	{
+		return resizeShader;
+	}
+	
+	public GenericVAO getResizeSurface()
+	{
+		return resizeSurface;
+	}
+	
+	public GenericVAO getResizeBorder()
+	{
+		return resizeBorder;
 	}
 	
 	//3D/Meshes:

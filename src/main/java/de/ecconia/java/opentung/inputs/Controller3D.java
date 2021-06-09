@@ -93,12 +93,18 @@ public class Controller3D implements Controller
 		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
 			//Abort grabbing, before opening the main menu:
-			//TBI: Do not open the pause-menu, if aborted grabbing?
 			if(renderPlane3D.isGrabbing())
 			{
 				renderPlane3D.abortGrabbing();
 			}
-			switchToInterface();
+			else if(renderPlane3D.isResizing())
+			{
+				renderPlane3D.abortResizing();
+			}
+			else
+			{
+				switchToInterface();
+			}
 		}
 		else if(scancode == Keybindings.KeyUnlockMouseCursor)
 		{
@@ -186,6 +192,11 @@ public class Controller3D implements Controller
 				else if(scancode == Keybindings.KeyGrab)
 				{
 					grab();
+				}
+				else if(scancode == Keybindings.KeyResize)
+				{
+					//TODO: Abort with 'Q' too.
+					renderPlane3D.boardResize();
 				}
 			}
 		}
@@ -528,5 +539,10 @@ public class Controller3D implements Controller
 	{
 		boolean alt = GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS;
 		return alt | GLFW.glfwGetKey(inputProcessor.getWindowID(), GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
+	}
+	
+	public boolean isLeftMouseDown()
+	{
+		return mouseDownLeft;
 	}
 }

@@ -78,6 +78,12 @@ public class CompBoard extends CompContainer implements CustomData
 		return color;
 	}
 	
+	public void setSize(int x, int z)
+	{
+		this.x = x;
+		this.z = z;
+	}
+	
 	public int getX()
 	{
 		return x;

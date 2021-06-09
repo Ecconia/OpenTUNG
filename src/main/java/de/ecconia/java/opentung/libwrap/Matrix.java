@@ -212,4 +212,11 @@ public class Matrix
 				(mat[0] * modelPos.getX() + mat[4] * modelPos.getY() + mat[8] * modelPos.getZ() + mat[12]) / w,
 				(mat[1] * modelPos.getX() + mat[5] * modelPos.getY() + mat[9] * modelPos.getZ() + mat[13]) / w);
 	}
+	
+	public Matrix copy()
+	{
+		float[] copy = new float[16];
+		System.arraycopy(mat, 0, copy, 0, 16);
+		return new Matrix(copy);
+	}
 }
