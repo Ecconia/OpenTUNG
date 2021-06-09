@@ -1,6 +1,8 @@
 package de.ecconia.java.opentung.core.data;
 
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.core.helper.BoardHelper;
 import de.ecconia.java.opentung.util.math.Vector3;
 
 public class ResizeData
@@ -13,12 +15,74 @@ public class ResizeData
 	private Double pointX, pointZ;
 	private boolean isMouseDown;
 	
+	private boolean allowPX = true;
+	private boolean allowNX = true;
+	private boolean allowPZ = true;
+	private boolean allowNZ = true;
+	
 	public ResizeData(CompBoard board)
 	{
 		this.board = board;
 		this.position = board.getPosition();
 		this.x = board.getX();
 		this.z = board.getZ();
+		
+		if(board.getParent() != null)
+		{
+			Vector3 vec;
+			if(board.getParent() instanceof CompBoard)
+			{
+				vec = BoardHelper.getAttachmentNormal((CompBoard) board.getParent(), board);
+			}
+			else
+			{
+				vec = board.getParent().getRotation().multiply(Vector3.yp);
+			}
+			vec = board.getRotation().inverse().multiply(vec.multiply(-1.0)); //Invert, cause the vector is from the parents view.
+			removeSideIfMatch(vec);
+		}
+		for(Component child : board.getChildren())
+		{
+			if(child instanceof CompBoard)
+			{
+				Vector3 vec = BoardHelper.getAttachmentNormal(board, (CompBoard) child); //Using the parents vector, so no inverting.
+				vec = board.getRotation().multiply(vec);
+				removeSideIfMatch(vec);
+				//TODO: Calc min.
+			}
+			else
+			{
+				Vector3 vec = child.getRotation().inverse().multiply(Vector3.yp);
+				vec = board.getRotation().multiply(vec);
+				removeSideIfMatch(vec);
+				//TODO: Calc min.
+			}
+		}
+	}
+	
+	private boolean removeSideIfMatch(Vector3 vec)
+	{
+		if(vec.getY() < 0.1 && vec.getY() > -0.1)
+		{
+			if(vec.getX() < -0.9)
+			{
+				allowNX = false;
+			}
+			else if(vec.getX() > 0.9)
+			{
+				allowPX = false;
+			}
+			else if(vec.getZ() < -0.9)
+			{
+				allowNZ = false;
+			}
+			else if(vec.getZ() > 0.9)
+			{
+				allowPZ = false;
+			}
+			return true;
+		}
+		return false;
 	}
 	
 	public CompBoard getBoard()
@@ -144,5 +208,37 @@ public class ResizeData
 		position = board.getRotation().multiply(position);
 		position = position.add(x, 0, z);
 		position = board.getRotation().inverse().multiply(position);
+	}
+	
+	public boolean allowsNX()
+	{
+		return allowNX;
+	}
+	
+	public boolean allowsNZ()
+	{
+		return allowNZ;
+	}
+	
+	public boolean allowsPX()
+	{
+		return allowPX;
+	}
+	
+	public boolean allowsPZ()
+	{
+		return allowPZ;
+	}
+	
+	public boolean isAllowed()
+	{
+		return isAxisX ?
+				(isNegative ? allowNX : allowPX) :
+				(isNegative ? allowNZ : allowPZ);
+	}
+	
+	public boolean isResizeAllowed()
+	{
+		return allowNX || allowPX || allowNZ || allowPZ;
 	}
 }

@@ -7,30 +7,33 @@ import de.ecconia.java.opentung.util.math.Vector3;
 public class BoardHelper
 {
 	//This function cannot and will never be compatible with boards which are inside of each other. Aka it may fail until collision has been added.
-	private static Vector3 getAttachmentNormalWork(CompBoard parent, CompBoard child)
+	public static Vector3 getAttachmentNormalLocal(CompBoard parent, CompBoard child)
 	{
-		System.out.println("---Attachment---");
-		System.out.println("Parent:");
-		System.out.println(" X: " + (parent.getRotation().inverse().multiply(Vector3.xp)));
-		System.out.println(" Y: " + (parent.getRotation().inverse().multiply(Vector3.yp)));
-		System.out.println(" Z: " + (parent.getRotation().inverse().multiply(Vector3.zp)));
-		System.out.println(" Pos: " + parent.getPosition());
-		System.out.println("Child:");
-		System.out.println(" X: " + (child.getRotation().inverse().multiply(Vector3.xp)));
-		System.out.println(" Y: " + (child.getRotation().inverse().multiply(Vector3.yp)));
-		System.out.println(" Z: " + (child.getRotation().inverse().multiply(Vector3.zp)));
-		System.out.println(" Pos: " + child.getPosition());
-		System.out.println(" Pos Rel: " + child.getPosition().subtract(parent.getPosition()));
+//		System.out.println("---Attachment---");
+//		System.out.println("Parent:");
+//		System.out.println(" X: " + (parent.getRotation().inverse().multiply(Vector3.xp)));
+//		System.out.println(" Y: " + (parent.getRotation().inverse().multiply(Vector3.yp)));
+//		System.out.println(" Z: " + (parent.getRotation().inverse().multiply(Vector3.zp)));
+//		System.out.println(" Pos: " + parent.getPosition());
+//		System.out.println("Child:");
+//		System.out.println(" X: " + (child.getRotation().inverse().multiply(Vector3.xp)));
+//		System.out.println(" Y: " + (child.getRotation().inverse().multiply(Vector3.yp)));
+//		System.out.println(" Z: " + (child.getRotation().inverse().multiply(Vector3.zp)));
+//		System.out.println(" Pos: " + child.getPosition());
+//		System.out.println(" Pos Rel: " + child.getPosition().subtract(parent.getPosition()));
 		
 		//Convert child board into a normalized parent space:
+//		System.out.println(parent.getPosition());
+//		System.out.println(child.getPosition());
+//		System.out.println(child.getPosition().subtract(parent.getPosition()));
 		Vector3 childCenter = parent.getRotation().inverse().multiply(child.getPosition().subtract(parent.getPosition()));
 		Quaternion childAlignment = child.getRotation().multiply(parent.getRotation());
 		
-		System.out.println("Child in parent space:");
-		System.out.println(" X: " + (childAlignment.inverse().multiply(Vector3.xp)));
-		System.out.println(" Y: " + (childAlignment.inverse().multiply(Vector3.yp)));
-		System.out.println(" Z: " + (childAlignment.inverse().multiply(Vector3.zp)));
-		System.out.println(" Pos: " + childCenter);
+//		System.out.println("Child in parent space:");
+//		System.out.println(" X: " + (childAlignment.inverse().multiply(Vector3.xp)));
+//		System.out.println(" Y: " + (childAlignment.inverse().multiply(Vector3.yp)));
+//		System.out.println(" Z: " + (childAlignment.inverse().multiply(Vector3.zp)));
+//		System.out.println(" Pos: " + childCenter);
 		
 		double parentX = (double) parent.getX() * 0.15D;
 		double parentY = 0.075D;
@@ -40,7 +43,7 @@ public class BoardHelper
 		Vector3 vecZ = childCenter.getZ() >= parentZ ? Vector3.zp : (childCenter.getZ() <= -parentZ ? Vector3.zn : null);
 		
 		int count = count(vecX, vecY, vecZ);
-		System.out.println("Count: " + count);
+//		System.out.println("Count: " + count);
 		if(count == 1)
 		{
 			return vecX != null ? vecX : (vecY != null ? vecY : vecZ);
@@ -62,16 +65,17 @@ public class BoardHelper
 			}
 		}
 		
-		System.out.println("Child size X: " + childBoundsParentSpace.x);
-		System.out.println("Child size Y: " + childBoundsParentSpace.y);
-		System.out.println("Child size Z: " + childBoundsParentSpace.z);
+//		System.out.println("Child size X: " + childBoundsParentSpace.x);
+//		System.out.println("Child size Y: " + childBoundsParentSpace.y);
+//		System.out.println("Child size Z: " + childBoundsParentSpace.z);
 		
 		Vector3 resultVector = null;
 		if(vecX != null)
 		{
 			double parentPos = parentX;
+			System.out.println(childCenter.getX() + " " + vecX.getX() + " (" + (childCenter.getX() * vecX.getX()) + ") " + childBoundsParentSpace.x);
 			double childPos = childCenter.getX() * vecX.getX() - childBoundsParentSpace.x;
-			System.out.println("Comparing X: " + parentPos + " | " + childPos);
+//			System.out.println("Comparing X: " + parentPos + " | " + childPos);
 			if(almostSame(parentPos, childPos))
 			{
 				resultVector = vecX;
@@ -81,7 +85,7 @@ public class BoardHelper
 		{
 			double parentPos = parentY;
 			double childPos = childCenter.getY() * vecY.getY() - childBoundsParentSpace.y;
-			System.out.println("Comparing Y: " + parentPos + " | " + childPos);
+//			System.out.println("Comparing Y: " + parentPos + " | " + childPos);
 			if(almostSame(parentPos, childPos))
 			{
 				if(resultVector != null)
@@ -98,7 +102,7 @@ public class BoardHelper
 		{
 			double parentPos = parentZ;
 			double childPos = childCenter.getZ() * vecZ.getZ() - childBoundsParentSpace.z;
-			System.out.println("Comparing Z: " + parentPos + " | " + childPos);
+//			System.out.println("Comparing Z: " + parentPos + " | " + childPos);
 			if(almostSame(parentPos, childPos))
 			{
 				if(resultVector != null)
@@ -124,7 +128,8 @@ public class BoardHelper
 	private static boolean almostSame(double a, double b)
 	{
 		double diff = a - b;
-		return diff <= 0.0001 && diff >= -0.0001;
+		//TBI: Epsilon should actually be 0.0001, but TUNG generates awesome values, so lets use something less precise.
+		return diff <= 0.002 && diff >= -0.002;
 	}
 	
 	private static boolean assignChildBounds(ThreeValues childBoundsParentSpace, double a, Vector3 probeVector)
@@ -178,7 +183,7 @@ public class BoardHelper
 	
 	public static Vector3 getAttachmentNormal(CompBoard parent, CompBoard child)
 	{
-		Vector3 result = getAttachmentNormalWork(parent, child);
+		Vector3 result = getAttachmentNormalLocal(parent, child);
 		return parent.getRotation().multiply(result); //Convert back to global space.
 	}
 	

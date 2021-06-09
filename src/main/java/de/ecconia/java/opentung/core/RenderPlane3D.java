@@ -1818,9 +1818,16 @@ public class RenderPlane3D implements RenderPlane
 				System.out.println("Starting board resizing.");
 				gpuTasks.add((unused) -> {
 					CompBoard board = (CompBoard) hitpoint.getHitPart();
-					worldMesh.removeComponent(board, this.board.getSimulation());
 					resizeData = new ResizeData(board);
-					//TODO: Find minimal expansion for each side.
+					if(!resizeData.isResizeAllowed())
+					{
+						System.out.println("Cannot resize this board, no side resizeable.");
+						resizeData = null;
+					}
+					else
+					{
+						worldMesh.removeComponent(board, this.board.getSimulation());
+					}
 				});
 			}
 			else
@@ -2053,10 +2060,13 @@ public class RenderPlane3D implements RenderPlane
 						zMatch &= zVal < 0.6;
 						if(xMatch || zMatch)
 						{
-							skipHitpoint = true;
-							resizeData.setPoints(collisionX, collisionZ);
 							resizeData.setAxisX(xMatch);
 							resizeData.setNegative(xMatch ? collisionX < 0 : collisionZ < 0);
+							if(resizeData.isAllowed())
+							{
+								skipHitpoint = true;
+								resizeData.setPoints(collisionX, collisionZ);
+							}
 						}
 					}
 				}
@@ -2920,51 +2930,64 @@ public class RenderPlane3D implements RenderPlane
 		
 		int x = resizeData.getBoardX();
 		int z = resizeData.getBoardZ();
+		Matrix copyMatrix;
 		
-		//PosX
-		Matrix copyMatrix = modelMatrix.copy();
-		copyMatrix.translate(0, 0, z * 0.15f + 0.3f);
-		copyMatrix.scale(x * 0.30f, 1, 0.6f);
-		resizeShader.setUniformM4(2, copyMatrix.getMat());
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
-		vao.use();
-		vao.draw();
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
-		vaoBorder.use();
-		vaoBorder.draw();
 		//PosZ
-		copyMatrix = modelMatrix.copy();
-		copyMatrix.translate(x * 0.15f + 0.3f, 0, 0);
-		copyMatrix.scale(0.6f, 1, z * 0.30f);
-		resizeShader.setUniformM4(2, copyMatrix.getMat());
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
-		vao.use();
-		vao.draw();
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
-		vaoBorder.use();
-		vaoBorder.draw();
-		//NegX
-		copyMatrix = modelMatrix.copy();
-		copyMatrix.translate(0, 0, -z * 0.15f - 0.3f);
-		copyMatrix.scale(x * 0.30f, 1, 0.6f);
-		resizeShader.setUniformM4(2, copyMatrix.getMat());
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
-		vao.use();
-		vao.draw();
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
-		vaoBorder.use();
-		vaoBorder.draw();
+		if(resizeData.allowsPZ())
+		{
+			copyMatrix = modelMatrix.copy();
+			copyMatrix.translate(0, 0, z * 0.15f + 0.3f);
+			copyMatrix.scale(x * 0.30f, 1, 0.6f);
+			resizeShader.setUniformM4(2, copyMatrix.getMat());
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 0.4f});
+			vao.use();
+			vao.draw();
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 1.0f});
+			vaoBorder.use();
+			vaoBorder.draw();
+		}
+		//PosX
+		if(resizeData.allowsPX())
+		{
+			copyMatrix = modelMatrix.copy();
+			copyMatrix.translate(x * 0.15f + 0.3f, 0, 0);
+			copyMatrix.scale(0.6f, 1, z * 0.30f);
+			resizeShader.setUniformM4(2, copyMatrix.getMat());
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 0.4f});
+			vao.use();
+			vao.draw();
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 1.0f});
+			vaoBorder.use();
+			vaoBorder.draw();
+		}
 		//NegZ
-		copyMatrix = modelMatrix.copy();
-		copyMatrix.translate(-x * 0.15f - 0.3f, 0, 0);
-		copyMatrix.scale(0.6f, 1, z * 0.30f);
-		resizeShader.setUniformM4(2, copyMatrix.getMat());
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 0.4f});
-		vao.use();
-		vao.draw();
-		resizeShader.setUniformV4(3, new float[] {1.0f, 1.0f, 0.0f, 1.0f});
-		vaoBorder.use();
-		vaoBorder.draw();
+		if(resizeData.allowsNZ())
+		{
+			copyMatrix = modelMatrix.copy();
+			copyMatrix.translate(0, 0, -z * 0.15f - 0.3f);
+			copyMatrix.scale(x * 0.30f, 1, 0.6f);
+			resizeShader.setUniformM4(2, copyMatrix.getMat());
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 0.4f});
+			vao.use();
+			vao.draw();
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 1.0f});
+			vaoBorder.use();
+			vaoBorder.draw();
+		}
+		//NegX
+		if(resizeData.allowsNX())
+		{
+			copyMatrix = modelMatrix.copy();
+			copyMatrix.translate(-x * 0.15f - 0.3f, 0, 0);
+			copyMatrix.scale(0.6f, 1, z * 0.30f);
+			resizeShader.setUniformM4(2, copyMatrix.getMat());
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 0.4f});
+			vao.use();
+			vao.draw();
+			resizeShader.setUniformV4(3, new float[]{1.0f, 1.0f, 0.0f, 1.0f});
+			vaoBorder.use();
+			vaoBorder.draw();
+		}
 		
 		GL30.glEnable(GL30.GL_CULL_FACE);
 		GL30.glDepthFunc(GL30.GL_LESS);
