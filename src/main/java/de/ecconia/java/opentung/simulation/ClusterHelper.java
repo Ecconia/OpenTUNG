@@ -181,7 +181,7 @@ public class ClusterHelper
 			}
 		}
 		
-		return drainActive1Cluster;
+		return drainActive2Cluster;
 	}
 	
 	private static Cluster pwDrainOffAndDrainActive(SimulationManager simulation, Connector drainOff, Connector drainActive, Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates)
