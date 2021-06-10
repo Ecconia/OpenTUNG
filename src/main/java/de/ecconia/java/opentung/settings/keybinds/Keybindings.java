@@ -70,6 +70,6 @@ public class Keybindings
 	public static int KeyGrab; //F
 	@KeybindingDefaults(key = "Build-Rotate", defaultValue = "R")
 	public static int KeyRotate; //R
-	@KeybindingDefaults(key = "Build-Resize", defaultValue = "V")
+	@KeybindingDefaults(key = "Build-Resize", defaultValue = "C")
 	public static int KeyResize;
 }
