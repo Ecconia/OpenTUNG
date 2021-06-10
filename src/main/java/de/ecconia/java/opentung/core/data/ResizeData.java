@@ -33,12 +33,14 @@ public class ResizeData
 			if(board.getParent() instanceof CompBoard)
 			{
 				vec = BoardHelper.getAttachmentNormal((CompBoard) board.getParent(), board);
+				//TODO: Calc min.
 			}
 			else
 			{
 				vec = board.getParent().getRotation().multiply(Vector3.yp);
+				//TODO: Calc min.
 			}
-			vec = board.getRotation().inverse().multiply(vec.multiply(-1.0)); //Invert, cause the vector is from the parents view.
+			vec = board.getRotation().multiply(vec.multiply(-1.0)); //Invert, cause the vector is from the parents view.
 			removeSideIfMatch(vec);
 		}
 		for(Component child : board.getChildren())
