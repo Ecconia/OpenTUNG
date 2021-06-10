@@ -1,6 +1,8 @@
 package de.ecconia.java.opentung.core.data;
 
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompMount;
+import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.core.helper.BoardHelper;
 import de.ecconia.java.opentung.util.math.Vector3;
@@ -20,6 +22,11 @@ public class ResizeData
 	private boolean allowPZ = true;
 	private boolean allowNZ = true;
 	
+	public double px = -Double.MAX_VALUE;
+	public double nx = Double.MAX_VALUE;
+	public double pz = -Double.MAX_VALUE;
+	public double nz = Double.MAX_VALUE;
+	
 	public ResizeData(CompBoard board)
 	{
 		this.board = board;
@@ -29,40 +36,69 @@ public class ResizeData
 		
 		if(board.getParent() != null)
 		{
+			CompContainer parent = (CompContainer) board.getParent();
 			Vector3 vec;
-			if(board.getParent() instanceof CompBoard)
+			if(parent instanceof CompBoard)
 			{
-				vec = BoardHelper.getAttachmentNormal((CompBoard) board.getParent(), board);
+				vec = BoardHelper.getAttachmentNormal((CompBoard) parent, board);
 				//TODO: Calc min.
 			}
 			else
 			{
-				vec = board.getParent().getRotation().multiply(Vector3.yp);
-				//TODO: Calc min.
+				vec = parent.getRotation().multiply(Vector3.yp);
+				//Calculate placement position, as if mount is standing on board:
+				Vector3 globalPosition = parent.getPosition().add(vec.multiply(CompMount.MOUNT_HEIGHT + 0.15));
+				Vector3 positionBoardSpace = board.getRotation().multiply(globalPosition.subtract(position));
+				expandBounds(positionBoardSpace);
 			}
 			vec = board.getRotation().multiply(vec.multiply(-1.0)); //Invert, cause the vector is from the parents view.
 			removeSideIfMatch(vec);
 		}
 		for(Component child : board.getChildren())
 		{
+			Vector3 vec;
 			if(child instanceof CompBoard)
 			{
-				Vector3 vec = BoardHelper.getAttachmentNormal(board, (CompBoard) child); //Using the parents vector, so no inverting.
-				vec = board.getRotation().multiply(vec);
-				removeSideIfMatch(vec);
+				vec = BoardHelper.getAttachmentNormal(board, (CompBoard) child); //Using the parents vector, so no inverting.
 				//TODO: Calc min.
 			}
 			else
 			{
-				Vector3 vec = child.getRotation().inverse().multiply(Vector3.yp);
-				vec = board.getRotation().multiply(vec);
-				removeSideIfMatch(vec);
-				//TODO: Calc min.
+				vec = child.getRotation().inverse().multiply(Vector3.yp);
+				//Calculate minimum:
+				Vector3 positionBoardSpace = board.getRotation().multiply(child.getPosition().subtract(position));
+				expandBounds(positionBoardSpace);
 			}
+			vec = board.getRotation().multiply(vec);
+			removeSideIfMatch(vec);
+		}
+		
+		//TBI: Code will eventually fail for mounts, thus add a small offset? Lets do that on first occasion/issue.
+	}
+	
+	private void expandBounds(Vector3 positionBoardSpace)
+	{
+		double xx = positionBoardSpace.getX();
+		double zz = positionBoardSpace.getZ();
+		if(xx < nx)
+		{
+			nx = xx;
+		}
+		if(xx > px)
+		{
+			px = xx;
+		}
+		if(zz < nz)
+		{
+			nz = zz;
+		}
+		if(zz > pz)
+		{
+			pz = zz;
 		}
 	}
 	
-	private boolean removeSideIfMatch(Vector3 vec)
+	private void removeSideIfMatch(Vector3 vec)
 	{
 		if(vec.getY() < 0.1 && vec.getY() > -0.1)
 		{
@@ -82,9 +118,7 @@ public class ResizeData
 			{
 				allowPZ = false;
 			}
-			return true;
 		}
-		return false;
 	}
 	
 	public CompBoard getBoard()
@@ -164,43 +198,66 @@ public class ResizeData
 	
 	public void adjustSize(int squareChange) //If possible...
 	{
-		if(squareChange > 100)
-		{
-			squareChange = 100;
-		}
-		else if(squareChange < -100)
-		{
-			squareChange = -100;
-		}
-		//Ignore this for now.
 		if(isAxisX)
 		{
-			//Expand/Shrink board:
-			x += squareChange;
-			//If the board smaller than the current minimum (1):
-			if(x < 1)
+			//Calculate how big the board would be with this change:
+			int wouldBeX = x + squareChange;
+			//If the board smaller than the minimum size:
+			if(wouldBeX < 1)
 			{
 				//Pretend that the change amount was smaller:
-				squareChange += (1 - x);
-				x = 1; //And just use the minimum.
+				squareChange += (1 - wouldBeX);
+				wouldBeX = 1; //And just use the minimum.
 			}
+			//Grab the actual minimum:
+			double posMin = isNegative ? -nx : px;
+			//Calculate where the board would end with new size: (We only change one side, without changing position, thus scale different for squareChange)
+			double newPos = x * 0.15 + squareChange * 0.3;
+			if(newPos < posMin) //Check if we would go below the minimum.
+			{
+				double error = posMin - newPos; //Calculate by how much we are below.
+				int failAmount = (int) Math.ceil(error / 0.3 - 0.0000001); //Calculate how many squares that is, round the value up. The 0.000001 is to remove rounding errors which would cause a number to get rounded up too much.
+				squareChange += failAmount; //Expand the negative squareAmount number.
+				wouldBeX += failAmount; //Correct the new size.
+			}
+			x = wouldBeX; //Apply.
+			
 			double offset = (double) squareChange * (isNegative ? -0.15 : 0.15);
 			pointX += offset; //Change the last known mouse cursor position.
-			modPos(offset, 0); //Change the board position.
+			//Update the two borders, cause they are relative to the position, which just changed.
+			px -= offset;
+			nx -= offset;
+			modPos(offset, 0);
 		}
 		else //Axis Z
 		{
-			//Expand/Shrink board:
-			z += squareChange;
-			//If the board smaller than the current minimum (1):
-			if(z < 1)
+			//Calculate how big the board would be with this change:
+			int wouldBeZ = z + squareChange;
+			//If the board smaller than the minimum size:
+			if(wouldBeZ < 1)
 			{
 				//Pretend that the change amount was smaller:
-				squareChange += (1 - z);
-				z = 1; //And just use the minimum.
+				squareChange += (1 - wouldBeZ);
+				wouldBeZ = 1; //And just use the minimum.
 			}
+			//Grab the actual minimum:
+			double posMin = isNegative ? -nz : pz;
+			//Calculate where the board would end with new size: (We only change one side, without changing position, thus scale different for squareChange)
+			double newPos = z * 0.15 + squareChange * 0.3;
+			if(newPos < posMin) //Check if we would go below the minimum.
+			{
+				double error = posMin - newPos; //Calculate by how much we are below.
+				int failAmount = (int) Math.ceil(error / 0.3 - 0.0000001); //Calculate how many squares that is, round the value up. The 0.000001 is to remove rounding errors which would cause a number to get rounded up too much.
+				squareChange += failAmount; //Expand the negative squareAmount number.
+				wouldBeZ += failAmount; //Correct the new size.
+			}
+			z = wouldBeZ; //Apply.
+			
 			double offset = (double) squareChange * (isNegative ? -0.15 : 0.15);
 			pointZ += offset; //Change the last known mouse cursor position.
+			//Update the two borders, cause they are relative to the position, which just changed.
+			pz -= offset;
+			nz -= offset;
 			modPos(0, offset); //Change the board position.
 		}
 	}
