@@ -2989,6 +2989,24 @@ public class RenderPlane3D implements RenderPlane
 			vaoBorder.draw();
 		}
 		
+		//Debug bounds:
+//		{
+//			copyMatrix = modelMatrix.copy();
+//
+//			double width = resizeData.px - resizeData.nx;
+//			double depth = resizeData.pz - resizeData.nz;
+//			copyMatrix.translate((float) (resizeData.px - width / 2.0), 0, (float) (resizeData.pz - depth / 2.0));
+//			copyMatrix.scale((float) width, 1, (float) depth);
+//
+//			resizeShader.setUniformM4(2, copyMatrix.getMat());
+//			resizeShader.setUniformV4(3, new float[]{1.0f, 0.0f, 0.0f, 0.4f});
+//			vao.use();
+//			vao.draw();
+//			resizeShader.setUniformV4(3, new float[]{1.0f, 0.0f, 0.0f, 1.0f});
+//			vaoBorder.use();
+//			vaoBorder.draw();
+//		}
+		
 		GL30.glEnable(GL30.GL_CULL_FACE);
 		GL30.glDepthFunc(GL30.GL_LESS);
 	}

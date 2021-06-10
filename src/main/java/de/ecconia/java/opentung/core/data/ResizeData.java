@@ -4,7 +4,8 @@ import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.core.helper.BoardHelper;
+import de.ecconia.java.opentung.core.helper.BoardRelationHelper;
+import de.ecconia.java.opentung.util.math.Vector2;
 import de.ecconia.java.opentung.util.math.Vector3;
 
 public class ResizeData
@@ -22,6 +23,7 @@ public class ResizeData
 	private boolean allowPZ = true;
 	private boolean allowNZ = true;
 	
+	//For debugging mode, the MAX_VALUE have to be replaced with something like 1000 else the thing dies the clipping space death.
 	public double px = -Double.MAX_VALUE;
 	public double nx = Double.MAX_VALUE;
 	public double pz = -Double.MAX_VALUE;
@@ -40,8 +42,13 @@ public class ResizeData
 			Vector3 vec;
 			if(parent instanceof CompBoard)
 			{
-				vec = BoardHelper.getAttachmentNormal((CompBoard) parent, board);
-				//TODO: Calc min.
+				BoardRelationHelper rel = new BoardRelationHelper(board, (CompBoard) parent); //WARNING: Treats parent as child! Cause we only care for the relation.
+				vec = rel.getAttachmentNormal();
+				if(!rel.isComplexRelated())
+				{
+					//Values are fine, lets calculate bounds:
+					expandBounds(rel);
+				}
 			}
 			else
 			{
@@ -50,17 +57,27 @@ public class ResizeData
 				Vector3 globalPosition = parent.getPosition().add(vec.multiply(CompMount.MOUNT_HEIGHT + 0.15));
 				Vector3 positionBoardSpace = board.getRotation().multiply(globalPosition.subtract(position));
 				expandBounds(positionBoardSpace);
+				//Finalization:
+				vec = vec.multiply(-1.0); //Invert, cause the vector is from the parents view.
 			}
-			vec = board.getRotation().multiply(vec.multiply(-1.0)); //Invert, cause the vector is from the parents view.
-			removeSideIfMatch(vec);
+			if(vec != null) //Might be missing, if the boards are complex related (as in relation is broken already)
+			{
+				vec = board.getRotation().multiply(vec);
+				removeSideIfMatch(vec);
+			}
 		}
 		for(Component child : board.getChildren())
 		{
 			Vector3 vec;
 			if(child instanceof CompBoard)
 			{
-				vec = BoardHelper.getAttachmentNormal(board, (CompBoard) child); //Using the parents vector, so no inverting.
-				//TODO: Calc min.
+				BoardRelationHelper rel = new BoardRelationHelper(board, (CompBoard) child); //Using the parents vector, so no inverting.
+				vec = rel.getAttachmentNormal();
+				if(!rel.isComplexRelated())
+				{
+					//Values are fine, lets calculate bounds:
+					expandBounds(rel);
+				}
 			}
 			else
 			{
@@ -69,11 +86,73 @@ public class ResizeData
 				Vector3 positionBoardSpace = board.getRotation().multiply(child.getPosition().subtract(position));
 				expandBounds(positionBoardSpace);
 			}
-			vec = board.getRotation().multiply(vec);
-			removeSideIfMatch(vec);
+			if(vec != null) //Might be missing, if the boards are complex related (as in relation is broken already)
+			{
+				vec = board.getRotation().multiply(vec);
+				removeSideIfMatch(vec);
+			}
 		}
 		
 		//TBI: Code will eventually fail for mounts, thus add a small offset? Lets do that on first occasion/issue.
+	}
+	
+	private void expandBounds(BoardRelationHelper rel)
+	{
+		if(rel.isAttachedAtSide())
+		{
+			if(rel.isSideX()) //Side normal is point in X axis.
+			{
+				double min = rel.getMinimumPoint().getY();
+				double max = rel.getMaximumPoint().getY();
+				System.out.println("-> Z: " + min + " " + max);
+				
+				if(min > pz)
+				{
+					pz = min;
+				}
+				if(max < nz)
+				{
+					nz = max;
+				}
+			}
+			else // SideZ
+			{
+				double min = rel.getMinimumPoint().getX();
+				double max = rel.getMaximumPoint().getX();
+				System.out.println("-> X: " + min + " " + max);
+				
+				if(min > px)
+				{
+					px = min;
+				}
+				if(max < nx)
+				{
+					nx = max;
+				}
+			}
+		}
+		else
+		{
+			Vector2 min = rel.getMinimumPoint();
+			Vector2 max = rel.getMaximumPoint();
+			
+			if(min.getY() > pz)
+			{
+				pz = min.getY();
+			}
+			if(max.getY() < nz)
+			{
+				nz = max.getY();
+			}
+			if(min.getX() > px)
+			{
+				px = min.getX();
+			}
+			if(max.getX() < nx)
+			{
+				nx = max.getX();
+			}
+		}
 	}
 	
 	private void expandBounds(Vector3 positionBoardSpace)
