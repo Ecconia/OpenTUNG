@@ -14,7 +14,9 @@ import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.io.ByteWriter;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -105,9 +107,10 @@ public class Saver
 		
 		//TBI: Store blots data as separate section with bit-wise encoding?
 		
+		Path tmpSaveFile = saveFile.resolveSibling(saveFile.getFileName() + ".tmp");
 		try
 		{
-			ByteWriter writer = new ByteWriter(saveFile);
+			ByteWriter writer = new ByteWriter(tmpSaveFile);
 			//Write OpenTUNG header:
 			writer.writeBytes(CompactText.encode("OpenTUNG-Boards")); //No length prefix, thus this unwrap.
 			//Write file-version:
@@ -183,6 +186,7 @@ public class Saver
 			}
 			
 			writer.close();
+			Files.move(tmpSaveFile, saveFile, StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch(Exception e)
 		{
