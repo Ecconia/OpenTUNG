@@ -73,11 +73,12 @@ public class BoardHelper
 		if(vecX != null)
 		{
 			double parentPos = parentX;
-			System.out.println(childCenter.getX() + " " + vecX.getX() + " (" + (childCenter.getX() * vecX.getX()) + ") " + childBoundsParentSpace.x);
+//			System.out.println(childCenter.getX() + " " + vecX.getX() + " (" + (childCenter.getX() * vecX.getX()) + ") " + childBoundsParentSpace.x);
 			double childPos = childCenter.getX() * vecX.getX() - childBoundsParentSpace.x;
 //			System.out.println("Comparing X: " + parentPos + " | " + childPos);
 			if(almostSame(parentPos, childPos))
 			{
+//				System.out.println("Same X");
 				resultVector = vecX;
 			}
 		}
@@ -88,13 +89,14 @@ public class BoardHelper
 //			System.out.println("Comparing Y: " + parentPos + " | " + childPos);
 			if(almostSame(parentPos, childPos))
 			{
+//				System.out.println("Same Y");
 				if(resultVector != null)
 				{
 					System.out.println("Error: Board is intersecting with parent board.");
 				}
 				else
 				{
-					resultVector = vecX;
+					resultVector = vecY;
 				}
 			}
 		}
@@ -105,13 +107,14 @@ public class BoardHelper
 //			System.out.println("Comparing Z: " + parentPos + " | " + childPos);
 			if(almostSame(parentPos, childPos))
 			{
+//				System.out.println("Same Z");
 				if(resultVector != null)
 				{
 					System.out.println("Error: Board is intersecting with parent board.");
 				}
 				else
 				{
-					resultVector = vecX;
+					resultVector = vecZ;
 				}
 			}
 		}
@@ -122,6 +125,7 @@ public class BoardHelper
 			resultVector = new Vector3(0.5, 0.5, 0.5);
 		}
 		
+//		System.out.println(resultVector);
 		return resultVector; //Return random garbage for now.
 	}
 	
