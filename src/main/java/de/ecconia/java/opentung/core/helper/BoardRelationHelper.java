@@ -20,11 +20,11 @@ public class BoardRelationHelper
 		this.parent = parent;
 		
 //		System.out.println("---Attachment---");
-		
+//
 //		System.out.println("Parent:");
 //		printAlignedQuaternion(" ", parent.getRotation());
 //		System.out.println(" Pos: " + parent.getPosition());
-		
+//
 //		System.out.println("Child:");
 //		printAlignedQuaternion(" ", child.getRotation());
 //		System.out.println(" Pos: " + child.getPosition());
@@ -124,6 +124,7 @@ public class BoardRelationHelper
 					if(localParentFaceAxis != null)
 					{
 						error("Error: Board is intersecting with parent board.");
+						complexRelated = true;
 					}
 					else
 					{
@@ -142,6 +143,7 @@ public class BoardRelationHelper
 					if(localParentFaceAxis != null)
 					{
 						error("Error: Board is intersecting with parent board.");
+						complexRelated = true;
 					}
 					else
 					{
@@ -178,7 +180,7 @@ public class BoardRelationHelper
 //			System.out.println(prefix + "X: " + Ansi.yellow + xs + Ansi.r + " Y: " + Ansi.yellow + ys + Ansi.r + " Z: " + Ansi.yellow + zs + Ansi.r);
 //		}
 //	}
-	
+//
 //	private String resolveAxis(Vector3 v)
 //	{
 //		if(v.getX() < -0.99)
@@ -252,7 +254,8 @@ public class BoardRelationHelper
 	{
 		double diff = a - b;
 		//TBI: Epsilon should actually be 0.0001, but TUNG generates awesome values, so lets use something less precise.
-		return diff <= 0.002 && diff >= -0.002;
+		// Might not always be TUNGs fault. Got difference of 0.011 for matching edge :(
+		return diff <= 0.011 && diff >= -0.011;
 	}
 	
 	private boolean assignChildBounds(double axisLength, Vector3 probeVector)
