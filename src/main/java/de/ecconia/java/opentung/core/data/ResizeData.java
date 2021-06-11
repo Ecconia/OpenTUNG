@@ -36,6 +36,12 @@ public class ResizeData
 		this.x = board.getX();
 		this.z = board.getZ();
 		
+		//Since we gonna add a small padding later on, lets subtract it first, so that Double does not get back to us. NaN or whatever might happen.
+		nz -= 0.002;
+		pz += 0.002;
+		nx -= 0.002;
+		px += 0.002;
+		
 		if(board.getParent() != null)
 		{
 			CompContainer parent = (CompContainer) board.getParent();
@@ -93,7 +99,11 @@ public class ResizeData
 			}
 		}
 		
-		//TBI: Code will eventually fail for mounts, thus add a small offset? Lets do that on first occasion/issue.
+		//It is important to increase the bounding rect a bit, because Mounts may stand a bit outside of it. (They are within, but not on the correct square).
+		nz += 0.001;
+		pz -= 0.001;
+		nx += 0.001;
+		px -= 0.001;
 	}
 	
 	private void expandBounds(BoardRelationHelper rel)
@@ -104,7 +114,6 @@ public class ResizeData
 			{
 				double min = rel.getMinimumPoint().getY();
 				double max = rel.getMaximumPoint().getY();
-				System.out.println("-> Z: " + min + " " + max);
 				
 				if(min > pz)
 				{
@@ -119,7 +128,6 @@ public class ResizeData
 			{
 				double min = rel.getMinimumPoint().getX();
 				double max = rel.getMaximumPoint().getX();
-				System.out.println("-> X: " + min + " " + max);
 				
 				if(min > px)
 				{
