@@ -52,7 +52,7 @@ public class ResizeData
 			}
 			else
 			{
-				vec = parent.getRotation().multiply(Vector3.yp);
+				vec = parent.getRotation().inverse().multiply(Vector3.yp);
 				//Calculate placement position, as if mount is standing on board:
 				Vector3 globalPosition = parent.getPosition().add(vec.multiply(CompMount.MOUNT_HEIGHT + 0.15));
 				Vector3 positionBoardSpace = board.getRotation().multiply(globalPosition.subtract(position));

@@ -20,29 +20,46 @@ public class BoardRelationHelper
 		this.parent = parent;
 		
 //		System.out.println("---Attachment---");
+		
 //		System.out.println("Parent:");
-//		System.out.println(" X: " + (parent.getRotation().inverse().multiply(Vector3.xp)));
-//		System.out.println(" Y: " + (parent.getRotation().inverse().multiply(Vector3.yp)));
-//		System.out.println(" Z: " + (parent.getRotation().inverse().multiply(Vector3.zp)));
+//		printAlignedQuaternion(" ", parent.getRotation());
 //		System.out.println(" Pos: " + parent.getPosition());
+		
 //		System.out.println("Child:");
-//		System.out.println(" X: " + (child.getRotation().inverse().multiply(Vector3.xp)));
-//		System.out.println(" Y: " + (child.getRotation().inverse().multiply(Vector3.yp)));
-//		System.out.println(" Z: " + (child.getRotation().inverse().multiply(Vector3.zp)));
+//		printAlignedQuaternion(" ", child.getRotation());
 //		System.out.println(" Pos: " + child.getPosition());
 //		System.out.println(" Pos Rel: " + child.getPosition().subtract(parent.getPosition()));
 		
 		//Calculate child position and alignment in parent board space:
-		childCenter = parent.getRotation().inverse().multiply(child.getPosition().subtract(parent.getPosition()));
-		Quaternion childAlignment = child.getRotation().multiply(parent.getRotation());
+		childCenter = parent.getRotation().multiply(child.getPosition().subtract(parent.getPosition()));
+		Quaternion childAlignment = child.getRotation().multiply(parent.getRotation().inverse());
 		Quaternion childAlignmentInverse = childAlignment.inverse();
 		
 //		System.out.println();
 //		System.out.println("Child in parent space:");
-//		System.out.println(" X: " + (childAlignment.inverse().multiply(Vector3.xp)));
-//		System.out.println(" Y: " + (childAlignment.inverse().multiply(Vector3.yp)));
-//		System.out.println(" Z: " + (childAlignment.inverse().multiply(Vector3.zp)));
-//		System.out.println(" Pos: " + childCenter);
+		//Wrong:
+//		printAlignedQuaternion(" 00: ", child.getRotation().multiply(parent.getRotation()));
+//		printAlignedQuaternion(" 01: ", child.getRotation().inverse().multiply(parent.getRotation()));
+//		printAlignedQuaternion(" 04: ", child.getRotation().multiply(parent.getRotation()).inverse());
+//		printAlignedQuaternion(" 05: ", child.getRotation().inverse().multiply(parent.getRotation()).inverse());
+//		printAlignedQuaternion(" 11: ", parent.getRotation().inverse().multiply(child.getRotation()));
+//		printAlignedQuaternion(" 13: ", parent.getRotation().inverse().multiply(child.getRotation().inverse()));
+//		printAlignedQuaternion(" 15: ", parent.getRotation().inverse().multiply(child.getRotation()).inverse());
+//		printAlignedQuaternion(" 17: ", parent.getRotation().inverse().multiply(child.getRotation().inverse()).inverse());
+		//Less wrong:
+//		printAlignedQuaternion(" 06: ", child.getRotation().multiply(parent.getRotation().inverse()).inverse());
+//		printAlignedQuaternion(" 07: ", child.getRotation().inverse().multiply(parent.getRotation().inverse()).inverse());
+//		printAlignedQuaternion(" 10: ", parent.getRotation().multiply(child.getRotation()));
+//		printAlignedQuaternion(" 12: ", parent.getRotation().multiply(child.getRotation().inverse()));
+		//Even less wrong:
+//		printAlignedQuaternion(" 03: ", child.getRotation().inverse().multiply(parent.getRotation().inverse()));
+//		printAlignedQuaternion(" 14: ", parent.getRotation().multiply(child.getRotation()).inverse());
+		//Probably not wrong:
+//		printAlignedQuaternion(" 02: ", child.getRotation().multiply(parent.getRotation().inverse()));
+//		printAlignedQuaternion(" 16: ", parent.getRotation().multiply(child.getRotation().inverse()).inverse());
+//		System.out.println(" Pos: " + (parent.getRotation().multiply(child.getPosition().subtract(parent.getPosition()))));
+		//Wrong:
+//		System.out.println(" Pos: " + (parent.getRotation().inverse().multiply(child.getPosition().subtract(parent.getPosition()))));
 		
 		//Calculate the children bounds:
 		{
@@ -80,6 +97,7 @@ public class BoardRelationHelper
 		int count = count(vecX, vecY, vecZ);
 		if(count == 1)
 		{
+//			System.out.println("Count 1");
 			localParentFaceAxis = vecX != null ? vecX : (vecY != null ? vecY : vecZ);
 		}
 		else if(!complexRelated)
@@ -140,6 +158,56 @@ public class BoardRelationHelper
 		}
 	}
 	
+//	private void printAlignedQuaternion(String prefix, Quaternion q)
+//	{
+//		q = q.inverse();
+//		Vector3 x = q.multiply(Vector3.xp);
+//		Vector3 y = q.multiply(Vector3.yp);
+//		Vector3 z = q.multiply(Vector3.zp);
+//		String xs = resolveAxis(x);
+//		String ys = resolveAxis(y);
+//		String zs = resolveAxis(z);
+//		if(xs == null || ys == null || zs == null)
+//		{
+//			System.out.println(prefix + "X: " + x);
+//			System.out.println(prefix + "Y: " + y);
+//			System.out.println(prefix + "Z: " + z);
+//		}
+//		else
+//		{
+//			System.out.println(prefix + "X: " + Ansi.yellow + xs + Ansi.r + " Y: " + Ansi.yellow + ys + Ansi.r + " Z: " + Ansi.yellow + zs + Ansi.r);
+//		}
+//	}
+	
+//	private String resolveAxis(Vector3 v)
+//	{
+//		if(v.getX() < -0.99)
+//		{
+//			return "-X";
+//		}
+//		if(v.getY() < -0.99)
+//		{
+//			return "-Y";
+//		}
+//		if(v.getZ() < -0.99)
+//		{
+//			return "-Z";
+//		}
+//		if(v.getX() > 0.99)
+//		{
+//			return "+X";
+//		}
+//		if(v.getY() > 0.99)
+//		{
+//			return "+Y";
+//		}
+//		if(v.getZ() > 0.99)
+//		{
+//			return "+Z";
+//		}
+//		return null;
+//	}
+	
 	public boolean isComplexRelated()
 	{
 		return complexRelated;
@@ -177,7 +245,7 @@ public class BoardRelationHelper
 		{
 			return null;
 		}
-		return parent.getRotation().multiply(localParentFaceAxis); //Convert back to global space.
+		return parent.getRotation().inverse().multiply(localParentFaceAxis); //Convert back to global space.
 	}
 	
 	private static boolean almostSame(double a, double b)
