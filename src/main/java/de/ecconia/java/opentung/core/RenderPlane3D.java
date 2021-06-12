@@ -68,7 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.lwjgl.opengl.GL30;
 
 public class RenderPlane3D implements RenderPlane
@@ -111,30 +110,20 @@ public class RenderPlane3D implements RenderPlane
 		this.cpuRaycast = new CPURaycast(); //Has internal fields, thus make it an instance.
 	}
 	
-	public void prepareSaving(AtomicInteger pauseArrived)
+	public void prepareSaving()
 	{
-		//TBI: May skip the execution of some simulation tasks with external source, problem?
-		board.getSimulation().pauseSimulation(pauseArrived);
-		gpuTasks.add((unused) -> {
-			if(isGrabbing())
-			{
-				//Grab aborting does not need the simulation thread, so it won't create new tasks there.
-				abortGrabbing();
-			}
-		});
-		//Following task is appended to the end of the task-queue and will allow saving.
-		//TBI: Assumes that the interface is open and thus no new GPU tasks had been added.
-		gpuTasks.add((unused) -> {
-			hitpoint = new Hitpoint();
-			boardDrawStartingPoint = null;
-			wireStartPoint = null;
-			pauseArrived.incrementAndGet();
-		});
-	}
-	
-	public void postSave()
-	{
-		board.getSimulation().resumeSimulation();
+		if(isGrabbing())
+		{
+			//Grab aborting does not need the simulation thread, so it won't create new tasks there.
+			abortGrabbing();
+		}
+		if(isResizing())
+		{
+			abortResizing(); //Abort resizing, not exactly required. But better to clean up before running this.
+		}
+		hitpoint = new Hitpoint();
+		wireStartPoint = null; //Stops drawing a wire.
+		boardDrawStartingPoint = null; //Stops drawing a board.
 	}
 	
 	//Other:
