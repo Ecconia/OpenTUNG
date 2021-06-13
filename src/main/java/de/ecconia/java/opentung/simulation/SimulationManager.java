@@ -170,7 +170,10 @@ public class SimulationManager extends Thread
 		}
 	}
 	
-	private void doTick()
+	/**
+	 * Although this is a public access method, it must only be called from the simulation thread.
+	 */
+	public void doTick()
 	{
 		{
 			List<Updateable> tmp = updateThisTick;
@@ -266,9 +269,17 @@ public class SimulationManager extends Thread
 		this.locked = false;
 	}
 	
-	public void setPaused(boolean paused)
+	public void togglePaused()
 	{
-		this.paused = paused;
+		this.paused = !this.paused;
+		if(this.paused)
+		{
+			System.out.println("[Simulation] Paused.");
+		}
+		else
+		{
+			System.out.println("[Simulation] Resumed." + (this.locked ? " But currently locked by saving." : ""));
+		}
 	}
 	
 	//Classes:

@@ -167,6 +167,11 @@ public class RenderPlane3D implements RenderPlane
 		return hitpoint != null ? hitpoint.getHitPart() : null;
 	}
 	
+	public SharedData getSharedData()
+	{
+		return sharedData;
+	}
+	
 	public int getGpuTasksCurrentSize()
 	{
 		return gpuTasksCurrentSize;

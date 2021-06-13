@@ -12,6 +12,7 @@ import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
+import de.ecconia.java.opentung.simulation.SimulationManager;
 import org.lwjgl.glfw.GLFW;
 
 public class Controller3D implements Controller
@@ -111,6 +112,21 @@ public class Controller3D implements Controller
 			inputProcessor.switchTo2D();
 			checkMouseLeft(false);
 			checkMouseRight(false);
+		}
+		else if(scancode == Keybindings.KeyPauseSimulation)
+		{
+			SimulationManager simulation = renderPlane3D.getSharedData().getBoardUniverse().getSimulation();
+			simulation.togglePaused();
+		}
+		else if(scancode == Keybindings.KeyTickSimulation)
+		{
+			SimulationManager simulation = renderPlane3D.getSharedData().getBoardUniverse().getSimulation();
+			simulation.updateJobNextTickThreadSafe((unused) -> {
+				if(simulation.isSimulationHalted())
+				{
+					simulation.doTick();
+				}
+			});
 		}
 		else
 		{

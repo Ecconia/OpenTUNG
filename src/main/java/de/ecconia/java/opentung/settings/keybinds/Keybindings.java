@@ -72,4 +72,9 @@ public class Keybindings
 	public static int KeyRotate; //R
 	@KeybindingDefaults(key = "Build-Resize", defaultValue = "C")
 	public static int KeyResize;
+	
+	@KeybindingDefaults(key = "Simulation-Pause", defaultValue = "P")
+	public static int KeyPauseSimulation; //R
+	@KeybindingDefaults(key = "Simulation-Tick", defaultValue = "T")
+	public static int KeyTickSimulation;
 }
