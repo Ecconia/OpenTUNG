@@ -228,7 +228,7 @@ public class RenderPlane2D implements RenderPlane
 			componentList.abort();
 			showComponentList = false;
 		}
-		else
+		else if(!hasWindowOpen())
 		{
 			showComponentList = true;
 		}

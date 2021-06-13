@@ -94,8 +94,11 @@ public class Controller2D implements Controller
 		{
 			if(!renderPlane2D.toggleComponentList())
 			{
-				mouseOnGUI = false; //Reset regardless.
-				inputProcessor.switchTo3D(); //If closed just go here.
+				if(!renderPlane2D.hasWindowOpen())
+				{
+					mouseOnGUI = false; //Reset regardless.
+					inputProcessor.switchTo3D(); //If closed just go here.
+				}
 			}
 		}
 		else if(scancode == Keybindings.KeyUnlockMouseCursor)
