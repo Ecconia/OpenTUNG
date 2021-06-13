@@ -200,6 +200,11 @@ public class RenderPlane3D implements RenderPlane
 		return wireStartPoint != null || boardDrawStartingPoint != null || grabData != null;
 	}
 	
+	public boolean isDraggingOrGrabbingOrResizing()
+	{
+		return wireStartPoint != null || boardDrawStartingPoint != null || grabData != null || resizeData != null;
+	}
+	
 	public GrabData getGrabData()
 	{
 		return grabData;

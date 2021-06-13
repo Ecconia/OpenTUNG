@@ -476,6 +476,12 @@ public class Controller3D implements Controller
 			return;
 		}
 		
+		if(renderPlane3D.isDraggingOrGrabbingOrResizing())
+		{
+			//We cannot draw a wire right now.
+			return;
+		}
+		
 		Part part = renderPlane3D.getCursorObject();
 		if(part != mouseRightDownOn)
 		{
