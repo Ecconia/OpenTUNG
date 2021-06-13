@@ -82,6 +82,7 @@ public class RenderPlane3D implements RenderPlane
 	private final List<Vector3> wireEndsToRender = new ArrayList<>();
 	private final LabelToolkit labelToolkit = new LabelToolkit();
 	private final BlockingQueue<GPUTask> gpuTasks = new LinkedBlockingQueue<>();
+	private int gpuTasksCurrentSize;
 	private final SharedData sharedData;
 	private final ShaderStorage shaderStorage;
 	private final Skybox skybox;
@@ -112,6 +113,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void prepareSaving()
 	{
+		hitpoint = new Hitpoint();
 		if(isGrabbing())
 		{
 			//Grab aborting does not need the simulation thread, so it won't create new tasks there.
@@ -121,7 +123,6 @@ public class RenderPlane3D implements RenderPlane
 		{
 			abortResizing(); //Abort resizing, not exactly required. But better to clean up before running this.
 		}
-		hitpoint = new Hitpoint();
 		wireStartPoint = null; //Stops drawing a wire.
 		boardDrawStartingPoint = null; //Stops drawing a board.
 	}
@@ -164,6 +165,11 @@ public class RenderPlane3D implements RenderPlane
 	{
 		Hitpoint hitpoint = this.hitpoint;
 		return hitpoint != null ? hitpoint.getHitPart() : null;
+	}
+	
+	public int getGpuTasksCurrentSize()
+	{
+		return gpuTasksCurrentSize;
 	}
 	
 	public Hitpoint getHitpoint()
@@ -1918,6 +1924,7 @@ public class RenderPlane3D implements RenderPlane
 	public void render()
 	{
 		//Handle jobs passed from other threads:
+		gpuTasksCurrentSize = gpuTasks.size();
 		while(!gpuTasks.isEmpty())
 		{
 			gpuTasks.poll().execute(this);

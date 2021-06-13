@@ -3,7 +3,6 @@ package de.ecconia.java.opentung.simulation;
 import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimulationManager extends Thread
 {
@@ -22,7 +21,9 @@ public class SimulationManager extends Thread
 	private int upsCounter;
 	
 	private boolean paused;
-	private AtomicInteger pauseArrived;
+	private boolean locked;
+	private int currentJobQueueSize;
+	private boolean isSimulationHalted;
 	
 	public SimulationManager()
 	{
@@ -41,26 +42,25 @@ public class SimulationManager extends Thread
 		
 		while(!Thread.currentThread().isInterrupted())
 		{
-			if(paused)
+			if(paused || locked)
 			{
-				if(pauseArrived != null)
-				{
-					pauseArrived.incrementAndGet();
-					pauseArrived = null; //Remove reference to not trigger it again.
-				}
 				tps = 0;
 				ups = 0;
 				try
 				{
-					Thread.sleep(500);
+					Thread.sleep(50);
 				}
 				catch(InterruptedException e)
 				{
 					break; //Just break the while loop. May happen on exit while saving.
 				}
+				isSimulationHalted = true;
+				processJobs(); //For now just process the jobs every now and then.
 			}
 			else
 			{
+				isSimulationHalted = false;
+				processJobs();
 				doTick();
 				
 				finishedTicks++;
@@ -149,7 +149,7 @@ public class SimulationManager extends Thread
 //		updateClusterThisStage.add(cluster);
 //	}
 	
-	private void doTick()
+	private void processJobs()
 	{
 		if(!updateJobNextTickThreadSafe.isEmpty())
 		{
@@ -162,12 +162,16 @@ public class SimulationManager extends Thread
 				//TBI: Alternatively overwrite the class and let clear only reset the pointer.
 				updateJobNextTickThreadSafe.clear();
 			}
+			currentJobQueueSize = updateJobThisTickThreadSafe.size();
 			for(UpdateJob updateJob : updateJobThisTickThreadSafe)
 			{
 				updateJob.update(this);
 			}
 		}
-		
+	}
+	
+	private void doTick()
+	{
 		{
 			List<Updateable> tmp = updateThisTick;
 			updateThisTick = updateNextTick;
@@ -228,6 +232,8 @@ public class SimulationManager extends Thread
 		}
 	}
 	
+	//Getters:
+	
 	public int getTPS()
 	{
 		return tps;
@@ -238,22 +244,34 @@ public class SimulationManager extends Thread
 		return (float) Math.round(((float) ups / (float) tps) * 100f) / 100f;
 	}
 	
-	public void pauseSimulation(AtomicInteger pauseArrived)
+	public int getCurrentJobQueueSize()
 	{
-		if(!this.isAlive())
-		{
-			System.out.println("Simulation thread crashed, saving anyway.");
-			pauseArrived.incrementAndGet();
-			return;
-		}
-		this.pauseArrived = pauseArrived;
-		paused = true;
+		return currentJobQueueSize;
 	}
 	
-	public void resumeSimulation()
+	public boolean isSimulationHalted()
 	{
-		paused = false;
+		return isSimulationHalted;
 	}
+	
+	//Locking/Pausing:
+	
+	public void lockSimulation()
+	{
+		this.locked = true;
+	}
+	
+	public void unlockSimulation()
+	{
+		this.locked = false;
+	}
+	
+	public void setPaused(boolean paused)
+	{
+		this.paused = paused;
+	}
+	
+	//Classes:
 	
 	public interface UpdateJob
 	{

@@ -3,17 +3,24 @@ package de.ecconia.java.opentung.savefile;
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.data.SharedData;
+import de.ecconia.java.opentung.core.structs.GPUTask;
 import de.ecconia.java.opentung.interfaces.windows.PauseMenu;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 public class SavePrepareUnit
 {
+	private final BlockingQueue<Callable> backNForthQueue = new LinkedBlockingQueue<>();
+	
 	private SharedData sharedData;
 	private PauseMenu pauseMenu;
+	
+	private boolean simulationDone;
+	private boolean renderDone;
 	
 	public SavePrepareUnit(PauseMenu pauseMenu, SharedData sharedData, boolean chooser)
 	{
@@ -23,6 +30,7 @@ public class SavePrepareUnit
 			return;
 		}
 		sharedData.setSaving();
+		pauseMenu.setSaveButtonsDisabled(true);
 		
 		this.sharedData = sharedData;
 		this.pauseMenu = pauseMenu;
@@ -91,46 +99,150 @@ public class SavePrepareUnit
 			SimulationManager simulationManager = sharedData.getBoardUniverse().getSimulation();
 			RenderPlane3D renderPlane3D = sharedData.getRenderPlane3D();
 			{
-				AtomicInteger pauseArrived = new AtomicInteger();
-				//TBI: May skip the execution of some simulation tasks with external source, problem?
-				simulationManager.pauseSimulation(pauseArrived);
-				//Following task is appended to the end of the task-queue and will allow saving.
-				//TBI: Assumes that the interface is open and thus no new GPU tasks had been added.
-				sharedData.getGpuTasks().add((render) -> {
-					renderPlane3D.prepareSaving();
-					pauseArrived.incrementAndGet();
-				});
-				while(pauseArrived.get() != 2)
+				System.out.println("[PreSave] Waiting for simulation/render jobs to be processed and simulation to be halted.");
+				simulationManager.lockSimulation();
+				if(simulationManager.isAlive())
 				{
-					try
+					simulationManager.updateJobNextTickThreadSafe(new SimulationFinalJob());
+				}
+				else
+				{
+					System.out.println("[PreSave] Simulation thread crashed, saving anyway...");
+					simulationDone = true;
+				}
+				
+				sharedData.getGpuTasks().add((render) -> {
+					renderPlane3D.prepareSaving(); //Stops all modes
+				});
+				
+				sharedData.getGpuTasks().add(new GPUFinalJob());
+				try
+				{
+					while(!(simulationDone && renderDone))
 					{
-						Thread.sleep(10);
-					}
-					catch(InterruptedException e)
-					{
-						e.printStackTrace();
+						backNForthQueue.take().call();
 					}
 				}
+				catch(InterruptedException e)
+				{
+					//Does not expect to be interrupted.
+					e.printStackTrace();
+					endSaving();
+					return; //Something interfered, for safety reasons lets not continue here.
+				}
 			}
-			pauseMenu.setSaveButtonsDisabled(true);
 			
 			//Start daemon thread (Cannot be killed):
 			Thread saveThread = new Thread(() -> {
 				System.out.println("Saving...");
 				long startTime = System.currentTimeMillis();
-				
 				Saver.save(sharedData.getBoardUniverse(), sharedData.getCurrentBoardFile());
-				
 				System.out.println("Done, took: " + (System.currentTimeMillis() - startTime) + "ms");
-				
 				//Unlock:
-				simulationManager.resumeSimulation();
+				simulationManager.unlockSimulation();
 				endSaving();
 			}, "SaveThread");
 			saveThread.setDaemon(false); //Yes it should finish saving first! Thus no daemon.
 			saveThread.start();
 		}, "Save-Preparation-Thread");
 		t.start();
+	}
+	
+	private class GPUFinalJob implements GPUTask
+	{
+		private int idleCounter = 0;
+		
+		@Override
+		public void execute(RenderPlane3D renderPlane3D)
+		{
+			int currentJobAmount = renderPlane3D.getGpuTasksCurrentSize();
+			if(currentJobAmount > 1)
+			{
+				idleCounter = 0;
+				reschedule();
+			}
+			else
+			{
+				if(idleCounter++ >= 6)
+				{
+					backNForthQueue.add(() -> {
+						//Trigger the queue, since that will cause the flag below to be checked.
+						System.out.println("[PreSave] Render jobs done.");
+						renderDone = true;
+					});
+				}
+				else
+				{
+					//Try again next cycle:
+					reschedule();
+				}
+			}
+		}
+		
+		private void reschedule()
+		{
+			backNForthQueue.add(() -> {
+				try
+				{
+					Thread.sleep(50);
+				}
+				catch(InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+				sharedData.getGpuTasks().add(this);
+			});
+		}
+	}
+	
+	private class SimulationFinalJob implements SimulationManager.UpdateJob
+	{
+		private int idleCounter = 0;
+		
+		@Override
+		public void update(SimulationManager simulation)
+		{
+			//Wait for the simulation to
+			if(!simulation.isSimulationHalted())
+			{
+				if(idleCounter != 0)
+				{
+					System.out.println("[PreSave] WARNING: While preparing saving and stopping simulation, the simulation after locked continued to run again! This should never be the case. Counter was: " + idleCounter);
+					idleCounter = 0;
+				}
+				simulation.updateJobNextTickThreadSafe(this);
+			}
+			
+			//Wait until the simulation job queue was empty for like 4-6 "cycles".
+			int simulationJobs = simulation.getCurrentJobQueueSize();
+			if(simulationJobs > 1)
+			{
+				//Try again next cycle:
+				idleCounter = 0;
+				simulation.updateJobNextTickThreadSafe(this);
+			}
+			else
+			{
+				if(idleCounter++ >= 6)
+				{
+					backNForthQueue.add(() -> {
+						//Trigger the queue, since that will cause the flag below to be checked.
+						System.out.println("[PreSave] Simulation jobs done.");
+						simulationDone = true;
+					});
+				}
+				else
+				{
+					//Try again next cycle:
+					simulation.updateJobNextTickThreadSafe(this);
+				}
+			}
+		}
+	}
+	
+	private interface Callable
+	{
+		void call();
 	}
 	
 	private void endSaving()
