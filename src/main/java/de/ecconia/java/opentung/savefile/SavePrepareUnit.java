@@ -211,6 +211,7 @@ public class SavePrepareUnit
 					idleCounter = 0;
 				}
 				simulation.updateJobNextTickThreadSafe(this);
+				return;
 			}
 			
 			//Wait until the simulation job queue was empty for like 4-6 "cycles".
