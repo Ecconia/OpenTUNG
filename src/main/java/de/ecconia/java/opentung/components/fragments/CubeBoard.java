@@ -81,14 +81,14 @@ public class CubeBoard extends CubeFull
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, t, t, color, type);
 		genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 		//Forward:
-		normal = rotation.inverse().multiply(new Vector3(0, 0, 1));
+		normal = rotation.inverse().multiply(new Vector3(0, 0, -1));
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, t, 0, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, 0, 0, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, 0, t, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), min.getZ()), normal, t, t, color, type);
 		genIndex(indices, indicesIndex.getAndInc(6), vertexCounter.getAndInc(4));
 		//Back:
-		normal = rotation.inverse().multiply(new Vector3(0, 0, -1));
+		normal = rotation.inverse().multiply(new Vector3(0, 0, 1));
 		genVertex(vertices, offsetV, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, t, 0, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, 0, 0, color, type);
 		genVertex(vertices, offsetV, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, 0, t, color, type);

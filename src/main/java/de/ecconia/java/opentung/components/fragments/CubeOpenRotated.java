@@ -119,7 +119,7 @@ public class CubeOpenRotated extends CubeFull
 		if(direction != Direction.ZNeg)
 		{
 			//Forward:
-			normal = rotation.inverse().multiply(new Vector3(0, 0, 1));
+			normal = rotation.inverse().multiply(new Vector3(0, 0, -1));
 			genVertex(vertices, offsetV, this.rotation, placementOffset, position, rotation, new Vector3(min.getX(), min.getY(), min.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, this.rotation, placementOffset, position, rotation, new Vector3(max.getX(), min.getY(), min.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, this.rotation, placementOffset, position, rotation, new Vector3(max.getX(), max.getY(), min.getZ()), normal, color, type);
@@ -129,7 +129,7 @@ public class CubeOpenRotated extends CubeFull
 		if(direction != Direction.ZPos)
 		{
 			//Back:
-			normal = rotation.inverse().multiply(new Vector3(0, 0, -1));
+			normal = rotation.inverse().multiply(new Vector3(0, 0, 1));
 			genVertex(vertices, offsetV, this.rotation, placementOffset, position, rotation, new Vector3(max.getX(), min.getY(), max.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, this.rotation, placementOffset, position, rotation, new Vector3(min.getX(), min.getY(), max.getZ()), normal, color, type);
 			genVertex(vertices, offsetV, this.rotation, placementOffset, position, rotation, new Vector3(min.getX(), max.getY(), max.getZ()), normal, color, type);
