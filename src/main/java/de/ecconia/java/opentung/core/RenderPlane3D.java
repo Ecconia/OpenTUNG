@@ -2416,14 +2416,7 @@ public class RenderPlane3D implements RenderPlane
 		{
 			//Drawing a wire:
 			Vector3 toPos = null;
-			if(hitpoint.canBePlacedOn())
-			{
-				HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
-				toPos = hitpointContainer.getPosition();
-				//Move placement position to the surface (it is always below it):
-				toPos = toPos.add(hitpointContainer.getNormal().multiply(0.075));
-			}
-			else if(!hitpoint.isEmpty())
+			if(!hitpoint.isEmpty())
 			{
 				Part lookingAt = hitpoint.getHitPart();
 				if(lookingAt instanceof Connector)
@@ -2496,6 +2489,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	private void drawWireToBePlaced(float[] view)
 	{
+		//Draw wire to be placed:
 		Vector3 position = hitpoint.getWireCenterPosition();
 		if(position != null)
 		{
@@ -2799,25 +2793,35 @@ public class RenderPlane3D implements RenderPlane
 				return;
 			}
 		}
-		else if(hitpoint.isEmpty())
+		else if(wireStartPoint == null)
 		{
-			return;
-		}
-		else
-		{
-			Part part = hitpoint.getHitPart();
-			
-			boolean isBoard = part instanceof CompBoard;
-			boolean isWire = part instanceof CompWireRaw;
-			if(
-					isBoard && !Settings.highlightBoards
-							|| isWire && !Settings.highlightWires
-							|| !(isBoard || isWire) && !Settings.highlightComponents
-			)
+			if(hitpoint.isEmpty())
 			{
 				return;
 			}
+			else
+			{
+				Part part = hitpoint.getHitPart();
+				
+				boolean isBoard = part instanceof CompBoard;
+				boolean isWire = part instanceof CompWireRaw;
+				if(
+						isBoard && !Settings.highlightBoards
+								|| isWire && !Settings.highlightWires
+								|| !(isBoard || isWire) && !Settings.highlightComponents
+				)
+				{
+					return;
+				}
+			}
 		}
+		
+		float[] color = new float[]{
+				Settings.highlightColorR,
+				Settings.highlightColorG,
+				Settings.highlightColorB,
+				Settings.highlightColorA
+		};
 		
 		Part part = hitpoint.getHitPart();
 		
@@ -2826,6 +2830,16 @@ public class RenderPlane3D implements RenderPlane
 		
 		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
 		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
+		if(wireStartPoint != null)
+		{
+			part = wireStartPoint;
+			color = new float[]{
+					1.0f,
+					0.5f,
+					0.0f,
+					0.7f
+			};
+		}
 		if(grabBoardHighlight)
 		{
 			//Do very very ugly drawing of board:
@@ -2859,12 +2873,7 @@ public class RenderPlane3D implements RenderPlane
 		//Only draw if stencil bit is set.
 		GL30.glStencilFunc(GL30.GL_EQUAL, 1, 0xFF);
 		
-		float[] color = new float[]{
-				Settings.highlightColorR,
-				Settings.highlightColorG,
-				Settings.highlightColorB,
-				Settings.highlightColorA
-		};
+		
 		
 		ShaderProgram planeShader = shaderStorage.getFlatPlaneShader();
 		planeShader.use();
