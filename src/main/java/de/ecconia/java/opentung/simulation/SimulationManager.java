@@ -20,8 +20,8 @@ public class SimulationManager extends Thread
 	private int ups;
 	private int upsCounter;
 	
-	private boolean paused;
-	private boolean locked;
+	private boolean paused; //Set to true, if the user requested the simulation to be paused.
+	private boolean locked; //Set to true, if the system forced the simulation to be paused.
 	private int currentJobQueueSize;
 	private boolean isSimulationHalted;
 	
@@ -33,77 +33,167 @@ public class SimulationManager extends Thread
 	@Override
 	public void run()
 	{
-		long past = System.currentTimeMillis();
-		int finishedTicks = 0;
+		long slotsPerSecond = 20;
+		long durationPerSlot = 1000 / slotsPerSecond;
+		initSlot(); //Initialize the system.
 		
-		long before = 0;
-		long after;
-		long targetSleep;
-		
+		//The end of the current slot and start of the new slot, used by the slot processing to detect overtime:
+		long nextSlotStartTime = System.currentTimeMillis() + durationPerSlot;
+		//When a full slot was skipped, tell the slot processor, so that he can catch up:
+		long skippedSlots = 0;
+		//Internal counter, to detect if a second has passed (20 slots over).
+		int slotCounter = 1;
+		boolean secondOver = false; //And the flag storing that state.
 		while(!Thread.currentThread().isInterrupted())
 		{
-			if(paused || locked)
+			processSlot(secondOver, (int) skippedSlots, nextSlotStartTime);
+			//Reset for next cycle/slot:
+			secondOver = false;
+			skippedSlots = 0;
+			
+			//Calculate the amount of time, that is left in this slot:
+			long timeRemaining = nextSlotStartTime - System.currentTimeMillis();
+			if(timeRemaining != 0) //No time remaining, so just continue!
 			{
-				tps = 0;
-				ups = 0;
-				try
+				if(timeRemaining > 1) //We will subtract 1, so lets not wait for 0ms.
 				{
-					Thread.sleep(50);
+					//For stability just wait one less ms. It can just wait longer next time.
+					// Basically a very stupid form of forced rounding down.
+					sleepWrapper(timeRemaining - 1);
 				}
-				catch(InterruptedException e)
+				else if(timeRemaining < 0) //Negative means, we ran out of time in this slot.
 				{
-					break; //Just break the while loop. May happen on exit while saving.
+					//Calculate how many ticks are skipped, and add the amount to the continuing values:
+					skippedSlots = timeRemaining / -durationPerSlot;
+					nextSlotStartTime += skippedSlots * durationPerSlot; //Add the full-slot skipped time to the next deadline.
+					if(skippedSlots > slotsPerSecond)
+					{
+						secondOver = true; //We skipped more than '20' slots, so a second must have passed.
+					}
+					slotCounter += skippedSlots % slotsPerSecond; //Lets not add more than 20. So that an if is sufficient later on.
 				}
-				isSimulationHalted = true;
-				processJobs(); //For now just process the jobs every now and then.
 			}
-			else
+			
+			//Prepare for the next cycle/slot:
+			nextSlotStartTime += durationPerSlot; //Time when the next slot will end.
+			if(++slotCounter > slotsPerSecond) //Can at most increase by 20, so no worry here.
 			{
-				isSimulationHalted = false;
-				processJobs();
-				doTick();
-				
-				finishedTicks++;
-				long now = System.currentTimeMillis();
-				if(now - past > 1000)
-				{
-					past = now;
-					tps = finishedTicks;
-					finishedTicks = 0;
-					ups = upsCounter;
-					upsCounter = 0;
-				}
-				
-				if(Settings.targetTPS > 0)
-				{
-					targetSleep = 1000000000L / Settings.targetTPS;
-					if(targetSleep > 1000000)
-					{
-						try
-						{
-							Thread.sleep(targetSleep / 1000000);
-						}
-						catch(InterruptedException e)
-						{
-							break;
-						}
-					}
-					else
-					{
-						after = System.nanoTime();
-						long delta = after - before;
-						long targetTime = after + targetSleep - delta;
-						while(System.nanoTime() < targetTime)
-						{
-						}
-						before = System.nanoTime();
-					}
-				}
+				secondOver = true; //Counter overflowed, thus second must have passed.
+				slotCounter -= slotsPerSecond;
 			}
 		}
 		
 		System.out.println("Simulation thread has turned off.");
 	}
+	
+	private void sleepWrapper(long milliseconds)
+	{
+		try
+		{
+			Thread.sleep(milliseconds);
+		}
+		catch(InterruptedException e)
+		{
+			//The exception removes the interrupt flag, lets help ourself and just set it again.
+			interrupt();
+		}
+	}
+	
+	//Tick scheduling fields:
+	
+	private boolean boostMode;
+	private int tickCounter;
+	private boolean wasPause;
+	
+	private double ticksPerSlot;
+	private double toBeProcessedTicks;
+	
+	private void initSlot()
+	{
+		updateValues();
+	}
+	
+	private void updateValues()
+	{
+		//Read settings.txt and apply values:
+		boostMode = Settings.targetTPS < 0;
+		ticksPerSlot = Settings.targetTPS / 20D;
+		//If there are over 1000 leftover ticks from the last slot, discard them and warn.
+		if(toBeProcessedTicks > 1000)
+		{
+			int skippedTicks = (int) Math.ceil(toBeProcessedTicks);
+			if(Settings.warnOnTPSSkipping)
+			{
+				System.out.println("[Simulation] Skipping " + skippedTicks + " ticks.");
+			}
+			toBeProcessedTicks = 0;
+		}
+	}
+	
+	private void processSlot(boolean secondPassed, int skippedSlots, long timeNextSlot)
+	{
+		processJobs(); //Jobs have to be done frequently regardless circumstances.
+		
+		if(secondPassed) //Do this only every so often (per second), less overhead.
+		{
+			//Set new boost times:
+			updateValues();
+			
+			//Update statistics:
+			tps = tickCounter;
+			tickCounter = 0;
+			ups = upsCounter;
+			upsCounter = 0;
+		}
+		
+		if(locked || paused)
+		{
+			//Basically fully reset every variable, that could cause the simulation to run.
+			isSimulationHalted = true; //This one is only used for the jobs, so that saving can stop simulation properly.
+			ticksPerSlot = 0; //Do not increase the amount of ticks to be processed again.
+			boostMode = false;
+			wasPause = true; //To restore the values, we need to detect when we resume, this variable is used for that.
+			toBeProcessedTicks = 0; //Pausing means there will not be ticks to catch up on resume.
+		}
+		else if(wasPause)
+		{
+			//Restore values:
+			updateValues();
+			isSimulationHalted = false;
+			wasPause = false;
+		}
+		
+		if(boostMode)
+		{
+			//As many ticks as possible, until slot runs out of time:
+			while(System.currentTimeMillis() < timeNextSlot)
+			{
+				doTick();
+			}
+		}
+		else
+		{
+			//One slot and all the skipped slots need to be counted.
+			// We are counting in floating point, so that we never loose precision and are as close to correct as possible.
+			toBeProcessedTicks += ticksPerSlot * (skippedSlots + 1);
+			int beforeTicks = tickCounter; //Used to count ticks processed.
+			int ticksToProcess = (int) Math.ceil(toBeProcessedTicks); //Convert the floating point amount back to integer. Round up, to do more than required, so that later on less work.
+			for(int i = 0; i < ticksToProcess; i++)
+			{
+				doTick();
+				
+				//Timeout, slot has no more time left:
+				if(System.currentTimeMillis() >= timeNextSlot)
+				{
+					break;
+				}
+			}
+			int processedTicks = tickCounter - beforeTicks; //Calculate processed ticks.
+			toBeProcessedTicks -= processedTicks;
+		}
+	}
+	
+	//Non-Schedule normal Simulation code:
 	
 	//Used by inputs like Buttons/Switches, when interacted with.
 	//Used to prime new components.
@@ -233,6 +323,8 @@ public class SimulationManager extends Thread
 		{
 			updateClusterNextStage.clear();
 		}
+		
+		tickCounter++;
 	}
 	
 	//Getters:

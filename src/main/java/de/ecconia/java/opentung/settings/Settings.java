@@ -50,8 +50,10 @@ public class Settings
 	
 	//### SIMULATION ###
 	
-	@SettingInfo(key = "settings.simulation.targetTPS", comment = "TPS which the game will try to archive.\n0 is unlimited.")
-	public static int targetTPS = 100;
+	@SettingInfo(key = "settings.simulation.targetTPS", comment = "TPS which the game will try to archive.\n -1 is unlimited.")
+	public static double targetTPS = 100.0;
+	@SettingInfo(key = "settings.simulation.warnOnSkipping", comment = "Will print a message when over 1000 ticks could not be handled after 1 second.")
+	public static boolean warnOnTPSSkipping = true;
 	
 	//### HIGHLIGHTING & DRAWING ###
 	
