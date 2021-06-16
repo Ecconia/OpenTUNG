@@ -115,10 +115,6 @@ public class Controller3D implements Controller
 				}
 			});
 		}
-		else if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
-		{
-			numberPressed(keyIndex - GLFW.GLFW_KEY_0);
-		}
 		else if(scancode == Keybindings.KeyToggleComponentsList)
 		{
 			inputProcessor.get2DController().openComponentList();
@@ -127,13 +123,20 @@ public class Controller3D implements Controller
 		{
 			if(!renderPlane3D.checkToolActivation(scancode, isControl()))
 			{
-				if(scancode == Keybindings.KeyRotate)
+				if(scancode == Keybindings.KeyHotbarDrop)
 				{
-					renderPlane3D.rotatePlacement(isControl());
+					if(isControl())
+					{
+						renderPlane3D.stopClusterHighlighting();
+					}
+					else
+					{
+						inputProcessor.get2DController().dropHotbarEntry();
+					}
 				}
-				else if(scancode == Keybindings.KeyHotbarDrop)
+				else if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
 				{
-					inputProcessor.get2DController().dropHotbarEntry();
+					numberPressed(keyIndex - GLFW.GLFW_KEY_0);
 				}
 			}
 		}
@@ -232,11 +235,6 @@ public class Controller3D implements Controller
 			mouseLeftDown = 0;
 			return;
 		}
-		if(renderPlane3D.attemptPlacement(mouseRightDown != 0))
-		{
-			mouseLeftDown = 0;
-			return;
-		}
 		
 		Part mouseLeftDownOn = renderPlane3D.getCursorObject();
 		if(mouseLeftDownOn != null)
@@ -325,27 +323,20 @@ public class Controller3D implements Controller
 		Part mouseRightDownOn = renderPlane3D.getCursorObject();
 		if(!renderPlane3D.toolMouseRightUp())
 		{
-			if(renderPlane3D.isInBoardPlacementMode())
+			if(mouseRightDownOn != null)
 			{
-				renderPlane3D.flipBoard();
-			}
-			else
-			{
-				if(mouseRightDownOn != null)
+				long clickDuration = (System.currentTimeMillis() - mouseRightDown);
+				//If the click was longer than a second, validate that its the intended component...
+				if(clickDuration > Settings.longMousePressDuration)
 				{
-					long clickDuration = (System.currentTimeMillis() - mouseRightDown);
-					//If the click was longer than a second, validate that its the intended component...
-					if(clickDuration > Settings.longMousePressDuration)
-					{
-						if(this.mouseRightDownOn == mouseRightDownOn)
-						{
-							renderPlane3D.componentRightClicked(mouseRightDownOn);
-						}
-					}
-					else
+					if(this.mouseRightDownOn == mouseRightDownOn)
 					{
 						renderPlane3D.componentRightClicked(mouseRightDownOn);
 					}
+				}
+				else
+				{
+					renderPlane3D.componentRightClicked(mouseRightDownOn);
 				}
 			}
 		}
@@ -359,16 +350,10 @@ public class Controller3D implements Controller
 	{
 		if(!renderPlane3D.toolScroll(val, isControl(), isAlt()))
 		{
-			if(renderPlane3D.allowBoardOffset(isControl()))
+			if(!renderPlane3D.isPrimaryToolActive())
 			{
-				renderPlane3D.boardOffset(val, isControl());
-			}
-			else
-			{
-				if(!renderPlane3D.isDraggingOrPrimaryToolActive())
-				{
-					inputProcessor.get2DController().forwardScrollingToHotbar(val);
-				}
+				//TBI: Only allow scrolling when in default tool mode? -> Makes sense though.
+				inputProcessor.get2DController().forwardScrollingToHotbar(val);
 			}
 		}
 	}
@@ -386,7 +371,7 @@ public class Controller3D implements Controller
 			index += 10;
 		}
 		
-		if(!renderPlane3D.isDraggingOrPrimaryToolActive())
+		if(!renderPlane3D.isPrimaryToolActive())
 		{
 			inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
 		}
@@ -400,7 +385,7 @@ public class Controller3D implements Controller
 	
 	private void middleMouseDown()
 	{
-		if(renderPlane3D.isDraggingOrPrimaryToolActive())
+		if(renderPlane3D.isPrimaryToolActive())
 		{
 			//Has the potential to change hotbar slot.
 			return;
