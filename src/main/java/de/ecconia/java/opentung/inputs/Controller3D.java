@@ -1,15 +1,10 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.components.meta.CompContainer;
-import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.core.Camera;
-import de.ecconia.java.opentung.core.data.GrabData;
 import de.ecconia.java.opentung.core.RenderPlane3D;
-import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.simulation.SimulationManager;
@@ -93,16 +88,8 @@ public class Controller3D implements Controller
 	{
 		if(keyIndex == GLFW.GLFW_KEY_ESCAPE)
 		{
-			//Abort grabbing, before opening the main menu:
-			if(renderPlane3D.isGrabbing())
-			{
-				renderPlane3D.abortGrabbing();
-			}
-			else if(renderPlane3D.isResizing())
-			{
-				renderPlane3D.abortResizing();
-			}
-			else
+			//Abort primary tool, before opening the main menu:
+			if(!renderPlane3D.toolAbort())
 			{
 				switchToInterface();
 			}
@@ -128,91 +115,25 @@ public class Controller3D implements Controller
 				}
 			});
 		}
-		else
+		else if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
 		{
-			GrabData grabData = renderPlane3D.getGrabData();
-			if(grabData != null)
+			numberPressed(keyIndex - GLFW.GLFW_KEY_0);
+		}
+		else if(scancode == Keybindings.KeyToggleComponentsList)
+		{
+			inputProcessor.get2DController().openComponentList();
+		}
+		else if(!renderPlane3D.toolKeyUp(scancode, isControl()))
+		{
+			if(!renderPlane3D.checkToolActivation(scancode, isControl()))
 			{
-				//Currently grabbing:
-				if(scancode == Keybindings.KeyGrabAbort)
-				{
-					renderPlane3D.abortGrabbing();
-				}
-				else if(scancode == Keybindings.KeyGrabDelete)
-				{
-					renderPlane3D.deleteGrabbed();
-				}
-				else
-				{
-					if(grabData.getComponent() instanceof CompBoard)
-					{
-						//Grabbing board:
-						if(scancode == Keybindings.KeyGrabRotateY)
-						{
-							renderPlane3D.rotateGrabbedBoardY();
-						}
-						else if(scancode == Keybindings.KeyGrabRotateX)
-						{
-							renderPlane3D.rotateGrabbedBoardX();
-						}
-						else if(scancode == Keybindings.KeyGrabRotateZ)
-						{
-							renderPlane3D.rotateGrabbedBoardZ();
-						}
-					}
-					else
-					{
-						//Grabbing other:
-						if(scancode == Keybindings.KeyGrabRotate)
-						{
-							renderPlane3D.rotatePlacement(isControl());
-						}
-					}
-				}
-			}
-			else
-			{
-				//Not grabbing:
-				if(keyIndex >= GLFW.GLFW_KEY_0 && keyIndex <= GLFW.GLFW_KEY_9)
-				{
-					numberPressed(keyIndex - GLFW.GLFW_KEY_0);
-				}
-				else if(scancode == Keybindings.KeyToggleComponentsList)
-				{
-					inputProcessor.get2DController().openComponentList();
-				}
-				else if(scancode == Keybindings.KeyRotate)
+				if(scancode == Keybindings.KeyRotate)
 				{
 					renderPlane3D.rotatePlacement(isControl());
-				}
-				else if(scancode == Keybindings.KeyDelete)
-				{
-					if(isControl())
-					{
-						//TODO: Q - as in, either move to Q, or somewhere else. Current solution is confusing.
-						renderPlane3D.stopClusterHighlighting();
-					}
-					else
-					{
-						Part toBeDeleted = renderPlane3D.getCursorObject();
-						if(toBeDeleted != null)
-						{
-							renderPlane3D.delete(toBeDeleted);
-						}
-					}
 				}
 				else if(scancode == Keybindings.KeyHotbarDrop)
 				{
 					inputProcessor.get2DController().dropHotbarEntry();
-				}
-				else if(scancode == Keybindings.KeyGrab)
-				{
-					grab();
-				}
-				else if(scancode == Keybindings.KeyResize)
-				{
-					//TODO: Abort with 'Q' too.
-					renderPlane3D.boardResize();
 				}
 			}
 		}
@@ -222,27 +143,6 @@ public class Controller3D implements Controller
 	public void unfocus()
 	{
 		switchToInterface();
-	}
-	
-	private void grab()
-	{
-		Part part = renderPlane3D.getCursorObject();
-		if(part != null)
-		{
-			if(part instanceof Connector)
-			{
-				part = part.getParent();
-			}
-			
-			if(isControl())
-			{
-				renderPlane3D.copy((Component) part);
-			}
-			else
-			{
-				renderPlane3D.grab((Component) part);
-			}
-		}
 	}
 	
 	//Stuff:
@@ -310,7 +210,6 @@ public class Controller3D implements Controller
 	public void doFrameCycle()
 	{
 		doLeftHoldableCheck();
-		mouseRightCheckDrag();
 	}
 	
 	//Left:
@@ -323,15 +222,16 @@ public class Controller3D implements Controller
 	{
 		mouseLeftDown = System.currentTimeMillis();
 		mouseLeftDownOn = renderPlane3D.getCursorObject();
-		if(mouseLeftDownOn instanceof CompContainer)
-		{
-			//TODO: Proper abort of the placement mode, once started.
-			renderPlane3D.placementStart();
-		}
+		renderPlane3D.checkToolActivationMouseDown(InputProcessor.MOUSE_LEFT, isControl());
 	}
 	
 	private void mouseLeftUp()
 	{
+		if(renderPlane3D.toolMouseLeftUp())
+		{
+			mouseLeftDown = 0;
+			return;
+		}
 		if(renderPlane3D.attemptPlacement(mouseRightDown != 0))
 		{
 			mouseLeftDown = 0;
@@ -412,97 +312,63 @@ public class Controller3D implements Controller
 	
 	private long mouseRightDown;
 	private Part mouseRightDownOn;
-	private boolean mouseRightDownOnConnector;
-	private boolean mouseRightConnectorMode;
 	
 	private void mouseRightDown()
 	{
 		mouseRightDown = System.currentTimeMillis();
 		mouseRightDownOn = renderPlane3D.getCursorObject();
-		if(mouseRightDownOn instanceof Connector)
-		{
-			mouseRightDownOnConnector = true;
-		}
+		renderPlane3D.checkToolActivationMouseDown(InputProcessor.MOUSE_RIGHT, isControl());
 	}
 	
 	private void mouseRightUp()
 	{
-		Hitpoint hitpoint = renderPlane3D.getHitpoint();
-		Part mouseRightDownOn = hitpoint.getHitPart();
-		if(mouseRightConnectorMode)
+		Part mouseRightDownOn = renderPlane3D.getCursorObject();
+		if(!renderPlane3D.toolMouseRightUp())
 		{
-			if(mouseRightDownOn instanceof Connector)
+			if(renderPlane3D.isInBoardPlacementMode())
 			{
-				renderPlane3D.rightDragOnConnectorStop(hitpoint);
+				renderPlane3D.flipBoard();
 			}
 			else
 			{
-				renderPlane3D.rightDragOnConnectorStop(null);
-			}
-		}
-		else if(renderPlane3D.isInBoardPlacementMode())
-		{
-			renderPlane3D.flipBoard();
-		}
-		else
-		{
-			if(mouseRightDownOn != null)
-			{
-				long clickDuration = (System.currentTimeMillis() - mouseRightDown);
-				//If the click was longer than a second, validate that its the intended component...
-				if(clickDuration > Settings.longMousePressDuration)
+				if(mouseRightDownOn != null)
 				{
-					if(this.mouseRightDownOn == mouseRightDownOn)
+					long clickDuration = (System.currentTimeMillis() - mouseRightDown);
+					//If the click was longer than a second, validate that its the intended component...
+					if(clickDuration > Settings.longMousePressDuration)
+					{
+						if(this.mouseRightDownOn == mouseRightDownOn)
+						{
+							renderPlane3D.componentRightClicked(mouseRightDownOn);
+						}
+					}
+					else
 					{
 						renderPlane3D.componentRightClicked(mouseRightDownOn);
 					}
-				}
-				else
-				{
-					renderPlane3D.componentRightClicked(mouseRightDownOn);
 				}
 			}
 		}
 		
 		mouseRightDown = 0;
-		mouseRightDownOnConnector = false;
-		mouseRightConnectorMode = false;
-	}
-	
-	private void mouseRightCheckDrag()
-	{
-		if(mouseRightConnectorMode || !mouseRightDownOnConnector)
-		{
-			return;
-		}
-		
-		if(renderPlane3D.isDraggingOrGrabbingOrResizing())
-		{
-			//We cannot draw a wire right now.
-			return;
-		}
-		
-		Part part = renderPlane3D.getCursorObject();
-		if(part != mouseRightDownOn)
-		{
-			mouseRightConnectorMode = true;
-			renderPlane3D.rightDragOnConnector((Connector) mouseRightDownOn);
-		}
 	}
 	
 	//Middle-Mouse & Wheel:
 	
 	private void scrollY(int val)
 	{
-		if(renderPlane3D.allowBoardOffset(isControl()))
+		if(!renderPlane3D.toolScroll(val, isControl(), isAlt()))
 		{
-			renderPlane3D.boardOffset(val, isControl(), isAlt());
-		}
-		else
-		{
-			if(!renderPlane3D.isDraggingOrGrabbing())
+			if(renderPlane3D.allowBoardOffset(isControl()))
 			{
-				inputProcessor.get2DController().forwardScrollingToHotbar(val);
+				renderPlane3D.boardOffset(val, isControl());
+			}
+			else
+			{
+				if(!renderPlane3D.isDraggingOrPrimaryToolActive())
+				{
+					inputProcessor.get2DController().forwardScrollingToHotbar(val);
+				}
 			}
 		}
 	}
@@ -520,7 +386,7 @@ public class Controller3D implements Controller
 			index += 10;
 		}
 		
-		if(!renderPlane3D.isDraggingOrGrabbing())
+		if(!renderPlane3D.isDraggingOrPrimaryToolActive())
 		{
 			inputProcessor.get2DController().forwardNumberIndexToHotbar(index);
 		}
@@ -534,7 +400,7 @@ public class Controller3D implements Controller
 	
 	private void middleMouseDown()
 	{
-		if(renderPlane3D.isDraggingOrGrabbing())
+		if(renderPlane3D.isDraggingOrPrimaryToolActive())
 		{
 			//Has the potential to change hotbar slot.
 			return;
