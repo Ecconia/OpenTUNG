@@ -77,7 +77,7 @@ public class DrawWire implements Tool
 	private FrameData frameData;
 	private boolean isChoosingSecondGroup;
 	
-	private static final FrameData emptyFrame = new FrameData(new LinkedList<>(), false, null, null, new LinkedList<>(), 1);
+	private static final FrameData emptyFrame = new FrameData(new LinkedList<>(), false, null, null, new LinkedList<>(), 1, false);
 	
 	public DrawWire(SharedData sharedData)
 	{
@@ -159,6 +159,10 @@ public class DrawWire implements Tool
 		boolean isMWP = isChoosingSecondGroup || isControl;
 		if(secondConnector == this.secondConnector && isMWP == frameData.isMWP() && skipAmount == frameData.getSkipAmount())
 		{
+			if(isControl != frameData.isControl())
+			{
+				this.frameData = new FrameData(frameData.getWires(), frameData.isMWP(), frameData.getGroupA(), frameData.getGroupB(), frameData.getGroupSkip(), frameData.getSkipAmount(), isControl);
+			}
 			//Connector and the MWP mode did not change, thus there is no need to run the following code again.
 			return hitpoint;
 		}
@@ -255,7 +259,7 @@ public class DrawWire implements Tool
 		}
 		
 		this.secondConnector = secondConnector;
-		this.frameData = new FrameData(newWires, isMWP, groupA, groupB, groupSkip, skipAmount);
+		this.frameData = new FrameData(newWires, isMWP, groupA, groupB, groupSkip, skipAmount, isControl);
 		
 		return hitpoint;
 	}
@@ -313,6 +317,13 @@ public class DrawWire implements Tool
 					this.isChoosingSecondGroup = true;
 					return; //Still about to place another group.
 				}
+				else if(frameData.isMWPExtended())
+				{
+					this.firstConnector = null;
+					this.secondConnector = null;
+					//Prepare for extended mode:
+					this.frameData = new FrameData(emptyFrame.getWires(), true, frameData.getGroupB(), null, emptyFrame.getGroupSkip(), emptyFrame.getSkipAmount(), true);
+				}
 			}
 			
 			List<CompWireRaw> newWires = new LinkedList<>();
@@ -352,7 +363,10 @@ public class DrawWire implements Tool
 				
 				if(newWires.isEmpty())
 				{
-					disable();
+					if(!frameData.isMWPExtended())
+					{
+						disable();
+					}
 					return;
 				}
 				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
@@ -380,7 +394,10 @@ public class DrawWire implements Tool
 						worldMesh.addComponent(wire, board.getSimulation());
 					}
 					
-					worldRenderer.toolDisable();
+					if(!frameData.isMWPExtended())
+					{
+						worldRenderer.toolDisable();
+					}
 				});
 			});
 		});
@@ -536,8 +553,9 @@ public class DrawWire implements Tool
 		private final List<Connector> groupB;
 		private final List<Connector> groupSkip;
 		private final int skipAmount;
+		private final boolean isControl;
 		
-		public FrameData(List<WireToBeDrawn> wires, boolean isMWP, List<Connector> connectorsGroupA, List<Connector> connectorsGroupB, List<Connector> groupSkip, int skipAmount)
+		public FrameData(List<WireToBeDrawn> wires, boolean isMWP, List<Connector> connectorsGroupA, List<Connector> connectorsGroupB, List<Connector> groupSkip, int skipAmount, boolean isControl)
 		{
 			this.wires = wires;
 			this.isMWP = isMWP;
@@ -545,11 +563,12 @@ public class DrawWire implements Tool
 			this.groupB = connectorsGroupB;
 			this.skipAmount = skipAmount;
 			this.groupSkip = groupSkip;
+			this.isControl = isControl;
 		}
 		
 		public boolean shouldEndTool()
 		{
-			return !isMWP || groupB != null;
+			return !isMWP || (groupB != null && !isControl);
 		}
 		
 		public List<WireToBeDrawn> getWires()
@@ -565,6 +584,16 @@ public class DrawWire implements Tool
 		public boolean isMWPDone()
 		{
 			return groupB != null;
+		}
+		
+		public boolean isMWPExtended()
+		{
+			return isMWP && groupB != null && isControl;
+		}
+		
+		public boolean isControl()
+		{
+			return isControl;
 		}
 		
 		public List<Connector> getGroupA()
