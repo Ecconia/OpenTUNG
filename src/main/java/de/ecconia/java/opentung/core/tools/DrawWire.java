@@ -33,25 +33,32 @@ import org.lwjgl.opengl.GL30;
 
 public class DrawWire implements Tool
 {
-	private static final float[] wireColor = {
+	private static final float[] colorWire = {
 			1.0f,
 			0.0f,
 			1.0f,
 			1.0f
 	};
 	
-	private static final float[] group1 = {
+	private static final float[] colorGroupA = {
 			1.0f,
 			0.5f,
 			0.0f,
 			0.7f
 	};
 	
-	private static final float[] group2 = {
+	private static final float[] colorGroupB = {
 			1.0f,
 			1.0f,
 			0.0f,
 			0.7f
+	};
+	
+	private static final float[] colorSkip = {
+			1.0f,
+			1.0f,
+			1.0f,
+			0.6f
 	};
 	
 	private final SharedData sharedData;
@@ -65,11 +72,12 @@ public class DrawWire implements Tool
 	private Connector firstConnector;
 	private Connector secondConnector;
 	
+	private int skipAmount;
 	private boolean unArmed;
 	private FrameData frameData;
 	private boolean isChoosingSecondGroup;
 	
-	private static final FrameData emptyFrame = new FrameData(new LinkedList<>(), false, null, null);
+	private static final FrameData emptyFrame = new FrameData(new LinkedList<>(), false, null, null, new LinkedList<>(), 1);
 	
 	public DrawWire(SharedData sharedData)
 	{
@@ -111,6 +119,7 @@ public class DrawWire implements Tool
 			this.secondConnector = null; //There is no second connector yet.
 			frameData = emptyFrame; //Set the initial empty frame data.
 			isChoosingSecondGroup = false;
+			this.skipAmount = emptyFrame.getSkipAmount(); //We do not skip when starting a new group.
 			gpuTasks.add((worldRenderer) -> {
 				worldRenderer.toolReady();
 			});
@@ -148,7 +157,7 @@ public class DrawWire implements Tool
 		}
 		
 		boolean isMWP = isChoosingSecondGroup || isControl;
-		if(secondConnector == this.secondConnector && isMWP == frameData.isMWP())
+		if(secondConnector == this.secondConnector && isMWP == frameData.isMWP() && skipAmount == frameData.getSkipAmount())
 		{
 			//Connector and the MWP mode did not change, thus there is no need to run the following code again.
 			return hitpoint;
@@ -157,10 +166,12 @@ public class DrawWire implements Tool
 		LinkedList<WireToBeDrawn> newWires = new LinkedList<>();
 		List<Connector> groupA = frameData.getGroupA();
 		List<Connector> groupB = frameData.getGroupB();
+		List<Connector> groupSkip = frameData.getGroupSkip();
 		
 		if(isMWP)
 		{
 			List<Connector> group = new LinkedList<>();
+			List<Connector> groupSkipNew = new LinkedList<>();
 			if(firstConnector == secondConnector)
 			{
 				group.add(firstConnector);
@@ -174,12 +185,27 @@ public class DrawWire implements Tool
 					Vector3 ray = secondConnector.getConnectionPoint().subtract(position);
 					List<CPURaycast.CollectionEntry> result = CPURaycast.collectConnectors(board.getRootBoard(), position, ray.normalize(), ray.length());
 					result.sort((a, b) -> (int) ((a.getDistance() - b.getDistance()) * 1000.0));
+					if((skipAmount - 1) > result.size())
+					{
+						skipAmount = result.size() + 1;
+					}
+					int skipCounter = skipAmount;
+					int index = 1;
 					for(CPURaycast.CollectionEntry entry : result)
 					{
-						group.add(entry.getConnector());
+						if(index++ == skipCounter)
+						{
+							skipCounter += skipAmount;
+							group.add(entry.getConnector());
+						}
+						else
+						{
+							groupSkipNew.add(entry.getConnector());
+						}
 					}
 				}
 			}
+			groupSkip = groupSkipNew;
 			if(isChoosingSecondGroup)
 			{
 				groupB = group;
@@ -229,9 +255,27 @@ public class DrawWire implements Tool
 		}
 		
 		this.secondConnector = secondConnector;
-		this.frameData = new FrameData(newWires, isMWP, groupA, groupB);
+		this.frameData = new FrameData(newWires, isMWP, groupA, groupB, groupSkip, skipAmount);
 		
 		return hitpoint;
+	}
+	
+	@Override
+	public boolean scroll(int val, boolean control, boolean alt)
+	{
+		if(firstConnector != null)
+		{
+			//Only apply this when the first connector is active.
+			gpuTasks.add((worldRender) -> {
+				skipAmount += val;
+				if(skipAmount < emptyFrame.getSkipAmount())
+				{
+					skipAmount = emptyFrame.getSkipAmount();
+				}
+			});
+		}
+		
+		return true; //Always return true, as long as this mode is active.
 	}
 	
 	@Override
@@ -260,6 +304,7 @@ public class DrawWire implements Tool
 			//Check if in MWP mode, check if second group exists, if not
 			if(frameData.isMWP())
 			{
+				frameData.getGroupSkip().clear(); //Regardless if continuing or not. Clear the skip data.
 				if(!frameData.isMWPDone())
 				{
 					//Prepare data for next iteration:
@@ -349,6 +394,7 @@ public class DrawWire implements Tool
 		if(hitpoint.getHitPart() instanceof Connector)
 		{
 			gpuTasks.add((worldRenderer) -> {
+				this.skipAmount = emptyFrame.getSkipAmount(); //We do not skip when starting a new group.
 				this.firstConnector = (Connector) hitpoint.getHitPart();
 			});
 			return true;
@@ -384,7 +430,7 @@ public class DrawWire implements Tool
 			invisibleCubeShader.use();
 			invisibleCubeShader.setUniformM4(1, view);
 			invisibleCubeShader.setUniformM4(2, model.getMat());
-			invisibleCubeShader.setUniformV4(3, wireColor);
+			invisibleCubeShader.setUniformV4(3, colorWire);
 			GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
 			invisibleCube.use();
 			invisibleCube.draw();
@@ -403,7 +449,7 @@ public class DrawWire implements Tool
 		{
 			if(frameData.getGroupA() != null) //This one should not be null, but better have it invisible than risk a crash.
 			{
-				drawOverlay(view, group1, frameData.getGroupA());
+				drawOverlay(view, colorGroupA, frameData.getGroupA());
 			}
 			else
 			{
@@ -411,7 +457,11 @@ public class DrawWire implements Tool
 			}
 			if(frameData.getGroupB() != null)
 			{
-				drawOverlay(view, group2, frameData.getGroupB());
+				drawOverlay(view, colorGroupB, frameData.getGroupB());
+			}
+			if(!frameData.getGroupSkip().isEmpty())
+			{
+				drawOverlay(view, colorSkip, frameData.getGroupSkip());
 			}
 		}
 		else //SWP:
@@ -423,12 +473,12 @@ public class DrawWire implements Tool
 			}
 			LinkedList<Connector> list = new LinkedList<>();
 			list.add(firstConnector);
-			drawOverlay(view, group1, list);
+			drawOverlay(view, colorGroupA, list);
 			if(secondConnector != null)
 			{
 				list.clear();
 				list.add(secondConnector);
-				drawOverlay(view, group2, list);
+				drawOverlay(view, colorGroupB, list);
 			}
 		}
 	}
@@ -484,13 +534,17 @@ public class DrawWire implements Tool
 		private final boolean isMWP;
 		private final List<Connector> groupA;
 		private final List<Connector> groupB;
+		private final List<Connector> groupSkip;
+		private final int skipAmount;
 		
-		public FrameData(List<WireToBeDrawn> wires, boolean isMWP, List<Connector> connectorsGroupA, List<Connector> connectorsGroupB)
+		public FrameData(List<WireToBeDrawn> wires, boolean isMWP, List<Connector> connectorsGroupA, List<Connector> connectorsGroupB, List<Connector> groupSkip, int skipAmount)
 		{
 			this.wires = wires;
 			this.isMWP = isMWP;
 			this.groupA = connectorsGroupA;
 			this.groupB = connectorsGroupB;
+			this.skipAmount = skipAmount;
+			this.groupSkip = groupSkip;
 		}
 		
 		public boolean shouldEndTool()
@@ -521,6 +575,16 @@ public class DrawWire implements Tool
 		public List<Connector> getGroupB()
 		{
 			return groupB;
+		}
+		
+		public List<Connector> getGroupSkip()
+		{
+			return groupSkip;
+		}
+		
+		public int getSkipAmount()
+		{
+			return skipAmount;
 		}
 	}
 	
