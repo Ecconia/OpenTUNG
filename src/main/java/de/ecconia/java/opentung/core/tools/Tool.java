@@ -56,6 +56,11 @@ public interface Tool
 		return false;
 	}
 	
+	default boolean mouseRightDown(Hitpoint hitpoint)
+	{
+		return false;
+	}
+	
 	//Render:
 	
 	/**

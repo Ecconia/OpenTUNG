@@ -315,7 +315,10 @@ public class Controller3D implements Controller
 	{
 		mouseRightDown = System.currentTimeMillis();
 		mouseRightDownOn = renderPlane3D.getCursorObject();
-		renderPlane3D.checkToolActivationMouseDown(InputProcessor.MOUSE_RIGHT, isControl());
+		if(!renderPlane3D.toolMouseRightDown())
+		{
+			renderPlane3D.checkToolActivationMouseDown(InputProcessor.MOUSE_RIGHT, isControl());
+		}
 	}
 	
 	private void mouseRightUp()

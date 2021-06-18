@@ -15,6 +15,8 @@ import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CPURaycast
 {
@@ -155,7 +157,7 @@ public class CPURaycast
 		}
 	}
 	
-	private double distance(Vector3 pos, Vector3 neg, Vector3 camPos, Vector3 camRay)
+	private static double distance(Vector3 pos, Vector3 neg, Vector3 camPos, Vector3 camRay)
 	{
 		double xA = (pos.getX() - camPos.getX()) / camRay.getX();
 		double xB = (neg.getX() - camPos.getX()) / camRay.getX();
@@ -302,6 +304,103 @@ public class CPURaycast
 		
 		Vector3 collisionPointBoardSpace = cameraPositionBoardSpace.add(cameraRayBoardSpace.multiply(distanceGlobal));
 		return new CollisionResult(normalGlobal, collisionPointBoardSpace);
+	}
+	
+	//### Connector Collector: ###
+	
+	public static List<CollectionEntry> collectConnectors(CompBoard rootBoard, Vector3 position, Vector3 ray, double distance)
+	{
+		List<CollectionEntry> list = new ArrayList<>();
+		collectFromContainer(rootBoard, position, ray, distance, list);
+		return list;
+	}
+	
+	private static void collectFromContainer(Component component, Vector3 position, Vector3 ray, double maxDistance, List<CollectionEntry> list)
+	{
+		if(!component.getBounds().contains(position))
+		{
+			double distance = distance(component.getBounds().getMax(), component.getBounds().getMin(), position, ray);
+			if(distance < 0)
+			{
+				return; //Object is behind the camera or not colliding.
+			}
+			if(distance > maxDistance)
+			{
+				return; //Object is further than allowed.
+			}
+		}
+		
+		//Normal or board:
+		collectFromComponent(component, position, ray, maxDistance, list);
+		if(component instanceof CompContainer)
+		{
+			//Test children:
+			for(Component child : ((CompContainer) component).getChildren())
+			{
+				collectFromContainer(child, position, ray, maxDistance, list);
+			}
+		}
+	}
+	
+	private static void collectFromComponent(Component component, Vector3 position, Vector3 ray, double maxDistance, List<CollectionEntry> list)
+	{
+		Quaternion componentRotation = component.getRotation();
+		Vector3 cameraPositionComponentSpace = componentRotation.multiply(position.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
+		Vector3 cameraRayComponentSpace = componentRotation.multiply(ray);
+		
+		if(component instanceof ConnectedComponent)
+		{
+			for(Connector connector : ((ConnectedComponent) component).getConnectors())
+			{
+				CubeFull shape = connector.getModel();
+				Vector3 size = shape.getSize();
+				Vector3 cameraRayPegSpace = cameraRayComponentSpace;
+				Vector3 cameraPositionPeg = cameraPositionComponentSpace;
+				if(shape instanceof CubeOpenRotated)
+				{
+					Quaternion rotation = ((CubeOpenRotated) shape).getRotation().inverse();
+					cameraRayPegSpace = rotation.multiply(cameraRayPegSpace);
+					cameraPositionPeg = rotation.multiply(cameraPositionPeg);
+				}
+				cameraPositionPeg = cameraPositionPeg.subtract(connector.getModel().getPosition());
+				
+				double distance = distance(size, size.invert(), cameraPositionPeg, cameraRayPegSpace);
+				if(distance < 0)
+				{
+					return; //Object is behind the camera or not colliding.
+				}
+				if(distance > maxDistance)
+				{
+					return; //Object is further than allowed.
+				}
+				
+				list.add(new CollectionEntry(connector, distance));
+			}
+		}
+	}
+	
+	//### Classes: ###
+	
+	public static class CollectionEntry
+	{
+		private final Connector connector;
+		private final double distance;
+		
+		public CollectionEntry(Connector connector, double distance)
+		{
+			this.connector = connector;
+			this.distance = distance;
+		}
+		
+		public double getDistance()
+		{
+			return distance;
+		}
+		
+		public Connector getConnector()
+		{
+			return connector;
+		}
 	}
 	
 	public static class CollisionResult

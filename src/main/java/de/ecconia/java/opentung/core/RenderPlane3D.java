@@ -281,6 +281,20 @@ public class RenderPlane3D implements RenderPlane
 		return primaryTool.mouseRightUp();
 	}
 	
+	public boolean toolMouseRightDown()
+	{
+		if(!acceptInputs)
+		{
+			return false;
+		}
+		Tool primaryTool = this.primaryTool;
+		if(primaryTool == null)
+		{
+			return false;
+		}
+		return primaryTool.mouseRightDown(hitpoint);
+	}
+	
 	//### Input handling: #################################
 	
 	private Controller3D controller;
