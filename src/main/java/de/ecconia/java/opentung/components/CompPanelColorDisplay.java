@@ -24,9 +24,9 @@ public class CompPanelColorDisplay extends LogicComponent implements Colorable
 			.addColorable(new CubeFull(new Vector3(0.0, 0.075 + 0.05, 0.0), new Vector3(0.3, 0.1, 0.3), Color.displayOff))
 			//Lets cheat a bit, to prevent z-Buffer-Fighting:
 			.addSolid(new CubeOpen(new Vector3(0.0, 0.075 - 0.125, 0.0), new Vector3(0.2, 0.1 + 0.15, 0.299), Direction.YPos, Color.material))
-			.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.06, 0.1), new Vector3(0.1, 0.12, 0.1), Direction.YPos, Color.circuitOFF))
-			.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.105, 0.0), new Vector3(0.1, 0.21, 0.1), Direction.YPos, Color.circuitOFF))
-			.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.15, -0.1), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF))
+			.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.06, 0.1), new Vector3(0.1, 0.12, 0.1), Direction.YPos, Color.circuitOFF, 0.75f))
+			.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.105, 0.0), new Vector3(0.1, 0.21, 0.1), Direction.YPos, Color.circuitOFF, 0.85714287f))
+			.addPeg(new CubeOpen(new Vector3(0.0, -0.075 - 0.1 - 0.15, -0.1), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF, 0.9f))
 			.setMountPlaceable(false)
 			.setBoardSidePlacementOption(PlacementSettingBoardSide.None)
 			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)

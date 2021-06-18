@@ -22,6 +22,13 @@ public class CubeOpen extends CubeFull
 		this.direction = openDirection;
 	}
 	
+	public CubeOpen(Vector3 position, Vector3 size, Direction openDirection, Color color, float connectorPercentage)
+	{
+		super(position, size, color, connectorPercentage);
+		
+		this.direction = openDirection;
+	}
+	
 	public Direction getDirection()
 	{
 		return direction;

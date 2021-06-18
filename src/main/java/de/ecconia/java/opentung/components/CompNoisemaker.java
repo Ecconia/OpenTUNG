@@ -26,7 +26,7 @@ public class CompNoisemaker extends LogicComponent implements Colorable, CustomD
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
 			.addColorable(new CubeFull(new Vector3(0.0, 0.36 + 0.3, 0.0), new Vector3(0.24, 0.6, 0.24), Color.noisemakerOFF))
-			.addPeg(new CubeOpen(new Vector3(0.0, 0.18, 0.0), new Vector3(0.1, 0.36, 0.1), Direction.YPos, Color.circuitOFF))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.18, 0.0), new Vector3(0.1, 0.36, 0.1), Direction.YPos, Color.circuitOFF, 0.25f))
 			.setMountPlaceable(true)
 			.setBoardSidePlacementOption(PlacementSettingBoardSide.All)
 			.setBoardPlacementOption(PlacementSettingBoardSquare.All)

@@ -22,9 +22,9 @@ public class CompColorDisplay extends LogicComponent implements Colorable
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
 			.addColorable(new CubeFull(new Vector3(0.0, 0.48 + 0.15, 0.0), new Vector3(0.3, 0.3, 0.3), Color.displayOff))
-			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.09, 0.1), new Vector3(0.1, 0.18, 0.1), Direction.YPos, Color.circuitOFF))
-			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF))
-			.addPeg(new CubeOpen(new Vector3(0.0, 0.24, -0.1), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.09, 0.1), new Vector3(0.1, 0.18, 0.1), Direction.YPos, Color.circuitOFF, 0.8f))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.48 - 0.15, 0.0), new Vector3(0.1, 0.3, 0.1), Direction.YPos, Color.circuitOFF, 0.8f))
+			.addPeg(new CubeOpen(new Vector3(0.0, 0.24, -0.1), new Vector3(0.1, 0.48, 0.1), Direction.YPos, Color.circuitOFF, 0.9f))
 			.setMountPlaceable(false) //In TUNG it cannot be on a mount, and its layout does not connect to the mount, thus no.
 			.setBoardSidePlacementOption(PlacementSettingBoardSide.None)
 			.setBoardPlacementOption(PlacementSettingBoardSquare.Middle)

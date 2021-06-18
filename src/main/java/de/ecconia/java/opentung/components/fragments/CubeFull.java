@@ -14,6 +14,9 @@ public class CubeFull extends Meshable
 	protected ModelMapper mapper;
 	protected Vector3 color;
 	
+	//TODO: This variable does not belong here. However it is the easiest way to transfer it to where it is needed without much overhead.
+	protected float connectorPercentage = 0.9f;
+	
 	public CubeFull(Vector3 position, Vector3 size, Color color, ModelMapper mapper)
 	{
 		this.position = position;
@@ -25,6 +28,12 @@ public class CubeFull extends Meshable
 	public CubeFull(Vector3 position, Vector3 size, Color color)
 	{
 		this(position, size, color, null);
+	}
+	
+	public CubeFull(Vector3 position, Vector3 size, Color color, float connectorPercentage)
+	{
+		this(position, size, color, null);
+		this.connectorPercentage = connectorPercentage;
 	}
 	
 	public int getFacesCount()
@@ -69,6 +78,11 @@ public class CubeFull extends Meshable
 	public Vector3 getSize()
 	{
 		return size;
+	}
+	
+	public float getConnectorPercentage()
+	{
+		return connectorPercentage;
 	}
 	
 	public void generateMeshEntry(Part instance, float[] vertices, ModelHolder.IntHolder offsetV, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, Color colorOverwrite, Vector3 position, Quaternion rotation, Vector3 placementOffset, MeshTypeThing type)

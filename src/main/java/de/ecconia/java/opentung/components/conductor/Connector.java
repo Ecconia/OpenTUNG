@@ -7,14 +7,14 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.Clusterable;
 import de.ecconia.java.opentung.simulation.InheritingCluster;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,15 +112,13 @@ public abstract class Connector extends Part implements Clusterable
 	
 	public Vector3 getConnectionPoint()
 	{
-		//TODO: VERY ungeneric, to be fixed!!! Btw also wrong for at least displays.
+		float connectionPercentage = model.getConnectorPercentage();
 		Vector3 connectionOffset;
 		if(model instanceof CubeOpenRotated)
 		{
 			Vector3 directionV = ((CubeOpenRotated) model).getDirection().asVector();
-			connectionOffset = new Vector3(
-					directionV.getX() * model.getSize().getX(),
-					directionV.getY() * model.getSize().getY(),
-					directionV.getZ() * model.getSize().getZ()).multiply(-0.8);
+			Vector3 halfHeightVector = directionV.multiply(model.getSize());
+			connectionOffset = halfHeightVector.multiply(2.0 * -connectionPercentage).add(halfHeightVector);
 			
 			Quaternion rotation = ((CubeOpenRotated) model).getRotation();
 			
@@ -134,17 +132,22 @@ public abstract class Connector extends Part implements Clusterable
 		else if(model instanceof CubeOpen)
 		{
 			Vector3 directionV = ((CubeOpen) model).getDirection().asVector();
-			connectionOffset = new Vector3(
-					directionV.getX() * model.getSize().getX(),
-					directionV.getY() * model.getSize().getY(),
-					directionV.getZ() * model.getSize().getZ()).multiply(-0.8);
+			Vector3 halfHeightVector = directionV.multiply(model.getSize());
+			connectionOffset = halfHeightVector.multiply(2.0 * -connectionPercentage).add(halfHeightVector);
 		}
 		else
 		{
-			connectionOffset = new Vector3(0, model.getSize().getY() * 0.8, 0);
+			double halfHeight = model.getSize().getY();
+			connectionOffset = new Vector3(0, halfHeight * 2.0 * connectionPercentage - halfHeight, 0);
 		}
 		
-		return getPosition().add(getParent().getRotation().inverse().multiply(getModel().getPosition().add(connectionOffset).add(getParent().getModelHolder().getPlacementOffset())));
+		return getPosition().add(
+				getParent().getRotation().inverse().multiply(
+						getModel().getPosition().add(connectionOffset).add(
+								getParent().getModelHolder().getPlacementOffset()
+						)
+				)
+		);
 	}
 	
 	public void remove(Wire wire)
