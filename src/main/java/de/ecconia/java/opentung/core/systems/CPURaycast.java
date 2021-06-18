@@ -367,11 +367,11 @@ public class CPURaycast
 				double distance = distance(size, size.invert(), cameraPositionPeg, cameraRayPegSpace);
 				if(distance < 0)
 				{
-					return; //Object is behind the camera or not colliding.
+					continue; //Object is behind the camera or not colliding.
 				}
 				if(distance > maxDistance)
 				{
-					return; //Object is further than allowed.
+					continue; //Object is further than allowed.
 				}
 				
 				list.add(new CollectionEntry(connector, distance));

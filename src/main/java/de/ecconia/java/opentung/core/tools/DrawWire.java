@@ -251,7 +251,7 @@ public class DrawWire implements Tool
 				{
 					newWires.add(wire);
 				}
-				if(newWires.isEmpty())
+				if(newWires.isEmpty() && firstConnector == secondConnector)
 				{
 					secondConnector = null; //Invalid connector. Unset.
 				}
