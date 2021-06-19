@@ -17,6 +17,7 @@ import de.ecconia.java.opentung.settings.SettingsIO;
 import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
 import de.ecconia.java.opentung.settings.keybinds.manager.KeybindingManager;
 import de.ecconia.java.opentung.tungboard.TungBoardLoader;
+import de.ecconia.java.opentung.util.logging.LogStreamHandler;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.awt.Dimension;
@@ -28,7 +29,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
@@ -37,6 +37,7 @@ import org.lwjgl.opengl.GL30;
 public class OpenTUNG
 {
 	public static Path dataFolder;
+	public static Path logsFolder;
 	public static Path boardFolder;
 	public static Path settingsPath;
 	public static Path keybindPath;
@@ -63,15 +64,49 @@ public class OpenTUNG
 			String threadCrashMessage = "Thread " + t.getName() + " crashed.";
 			System.out.println(threadCrashMessage);
 			e.printStackTrace(System.out);
-			JOptionPane.showMessageDialog(null, new JLabel(threadCrashMessage + "\nSee console for stacktrace, please report it."));
+			JOptionPane.showMessageDialog(null, threadCrashMessage + " See console for stacktrace, please report it.");
 		});
+		
+		//Enables/manages the output stream handling and logging to file:
+		LogStreamHandler logHandler = new LogStreamHandler();
+		{
+			//Print the run arguments to file. Although this one will not have a prefix. It can be skipped easily.
+			if(args.length != 0)
+			{
+				logHandler.justAddToFile("Arguments (" + args.length + "): '" + String.join("', '", args) + "'");
+			}
+			else
+			{
+				logHandler.justAddToFile("Arguments (0).");
+			}
+		}
 		
 		//Load version information:
 		OpenTUNGVersion version = new OpenTUNGVersion();
-		System.out.println("Running OpenTUNG Version: git-" + version.getGitCommitHash() + (version.isGitDirty() ? "-dirty" : "") + (!version.getGitBranch().equals("master") ? " (" + version.getGitBranch() + ")" : ""));
+		String versionString = "Running OpenTUNG Version: git-" + version.getGitCommitHash() + (version.isGitDirty() ? "-dirty" : "") + (!version.getGitBranch().equals("master") ? " (" + version.getGitBranch() + ")" : "");
+		System.out.println(versionString);
 		
 		parsePreSetupArguments(args);
-		setupDataFolder();
+		setupDataFolder(); //TODO: Much better user feedback, until file-logging is a thing.
+		{
+			//Folders are a thing, enable logging to file:
+			String logFileName = LogStreamHandler.claimDefaultLogFileName(logsFolder);
+			if(logFileName == null)
+			{
+				System.exit(1); //No do not allow this.
+			}
+			System.out.println("[Logging] Claimed logfile name: " + logFileName);
+			try
+			{
+				logHandler.armFileLogger(logsFolder, logFileName);
+			}
+			catch(IOException e)
+			{
+				System.out.println("Exception, while enabling file-logger:");
+				e.printStackTrace(System.out);
+				System.exit(1);
+			}
+		}
 		Path toLoadFile;
 		try
 		{
@@ -197,6 +232,7 @@ public class OpenTUNG
 				catch(Exception e)
 				{
 					e.printStackTrace(System.out);
+					JOptionPane.showMessageDialog(null, "Graphic thread crashed. Stopping OpenTUNG. See console for the cause and report it.");
 					boardUniverse.getSimulation().interrupt();
 					inputHandler.stop();
 					System.exit(1); //Throw 1;
@@ -266,9 +302,21 @@ public class OpenTUNG
 			}
 			
 			dataFolder = dataFolder.toRealPath(LinkOption.NOFOLLOW_LINKS);
-			boardFolder = dataFolder.resolve("boards");
 			System.out.println("[FilesInit] Using data folder at: " + dataFolder);
 			
+			logsFolder = dataFolder.resolve("logs");
+			if(!Files.exists(logsFolder))
+			{
+				System.out.println("[FilesInit] Logs folder does not exist, creating.");
+				Files.createDirectory(logsFolder);
+			}
+			else if(!Files.isDirectory(logsFolder))
+			{
+				System.out.println("[FilesInit] [ERROR] Logs folder is a file, thus cannot be used. Please remove logs file: '" + logsFolder + "'.");
+				System.exit(1);
+			}
+			
+			boardFolder = dataFolder.resolve("boards");
 			if(!Files.exists(boardFolder))
 			{
 				System.out.println("[FilesInit] Board folder does not exist, creating.");
@@ -299,7 +347,7 @@ public class OpenTUNG
 		{
 			System.out.println("[FilesInit] Failed to create data folder. Please report stacktrace, if you have no clue why:");
 			e.printStackTrace(System.out);
-			JOptionPane.showMessageDialog(null, new JLabel("Could not create data folders. Please see console for error details. Report this issue, if it does not make sense to you."));
+			JOptionPane.showMessageDialog(null, "Could not create data folders. Please see console for error details. Report this issue, if it does not make sense to you.");
 			System.exit(1);
 		}
 	}
