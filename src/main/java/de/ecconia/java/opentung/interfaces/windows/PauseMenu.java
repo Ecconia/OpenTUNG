@@ -177,7 +177,7 @@ public class PauseMenu
 		}
 		catch(IOException e)
 		{
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 		}
 	}
 	

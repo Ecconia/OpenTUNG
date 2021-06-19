@@ -183,7 +183,7 @@ public class OpenTUNG
 								}
 								catch(InterruptedException e)
 								{
-									e.printStackTrace(); //Should never happen though.
+									e.printStackTrace(System.out); //Should never happen though.
 								}
 							}
 							lastFinishedRender = System.currentTimeMillis();
@@ -196,7 +196,7 @@ public class OpenTUNG
 				}
 				catch(Exception e)
 				{
-					e.printStackTrace();
+					e.printStackTrace(System.out);
 					boardUniverse.getSimulation().interrupt();
 					inputHandler.stop();
 					System.exit(1); //Throw 1;
@@ -219,7 +219,7 @@ public class OpenTUNG
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 			inputHandler.stop();
 			System.exit(1); //Throw 1;
 		}

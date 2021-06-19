@@ -182,7 +182,7 @@ public class ShaderProgram
 				throw new RuntimeException("Could not find shader file: " + path);
 			}
 			
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 			throw new RuntimeException("Could not load shader code: " + path);
 		}
 	}

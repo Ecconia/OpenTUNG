@@ -90,7 +90,7 @@ public class BoardUniverse
 			}
 			catch(Exception e)
 			{
-				e.printStackTrace();
+				e.printStackTrace(System.out);
 				System.out.println(Ansi.red + "Couldn't find wire ports... " + Ansi.r);
 			}
 			
@@ -163,7 +163,7 @@ public class BoardUniverse
 			}
 			catch(InterruptedException e)
 			{
-				e.printStackTrace();
+				e.printStackTrace(System.out);
 			}
 		}, "BoardProcessingThread");
 		finalizeThread.setDaemon(true);

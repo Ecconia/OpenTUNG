@@ -70,7 +70,7 @@ public class OpenTUNGVersion
 		
 		if(faulty)
 		{
-			System.out.println("Terminating, git.properties file is incomplete and does not contain the required version information. Please build the jar properly again, if you obtained it from elsewhere, complain to person in charge.");
+			System.out.println("[VersionLoading/ERROR] Terminating, git.properties file is incomplete and does not contain the required version information. Please build the jar properly again, if you obtained it from elsewhere, complain to person in charge.");
 			System.exit(1);
 		}
 	}

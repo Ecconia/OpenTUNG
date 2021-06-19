@@ -126,7 +126,7 @@ public class SavePrepareUnit
 				catch(InterruptedException e)
 				{
 					//Does not expect to be interrupted.
-					e.printStackTrace();
+					e.printStackTrace(System.out);
 					endSaving();
 					return; //Something interfered, for safety reasons lets not continue here.
 				}
@@ -188,7 +188,7 @@ public class SavePrepareUnit
 				}
 				catch(InterruptedException e)
 				{
-					e.printStackTrace();
+					e.printStackTrace(System.out);
 				}
 				sharedData.getGpuTasks().add(this);
 			});

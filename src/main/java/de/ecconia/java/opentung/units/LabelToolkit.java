@@ -77,7 +77,7 @@ public class LabelToolkit
 		}
 		catch(IOException e)
 		{
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 			System.exit(1);
 			throw new RuntimeException("Tilt."); //Yes Java, this really means I stopped here.
 		}
@@ -129,7 +129,7 @@ public class LabelToolkit
 			}
 			catch(InterruptedException e)
 			{
-				e.printStackTrace();
+				e.printStackTrace(System.out);
 				return; //Abort, should not happen.
 			}
 			
@@ -167,7 +167,7 @@ public class LabelToolkit
 		catch(InterruptedException e)
 		{
 			//Should never happen.
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 			return;
 		}
 		

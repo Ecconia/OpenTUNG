@@ -192,7 +192,7 @@ public class Saver
 		{
 			//TODO: Handle.
 			System.out.println("Error while saving, please report. Continuing.");
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 		}
 	}
 }

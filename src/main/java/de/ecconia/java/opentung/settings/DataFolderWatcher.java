@@ -70,7 +70,7 @@ public class DataFolderWatcher
 		catch(IOException x)
 		{
 			System.out.println("File watcher could not be started, file changes go unnoticed.");
-			x.printStackTrace();
+			x.printStackTrace(System.out);
 		}
 		watcherActive = javaIsBadBoi;
 	}
