@@ -34,7 +34,7 @@ public class MathHelper
 		//Handle floating-point errors which happen every now and then:
 		if(dot > 1)
 		{
-			if(dot > 1.000000000000004)
+			if(dot > 1.000000000001)
 			{
 				error(dot, origin, target);
 			}
@@ -42,7 +42,7 @@ public class MathHelper
 		}
 		else if(dot < -1)
 		{
-			if(dot < -1.000000000000004)
+			if(dot < -1.000000000001)
 			{
 				error(dot, origin, target);
 			}
