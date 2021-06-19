@@ -12,6 +12,9 @@ public class ByteWriter
 {
 	private final OutputStream fos;
 	
+	private final byte[] buffer = new byte[1024];
+	private int bufferIndex = 0;
+	
 	public ByteWriter(Path file)
 	{
 		try
@@ -75,13 +78,40 @@ public class ByteWriter
 	
 	public void writeBytes(byte[] bytes)
 	{
-		try
+		if(bytes.length > buffer.length) //Array does not fit into buffer.
 		{
-			fos.write(bytes);
+			try
+			{
+				fos.write(buffer, 0, bufferIndex); //Flush the temp buffer first, regardless current size.
+				fos.write(bytes, 0, bytes.length);
+			}
+			catch(IOException e)
+			{
+				throw new RuntimeException(e);
+			}
+			bufferIndex = 0;
 		}
-		catch(IOException e)
+		else
 		{
-			throw new RuntimeException(e);
+			int endIndex = bufferIndex + bytes.length; //Where the new index would be.
+			if(endIndex >= buffer.length) //New index does not fit into buffer.
+			{
+				try
+				{
+					fos.write(buffer, 0, bufferIndex); //Flush buffer
+					System.arraycopy(bytes, 0, buffer, 0, bytes.length); //And overwrite buffer with the array.
+					bufferIndex = bytes.length;
+				}
+				catch(IOException e)
+				{
+					throw new RuntimeException(e);
+				}
+			}
+			else
+			{
+				System.arraycopy(bytes, 0, buffer, bufferIndex, bytes.length);
+				bufferIndex = endIndex; //Reuse addition result from earlier.
+			}
 		}
 	}
 	
@@ -117,14 +147,19 @@ public class ByteWriter
 	
 	public void writeByte(int value)
 	{
-		try
+		if(bufferIndex >= buffer.length) //Should never ever be above 1024.
 		{
-			fos.write(value);
+			try
+			{
+				fos.write(buffer, 0, buffer.length);
+			}
+			catch(IOException e)
+			{
+				throw new RuntimeException(e);
+			}
+			bufferIndex = 0;
 		}
-		catch(IOException e)
-		{
-			throw new RuntimeException(e);
-		}
+		buffer[bufferIndex++] = (byte) value;
 	}
 	
 	public void writeFloat(float value)
@@ -141,6 +176,10 @@ public class ByteWriter
 	{
 		try
 		{
+			if(bufferIndex != 0)
+			{
+				fos.write(buffer, 0, bufferIndex);
+			}
 			fos.flush();
 			fos.close();
 		}

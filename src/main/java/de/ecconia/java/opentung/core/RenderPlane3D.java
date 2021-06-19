@@ -430,7 +430,9 @@ public class RenderPlane3D implements RenderPlane
 		
 		camera = new Camera();
 		
+		System.out.println("Setting up primary world-mesh... (May take a long time)");
 		worldMesh.setup(board, board.getWiresToRender(), board.getSimulation());
+		System.out.println("Finished generating world mesh.");
 		
 		gpuTasks.add(world3D -> {
 			IconGeneration.render(shaderStorage);
