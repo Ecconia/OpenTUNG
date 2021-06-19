@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import javax.swing.JOptionPane;
 
 public class RenderPlane3D implements RenderPlane
 {
@@ -459,6 +460,8 @@ public class RenderPlane3D implements RenderPlane
 		System.out.println("[MeshDebug] P-W-L Done.");
 	}
 	
+	private boolean doNotShowPopupAgain = false;
+	
 	@Override
 	public void render()
 	{
@@ -466,7 +469,20 @@ public class RenderPlane3D implements RenderPlane
 		gpuTasksCurrentSize = gpuTasks.size();
 		while(!gpuTasks.isEmpty())
 		{
-			gpuTasks.poll().execute(this);
+			try
+			{
+				gpuTasks.poll().execute(this);
+			}
+			catch(Throwable t)
+			{
+				System.out.println("Failed to run job on render thread. Stacktrace:");
+				t.printStackTrace(System.out);
+				if(!doNotShowPopupAgain)
+				{
+					doNotShowPopupAgain = true;
+					JOptionPane.showMessageDialog(null, "Failed to run job on render thread. World is probably corrupted now. Please report stacktrace. And restart. This message will not be shown again.");
+				}
+			}
 		}
 		
 		//Cleanup all meshes before using them:

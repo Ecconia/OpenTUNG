@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.simulation;
 import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JOptionPane;
 
 public class SimulationManager extends Thread
 {
@@ -130,6 +131,8 @@ public class SimulationManager extends Thread
 		}
 	}
 	
+	private boolean doNotShowPopupAgain = false;
+	
 	private void processSlot(boolean secondPassed, int skippedSlots, long timeNextSlot)
 	{
 		processJobs(); //Jobs have to be done frequently regardless circumstances.
@@ -165,10 +168,23 @@ public class SimulationManager extends Thread
 		
 		if(boostMode)
 		{
-			//As many ticks as possible, until slot runs out of time:
-			while(System.currentTimeMillis() < timeNextSlot)
+			try
 			{
-				doTick();
+				//As many ticks as possible, until slot runs out of time:
+				while(System.currentTimeMillis() < timeNextSlot)
+				{
+					doTick();
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception while executing ticks. Skipping some. Please restart and report issue.");
+				e.printStackTrace(System.out);
+				if(!doNotShowPopupAgain)
+				{
+					doNotShowPopupAgain = true;
+					JOptionPane.showMessageDialog(null, "Exceptions while simulating tick. Please report stacktrace. And restart. Message will not be shown again.");
+				}
 			}
 		}
 		else
@@ -178,14 +194,27 @@ public class SimulationManager extends Thread
 			toBeProcessedTicks += ticksPerSlot * (skippedSlots + 1);
 			int beforeTicks = tickCounter; //Used to count ticks processed.
 			int ticksToProcess = (int) Math.ceil(toBeProcessedTicks); //Convert the floating point amount back to integer. Round up, to do more than required, so that later on less work.
-			for(int i = 0; i < ticksToProcess; i++)
+			try
 			{
-				doTick();
-				
-				//Timeout, slot has no more time left:
-				if(System.currentTimeMillis() >= timeNextSlot)
+				for(int i = 0; i < ticksToProcess; i++)
 				{
-					break;
+					doTick();
+					
+					//Timeout, slot has no more time left:
+					if(System.currentTimeMillis() >= timeNextSlot)
+					{
+						break;
+					}
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception while executing ticks. Skipping some. Please restart and report issue.");
+				e.printStackTrace(System.out);
+				if(!doNotShowPopupAgain)
+				{
+					doNotShowPopupAgain = true;
+					JOptionPane.showMessageDialog(null, "Exceptions while simulating tick. Please report stacktrace. And restart. Message will not be shown again.");
 				}
 			}
 			int processedTicks = tickCounter - beforeTicks; //Calculate processed ticks.
@@ -239,6 +268,8 @@ public class SimulationManager extends Thread
 //		updateClusterThisStage.add(cluster);
 //	}
 	
+	private boolean doNotShowPopupAgainUpdateJob = false;
+	
 	private void processJobs()
 	{
 		if(!updateJobNextTickThreadSafe.isEmpty())
@@ -255,7 +286,20 @@ public class SimulationManager extends Thread
 			currentJobQueueSize = updateJobThisTickThreadSafe.size();
 			for(UpdateJob updateJob : updateJobThisTickThreadSafe)
 			{
-				updateJob.update(this);
+				try
+				{
+					updateJob.update(this);
+				}
+				catch(Throwable t)
+				{
+					System.out.println("Failed to run job on simulation thread. Stacktrace:");
+					t.printStackTrace(System.out);
+					if(!doNotShowPopupAgainUpdateJob)
+					{
+						doNotShowPopupAgainUpdateJob = true;
+						JOptionPane.showMessageDialog(null, "Failed to run job on simulation thread. World is probably corrupted now. Please report stacktrace. And restart. This message is only shown once.");
+					}
+				}
 			}
 		}
 	}

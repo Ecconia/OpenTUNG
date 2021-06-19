@@ -499,10 +499,53 @@ public class OpenTUNG
 		GL30.glStencilMask(0x00);
 	}
 	
-	private static void render()
+	private static boolean failed = false;
+	private static boolean doNotShowPopupAgain = false;
+	
+	private static void render() throws InterruptedException
 	{
-		worldView.render();
-		interactables.render();
+		Throwable throwable = null;
+		try
+		{
+			worldView.render();
+		}
+		catch(Throwable t)
+		{
+			throwable = t;
+			System.out.println("World rendering failed! Skipping this cycle. Stacktrace:");
+			t.printStackTrace(System.out);
+		}
+		try
+		{
+			interactables.render();
+		}
+		catch(Throwable t)
+		{
+			throwable = t;
+			System.out.println("Interface rendering failed! Skipping this cycle. Stacktrace:");
+			t.printStackTrace(System.out);
+		}
+		
+		if(throwable == null)
+		{
+			failed = false;
+		}
+		else
+		{
+			if(!failed)
+			{
+				failed = true;
+				if(!doNotShowPopupAgain)
+				{
+					doNotShowPopupAgain = true;
+					JOptionPane.showMessageDialog(null, "Could not render current frame, stacktrace happened. Please check console and report the issue! This message will not appear again.");
+				}
+			}
+			else
+			{
+				Thread.sleep(400); //Throttling the amount of spam in console (and thus the framerate too...)
+			}
+		}
 	}
 	
 	public static void setBackgroundColor()

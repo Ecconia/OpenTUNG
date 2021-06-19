@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.inputs;
 
 import de.ecconia.java.opentung.core.structs.SimpleCallback;
+import javax.swing.JOptionPane;
 import org.lwjgl.glfw.GLFW;
 
 public class InputReceiver
@@ -57,6 +58,8 @@ public class InputReceiver
 		GLFW.glfwPostEmptyEvent();
 	}
 	
+	private boolean doNotShowPopupAgain = false;
+	
 	public void eventPollEntry(SimpleCallback titleUpdater)
 	{
 		long time = System.currentTimeMillis();
@@ -65,7 +68,20 @@ public class InputReceiver
 		{
 			if(intervalMode)
 			{
-				GLFW.glfwPollEvents();
+				try
+				{
+					GLFW.glfwPollEvents();
+				}
+				catch(Exception e)
+				{
+					System.out.println("An exception happened while processing input events. Please report stacktrace:");
+					e.printStackTrace(System.out);
+					if(!doNotShowPopupAgain)
+					{
+						doNotShowPopupAgain = true;
+						JOptionPane.showMessageDialog(null, "Exception while processing your mouse/keyboard/window inputs. Please report stacktrace. This message will not appear again.");
+					}
+				}
 				
 				processor.postEvents();
 				
@@ -87,7 +103,20 @@ public class InputReceiver
 			}
 			else
 			{
-				GLFW.glfwWaitEventsTimeout(1D); //Wait the maximum of 1 second.
+				try
+				{
+					GLFW.glfwWaitEventsTimeout(1D); //Wait the maximum of 1 second.
+				}
+				catch(Exception e)
+				{
+					System.out.println("An exception happened while processing input events. Please report stacktrace:");
+					e.printStackTrace(System.out);
+					if(!doNotShowPopupAgain)
+					{
+						doNotShowPopupAgain = true;
+						JOptionPane.showMessageDialog(null, "Exception while processing your mouse/keyboard/window inputs. Please report stacktrace. This message will not appear again.");
+					}
+				}
 				processor.postEvents(); //Call anyway.
 				time = System.currentTimeMillis(); //Keep track of time, in case of switching.
 			}
