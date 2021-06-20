@@ -1,0 +1,135 @@
+package de.ecconia.java.opentung.core.tools;
+
+import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.fragments.Color;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.components.fragments.Meshable;
+import de.ecconia.java.opentung.components.meta.Colorable;
+import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.ConnectedComponent;
+import de.ecconia.java.opentung.components.meta.CustomColor;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.components.meta.Part;
+import de.ecconia.java.opentung.core.data.Hitpoint;
+import de.ecconia.java.opentung.core.data.ShaderStorage;
+import de.ecconia.java.opentung.core.data.SharedData;
+import de.ecconia.java.opentung.core.helper.World3DHelper;
+import de.ecconia.java.opentung.libwrap.Matrix;
+import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
+
+public class EditWindow implements Tool
+{
+	private final SharedData sharedData;
+	
+	private Component component;
+	
+	public EditWindow(SharedData sharedData)
+	{
+		this.sharedData = sharedData;
+	}
+	
+	@Override
+	public Boolean activateKeyUp(Hitpoint hitpoint, int scancode, boolean control)
+	{
+		if(scancode == Keybindings.KeyEditComponent && !hitpoint.isEmpty())
+		{
+			Part hitPart = hitpoint.getHitPart();
+			if(hitPart instanceof Connector)
+			{
+				hitPart = hitPart.getParent();
+			}
+			if(hitPart instanceof CustomColor)
+			{
+				this.component = (Component) hitPart;
+				sharedData.getGpuTasks().add((worldRenderer) -> {
+					worldRenderer.getWorldMesh().removeComponent(component, sharedData.getBoardUniverse().getSimulation());
+					sharedData.getRenderPlane2D().openCustomColorWindow(this, (CustomColor) component);
+					worldRenderer.toolReady();
+				});
+				return true;
+			}
+			return false;
+		}
+		return null;
+	}
+	
+	public void guiClosed()
+	{
+		sharedData.getRenderPlane3D().toolStopInputs();
+		sharedData.getGpuTasks().add((worldRenderer) -> {
+			worldRenderer.getWorldMesh().addComponent(component, sharedData.getBoardUniverse().getSimulation());
+			worldRenderer.toolDisable();
+		});
+	}
+	
+	@Override
+	public void renderWorld(float[] view)
+	{
+		ShaderStorage shaderStorage = sharedData.getShaderStorage();
+		//Render the removed component:
+		if(component instanceof CompBoard)
+		{
+			CompBoard board = (CompBoard) component;
+			
+			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW).
+			Matrix matrix = new Matrix();
+			//Apply global position:
+			Vector3 position = board.getPosition();
+			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			Quaternion newAlignment = board.getRotation();
+			matrix.multiply(new Matrix(newAlignment.createMatrix())); //Apply global rotation.
+			//The cube is centered, no translation.
+			matrix.scale((float) board.getX() * 0.15f, 0.075f, (float) board.getZ() * 0.15f); //Just use the right size from the start... At this point in code it always has that size.
+			
+			//Draw the board:
+			shaderStorage.getBoardTexture().activate();
+			ShaderProgram textureCubeShader = shaderStorage.getTextureCubeShader();
+			textureCubeShader.use();
+			textureCubeShader.setUniformM4(1, view);
+			textureCubeShader.setUniformM4(2, matrix.getMat());
+			textureCubeShader.setUniformV2(3, new float[]{board.getX(), board.getZ()});
+			textureCubeShader.setUniformV4(4, board.getColor().asArray());
+			GenericVAO textureCube = shaderStorage.getVisibleOpTexCube();
+			textureCube.use();
+			textureCube.draw();
+		}
+		else
+		{
+			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
+			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
+			ModelHolder model = component.getModelHolder();
+			Vector3 position = component.getPosition();
+			Quaternion alignment = component.getRotation();
+			
+			visibleCubeShader.use();
+			visibleCubeShader.setUniformM4(1, view);
+			Matrix matrix = new Matrix();
+			Matrix rotation = new Matrix(alignment.createMatrix());
+			Vector3 placementOffset = model.getPlacementOffset();
+			for(int i = 0; i < model.getColorables().size(); i++)
+			{
+				Meshable meshable = model.getColorables().get(i);
+				visibleCubeShader.setUniformV4(3, ((Colorable) component).getCurrentColor(i).asArray());
+				World3DHelper.drawCubeFull(visibleCubeShader, visibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			}
+			for(Meshable meshable : model.getSolid())
+			{
+				visibleCubeShader.setUniformV4(3, ((CubeFull) meshable).getColorArray());
+				World3DHelper.drawCubeFull(visibleCubeShader, visibleCube, (CubeFull) meshable, position, rotation, placementOffset, matrix);
+			}
+			if(component instanceof ConnectedComponent)
+			{
+				for(Connector connector : ((ConnectedComponent) component).getConnectors())
+				{
+					visibleCubeShader.setUniformV4(3, connector.getCluster().isActive() ? Color.circuitON.asArray() : Color.circuitOFF.asArray());
+					World3DHelper.drawCubeFull(visibleCubeShader, visibleCube, connector.getModel(), position, rotation, placementOffset, matrix);
+				}
+			}
+		}
+	}
+}

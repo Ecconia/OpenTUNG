@@ -261,7 +261,7 @@ public class TungBoardLoader
 			display.setPosition(globalPosition.add(rotatedFixPoint));
 			display.setRotation(globalRotation);
 			TungColorEnum c = ((TungDisplay) object).getColor();
-			display.setColorRaw(new Color(c.getR(), c.getG(), c.getB()));
+			display.setColor(new Color(c.getR(), c.getG(), c.getB()));
 			
 			return display;
 		}
@@ -309,7 +309,7 @@ public class TungBoardLoader
 			display.setPosition(globalPosition.add(rotatedFixPoint));
 			display.setRotation(globalRotation);
 			TungColorEnum c = ((TungPanelDisplay) object).getColor();
-			display.setColorRaw(new Color(c.getR(), c.getG(), c.getB()));
+			display.setColor(new Color(c.getR(), c.getG(), c.getB()));
 			
 			return display;
 		}

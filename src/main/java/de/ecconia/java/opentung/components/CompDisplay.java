@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.components.fragments.Direction;
 import de.ecconia.java.opentung.components.meta.Colorable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomColor;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.LogicComponent;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
@@ -19,7 +20,7 @@ import de.ecconia.java.opentung.meshing.ColorMeshBagReference;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompDisplay extends LogicComponent implements Colorable, CustomData
+public class CompDisplay extends LogicComponent implements Colorable, CustomData, CustomColor
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.075, 0.0))
@@ -55,12 +56,14 @@ public class CompDisplay extends LogicComponent implements Colorable, CustomData
 		input = pegs.get(0);
 	}
 	
-	public void setColorRaw(Color color)
+	@Override
+	public void setColor(Color color)
 	{
 		this.colorRaw = color;
 	}
 	
-	public Color getColorRaw()
+	@Override
+	public Color getColor()
 	{
 		return colorRaw;
 	}
@@ -135,7 +138,7 @@ public class CompDisplay extends LogicComponent implements Colorable, CustomData
 	public Component copy()
 	{
 		CompDisplay copy = (CompDisplay) super.copy();
-		copy.setColorRaw(colorRaw);
+		copy.setColor(colorRaw);
 		return copy;
 	}
 }

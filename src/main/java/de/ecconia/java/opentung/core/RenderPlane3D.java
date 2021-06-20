@@ -24,6 +24,7 @@ import de.ecconia.java.opentung.core.systems.Skybox;
 import de.ecconia.java.opentung.core.tools.Delete;
 import de.ecconia.java.opentung.core.tools.DrawBoard;
 import de.ecconia.java.opentung.core.tools.DrawWire;
+import de.ecconia.java.opentung.core.tools.EditWindow;
 import de.ecconia.java.opentung.core.tools.GrabCopy;
 import de.ecconia.java.opentung.core.tools.NormalPlacement;
 import de.ecconia.java.opentung.core.tools.Resize;
@@ -131,6 +132,7 @@ public class RenderPlane3D implements RenderPlane
 		tools.add(new Delete(sharedData));
 		tools.add(new DrawWire(sharedData));
 		tools.add(new DrawBoard(sharedData));
+		tools.add(new EditWindow(sharedData));
 	}
 	
 	//Primary tool:

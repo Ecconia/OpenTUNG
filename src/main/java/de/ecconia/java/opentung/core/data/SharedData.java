@@ -4,6 +4,7 @@ import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.structs.GPUTask;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
 
@@ -12,6 +13,7 @@ public class SharedData
 	private PlaceableInfo currentPlaceable;
 	private BlockingQueue<GPUTask> gpuTasks;
 	private boolean saving;
+	private RenderPlane2D renderPlane2D;
 	private RenderPlane3D renderPlane3D;
 	private Path currentBoardFile;
 	private boolean simulationLoaded;
@@ -49,6 +51,16 @@ public class SharedData
 	public BlockingQueue<GPUTask> getGpuTasks()
 	{
 		return gpuTasks;
+	}
+	
+	public void setRenderPlane2D(RenderPlane2D renderPlane2D)
+	{
+		this.renderPlane2D = renderPlane2D;
+	}
+	
+	public RenderPlane2D getRenderPlane2D()
+	{
+		return renderPlane2D;
 	}
 	
 	public void setRenderPlane3D(RenderPlane3D renderPlane3D)

@@ -106,6 +106,14 @@ public class Controller2D implements Controller
 			//The cursor is already unlocked, thus here it just closes the window...
 			renderPlane2D.closeWindows();
 		}
+		else if(scancode == Keybindings.KeyEditComponent)
+		{
+			if(renderPlane2D.closeColorSwitcher())
+			{
+				mouseOnGUI = false; //Reset regardless.
+				inputProcessor.switchTo3D(); //If closed just go here.
+			}
+		}
 	}
 	
 	public void forwardScrollingToHotbar(int val)

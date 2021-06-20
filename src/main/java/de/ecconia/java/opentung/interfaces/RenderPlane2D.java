@@ -1,11 +1,14 @@
 package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.OpenTUNG;
+import de.ecconia.java.opentung.components.meta.CustomColor;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.structs.RenderPlane;
+import de.ecconia.java.opentung.core.tools.EditWindow;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
+import de.ecconia.java.opentung.interfaces.windows.ColorSwitcher;
 import de.ecconia.java.opentung.interfaces.windows.ComponentList;
 import de.ecconia.java.opentung.interfaces.windows.Hotbar;
 import de.ecconia.java.opentung.interfaces.windows.PauseMenu;
@@ -31,9 +34,11 @@ public class RenderPlane2D implements RenderPlane
 	private Hotbar hotbar;
 	private ComponentList componentList;
 	private PauseMenu pauseMenu;
+	private ColorSwitcher colorSwitcher;
 	
 	private boolean showComponentList;
 	private boolean showPauseMenu;
+	private boolean showColorSwitcher;
 	
 	public long vg;
 	
@@ -45,6 +50,8 @@ public class RenderPlane2D implements RenderPlane
 		this.sharedData = sharedData;
 		this.shaderStorage = sharedData.getShaderStorage();
 		this.inputHandler = inputHandler;
+		
+		sharedData.setRenderPlane2D(this);
 		
 		text = new MeshText();
 	}
@@ -80,6 +87,7 @@ public class RenderPlane2D implements RenderPlane
 			componentList = new ComponentList(this, hotbar);
 		});
 		pauseMenu = new PauseMenu(this);
+		colorSwitcher = new ColorSwitcher(this);
 		
 		text.createAtlas();
 		
@@ -114,6 +122,10 @@ public class RenderPlane2D implements RenderPlane
 		if(tsShowPauseMenu)
 		{
 			pauseMenu.renderFrame();
+		}
+		if(showColorSwitcher)
+		{
+			colorSwitcher.render();
 		}
 		NanoVG.nvgEndFrame(vg);
 		
@@ -178,9 +190,27 @@ public class RenderPlane2D implements RenderPlane
 		pauseMenu.update(sharedData);
 	}
 	
+	public void openCustomColorWindow(EditWindow editWindow, CustomColor component)
+	{
+		inputHandler.switchTo2D();
+		colorSwitcher.setComponent(editWindow, component);
+		showColorSwitcher = true;
+	}
+	
+	public boolean closeColorSwitcher()
+	{
+		if(showColorSwitcher)
+		{
+			showColorSwitcher = false;
+			colorSwitcher.close();
+			return true;
+		}
+		return false;
+	}
+	
 	public boolean hasWindowOpen()
 	{
-		return showComponentList || showPauseMenu;
+		return showComponentList || showPauseMenu || showColorSwitcher;
 	}
 	
 	public void closeWindows()
@@ -189,20 +219,27 @@ public class RenderPlane2D implements RenderPlane
 		if(showPauseMenu)
 		{
 			pauseMenu.close();
+			showPauseMenu = false;
 		}
-		showPauseMenu = false;
+		if(showColorSwitcher)
+		{
+			colorSwitcher.close();
+			showColorSwitcher = false;
+		}
 	}
 	
 	public boolean leftMouseDown(int x, int y)
 	{
-		if(!showComponentList)
-		{
-			return false;
-		}
-		else
+		if(showComponentList)
 		{
 			return componentList.leftMouseDown(x, y);
 		}
+		else if(showColorSwitcher)
+		{
+			return colorSwitcher.leftMouseDown(x, y);
+		}
+		
+		return false;
 	}
 	
 	public boolean leftMouseUp(int x, int y)
@@ -214,6 +251,10 @@ public class RenderPlane2D implements RenderPlane
 		else if(showPauseMenu)
 		{
 			return pauseMenu.leftMouseUp(x, y);
+		}
+		else if(showColorSwitcher)
+		{
+			return colorSwitcher.leftMouseUp(x, y);
 		}
 		else
 		{
@@ -251,6 +292,10 @@ public class RenderPlane2D implements RenderPlane
 			{
 				componentList.mouseMoved(xAbs, yAbs);
 			}
+		}
+		else if(showColorSwitcher)
+		{
+			colorSwitcher.mouseMoved(xAbs, yAbs);
 		}
 	}
 	

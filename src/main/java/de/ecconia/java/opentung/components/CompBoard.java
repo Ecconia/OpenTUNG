@@ -6,6 +6,7 @@ import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.ModelMapper;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.components.meta.CustomColor;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
@@ -18,7 +19,7 @@ import de.ecconia.java.opentung.util.io.ByteLevelHelper;
 import de.ecconia.java.opentung.util.io.ByteReader;
 import de.ecconia.java.opentung.util.math.Vector3;
 
-public class CompBoard extends CompContainer implements CustomData
+public class CompBoard extends CompContainer implements CustomData, CustomColor
 {
 	public static final ModelHolder modelHolder = new ModelBuilder()
 			.setPlacementOffset(new Vector3(0.0, 0.0, 0.0))
@@ -68,11 +69,13 @@ public class CompBoard extends CompContainer implements CustomData
 		this.z = z;
 	}
 	
+	@Override
 	public void setColor(Color color)
 	{
 		this.color = color;
 	}
 	
+	@Override
 	public Color getColor()
 	{
 		return color;
