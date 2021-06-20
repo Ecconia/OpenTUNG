@@ -54,7 +54,7 @@ public class LogStreamHandler
 	public static String claimDefaultLogFileName(Path folder)
 	{
 		ZonedDateTime zonedDateTimeCurrent = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
-		DateTimeFormatter dateConverter = DateTimeFormatter.ofPattern("uuuu.MM.dd-HH:mm:ssX");
+		DateTimeFormatter dateConverter = DateTimeFormatter.ofPattern("uuuu-MM-dd");
 		String name = dateConverter.format(zonedDateTimeCurrent) + "-";
 		
 		int index = 0;
