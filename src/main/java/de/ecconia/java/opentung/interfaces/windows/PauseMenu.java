@@ -14,6 +14,7 @@ import de.ecconia.java.opentung.savefile.SavePrepareUnit;
 import de.ecconia.java.opentung.settings.Settings;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import org.lwjgl.nanovg.NanoVG;
 
 public class PauseMenu
@@ -153,7 +154,17 @@ public class PauseMenu
 	
 	private void openKeybindings()
 	{
-		String path = PauseMenu.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String path;
+		try
+		{
+			path = new File(PauseMenu.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().toString();
+		}
+		catch(URISyntaxException e)
+		{
+			System.out.println("Could not acquire jar file location.");
+			e.printStackTrace(System.out);
+			return;
+		}
 		if(!path.endsWith(".jar"))
 		{
 			System.out.println("[OpenKeybindingsManager] ERROR: Not running from a jar file! Cannot construct run-command for keybinding manager.");
