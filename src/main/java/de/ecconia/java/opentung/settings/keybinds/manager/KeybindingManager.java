@@ -1,12 +1,11 @@
 package de.ecconia.java.opentung.settings.keybinds.manager;
 
-import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
 import java.nio.file.Path;
 
 public class KeybindingManager
 {
-	private final KeyCodeGrabber keyCodeGrabber;
+	private final Path keybindingFile;
 	private final KeybindingGUI keybindingGUI;
 	private final KeybindingsIO keybindingsIO;
 	
@@ -14,9 +13,10 @@ public class KeybindingManager
 	
 	public KeybindingManager(Path keybindingFile)
 	{
+		this.keybindingFile = keybindingFile;
 		//Needs to be first, else the keybindingIO cannot load...
-		keyCodeGrabber = new KeyCodeGrabber(this);
-		keybindingsIO = new KeybindingsIO(OpenTUNG.keybindPath, null);
+		KeyCodeGrabber keyCodeGrabber = new KeyCodeGrabber(this);
+		keybindingsIO = new KeybindingsIO(keybindingFile, null);
 		keybindingGUI = new KeybindingGUI(this, keybindingsIO.getKeys());
 		
 		while(true)
@@ -28,6 +28,8 @@ public class KeybindingManager
 			}
 			catch(InterruptedException e)
 			{
+				//Not supposed to be interrupted.
+				e.printStackTrace(System.out);
 			}
 			
 			if(keyCodeGrabber.run())
@@ -60,6 +62,6 @@ public class KeybindingManager
 	
 	public void saveData()
 	{
-		keybindingsIO.overwriteFile(OpenTUNG.keybindPath);
+		keybindingsIO.overwriteFile(keybindingFile);
 	}
 }

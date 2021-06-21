@@ -131,10 +131,7 @@ public class KeybindingGUI extends JFrame
 	
 	public void keyboardInput(int scancode, String glfwName, String osCharacter)
 	{
-		if(osCharacter != null && osCharacter.charAt(0) >= 'a' && osCharacter.charAt(0) <= 'z')
-		{
-			osCharacter = String.valueOf((char) (osCharacter.charAt(0) - 'a' + 'A'));
-		}
+		osCharacter = KeybindingsIO.fixReadable(osCharacter);
 		System.out.println("Received input: " + scancode + " " + glfwName + " " + osCharacter);
 		if(activatedKeyBinding != null)
 		{

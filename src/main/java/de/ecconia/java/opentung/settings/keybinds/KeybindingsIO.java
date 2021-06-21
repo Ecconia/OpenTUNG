@@ -144,7 +144,7 @@ public class KeybindingsIO
 				//Apply:
 				entry.setScancode(scancode);
 				entry.setKeyValue(value);
-				entry.setReadable(GLFW.glfwGetKeyName(GLFW.GLFW_KEY_UNKNOWN, scancode));
+				entry.setReadable(fixReadable(GLFW.glfwGetKeyName(GLFW.GLFW_KEY_UNKNOWN, scancode)));
 			}
 		}
 		catch(IOException e)
@@ -218,11 +218,7 @@ public class KeybindingsIO
 				{
 					throw new RuntimeException("Keybindings: Was not able to get scancode for key '" + defaultValue + "', please report this.");
 				}
-				String readable = GLFW.glfwGetKeyName(GLFW.GLFW_KEY_UNKNOWN, scancode);
-				if(readable != null && readable.length() == 1 && readable.charAt(0) >= 'a' && readable.charAt(0) <= 'z')
-				{
-					readable = String.valueOf((char) (readable.charAt(0) - 'a' + 'A'));
-				}
+				String readable = fixReadable(GLFW.glfwGetKeyName(GLFW.GLFW_KEY_UNKNOWN, scancode));
 				KeyEntry entry = new KeyEntry(key, field, defaultValue, scancode, comment, readable);
 				keys.put(key, entry);
 				orderedKeys.addLast(entry);
@@ -232,6 +228,24 @@ public class KeybindingsIO
 				throw new RuntimeException("Keybindings: Field " + field.getName() + " has no KeybindingDefaults annotation.");
 			}
 		}
+	}
+	
+	public static String fixReadable(String readable)
+	{
+		if(readable == null || readable.isEmpty())
+		{
+			return null;
+		}
+		if(readable.length() != 1)
+		{
+			return readable;
+		}
+		char c = readable.charAt(0);
+		if(c >= 'a' && c <= 'z')
+		{
+			return String.valueOf((char) (c - 'a' + 'A'));
+		}
+		return readable;
 	}
 	
 	private void populateKeybindings()
@@ -285,7 +299,8 @@ public class KeybindingsIO
 		@Override
 		public String toString()
 		{
-			return key + ": " + (keyValue == null ? scancode == defaultScancode ? defaultValue : scancode : keyValue) + (readable == null || readable.length() != 1 ? "" : ", " + ((readable.charAt(0) >= 'a' && readable.charAt(0) <= 'z') ? String.valueOf((char) (readable.charAt(0) - 'a' + 'A')) : readable));
+			String fixedReadable = fixReadable(readable);
+			return key + ": " + (keyValue == null ? scancode == defaultScancode ? defaultValue : scancode : keyValue) + (fixedReadable == null ? "" : ", " + readable);
 		}
 		
 		public String getKey()

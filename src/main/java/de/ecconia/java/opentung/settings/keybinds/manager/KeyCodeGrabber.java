@@ -37,7 +37,7 @@ public class KeyCodeGrabber
 			if(action == GLFW.GLFW_PRESS)
 			{
 				String glfwName = null;
-				if(key != -1)
+				if(key != GLFW.GLFW_KEY_UNKNOWN)
 				{
 					glfwName = GLFWKeyMapper.keyMapping[key];
 				}
