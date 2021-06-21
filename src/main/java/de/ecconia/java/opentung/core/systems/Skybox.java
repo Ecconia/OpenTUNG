@@ -120,7 +120,7 @@ public class Skybox
 					if(texProvider == null)
 					{
 						//Cannot find any texture.
-						System.out.println("[SKYBOX] No skybox texture found.");
+						System.out.println("[Skybox] Issue: No skybox texture found.");
 						return;
 					}
 				}
@@ -131,12 +131,12 @@ public class Skybox
 				return;
 			}
 			
-			System.out.println("[SKYBOX] Skybox file has changed.");
+			System.out.println("[Skybox] Skybox texture was updated.");
 			
 			BufferedImage[] images = texProvider.getImages();
 			if(images == null)
 			{
-				System.out.println("[SKYBOX] Could not load skybox texture.");
+				System.out.println("[Skybox] Error: Could not load skybox texture.");
 				return;
 			}
 			
@@ -165,7 +165,7 @@ public class Skybox
 		}
 		catch(IOException e)
 		{
-			System.out.println("[SKYBOX] Exception while loading skybox: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+			System.out.println("[Skybox] Error: Exception while loading skybox: " + e.getClass().getSimpleName() + ": " + e.getMessage());
 		}
 	}
 	
@@ -217,22 +217,35 @@ public class Skybox
 		
 		public static SingleResolver create() throws IOException
 		{
-			Path[] paths = {
-					skyboxFolder.resolve("right"),
-					skyboxFolder.resolve("left"),
-					skyboxFolder.resolve("top"),
-					skyboxFolder.resolve("bottom"),
-					skyboxFolder.resolve("front"),
-					skyboxFolder.resolve("back"),
+			String[] sides = {
+					"right",
+					"left",
+					"top",
+					"bottom",
+					"front",
+					"back",
 			};
 			
-			for(Path path : paths)
+			Path[] paths = new Path[6];
+			for(int i = 0; i < sides.length; i++)
 			{
+				String side = sides[i];
+				Path path = skyboxFolder.resolve(side + ".png");
 				if(!Files.exists(path))
 				{
-					return null;
+					path = skyboxFolder.resolve(side + ".jpg");
+					if(!Files.exists(path))
+					{
+						if(i != 0)
+						{
+							System.out.println("[Skybox] Issue: Incomplete skybox side files, could not find side '" + side + "'. Side names are: " + String.join(", ", sides) + " with respective file endings .png or .jpg.");
+						}
+						return null;
+					}
 				}
+				paths[i] = path;
 			}
+			System.out.println("[Skybox] Found side textures.");
 			
 			FileHolder[] files = {
 					new FileHolder(paths[0]),
@@ -258,7 +271,7 @@ public class Skybox
 			{
 				if(file.isInvalid())
 				{
-					System.out.println("[SKYBOX] WARNING: File does not exist anymore.");
+					System.out.println("[Skybox] Warning: File does not exist anymore.");
 					return null;
 				}
 			}
@@ -269,7 +282,7 @@ public class Skybox
 				images[i] = files[i].loadImage();
 				if(images[i] == null)
 				{
-					System.out.println("[SKYBOX] WARNING: Not able to load skybox.");
+					System.out.println("[Skybox] Error: Not able to load skybox.");
 					return null;
 				}
 			}
@@ -277,19 +290,19 @@ public class Skybox
 			int height = images[0].getHeight();
 			if(width != height)
 			{
-				System.out.println("[SKYBOX] Height and width of each side is not the same.");
+				System.out.println("[Skybox] Issue: Height and width of each side is not the same.");
 				return null;
 			}
 			for(int i = 1; i < 6; i++)
 			{
 				if(images[i].getWidth() != width)
 				{
-					System.out.println("[SKYBOX] Not all sides have the same width.");
+					System.out.println("[Skybox] Issue: Not all sides have the same width.");
 					return null;
 				}
 				if(images[i].getHeight() != height)
 				{
-					System.out.println("[SKYBOX] Not all sides have the same height.");
+					System.out.println("[Skybox] Issue: Not all sides have the same height.");
 					return null;
 				}
 			}
@@ -330,6 +343,7 @@ public class Skybox
 			{
 				return null;
 			}
+			System.out.println("[Skybox] Found atlas texture.");
 			return new AtlasResolver(new FileHolder(path));
 		}
 		
@@ -343,7 +357,7 @@ public class Skybox
 		{
 			if(file.isInvalid())
 			{
-				System.out.println("[SKYBOX] WARNING: File does not exist anymore.");
+				System.out.println("[Skybox] Warning: File does not exist anymore.");
 				return null;
 			}
 			
@@ -351,25 +365,25 @@ public class Skybox
 			BufferedImage atlas = file.loadImage();
 			if(atlas == null)
 			{
-				System.out.println("[SKYBOX] WARNING: Not able to load skybox.");
+				System.out.println("[Skybox] Error: Not able to load skybox.");
 				return null;
 			}
 			int width = atlas.getWidth();
 			if(width % 4 != 0)
 			{
-				System.out.println("[SKYBOX] WARNING: To loaded image has width which cannot be divided by 4: " + width);
+				System.out.println("[Skybox] Issue: To loaded image has width which cannot be divided by 4: " + width);
 				return null;
 			}
 			int height = atlas.getHeight();
 			if(height % 3 != 0)
 			{
-				System.out.println("[SKYBOX] WARNING: To loaded image has height which cannot be divided by 3: " + height);
+				System.out.println("[Skybox] Issue: To loaded image has height which cannot be divided by 3: " + height);
 				return null;
 			}
 			int a = width / 4;
 			if(a != (height / 3))
 			{
-				System.out.println("[SKYBOX] Height and width of each side is not the same.");
+				System.out.println("[Skybox] Issue: Height and width of each side is not the same.");
 				return null;
 			}
 			//Split the images:
