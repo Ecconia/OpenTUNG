@@ -15,7 +15,6 @@ import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
-import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.data.GrabContainerData;
 import de.ecconia.java.opentung.core.data.GrabData;
@@ -107,15 +106,15 @@ public class GrabCopy implements Tool
 				return false;
 			}
 			Component component = hitpoint.getHitPart() instanceof Connector ? hitpoint.getHitPart().getParent() : (Component) hitpoint.getHitPart();
+			this.hitpoint = hitpoint;
 			if(control)
 			{
-				copy(component);
+				return copy(component);
 			}
 			else
 			{
-				grab(component);
+				return grab(component);
 			}
-			return true;
 		}
 		return null;
 	}
@@ -205,27 +204,20 @@ public class GrabCopy implements Tool
 	@Override
 	public boolean mouseLeftUp()
 	{
-		//Possible placement.
-		//TODO: Abort placement
-		
 		final Hitpoint hitpoint = this.hitpoint;
-		if(hitpoint == null)
-		{
-			return false; //Too early. TODO: Fix hitpoint access.
-		}
 		
 		//Abort if not fully loaded
 		if(!hitpoint.canBePlacedOn())
 		{
 			//If not looking at a container abort.
-			return false;
+			return true;
 		}
 		
 		CompContainer parent = (CompContainer) hitpoint.getHitPart();
 		if(parent != board.getRootBoard() && parent.getParent() == null)
 		{
 			System.out.println("Board attempted to place on is deleted/gone.");
-			return false;
+			return true;
 		}
 		
 		//From here on it will be executed no more turning back:
@@ -577,13 +569,13 @@ public class GrabCopy implements Tool
 		});
 	}
 	
-	public void grab(Component toBeGrabbed)
+	public boolean grab(Component toBeGrabbed)
 	{
 		CompContainer parent = (CompContainer) toBeGrabbed.getParent();
 		if(parent == null)
 		{
 			System.out.println("Can't grab component, since its either the root board or soon deleted.");
-			return;
+			return false;
 		}
 		//Setting the parent to null is a thread-safe operation. It has to be. Doing this declares this component as "busy", means no other interaction with it should be possible.
 		toBeGrabbed.setParent(null);
@@ -809,6 +801,7 @@ public class GrabCopy implements Tool
 				});
 			});
 		});
+		return true;
 	}
 	
 	private void alignComponent(Component component, Vector3 oldPosition, Vector3 newPosition, Quaternion deltaRotation)
@@ -850,16 +843,16 @@ public class GrabCopy implements Tool
 		return changed.getY() > 0.98D || changed.getY() < -0.98D;
 	}
 	
-	public void copy(Component componentToCopy)
+	public boolean copy(Component componentToCopy)
 	{
 		if(grabData != null)
 		{
-			return;
+			return false;
 		}
 		if(componentToCopy instanceof Wire)
 		{
 			//We don't copy wires.
-			return;
+			return false;
 		}
 		
 		//No need to do the parent check, since we want to copy the component and not change it.
@@ -1182,6 +1175,7 @@ public class GrabCopy implements Tool
 				});
 			});
 		});
+		return true;
 	}
 	
 	public Quaternion getDeltaGrabRotation(HitpointContainer hitpoint)
@@ -1220,6 +1214,7 @@ public class GrabCopy implements Tool
 	@Override
 	public Hitpoint adjustHitpoint(Hitpoint hitpoint)
 	{
+		//TODO: Fix hitpoint access, it should not
 		this.hitpoint = hitpoint; //Update the hitpoint.
 		
 		if(hitpoint.canBePlacedOn())
@@ -1420,8 +1415,6 @@ public class GrabCopy implements Tool
 		{
 			return;
 		}
-		
-		Part part = hitpoint.getHitPart();
 		
 		//Enable drawing to stencil buffer
 		GL30.glStencilMask(0xFF);
