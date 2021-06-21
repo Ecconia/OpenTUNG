@@ -1,5 +1,6 @@
 package de.ecconia.java.opentung.libwrap;
 
+import de.ecconia.java.opentung.util.logging.LogStreamHandler;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,11 +30,11 @@ public class SWindowWrapper
 	{
 		this.oWidth = width;
 		this.oHeight = height;
-		GLFWErrorCallback.createPrint(System.err).set();
+		GLFWErrorCallback.createPrint(LogStreamHandler.outputStreamBypass).set();
 		
 		if(!GLFW.glfwInit())
 		{
-			throw new IllegalStateException("Unable to initialize GLFW");
+			throw new IllegalStateException("Unable to initialize GLFW. Please check console (not the logs!) for more details from OpenGL.");
 		}
 		
 		GLFW.glfwDefaultWindowHints();

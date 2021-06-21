@@ -19,6 +19,9 @@ public class LogStreamHandler
 {
 	private final CachingFileLogger fileLogger;
 	
+	//Save the original output stream. It will be used by OpenGL, since that prints without line endings. Sadly that way it does not end up in the log files.
+	public static final PrintStream outputStreamBypass = System.out;
+	
 	public LogStreamHandler()
 	{
 		//First do what has to be called last in the chain. So lower priority first here. Higher priority last. It is a stack.
