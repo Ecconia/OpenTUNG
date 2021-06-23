@@ -195,6 +195,13 @@ public class ColorSwitcher
 			//Restore color:
 			component.setColor(startColor);
 		}
+		else
+		{
+			//Apply/Keep color:
+			//TBI: Is the manual handling an okay-ish solution?
+			interfaceRenderer.closeColorSwitcher();
+			interfaceRenderer.getInputHandler().switchTo3D();
+		}
 		
 		lastSlot = null;
 		startColor = null;

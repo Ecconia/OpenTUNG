@@ -322,6 +322,11 @@ public class RenderPlane2D implements RenderPlane
 		inputHandler.issueShutdown();
 	}
 	
+	public InputProcessor getInputHandler()
+	{
+		return inputHandler;
+	}
+	
 	public SharedData getSharedData()
 	{
 		return sharedData;
