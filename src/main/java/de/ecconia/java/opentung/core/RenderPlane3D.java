@@ -368,37 +368,42 @@ public class RenderPlane3D implements RenderPlane
 				double angle = MathHelper.angleFromVectors(rayA, rayB);
 				if(angle > 178 && angle < 182)
 				{
-					//Angles and ray-cast match, now perform the actual linking:
+					//Do ray-cast from the other side:
 					Vector3 snappingPegBConnectionPoint = snappingPegB.getConnectionPoint();
-					Vector3 direction = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
-					double distance = direction.length();
-					Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-					if(Double.isNaN(alignment.getA()))
+					result = cpuRaycast.cpuRaycast(snappingPegBConnectionPoint, rayB, board.getRootBoard());
+					if(result.getMatch() != null && result.getMatch().getParent() == snappingPegA)
 					{
-						System.out.println("[ERROR] Cannot place snapping peg wire, cause start- and end-point are probably the same... Please try to not abuse OpenTUNG. Ignore stacktrace, but maybe report this issue if its not intended.");
-						return; //Do not connect these, there is something horribly wrong here.
-					}
-					
-					snappingPegB.setPartner(snappingPegA);
-					snappingPegA.setPartner(snappingPegB);
-					CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
-					wire.setLength((float) distance);
-					wire.setPosition(snappingPegAConnectionPoint.add(direction.divide(2)));
-					wire.setRotation(alignment);
-					
-					worldMesh.addComponent(wire, board.getSimulation());
-					
-					board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
-						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-						ClusterHelper.placeWire(simulation, board, snappingPegA.getPegs().get(0), snappingPegB.getPegs().get(0), wire, updates);
-						gpuTasks.add((unused) -> {
-							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
-							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
-							{
-								entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
-							}
+						//Angles and ray-cast match, now perform the actual linking:
+						Vector3 direction = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
+						double distance = direction.length();
+						Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+						if(Double.isNaN(alignment.getA()))
+						{
+							System.out.println("[ERROR] Cannot place snapping peg wire, cause start- and end-point are probably the same... Please try to not abuse OpenTUNG. Ignore stacktrace, but maybe report this issue if its not intended.");
+							return; //Do not connect these, there is something horribly wrong here.
+						}
+						
+						snappingPegB.setPartner(snappingPegA);
+						snappingPegA.setPartner(snappingPegB);
+						CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
+						wire.setLength((float) distance);
+						wire.setPosition(snappingPegAConnectionPoint.add(direction.divide(2)));
+						wire.setRotation(alignment);
+						
+						worldMesh.addComponent(wire, board.getSimulation());
+						
+						board.getSimulation().updateJobNextTickThreadSafe((simulation) -> {
+							Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+							ClusterHelper.placeWire(simulation, board, snappingPegA.getPegs().get(0), snappingPegB.getPegs().get(0), wire, updates);
+							gpuTasks.add((unused) -> {
+								System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
+								for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
+								{
+									entry.getKey().handleUpdates(entry.getValue(), board.getSimulation());
+								}
+							});
 						});
-					});
+					}
 				}
 			}
 		}
