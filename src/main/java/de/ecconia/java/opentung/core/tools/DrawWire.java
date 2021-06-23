@@ -3,6 +3,7 @@ package de.ecconia.java.opentung.core.tools;
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
@@ -17,6 +18,7 @@ import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
+import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Wire;
@@ -467,6 +469,14 @@ public class DrawWire implements Tool
 			if(frameData.getGroupA() != null) //This one should not be null, but better have it invisible than risk a crash.
 			{
 				drawOverlay(view, colorGroupA, frameData.getGroupA());
+				if(firstConnector == null)
+				{
+					Hitpoint hitpoint = sharedData.getRenderPlane3D().getHitpoint();
+					if(hitpoint.getHitPart() instanceof Connector)
+					{
+						highlightConnector(view, hitpoint.getHitPart());
+					}
+				}
 			}
 			else
 			{
@@ -520,6 +530,48 @@ public class DrawWire implements Tool
 		{
 			World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, part.getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
 		}
+		
+		//Draw on top
+		GL30.glDisable(GL30.GL_DEPTH_TEST);
+		//Only draw if stencil bit is set.
+		GL30.glStencilFunc(GL30.GL_EQUAL, 1, 0xFF);
+		
+		ShaderProgram planeShader = shaderStorage.getFlatPlaneShader();
+		planeShader.use();
+		planeShader.setUniformV4(0, color);
+		GenericVAO fullCanvasPlane = shaderStorage.getFlatPlane();
+		fullCanvasPlane.use();
+		fullCanvasPlane.draw();
+		
+		//Restore settings:
+		GL30.glStencilFunc(GL30.GL_NOTEQUAL, 1, 0xFF);
+		GL30.glEnable(GL30.GL_DEPTH_TEST);
+		//Clear stencil buffer:
+		GL30.glClear(GL30.GL_STENCIL_BUFFER_BIT);
+		//After clearing, disable usage/writing of/to stencil buffer again.
+		GL30.glStencilMask(0x00);
+	}
+	
+	//TODO: This code is redundant with normal placement. Figure out a way to neatly merge them.
+	private void highlightConnector(float[] view, Part part)
+	{
+		float[] color = new float[]{
+				Settings.highlightColorR,
+				Settings.highlightColorG,
+				Settings.highlightColorB,
+				Settings.highlightColorA
+		};
+		
+		//Enable drawing to stencil buffer
+		GL30.glStencilMask(0xFF);
+		
+		ShaderProgram invisibleCubeShader = shaderStorage.getInvisibleCubeShader();
+		GenericVAO invisibleCube = shaderStorage.getInvisibleCube();
+		
+		invisibleCubeShader.use();
+		invisibleCubeShader.setUniformM4(1, view);
+		invisibleCubeShader.setUniformV4(3, new float[]{0, 0, 0, 0});
+		World3DHelper.drawCubeFull(invisibleCubeShader, invisibleCube, ((Connector) part).getModel(), part, part.getParent().getModelHolder().getPlacementOffset(), new Matrix());
 		
 		//Draw on top
 		GL30.glDisable(GL30.GL_DEPTH_TEST);

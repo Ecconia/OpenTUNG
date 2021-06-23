@@ -753,4 +753,9 @@ public class RenderPlane3D implements RenderPlane
 	{
 		defaultTool.resetFineBoardOffset();
 	}
+	
+	public Hitpoint getHitpoint()
+	{
+		return hitpoint;
+	}
 }
