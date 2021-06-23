@@ -181,7 +181,7 @@ public class PauseMenu
 		System.out.println("[OpenKeybindingsManager] Java executeable path: " + jvm_location);
 		
 		ProcessBuilder pb = new ProcessBuilder(jvm_location, "-jar", path, "key");
-		pb.directory(OpenTUNG.dataFolder.getParent().toFile());
+		pb.directory(OpenTUNG.bootstrap.getDataFolder().getParent().toFile());
 		try
 		{
 			pb.start();

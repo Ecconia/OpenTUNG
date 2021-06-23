@@ -44,7 +44,7 @@ public class SavePrepareUnit
 				{
 					if(currentSavePath == null)
 					{
-						currentSavePath = OpenTUNG.boardFolder;
+						currentSavePath = OpenTUNG.bootstrap.getBoardFolder();
 					}
 					else
 					{

@@ -93,7 +93,7 @@ public class Skybox
 		skyboxFolder = dataFolder.resolve("skybox");
 		if(!Files.exists(skyboxFolder))
 		{
-			System.out.println("[FilesInit] Skybox folder does not exist, creating (along with default skybox).");
+			System.out.println("[DataFolderCreation] Skybox folder does not exist, creating (along with default skybox).");
 			Files.createDirectory(skyboxFolder);
 			
 			//Fresh folder, create default.
@@ -102,7 +102,7 @@ public class Skybox
 		}
 		else if(!Files.isDirectory(skyboxFolder))
 		{
-			System.out.println("[FilesInit] [ERROR] Skybox folder is a file, thus cannot be used. Please remove skybox file: '" + skyboxFolder + "'.");
+			System.out.println("[DataFolderCreation] Skybox folder is a file, thus cannot be used. Please remove skybox file: '" + skyboxFolder + "'.");
 			System.exit(1);
 		}
 	}

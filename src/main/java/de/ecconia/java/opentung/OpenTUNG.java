@@ -6,7 +6,6 @@ import de.ecconia.java.opentung.core.OpenTUNGVersion;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
-import de.ecconia.java.opentung.core.systems.Skybox;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
@@ -22,12 +21,7 @@ import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.awt.Dimension;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.lwjgl.Version;
@@ -36,12 +30,6 @@ import org.lwjgl.opengl.GL30;
 
 public class OpenTUNG
 {
-	public static Path dataFolder;
-	public static Path logsFolder;
-	public static Path boardFolder;
-	public static Path settingsPath;
-	public static Path keybindPath;
-	
 	//TODO: Load from settings:
 	private static final int initialWidth = 800;
 	private static final int initialHeight = 600;
@@ -52,10 +40,11 @@ public class OpenTUNG
 	private static BoardUniverse boardUniverse;
 	private static ShaderStorage shaderStorage;
 	
-	private static boolean x11LoadLaterFix;
 	//Currently stored here, until X11 is workarounded (as in AWT removed):
 	private static SharedData sharedData;
 	private static String fileName = "<unknown>";
+	
+	public static OpenTUNGBootstrap bootstrap;
 	
 	public static void main(String[] args)
 	{
@@ -66,6 +55,21 @@ public class OpenTUNG
 			e.printStackTrace(System.out);
 			JOptionPane.showMessageDialog(null, threadCrashMessage + " See console for stacktrace, please report it.");
 		});
+		
+		bootstrap = new OpenTUNGBootstrap(args);
+		if(bootstrap.getFinalTarget() == OpenTUNGBootstrap.FinalTarget.Version)
+		{
+			OpenTUNGVersion version = new OpenTUNGVersion();
+			System.out.println("[Version] Printing OpenTUNG version:");
+			System.out.println("[Version]  Current Git branch: " + version.getGitBranch());
+			System.out.println("[Version]  Last Git commit hash: " + version.getGitCommitHash());
+			System.out.println("[Version]  Last Git commit title: " + version.getGitCommitTitle());
+			System.out.println("[Version]  Git got modified: " + version.isGitDirty());
+			System.out.println("[Version]  Build date/time: " + version.getBuildDateTime());
+			String versionString = "git-" + version.getGitCommitHash() + (version.isGitDirty() ? "-dirty" : "") + (!version.getGitBranch().equals("master") ? " (" + version.getGitBranch() + ")" : "");
+			System.out.println("[Version]  - Final version code: " + versionString);
+			return;
+		}
 		
 		//Enables/manages the output stream handling and logging to file:
 		LogStreamHandler logHandler = new LogStreamHandler();
@@ -85,12 +89,12 @@ public class OpenTUNG
 		OpenTUNGVersion version = new OpenTUNGVersion();
 		String versionString = "Running OpenTUNG Version: git-" + version.getGitCommitHash() + (version.isGitDirty() ? "-dirty" : "") + (!version.getGitBranch().equals("master") ? " (" + version.getGitBranch() + ")" : "");
 		System.out.println(versionString);
+		System.out.println("Running OpenTUNG in folder: " + bootstrap.getDataFolder());
 		
-		parsePreSetupArguments(args);
-		setupDataFolder(); //TODO: Much better user feedback, until file-logging is a thing.
 		{
+			//TODO: Practically the arming can now be done directly. Since setting up the folder is no longer logged.
 			//Folders are a thing, enable logging to file:
-			String logFileName = LogStreamHandler.claimDefaultLogFileName(logsFolder);
+			String logFileName = LogStreamHandler.claimDefaultLogFileName(bootstrap.getLogsFolder());
 			if(logFileName == null)
 			{
 				System.exit(1); //No do not allow this.
@@ -98,33 +102,51 @@ public class OpenTUNG
 			System.out.println("[Logging] Claimed logfile name: " + logFileName);
 			try
 			{
-				logHandler.armFileLogger(logsFolder, logFileName);
+				logHandler.armFileLogger(bootstrap.getLogsFolder(), logFileName);
 			}
 			catch(IOException e)
 			{
-				System.out.println("Exception, while enabling file-logger:");
+				System.out.println("[Logging] Exception, while enabling file-logger:");
 				e.printStackTrace(System.out);
 				System.exit(1);
 			}
 		}
-		Path toLoadFile;
-		try
+		
+		if(bootstrap.getFinalTarget() == OpenTUNGBootstrap.FinalTarget.Keybindings)
 		{
-			toLoadFile = parsePostSetupArguments(args);
+			new KeybindingManager(bootstrap.getKeybindingFile());
+			return;
 		}
-		catch(RuntimeException e)
+		
+		Path toLoadFile = bootstrap.getFile();
+		final boolean x11LoadLaterFix; //X11 has a bug combined with OpenGL, which lets OpenTUNG crash later on. Thus if on Linux, do not open the chooser before the main window exists.
+		if(bootstrap.getFinalTarget() == OpenTUNGBootstrap.FinalTarget.Chooser)
 		{
-			if("Stop.".equals(e.getMessage()))
+			String osName = System.getProperty("os.name").toLowerCase();
+			System.out.println("[Debug] Os-Name: " + osName);
+			if(osName.contains("nix") || osName.contains("nux") || osName.indexOf("aix") > 0) //Detect Linux
 			{
-				return;
+				x11LoadLaterFix = true;
 			}
-			throw e;
+			else
+			{
+				x11LoadLaterFix = false;
+				toLoadFile = loadFileGUI();
+				if(toLoadFile == null)
+				{
+					System.exit(1);
+				}
+			}
+		}
+		else
+		{
+			x11LoadLaterFix = false;
 		}
 		
 		//Create DataFolderWatcher, used for generic callbacks on file change.
-		DataFolderWatcher watcher = new DataFolderWatcher(dataFolder);
+		DataFolderWatcher watcher = new DataFolderWatcher(bootstrap.getDataFolder());
 		//Create the initial Settings loader, it uses the watcher to keep the settings up to date.
-		new SettingsIO(settingsPath, watcher, Settings.class);
+		new SettingsIO(bootstrap.getSettingsFile(), watcher, Settings.class);
 		
 		if(!x11LoadLaterFix)
 		{
@@ -140,7 +162,7 @@ public class OpenTUNG
 			inputHandler = new InputProcessor(window.getID());
 			
 			//Has to be done now, since before here scancode resolving does not work.
-			new KeybindingsIO(keybindPath, watcher);
+			new KeybindingsIO(bootstrap.getKeybindingFile(), watcher);
 			
 			Thread graphicsThread = new Thread(() -> {
 				try
@@ -284,209 +306,30 @@ public class OpenTUNG
 		sharedData = new SharedData(boardUniverse, toLoadFile);
 	}
 	
-	private static void setupDataFolder()
-	{
-		try
-		{
-			dataFolder = Paths.get("OpenTUNG");
-			if(!Files.exists(dataFolder))
-			{
-				System.out.println("[FilesInit] Data folder does not exist, creating.");
-				Files.createDirectories(dataFolder);
-			}
-			else if(!Files.isDirectory(dataFolder))
-			{
-				dataFolder = dataFolder.toRealPath(LinkOption.NOFOLLOW_LINKS);
-				System.out.println("[FilesInit] ERROR: Data folder is a file, thus cannot be used. Please remove data file: '" + dataFolder + "'.");
-				System.exit(1);
-			}
-			
-			dataFolder = dataFolder.toRealPath(LinkOption.NOFOLLOW_LINKS);
-			System.out.println("[FilesInit] Using data folder at: " + dataFolder);
-			
-			logsFolder = dataFolder.resolve("logs");
-			if(!Files.exists(logsFolder))
-			{
-				System.out.println("[FilesInit] Logs folder does not exist, creating.");
-				Files.createDirectory(logsFolder);
-			}
-			else if(!Files.isDirectory(logsFolder))
-			{
-				System.out.println("[FilesInit] [ERROR] Logs folder is a file, thus cannot be used. Please remove logs file: '" + logsFolder + "'.");
-				System.exit(1);
-			}
-			
-			boardFolder = dataFolder.resolve("boards");
-			if(!Files.exists(boardFolder))
-			{
-				System.out.println("[FilesInit] Board folder does not exist, creating.");
-				Files.createDirectory(boardFolder);
-			}
-			else if(!Files.isDirectory(boardFolder))
-			{
-				System.out.println("[FilesInit] [ERROR] Board folder is a file, thus cannot be used. Please remove board file: '" + boardFolder + "'.");
-				System.exit(1);
-			}
-			
-			settingsPath = dataFolder.resolve("settings.txt");
-			if(Files.isDirectory(settingsPath))
-			{
-				System.out.println("[FilesInit] Settings file is a directory, thus cannot be used. Please remove settings folder: '" + settingsPath + "'.");
-				System.exit(1);
-			}
-			keybindPath = dataFolder.resolve("keybindings.txt");
-			if(Files.isDirectory(keybindPath))
-			{
-				System.out.println("[FilesInit] Keybindings file is a directory, thus cannot be used. Please remove keybindings folder: '" + keybindPath + "'.");
-				System.exit(1);
-			}
-			
-			Skybox.prepareDataFolder(dataFolder);
-		}
-		catch(IOException e)
-		{
-			System.out.println("[FilesInit] Failed to create data folder. Please report stacktrace, if you have no clue why:");
-			e.printStackTrace(System.out);
-			JOptionPane.showMessageDialog(null, "Could not create data folders. Please see console for error details. Report this issue, if it does not make sense to you.");
-			System.exit(1);
-		}
-	}
-	
-	private static void parsePreSetupArguments(String... arguments)
-	{
-		if(arguments.length > 1)
-		{
-			System.out.println("[ArgumentParser] OpenTUNG allows at most 1 argument. If you supplied an argument with spaces wrap it up in quotes: \"<your argument with spaces>\"");
-			System.exit(1);
-		}
-		else if(arguments.length == 1)
-		{
-			String argument = arguments[0];
-			if(argument.toLowerCase().matches("(--?)?(help|\\?|h)"))
-			{
-				printHelp();
-				System.exit(0);
-			}
-		}
-	}
-	
-	private static Path parsePostSetupArguments(String... arguments)
-	{
-		Path toLoadFile = null;
-		if(arguments.length == 1)
-		{
-			String argument = arguments[0];
-			//Well multiple arguments for the same stuff and even Regex, not cool. Going to be obsolete anyway.
-			if(argument.toLowerCase().matches("(--?)?(key|keyhelper|keycode)"))
-			{
-				new KeybindingManager(keybindPath);
-				throw new RuntimeException("Stop.");
-			}
-			else if(argument.toLowerCase().matches("(--?)?(load|window|gui)"))
-			{
-				String osName = System.getProperty("os.name").toLowerCase();
-				System.out.println("[Debug] Os-Name: " + osName);
-				if(osName.contains("nix") || osName.contains("nux") || osName.indexOf("aix") > 0) //Detect Linux
-				{
-					x11LoadLaterFix = true;
-					return null;
-				}
-				toLoadFile = loadFileGUI();
-				if(toLoadFile == null)
-				{
-					System.exit(1);
-					return null; //Satisfy compiler.
-				}
-			}
-			else
-			{
-				//Attempt to parse as filepath
-				if(canBeLoaded(argument))
-				{
-					try
-					{
-						toLoadFile = FileSystems.getDefault().getPath(argument);
-					}
-					catch(InvalidPathException e)
-					{
-						System.out.println("[ArgumentParser] Failed parse file to load. Supplied: '" + argument + "'.");
-						e.printStackTrace(System.out);
-						System.exit(1);
-						return null; //Satisfy compiler.
-					}
-					
-					if(!toLoadFile.isAbsolute())
-					{
-						//Try to use from root and from the board folder.
-						Path withRelativePrefix = boardFolder.resolve(toLoadFile);
-						if(Files.exists(withRelativePrefix))
-						{
-							toLoadFile = withRelativePrefix;
-						}
-					}
-					
-					if(!Files.exists(toLoadFile))
-					{
-						System.out.println("[ArgumentParser] Could not find file at: '" + toLoadFile + "'.");
-						System.exit(1);
-						return null; //Satisfy compiler.
-					}
-					try
-					{
-						toLoadFile = toLoadFile.toRealPath(LinkOption.NOFOLLOW_LINKS);
-					}
-					catch(IOException e)
-					{
-						System.out.println("[ArgumentParser] Failed to resolve provided file path to full path. File path: '" + toLoadFile + "'.");
-						e.printStackTrace(System.out);
-						System.exit(1);
-						return null; //Satisfy compiler.
-					}
-				}
-				else
-				{
-					System.out.println("[ArgumentParser] Your argument is not a known command, nor a file OpenTUNG can open. Supplied: '" + argument + "'.");
-					printHelp();
-					System.exit(1);
-				}
-			}
-		}
-		//else - No input file or other instruction.
-		return toLoadFile;
-	}
-	
-	private static void printHelp()
-	{
-		System.out.println(
-				"[HELP] Following commands are supported:\n"
-						+ "[HELP] - You can use 'load', 'window', 'gui' to open a window for choosing a file to load.\n"
-						+ "[HELP] - You can supply one file to load, but it must end on '.tungboard' or '.opentung'.");
-	}
-	
 	private static Path loadFileGUI()
 	{
-		JFileChooser fileChooser = new JFileChooser(boardFolder.toFile());
+		JFileChooser fileChooser = new JFileChooser(bootstrap.getBoardFolder().toFile());
 		int result = fileChooser.showSaveDialog(null);
 		if(result != JFileChooser.APPROVE_OPTION)
 		{
-			System.out.println("Nothing chosen, terminating.");
+			System.out.println("[SaveFileChooser] Nothing chosen, terminating.");
 			return null;
 		}
 		Path currentSaveFile = fileChooser.getSelectedFile().toPath();
 		
-		if(canBeLoaded(currentSaveFile.getFileName().toString()))
+		if(hasCorrectFileEnding(currentSaveFile.getFileName().toString()))
 		{
 			return currentSaveFile;
 		}
 		else
 		{
-			System.out.println("Choose '" + currentSaveFile + "', missing or incorrect file ending.");
+			System.out.println("[SaveFileChooser] Choose '" + currentSaveFile + "', missing or incorrect file ending.");
 			JOptionPane.showMessageDialog(null, "File-ending must be '.opentung' or '.tungboard'.", "Can only load TUNG and OpenTUNG files.", JOptionPane.ERROR_MESSAGE, null);
 			return null;
 		}
 	}
 	
-	private static boolean canBeLoaded(String filename)
+	private static boolean hasCorrectFileEnding(String filename)
 	{
 		int endingIndex = filename.lastIndexOf('.');
 		if(endingIndex < 0)

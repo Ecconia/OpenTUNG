@@ -177,6 +177,7 @@ public class Saver
 			//Write wires with: connector-id, connector-id, rotation
 			for(Wire wire : wires)
 			{
+				//TODO: Save list of unconnected wires. And print a warning at the end of exporting + change the filename.
 				Connector c = wire.getConnectorA();
 				int id = connectorIDs.get(c);
 				writer.writeVariableInt(id);
