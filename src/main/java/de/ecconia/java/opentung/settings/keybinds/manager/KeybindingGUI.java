@@ -37,6 +37,8 @@ public class KeybindingGUI extends JFrame
 	
 	private KeyBindingEntry activatedKeyBinding;
 	
+	private int lastHeight = 0;
+	
 	public KeybindingGUI(KeybindingManager manager, Collection<KeybindingsIO.KeyEntry> keys)
 	{
 		this.manager = manager;
@@ -85,8 +87,11 @@ public class KeybindingGUI extends JFrame
 			@Override
 			public void componentResized(ComponentEvent e)
 			{
-				scroller.setPreferredSize(new Dimension(entryPanel.getMinimumSize().width, scroller.getHeight()));
+				getContentPane().revalidate();
+				int otherHeight = getContentPane().getHeight() - lastHeight;
+				scroller.setPreferredSize(new Dimension(entryPanel.getMinimumSize().width, scroller.getHeight() + otherHeight));
 				scroller.revalidate();
+				lastHeight = getContentPane().getHeight();
 			}
 			
 			@Override
@@ -106,6 +111,7 @@ public class KeybindingGUI extends JFrame
 		});
 		
 		pack();
+		lastHeight = getContentPane().getHeight();
 		setLocationRelativeTo(null);
 		setVisible(true);
 	}
