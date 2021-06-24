@@ -512,19 +512,22 @@ public class RenderPlane3D implements RenderPlane
 			
 			//Draw world:
 			drawDynamic(view);
-			//Draw primary tool in world:
-			if(primaryTool != null)
+			if(fullyLoaded)
 			{
-				primaryTool.renderWorld(view);
-			}
-			
-			//Draw secondary overlays:
-			clusterHighlighter.highlightCluster(view);
-			
-			//Draw primary tool overlay:
-			if(primaryTool != null)
-			{
-				primaryTool.renderOverlay(view);
+				//Draw primary tool in world:
+				if(primaryTool != null)
+				{
+					primaryTool.renderWorld(view);
+				}
+				
+				//Draw secondary overlays:
+				clusterHighlighter.highlightCluster(view);
+				
+				//Draw primary tool overlay:
+				if(primaryTool != null)
+				{
+					primaryTool.renderOverlay(view);
+				}
 			}
 			
 			//Draw old things:
