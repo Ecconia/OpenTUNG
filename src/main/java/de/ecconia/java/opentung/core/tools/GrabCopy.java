@@ -35,6 +35,7 @@ import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
+import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.InitClusterHelper;
@@ -276,6 +277,11 @@ public class GrabCopy implements Tool
 		}
 		
 		gpuTasks.add((worldRenderer) -> {
+			if(!grabData.isCopy())
+			{
+				worldRenderer.clustersBackInPlace();
+			}
+			
 			//Move to new meshes:
 			for(Component component : grabData.getComponents())
 			{
@@ -394,7 +400,7 @@ public class GrabCopy implements Tool
 	public boolean abort()
 	{
 		System.out.println("Abort grabbing...");
-		gpuTasks.add((unused) -> {
+		gpuTasks.add((worldRenderer) -> {
 			if(grabData.isCopy())
 			{
 				for(CompLabel label : grabData.getLabels())
@@ -428,10 +434,11 @@ public class GrabCopy implements Tool
 				
 				grabData = null;
 				//Can be called before the simulation thread is done, cause the next tool will have to wait for that to be done. It does not spawn jobs.
-				unused.toolDisable();
+				worldRenderer.toolDisable();
 				return;
 			}
 			
+			worldRenderer.clustersBackInPlace();
 			for(Component component : grabData.getComponents())
 			{
 				secondaryMesh.removeComponent(component, simulation);
@@ -476,7 +483,7 @@ public class GrabCopy implements Tool
 			grabbedComponent.setParent(grabbedParent);
 			
 			grabData = null;
-			unused.toolDisable();
+			worldRenderer.toolDisable();
 		});
 		return true;
 	}
@@ -495,13 +502,28 @@ public class GrabCopy implements Tool
 		}
 		simulation.updateJobNextTickThreadSafe((unused) -> {
 			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+			boolean isContainer = grabData instanceof GrabContainerData;
+			if(!isContainer) //Has to be done first before all cluster modifications. Delete only removes clusters.
+			{
+				//Collect clusters:
+				if(grabData.getComponent() instanceof ConnectedComponent)
+				{
+					List<Connector> connectors = ((ConnectedComponent) grabData.getComponent()).getConnectors();
+					List<Cluster> modifiedClusters = new ArrayList<>(connectors.size());
+					for(Connector connector : connectors)
+					{
+						modifiedClusters.add(connector.getCluster());
+					}
+					sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
+				}
+			}
 			//TBI: Removing wires first? Or just all blots/pegs?
 			for(Wire wire : grabData.getOutgoingWires())
 			{
 				//Outgoing wires:
 				ClusterHelper.removeWire(simulation, wire, updates);
 			}
-			if(grabData instanceof GrabContainerData)
+			if(isContainer)
 			{
 				GrabContainerData grabContainerData = (GrabContainerData) grabData;
 				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
@@ -530,6 +552,7 @@ public class GrabCopy implements Tool
 			}
 			
 			gpuTasks.add((worldRenderer) -> {
+				worldRenderer.clustersBackInPlace(); //Although possibly heavily modified...
 				System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
 				for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
 				{
@@ -690,6 +713,20 @@ public class GrabCopy implements Tool
 				// Actually it makes much more sense for the copy to also just set the list. So lets keep it this way.
 				newGrabData.setInternalWires(internalWires);
 				
+				if(!isContainer)
+				{
+					List<Cluster> modifiedClusters = new ArrayList<>(connectors.size());
+					for(Connector connector : connectors)
+					{
+						modifiedClusters.add(connector.getCluster());
+					}
+					sharedData.getRenderPlane3D().clustersOutOfPlace(modifiedClusters);
+				}
+				else
+				{
+					sharedData.getRenderPlane3D().clustersOutOfPlace(null);
+				}
+				
 				//The snapping peg management can and should be done on the simulation thread as much as possible.
 				// We should never delay the render thread for longer than required, the simulation we can halt as long as we please for bigger things.
 				if(isContainer)
@@ -742,12 +779,6 @@ public class GrabCopy implements Tool
 					for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
 					{
 						entry.getKey().handleUpdates(entry.getValue(), simulation);
-					}
-					
-					//If there is a cluster highlighted, for now we want to stop highlighting it, since it might have changed (by ripping snapping connections apart), it is also not possible to highlight the cluster positions if they are on the secondary mesh.
-					for(Connector connector : connectors)
-					{
-						sharedData.getRenderPlane3D().clusterChanged(connector.getCluster());
 					}
 					
 					//Move components into the grab/secondary-mesh: Done in this stage, as a final visual confirmation to the user. Could be done in the first render stage.

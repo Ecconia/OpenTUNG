@@ -19,12 +19,14 @@ import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -372,11 +374,15 @@ public class DrawWire implements Tool
 					return;
 				}
 				Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+				List<Cluster> modifiedClusters = new ArrayList<>(64); //32 wire busses, fine.
 				for(CompWireRaw wire : newWires)
 				{
+					modifiedClusters.add(wire.getConnectorA().getCluster());
+					modifiedClusters.add(wire.getConnectorB().getCluster());
 					//Places the wires and updates clusters as needed. Also finishes the wire linking.
 					ClusterHelper.placeWire(simulation, board, wire.getConnectorA(), wire.getConnectorB(), wire, updates);
 				}
+				worldRenderer.clustersChanged(modifiedClusters);
 				
 				//Once it is fully prepared by simulation thread, cause the graphic thread to draw it.
 				gpuTasks.add((unused) -> {
@@ -388,8 +394,6 @@ public class DrawWire implements Tool
 					
 					for(CompWireRaw wire : newWires)
 					{
-						sharedData.getRenderPlane3D().clusterChanged(wire.getConnectorA().getCluster());
-						sharedData.getRenderPlane3D().clusterChanged(wire.getConnectorB().getCluster());
 						//Add the wire to the mesh sources
 						board.getWiresToRender().add(wire);
 						wireRayCaster.addWire(wire);

@@ -19,6 +19,7 @@ import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
+import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.HiddenWire;
 import de.ecconia.java.opentung.simulation.SimulationManager;
@@ -94,8 +95,16 @@ public class Delete implements Tool
 				{
 					final CompWireRaw wireToDelete = (CompWireRaw) toBeDeleted;
 					simulation.updateJobNextTickThreadSafe((simulation) -> {
+						List<Cluster> modifiedClusters = new ArrayList<>(3);
+						modifiedClusters.add(wireToDelete.getCluster()); //If this wire is somehow affiliated with the highlighting, the directly connected clusters are listed, thus only add the wire-cluster. Same as blot. And if pegs, also same or known.
+						
 						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 						ClusterHelper.removeWire(simulation, wireToDelete, updates);
+						
+						//However after removal, the two clusters of the blot might have changed, in a way that original wire-cluster fully vanished. Safety first, lets add them.
+						modifiedClusters.add(wireToDelete.getConnectorA().getCluster());
+						modifiedClusters.add(wireToDelete.getConnectorB().getCluster());
+						sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
 						
 						gpuTasks.add((worldRenderer) -> {
 							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
@@ -103,7 +112,6 @@ public class Delete implements Tool
 							{
 								entry.getKey().handleUpdates(entry.getValue(), simulation);
 							}
-							sharedData.getRenderPlane3D().clusterChanged(wireToDelete.getCluster());
 							board.getWiresToRender().remove(wireToDelete);
 							wireRayCaster.removeWire(wireToDelete);
 							worldMesh.removeComponent(wireToDelete, simulation);
@@ -148,16 +156,28 @@ public class Delete implements Tool
 						if(component instanceof ConnectedComponent)
 						{
 							ConnectedComponent con = (ConnectedComponent) component;
+							List<Cluster> modifiedClusters = new ArrayList<>(con.getConnectors().size());
 							for(Blot blot : con.getBlots())
 							{
+								modifiedClusters.add(blot.getCluster());
 								ClusterHelper.removeBlot(simulation, blot, updates);
 								wiresToRemove.addAll(blot.getWires());
 							}
 							for(Peg peg : con.getPegs())
 							{
+								modifiedClusters.add(peg.getCluster());
 								ClusterHelper.removePeg(simulation, peg, updates);
 								wiresToRemove.addAll(peg.getWires());
 							}
+							for(Wire wire : wiresToRemove)
+							{
+								if(wire instanceof HiddenWire)
+								{
+									continue;
+								}
+								((Part) wire).setParent(null); //Mark as deleted.
+							}
+							sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
 						}
 						
 						gpuTasks.add((worldRenderer) -> {
@@ -165,13 +185,6 @@ public class Delete implements Tool
 							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
 							{
 								entry.getKey().handleUpdates(entry.getValue(), simulation);
-							}
-							if(component instanceof ConnectedComponent)
-							{
-								for(Connector connector : ((ConnectedComponent) component).getConnectors())
-								{
-									sharedData.getRenderPlane3D().clusterChanged(connector.getCluster());
-								}
 							}
 							for(Wire wire : wiresToRemove)
 							{

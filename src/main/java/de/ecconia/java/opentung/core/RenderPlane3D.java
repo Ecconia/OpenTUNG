@@ -347,7 +347,7 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void stopClusterHighlighting()
 	{
-		clusterHighlighter.stop();
+		clusterHighlighter.abortHighlighting();
 	}
 	
 	//Must be run from render thread.
@@ -713,6 +713,28 @@ public class RenderPlane3D implements RenderPlane
 		}
 	}
 	
+	//### Cluster-Highlighter: ###
+	
+	//Must be called on the simulation thread.
+	public void clustersChanged(List<Cluster> clusters)
+	{
+		clusterHighlighter.clustersChanged(clusters);
+	}
+	
+	//Must be called on the simulation thread.
+	public void clustersOutOfPlace(List<Cluster> clusters)
+	{
+		clusterHighlighter.clustersOutOfPlace(clusters);
+	}
+	
+	//Must be called on the render thread.
+	public void clustersBackInPlace()
+	{
+		clusterHighlighter.clustersBackInPlace();
+	}
+	
+	//### Getter and stuff: ###
+	
 	@Override
 	public void newSize(int width, int height)
 	{
@@ -747,11 +769,6 @@ public class RenderPlane3D implements RenderPlane
 	{
 		this.fixXAxis = x;
 		this.lastUpNormal = y;
-	}
-	
-	public void clusterChanged(Cluster cluster)
-	{
-		clusterHighlighter.clusterChanged(cluster);
 	}
 	
 	public void resetFineBoardOffset()
