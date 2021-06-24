@@ -434,7 +434,6 @@ public class RenderPlane3D implements RenderPlane
 		}
 		
 		skybox.setup();
-		setupTools();
 		
 		camera = new Camera();
 		
@@ -450,6 +449,7 @@ public class RenderPlane3D implements RenderPlane
 		
 		//Do not start receiving events before here. Be sure the whole thing is properly setted up.
 		controller = new Controller3D(this);
+		setupTools(); //Needs the controller. TBI: How to make this better?
 		inputHandler.setController(controller);
 		
 		System.out.println("[Debug] Label amount: " + board.getLabelsToRender().size());
