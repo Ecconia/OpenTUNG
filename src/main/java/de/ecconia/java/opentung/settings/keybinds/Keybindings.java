@@ -59,6 +59,8 @@ public class Keybindings
 	public static int KeyGrabRotateX; //F
 	@KeybindingDefaults(key = "Grab-BoardRotateZ", defaultValue = "G")
 	public static int KeyGrabRotateZ; //G
+	@KeybindingDefaults(key = "MWP-FlipOrder", defaultValue = "F")
+	public static int KeyMWPFlipOrder;
 	
 	@KeybindingDefaults(key = "Hotbar-Drop", defaultValue = "Q", comment = "" +
 			"\n" +

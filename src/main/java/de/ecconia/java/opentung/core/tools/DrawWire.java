@@ -19,6 +19,7 @@ import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.ClusterHelper;
 import de.ecconia.java.opentung.simulation.SimulationManager;
@@ -27,6 +28,7 @@ import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -80,8 +82,9 @@ public class DrawWire implements Tool
 	private boolean unArmed;
 	private FrameData frameData;
 	private boolean isChoosingSecondGroup;
+	private boolean flipSecondaryGroup;
 	
-	private static final FrameData emptyFrame = new FrameData(new LinkedList<>(), false, null, null, new LinkedList<>(), 1, false);
+	private static final FrameData emptyFrame = new FrameData(new LinkedList<>(), false, null, null, new LinkedList<>(), 1, false, false);
 	
 	public DrawWire(SharedData sharedData)
 	{
@@ -123,6 +126,7 @@ public class DrawWire implements Tool
 			this.secondConnector = null; //There is no second connector yet.
 			frameData = emptyFrame; //Set the initial empty frame data.
 			isChoosingSecondGroup = false;
+			flipSecondaryGroup = false;
 			this.skipAmount = emptyFrame.getSkipAmount(); //We do not skip when starting a new group.
 			gpuTasks.add((worldRenderer) -> {
 				worldRenderer.toolReady();
@@ -161,11 +165,11 @@ public class DrawWire implements Tool
 		}
 		
 		boolean isMWP = isChoosingSecondGroup || isControl;
-		if(secondConnector == this.secondConnector && isMWP == frameData.isMWP() && skipAmount == frameData.getSkipAmount())
+		if(secondConnector == this.secondConnector && isMWP == frameData.isMWP() && skipAmount == frameData.getSkipAmount() && flipSecondaryGroup == frameData.isFlipSecondaryGroup())
 		{
 			if(isControl != frameData.isControl())
 			{
-				this.frameData = new FrameData(frameData.getWires(), frameData.isMWP(), frameData.getGroupA(), frameData.getGroupB(), frameData.getGroupSkip(), frameData.getSkipAmount(), isControl);
+				this.frameData = new FrameData(frameData.getWires(), frameData.isMWP(), frameData.getGroupA(), frameData.getGroupB(), frameData.getGroupSkip(), frameData.getSkipAmount(), isControl, frameData.isFlipSecondaryGroup());
 			}
 			//Connector and the MWP mode did not change, thus there is no need to run the following code again.
 			return hitpoint;
@@ -217,6 +221,10 @@ public class DrawWire implements Tool
 			if(isChoosingSecondGroup)
 			{
 				groupB = group;
+				if(flipSecondaryGroup)
+				{
+					Collections.reverse(groupB);
+				}
 				List<Connector> smaller = groupA.size() < groupB.size() ? groupA : groupB;
 				List<Connector> bigger = groupA.size() < groupB.size() ? groupB : groupA;
 				for(int i = 0; i < smaller.size(); i++)
@@ -263,7 +271,7 @@ public class DrawWire implements Tool
 		}
 		
 		this.secondConnector = secondConnector;
-		this.frameData = new FrameData(newWires, isMWP, groupA, groupB, groupSkip, skipAmount, isControl);
+		this.frameData = new FrameData(newWires, isMWP, groupA, groupB, groupSkip, skipAmount, isControl, flipSecondaryGroup);
 		
 		return hitpoint;
 	}
@@ -284,6 +292,20 @@ public class DrawWire implements Tool
 		}
 		
 		return true; //Always return true, as long as this mode is active.
+	}
+	
+	@Override
+	public boolean keyUp(int scancode, boolean control)
+	{
+		if(scancode == Keybindings.KeyMWPFlipOrder)
+		{
+			if(isChoosingSecondGroup)
+			{
+				flipSecondaryGroup = !flipSecondaryGroup;
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
@@ -326,7 +348,7 @@ public class DrawWire implements Tool
 					this.firstConnector = null;
 					this.secondConnector = null;
 					//Prepare for extended mode:
-					this.frameData = new FrameData(emptyFrame.getWires(), true, frameData.getGroupB(), null, emptyFrame.getGroupSkip(), emptyFrame.getSkipAmount(), true);
+					this.frameData = new FrameData(emptyFrame.getWires(), true, frameData.getGroupB(), null, emptyFrame.getGroupSkip(), emptyFrame.getSkipAmount(), true, flipSecondaryGroup);
 				}
 			}
 			
@@ -610,8 +632,9 @@ public class DrawWire implements Tool
 		private final List<Connector> groupSkip;
 		private final int skipAmount;
 		private final boolean isControl;
+		private final boolean flipSecondaryGroup;
 		
-		public FrameData(List<WireToBeDrawn> wires, boolean isMWP, List<Connector> connectorsGroupA, List<Connector> connectorsGroupB, List<Connector> groupSkip, int skipAmount, boolean isControl)
+		public FrameData(List<WireToBeDrawn> wires, boolean isMWP, List<Connector> connectorsGroupA, List<Connector> connectorsGroupB, List<Connector> groupSkip, int skipAmount, boolean isControl, boolean flipSecondaryGroup)
 		{
 			this.wires = wires;
 			this.isMWP = isMWP;
@@ -620,6 +643,7 @@ public class DrawWire implements Tool
 			this.skipAmount = skipAmount;
 			this.groupSkip = groupSkip;
 			this.isControl = isControl;
+			this.flipSecondaryGroup = flipSecondaryGroup;
 		}
 		
 		public boolean shouldEndTool()
@@ -670,6 +694,11 @@ public class DrawWire implements Tool
 		public int getSkipAmount()
 		{
 			return skipAmount;
+		}
+		
+		public boolean isFlipSecondaryGroup()
+		{
+			return flipSecondaryGroup;
 		}
 	}
 	
