@@ -135,6 +135,11 @@ public class RenderPlane3D implements RenderPlane
 		tools.add(new EditWindow(sharedData));
 	}
 	
+	private void toolDebug(String message)
+	{
+		System.out.println("[ActiveToolDebug] " + message + " (Active: " + (primaryTool == null ? "null" : primaryTool.getClass().getSimpleName()) + " | PreActive: " + (primaryToolReserve == null ? "null" : primaryToolReserve.getClass().getSimpleName()) + ")");
+	}
+	
 	//Primary tool:
 	private Tool primaryToolReserve; //This variable is to be written to by the input thread.
 	private boolean acceptInputs = true; //Set to false on the input thread, as soon as the tool intends to stop.
@@ -155,8 +160,13 @@ public class RenderPlane3D implements RenderPlane
 			{
 				if(res)
 				{
+					toolDebug("Pre-Activating tool: " + tool.getClass().getSimpleName());
 					acceptInputs = false;
 					primaryToolReserve = tool; //Reserve this tool.
+				}
+				else
+				{
+					toolDebug("Passive-Activating tool: " + tool.getClass().getSimpleName());
 				}
 				return true;
 			}
@@ -180,8 +190,13 @@ public class RenderPlane3D implements RenderPlane
 			{
 				if(res)
 				{
+					toolDebug("Pre-Activating tool: " + tool.getClass().getSimpleName());
 					acceptInputs = false;
 					primaryToolReserve = tool; //Reserve this tool.
+				}
+				else
+				{
+					toolDebug("Passive-Activating tool: " + tool.getClass().getSimpleName());
 				}
 				return true;
 			}
@@ -195,17 +210,20 @@ public class RenderPlane3D implements RenderPlane
 	
 	public void toolReady()
 	{
+		toolDebug("Activating tool, its ready.");
 		acceptInputs = true;
 		primaryTool = primaryToolReserve;
 	}
 	
 	public void toolStopInputs()
 	{
+		toolDebug("Pre-Stop tool.");
 		acceptInputs = false;
 	}
 	
 	public void toolDisable()
 	{
+		toolDebug("Disabling tool.");
 		//Must be called by the tool itself.
 		primaryTool = defaultTool;
 		acceptInputs = true; //For safety reasons, call here too.
