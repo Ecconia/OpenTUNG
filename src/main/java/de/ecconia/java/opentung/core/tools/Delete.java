@@ -101,7 +101,8 @@ public class Delete implements Tool
 						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
 						ClusterHelper.removeWire(simulation, wireToDelete, updates);
 						
-						//However after removal, the two clusters of the blot might have changed, in a way that original wire-cluster fully vanished. Safety first, lets add them.
+						//If a currently non-selected source-cluster wire gets deleted, the connected cluster might be semi-highlighted and thus needs to be expanded.
+						// Thus also register the new clusters:
 						modifiedClusters.add(wireToDelete.getConnectorA().getCluster());
 						modifiedClusters.add(wireToDelete.getConnectorB().getCluster());
 						sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
@@ -123,40 +124,38 @@ public class Delete implements Tool
 				else if(toBeDeleted instanceof Component)
 				{
 					final Component component = (Component) toBeDeleted;
-					//TODO: Get rid of this bad boi code: Do not loop over wires on the input thread, use the simulation thread instead.
-					if(toBeDeleted instanceof CompSnappingPeg)
-					{
-						for(Wire wire : ((ConnectedComponent) component).getPegs().get(0).getWires())
-						{
-							if(wire instanceof CompSnappingWire)
-							{
-								CompSnappingPeg sPeg = (CompSnappingPeg) toBeDeleted;
-								simulation.updateJobNextTickThreadSafe((simulation) -> {
-									Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
-									ClusterHelper.removeWire(simulation, wire, updates);
-									sPeg.getPartner().setPartner(null);
-									sPeg.setPartner(null);
-									gpuTasks.add((unused) -> {
-										System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
-										for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
-										{
-											entry.getKey().handleUpdates(entry.getValue(), simulation);
-										}
-										worldMesh.removeComponent((CompSnappingWire) wire, simulation);
-									});
-								});
-								break;
-							}
-						}
-					}
-					
 					simulation.updateJobNextTickThreadSafe((simulation) -> {
 						List<Wire> wiresToRemove = new ArrayList<>();
 						Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+						CompSnappingWire snappingWire = null;
 						if(component instanceof ConnectedComponent)
 						{
 							ConnectedComponent con = (ConnectedComponent) component;
 							List<Cluster> modifiedClusters = new ArrayList<>(con.getConnectors().size());
+							if(component instanceof CompSnappingPeg)
+							{
+								CompSnappingPeg snappingPeg = (CompSnappingPeg) component;
+								if(snappingPeg.hasPartner())
+								{
+									for(Wire wire : con.getPegs().get(0).getWires())
+									{
+										if(wire instanceof CompSnappingWire)
+										{
+											//Detect this wire first, before it gets deleted by normal wire handling.
+											snappingWire = (CompSnappingWire) wire;
+											snappingPeg.setParent(null);
+											modifiedClusters.add(wire.getCluster()); //Add this cluster first, since once it got removed. The original cluster could be gone.
+											ClusterHelper.removeWire(simulation, wire, updates);
+											//The snapping wire cannot be connected to a blot. Means both sides and the wire itself are only one cluster.
+											// If it is highlighted, it already is remembered. If not highlighted, nothing changes, since both sides still would be a not highlighted cluster.
+											CompSnappingPeg partner = snappingPeg.getPartner();
+											partner.setPartner(null);
+											snappingPeg.setPartner(null);
+											break;
+										}
+									}
+								}
+							}
 							for(Blot blot : con.getBlots())
 							{
 								modifiedClusters.add(blot.getCluster());
@@ -180,6 +179,7 @@ public class Delete implements Tool
 							sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
 						}
 						
+						CompSnappingWire finalSnappingWire = snappingWire;
 						gpuTasks.add((worldRenderer) -> {
 							System.out.println("[ClusterUpdateDebug] Updating " + updates.size() + " conductor mesh bags.");
 							for(Map.Entry<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> entry : updates.entrySet())
@@ -197,6 +197,10 @@ public class Delete implements Tool
 								board.getWiresToRender().remove(wire); //Non-Visible wires got filtered before.
 								wireRayCaster.removeWire((CompWireRaw) wire);
 								worldMesh.removeComponent((CompWireRaw) wire, simulation);
+							}
+							if(finalSnappingWire != null)
+							{
+								worldMesh.removeComponent(finalSnappingWire, simulation);
 							}
 							if(component instanceof CompLabel)
 							{

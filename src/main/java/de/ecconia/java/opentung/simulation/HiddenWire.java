@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.simulation;
 
 import de.ecconia.java.opentung.components.conductor.Connector;
 
+//TODO: Rename to internal wire.
 public class HiddenWire implements Wire
 {
 	private Connector connectorA, connectorB;
