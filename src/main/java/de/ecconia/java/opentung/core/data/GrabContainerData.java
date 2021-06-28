@@ -39,7 +39,7 @@ public class GrabContainerData extends GrabData
 		this.grabRotation = grabRotation;
 	}
 	
-	public Collection<CompSnappingPeg> getSnappingPegs()
+	public Collection<CompSnappingPeg> getUnconnectedSnappingPegs()
 	{
 		return unconnectedSnappingPegs;
 	}

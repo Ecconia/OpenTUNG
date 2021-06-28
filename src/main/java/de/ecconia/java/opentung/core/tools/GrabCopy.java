@@ -326,7 +326,7 @@ public class GrabCopy implements Tool
 					worldMesh.addComponent(wire, board.getSimulation());
 				}
 				
-				for(CompSnappingPeg snappingPeg : grabContainerData.getSnappingPegs())
+				for(CompSnappingPeg snappingPeg : grabContainerData.getUnconnectedSnappingPegs())
 				{
 					sharedData.getRenderPlane3D().snapSnappingPeg(snappingPeg);
 				}
@@ -397,7 +397,6 @@ public class GrabCopy implements Tool
 	
 	//TODO: Properly handle abort, while it is still initializing.
 	
-	//TODO: Fix snapping pegs when aborting...
 	@Override
 	public boolean abort()
 	{
@@ -440,6 +439,13 @@ public class GrabCopy implements Tool
 				return;
 			}
 			
+			//Update parent relation: (Update them first, so that the ray-casting for snapping pegs works)
+			Component grabbedComponent = grabData.getComponent();
+			CompContainer grabbedParent = grabData.getParent();
+			grabbedParent.addChild(grabbedComponent);
+			grabbedParent.updateBounds();
+			grabbedComponent.setParent(grabbedParent);
+			
 			worldRenderer.clustersBackInPlace();
 			for(Component component : grabData.getComponents())
 			{
@@ -475,14 +481,16 @@ public class GrabCopy implements Tool
 					secondaryMesh.removeComponent(wire, simulation);
 					worldMesh.addComponent(wire, simulation);
 				}
+				//TODO: snapSnappingPeg spawns further jobs. Do not disable before they are done.
+				for(CompSnappingPeg snappingPeg : grabContainerData.getUnconnectedSnappingPegs())
+				{
+					sharedData.getRenderPlane3D().snapSnappingPeg(snappingPeg);
+				}
 			}
-			
-			//Update parent relation:
-			Component grabbedComponent = grabData.getComponent();
-			CompContainer grabbedParent = grabData.getParent();
-			grabbedParent.addChild(grabbedComponent);
-			grabbedParent.updateBounds();
-			grabbedComponent.setParent(grabbedParent);
+			else if(grabData.getComponent() instanceof CompSnappingPeg)
+			{
+				sharedData.getRenderPlane3D().snapSnappingPeg((CompSnappingPeg) grabData.getComponent());
+			}
 			
 			grabData = null;
 			worldRenderer.toolDisable();
