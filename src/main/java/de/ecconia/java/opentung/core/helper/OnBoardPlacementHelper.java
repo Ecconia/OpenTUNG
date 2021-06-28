@@ -153,9 +153,11 @@ public class OnBoardPlacementHelper
 		Vector3 orientation = fixedAlignment.multiply(Vector3.zn);
 		
 		double angle = MathHelper.angleFromVectors(orientation, Vector3.zn);
-		boolean x = angle >= -0.001 && angle <= 0.001 || angle >= 179.999 && angle <= 180.001;
+		//Epsilon reference: 179.99876548404842
+		boolean x = angle >= -0.01 && angle <= 0.01 || angle >= 179.99 && angle <= 180.01;
 		angle = MathHelper.angleFromVectors(orientation, Vector3.xn);
-		boolean z = angle >= -0.001 && angle <= 0.001 || angle >= 179.999 && angle <= 180.001;
+		boolean z = angle >= -0.01 && angle <= 0.01 || angle >= 179.99 && angle <= 180.01;
+		
 		
 		if(!x && !z)
 		{

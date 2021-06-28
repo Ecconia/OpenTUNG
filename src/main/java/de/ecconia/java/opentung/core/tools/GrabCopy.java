@@ -15,6 +15,7 @@ import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
+import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.data.GrabContainerData;
 import de.ecconia.java.opentung.core.data.GrabData;
@@ -396,6 +397,7 @@ public class GrabCopy implements Tool
 	
 	//TODO: Properly handle abort, while it is still initializing.
 	
+	//TODO: Fix snapping pegs when aborting...
 	@Override
 	public boolean abort()
 	{
@@ -1209,7 +1211,7 @@ public class GrabCopy implements Tool
 		return true;
 	}
 	
-	public Quaternion getDeltaGrabRotation(HitpointContainer hitpoint)
+	public Quaternion getAbsoluteGrabRotation(HitpointContainer hitpoint)
 	{
 		Component component = grabData.getComponent();
 		boolean grabbingBoard = component instanceof CompBoard;
@@ -1237,7 +1239,7 @@ public class GrabCopy implements Tool
 		}
 		
 		//Since the Rotation cannot be changed, it must be modified. So we undo the old rotation and apply the new one.
-		return component.getRotation().inverse().multiply(absAlignment);
+		return absAlignment;
 	}
 	
 	//Math:
@@ -1250,24 +1252,28 @@ public class GrabCopy implements Tool
 		
 		if(hitpoint.canBePlacedOn())
 		{
+			//Calculate new position:
+			CompContainer parent = (CompContainer) hitpoint.getHitPart();
+			
 			HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 			
-			Quaternion deltaAlignment = getDeltaGrabRotation(hitpointContainer);
-			hitpointContainer.setAlignment(deltaAlignment);
+			Quaternion absoluteAlignment = getAbsoluteGrabRotation(hitpointContainer);
+			Quaternion relativeAlignment = grabData.getComponent().getRotation().inverse().multiply(absoluteAlignment);
+			hitpointContainer.setAlignment(relativeAlignment);
 			
 			//Figure out the base position:
 			Vector3 position;
 			{
-				//Calculate new position:
-				CompContainer parent = (CompContainer) hitpoint.getHitPart();
-				if(hitpoint.isBoard())
+				if(hitpoint.isBoard()) //Placing on board
 				{
 					HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
 					OnBoardPlacementHelper placementHelper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
-					position = placementHelper.middleEither();
-					position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
-					if(grabData.getComponent() instanceof CompBoard)
+					
+					if(grabData.getComponent() instanceof CompBoard) //Special handling for boards, since it does not use "auto" placement mode as base.
 					{
+						position = placementHelper.middleEither();
+						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+						
 						boolean isLaying;
 						boolean isSideX = false; //Which the top/bottom is not facing.
 						{
@@ -1298,24 +1304,71 @@ public class GrabCopy implements Tool
 							y = fineBoardOffset;
 						}
 						Vector3 offset = new Vector3(x, y, z);
-						Quaternion absAlignment = grabData.getComponent().getRotation().multiply(deltaAlignment);
-						offset = absAlignment.inverse().multiply(offset);
+						offset = absoluteAlignment.inverse().multiply(offset);
 						position = position.add(offset);
 					}
-					else if(grabData.getComponent() instanceof CompMount)
+					else //Is a normal component
 					{
-						if(!placementHelper.isSide() && !controller.isControl())
+						position = placementHelper.auto(grabData.getComponent().getInfo().getModel(), controller.isControl(), absoluteAlignment);
+						if(position == null && grabData.getComponent() instanceof CompSnappingPeg)
 						{
-							//Apply offset:
-							Vector3 offset = new Vector3(0, 0, -0.15);
-							Quaternion absAlignment = grabData.getComponent().getRotation().multiply(deltaAlignment);
-							position = position.add(absAlignment.inverse().multiply(offset));
+							//Attempt again without control: (Should center it).
+							position = placementHelper.auto(grabData.getComponent().getInfo().getModel(), false, absoluteAlignment);
+						}
+						if(position == null)
+						{
+							this.hitpoint = new Hitpoint(hitpoint.getHitPart(), hitpoint.getDistance()); //Prevent the component from being drawn, by just changing the hitpoint type. [pretend non-container]
+							return this.hitpoint;
+						}
+						else
+						{
+							position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+							if(grabData.getComponent() instanceof CompMount)
+							{
+								if(!placementHelper.isSide() && !controller.isControl())
+								{
+									//Apply offset:
+									Vector3 offset = new Vector3(0, 0, -0.15);
+									position = position.add(absoluteAlignment.inverse().multiply(offset));
+								}
+							}
 						}
 					}
 				}
-				else //Mount:
+				else //Placing on mount
 				{
-					position = parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT));
+					ModelHolder model = grabData.getComponent().getModelHolder();
+					if(model.canBePlacedOnMounts())
+					{
+						position = parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT));
+						if(grabData.getComponent() instanceof CompBoard)
+						{
+							//Apply offsets:
+							boolean isLaying;
+							boolean isSideX = false; //Which the top/bottom is not facing.
+							{
+								Vector3 rotated = ((GrabContainerData) grabData).getAlignment().multiply(Vector3.yp);
+								isLaying = rotated.getY() > 0.9 || rotated.getY() < -0.9;
+								if(!isLaying)
+								{
+									isSideX = rotated.getZ() > 0.9 || rotated.getZ() < -0.9;
+								}
+							}
+							
+							double x = isLaying || isSideX ? xBoardOffset : 0;
+							double z = isLaying || !isSideX ? zBoardOffset : 0;
+							
+							Vector3 offset = new Vector3(x, 0, z);
+							Quaternion absAlignment = grabData.getComponent().getRotation().multiply(relativeAlignment);
+							offset = absAlignment.inverse().multiply(offset);
+							position = position.add(offset);
+						}
+					}
+					else
+					{
+						this.hitpoint = new Hitpoint(hitpoint.getHitPart(), hitpoint.getDistance()); //No placement.
+						return this.hitpoint;
+					}
 				}
 			}
 			
