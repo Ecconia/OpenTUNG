@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.settings.keybinds.manager;
 
 import de.ecconia.java.opentung.settings.keybinds.GLFWKeyMapper;
+import de.ecconia.java.opentung.util.logging.LogStreamHandler;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.system.MemoryUtil;
@@ -11,7 +12,7 @@ public class KeyCodeGrabber
 	
 	public KeyCodeGrabber(KeybindingManager manager)
 	{
-		GLFWErrorCallback.createPrint(System.err).set();
+		GLFWErrorCallback.createPrint(LogStreamHandler.outputStreamBypass).set();
 		if(!GLFW.glfwInit())
 		{
 			throw new IllegalStateException("Unable to initialize GLFW");
@@ -60,5 +61,10 @@ public class KeyCodeGrabber
 	public void grabFocus()
 	{
 		GLFW.glfwFocusWindow(windowID);
+	}
+	
+	public void close()
+	{
+		GLFW.glfwSetWindowShouldClose(windowID, true);
 	}
 }

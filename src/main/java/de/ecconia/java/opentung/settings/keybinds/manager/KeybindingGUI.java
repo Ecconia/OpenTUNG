@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.FontRenderContext;
@@ -48,6 +50,7 @@ public class KeybindingGUI extends JFrame
 		
 		JPanel content = new JPanel();
 		setContentPane(content);
+		content.setFocusable(false);
 		content.setBorder(new EmptyBorder(3, 3, 3, 3));
 		content.setBackground(Color.gray);
 		content.setLayout(new VerticalListLayout(4, false));
@@ -106,6 +109,30 @@ public class KeybindingGUI extends JFrame
 			
 			@Override
 			public void componentHidden(ComponentEvent e)
+			{
+			}
+		});
+		setFocusable(true);
+		addKeyListener(new KeyListener()
+		{
+			@Override
+			public void keyTyped(KeyEvent e)
+			{
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				if(e.getKeyCode() == KeyEvent.VK_ESCAPE)
+				{
+					System.out.println("Escape pressed, quitting.");
+					dispose(); //Close this window.
+					manager.closeGrabber();
+				}
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent e)
 			{
 			}
 		});

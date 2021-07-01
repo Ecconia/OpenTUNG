@@ -8,6 +8,7 @@ public class KeybindingManager
 	private final Path keybindingFile;
 	private final KeybindingGUI keybindingGUI;
 	private final KeybindingsIO keybindingsIO;
+	private final KeyCodeGrabber keyCodeGrabber;
 	
 	private boolean focus;
 	
@@ -15,7 +16,7 @@ public class KeybindingManager
 	{
 		this.keybindingFile = keybindingFile;
 		//Needs to be first, else the keybindingIO cannot load...
-		KeyCodeGrabber keyCodeGrabber = new KeyCodeGrabber(this);
+		keyCodeGrabber = new KeyCodeGrabber(this);
 		keybindingsIO = new KeybindingsIO(keybindingFile, null);
 		keybindingGUI = new KeybindingGUI(this, keybindingsIO.getKeys());
 		
@@ -63,5 +64,10 @@ public class KeybindingManager
 	public void saveData()
 	{
 		keybindingsIO.overwriteFile(keybindingFile);
+	}
+	
+	public void closeGrabber()
+	{
+		keyCodeGrabber.close();
 	}
 }
