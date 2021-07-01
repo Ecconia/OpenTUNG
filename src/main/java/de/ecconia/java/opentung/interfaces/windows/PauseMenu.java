@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.OpenTUNG;
+import de.ecconia.java.opentung.OpenTUNGBootstrap;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.interfaces.GUIColors;
@@ -180,7 +181,7 @@ public class PauseMenu
 		}
 		System.out.println("[OpenKeybindingsManager] Java executeable path: " + jvm_location);
 		
-		ProcessBuilder pb = new ProcessBuilder(jvm_location, "-jar", path, "key");
+		ProcessBuilder pb = new ProcessBuilder(jvm_location, "-jar", path, OpenTUNGBootstrap.argKeybindings);
 		pb.directory(OpenTUNG.bootstrap.getDataFolder().getParent().toFile());
 		try
 		{

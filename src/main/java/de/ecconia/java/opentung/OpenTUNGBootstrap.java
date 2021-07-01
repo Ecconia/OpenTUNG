@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 public class OpenTUNGBootstrap
 {
-	private static final String argKeybindings = "--keybindings";
+	public static final String argKeybindings = "--keybindings";
 	private static final String argChooser = "--chooser";
 	private static final String argVersion = "--version";
 	private static final String argHelp = "--help";
