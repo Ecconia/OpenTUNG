@@ -416,8 +416,8 @@ public class OpenTUNGBootstrap
 			{
 				System.out.println("[SaveFileResolver] Cannot find provided file to load '" + file + "', attempted to use '.opentung' and '.tungboard' file-extensions.");
 			}
-			System.out.println("[SaveFileResolver]  Looked in '" + folder + "'");
-			System.out.println("[SaveFileResolver]        and '" + boardFolder + "'");
+			System.out.println("[SaveFileResolver]  Looked in '" + boardFolder + "'");
+			System.out.println("[SaveFileResolver]        and '" + System.getProperty("user.dir") + "'");
 			System.exit(1);
 		}
 		//Found the file, apply the fixed path:
@@ -447,18 +447,26 @@ public class OpenTUNGBootstrap
 		}
 		else
 		{
-			//TBI: Should it first check the data or the boards folder?
 			//First check the boards folder.
 			Path boardRelative = boardFolder.resolve(path);
 			if(Files.exists(boardRelative))
 			{
 				return boardRelative;
 			}
-			//If not check the data folder, we prefer that location.
-			Path dataRelative = folder.resolve(path);
-			if(Files.exists(dataRelative))
+			//If not in the boards folder, it could be relative to the executing location.
+			if(Files.exists(path))
 			{
-				return dataRelative;
+				//It exists, make its path absolute.
+				try
+				{
+					path = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
+				}
+				catch(IOException e)
+				{
+					System.out.println("[DataFolderCreation] Attempted to print real/absolute path of save-file '" + path + "', but got an exception (main error after stacktrace):");
+					e.printStackTrace(System.out);
+				}
+				return path;
 			}
 		}
 		return null; //Does not exist.
