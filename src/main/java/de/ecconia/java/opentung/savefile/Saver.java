@@ -146,12 +146,12 @@ public class Saver
 				int parentID = parent == null ? 0 : componentIDs.get(parent);
 				writer.writeVariableInt(parentID);
 				//Position:
-				Vector3 position = component.getPosition();
+				Vector3 position = component.getPositionGlobal();
 				writer.writeDouble(position.getX());
 				writer.writeDouble(position.getY());
 				writer.writeDouble(position.getZ());
 				//Direction/Rotation:
-				Quaternion quaternion = component.getRotation();
+				Quaternion quaternion = component.getAlignmentGlobal();
 				Vector3 v = quaternion.getV();
 				double a = quaternion.getA();
 				writer.writeDouble(v.getX());

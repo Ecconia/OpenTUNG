@@ -121,11 +121,11 @@ public class Loader
 			
 			//Position:
 			Vector3 position = new Vector3(reader.readDouble(), reader.readDouble(), reader.readDouble());
-			component.setPosition(position);
+			component.setPositionGlobal(position);
 			//Rotation:
 			Vector3 qV = new Vector3(reader.readDouble(), reader.readDouble(), reader.readDouble());
 			Quaternion rotation = new Quaternion(reader.readDouble(), qV);
-			component.setRotation(rotation);
+			component.setAlignmentGlobal(rotation);
 			//Blot outputs:
 			for(int j = 0; j < data.getBlots(); j++)
 			{
@@ -178,8 +178,8 @@ public class Loader
 			double distance = direction.length();
 			Quaternion rotation = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
 			Vector3 position = toPos.add(direction);
-			wire.setRotation(rotation);
-			wire.setPosition(position);
+			wire.setAlignmentGlobal(rotation);
+			wire.setPositionGlobal(position);
 			wire.setLength((float) distance * 2f);
 			
 			wire.setConnectorA(a);

@@ -344,8 +344,8 @@ public class OpenTUNG
 	private static CompBoard generateStartingBoard()
 	{
 		CompBoard board = new CompBoard(null, 10, 10);
-		board.setPosition(Vector3.zero);
-		board.setRotation(Quaternion.zero);
+		board.setPositionGlobal(Vector3.zero);
+		board.setAlignmentGlobal(Quaternion.zero);
 		return board;
 	}
 	

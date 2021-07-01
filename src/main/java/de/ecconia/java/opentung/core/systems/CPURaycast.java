@@ -89,8 +89,8 @@ public class CPURaycast
 	
 	private void testComponent(Component component, Vector3 camPos, Vector3 camRay)
 	{
-		Quaternion componentRotation = component.getRotation();
-		Vector3 cameraPositionComponentSpace = componentRotation.multiply(camPos.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
+		Quaternion componentRotation = component.getAlignmentGlobal();
+		Vector3 cameraPositionComponentSpace = componentRotation.multiply(camPos.subtract(component.getPositionGlobal())).subtract(component.getModelHolder().getPlacementOffset());
 		Vector3 cameraRayComponentSpace = componentRotation.multiply(camRay);
 		
 		if(component instanceof ConnectedComponent)
@@ -232,8 +232,8 @@ public class CPURaycast
 	{
 		//TODO: Another ungeneric access
 		CubeFull shape = (CubeFull) board.getModelHolder().getSolid().get(0);
-		Vector3 position = board.getPosition();
-		Quaternion rotation = board.getRotation();
+		Vector3 position = board.getPositionGlobal();
+		Quaternion rotation = board.getAlignmentGlobal();
 		Vector3 size = shape.getSize();
 		if(shape.getMapper() != null)
 		{
@@ -344,8 +344,8 @@ public class CPURaycast
 	
 	private static void collectFromComponent(Component component, Vector3 position, Vector3 ray, double maxDistance, List<CollectionEntry> list)
 	{
-		Quaternion componentRotation = component.getRotation();
-		Vector3 cameraPositionComponentSpace = componentRotation.multiply(position.subtract(component.getPosition())).subtract(component.getModelHolder().getPlacementOffset());
+		Quaternion componentRotation = component.getAlignmentGlobal();
+		Vector3 cameraPositionComponentSpace = componentRotation.multiply(position.subtract(component.getPositionGlobal())).subtract(component.getModelHolder().getPlacementOffset());
 		Vector3 cameraRayComponentSpace = componentRotation.multiply(ray);
 		
 		if(component instanceof ConnectedComponent)

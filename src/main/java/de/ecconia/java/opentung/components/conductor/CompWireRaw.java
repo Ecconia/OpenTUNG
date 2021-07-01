@@ -71,15 +71,15 @@ public class CompWireRaw extends Component implements Wire
 	public Vector3 getEnd1()
 	{
 		Vector3 endPointer = new Vector3(0, 0, length / 2f);
-		endPointer = getRotation().inverse().multiply(endPointer);
-		return endPointer.add(getPosition());
+		endPointer = getAlignmentGlobal().inverse().multiply(endPointer);
+		return endPointer.add(getPositionGlobal());
 	}
 	
 	public Vector3 getEnd2()
 	{
 		Vector3 endPointer = new Vector3(0, 0, length / 2f);
-		endPointer = getRotation().inverse().multiply(endPointer).invert();
-		return endPointer.add(getPosition());
+		endPointer = getAlignmentGlobal().inverse().multiply(endPointer).invert();
+		return endPointer.add(getPositionGlobal());
 	}
 	
 	public void insertMeshData(float[] vertices, ModelHolder.IntHolder verticesIndex, int[] indices, ModelHolder.IntHolder indicesIndex, ModelHolder.IntHolder vertexCounter, MeshTypeThing type)
@@ -87,7 +87,7 @@ public class CompWireRaw extends Component implements Wire
 		//TODO: This is super ungeneric, beware.
 		CubeFull shape = (CubeFull) getModelHolder().getConductors().get(0);
 		
-		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, Color.circuitON, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
+		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, Color.circuitON, getPositionGlobal(), getAlignmentGlobal(), modelHolder.getPlacementOffset(), type);
 	}
 	
 	// ### SIMULATION ###
@@ -163,8 +163,8 @@ public class CompWireRaw extends Component implements Wire
 	public Component copy()
 	{
 		CompWireRaw copy = new CompWireRaw(null);
-		copy.setRotation(rotation);
-		copy.setPosition(position);
+		copy.setAlignmentGlobal(alignmentGlobal);
+		copy.setPositionGlobal(positionGlobal);
 		copy.setLength(length);
 		return copy;
 	}

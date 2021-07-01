@@ -356,8 +356,8 @@ public class DrawWire implements Tool
 			for(WireToBeDrawn wire : frameData.getWires())
 			{
 				CompWireRaw newWire = new CompWireRaw(board.getPlaceboWireParent());
-				newWire.setRotation(wire.getAlignment());
-				newWire.setPosition(wire.getPosition());
+				newWire.setAlignmentGlobal(wire.getAlignment());
+				newWire.setPositionGlobal(wire.getPosition());
 				newWire.setLength((float) wire.getLength() * 2f);
 				newWire.setConnectorA(wire.getA());
 				newWire.setConnectorB(wire.getB());

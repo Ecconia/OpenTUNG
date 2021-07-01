@@ -23,7 +23,7 @@ public class OnBoardPlacementHelper
 	
 	public OnBoardPlacementHelper(CompBoard board, Vector3 localNormal, Vector3 collisionPointBoardSpace)
 	{
-		this.alignment = board.getRotation();
+		this.alignment = board.getAlignmentGlobal();
 		
 		//Adjust placement position according to component properties:
 		isSide = localNormal.getY() == 0;

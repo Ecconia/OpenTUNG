@@ -117,8 +117,8 @@ public class TungBoardLoader
 			CompBoard board = new CompBoard(parent, x, z);
 			TungColor componentColor = tungBoard.getColor();
 			board.setColor(Color.fromComponent(componentColor.getR(), componentColor.getG(), componentColor.getB()));
-			board.setPosition(globalPosition.add(rotatedFixPoint));
-			board.setRotation(globalRotation);
+			board.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			board.setAlignmentGlobal(globalRotation);
 			
 			for(TungObject tungChild : tungBoard.getChildren())
 			{
@@ -139,8 +139,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompMount mount = new CompMount(parent);
-			mount.setPosition(globalPosition.add(rotatedFixPoint));
-			mount.setRotation(globalRotation);
+			mount.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			mount.setAlignmentGlobal(globalRotation);
 			
 			for(TungObject tungChild : tungMount.getChildren())
 			{
@@ -159,8 +159,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPeg peg = new CompPeg(parent);
-			peg.setPosition(globalPosition.add(rotatedFixPoint));
-			peg.setRotation(globalRotation);
+			peg.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			peg.setAlignmentGlobal(globalRotation);
 			
 			return peg;
 		}
@@ -170,8 +170,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompInverter inverter = new CompInverter(parent);
-			inverter.setPosition(globalPosition.add(rotatedFixPoint));
-			inverter.setRotation(globalRotation);
+			inverter.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			inverter.setAlignmentGlobal(globalRotation);
 			inverter.setPowered(0, ((TungInverter) object).isOutputOn());
 			
 			return inverter;
@@ -182,8 +182,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompBlotter blotter = new CompBlotter(parent);
-			blotter.setPosition(globalPosition.add(rotatedFixPoint));
-			blotter.setRotation(globalRotation);
+			blotter.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			blotter.setAlignmentGlobal(globalRotation);
 			blotter.setPowered(0, ((TungBlotter) object).isOutputOn());
 			
 			return blotter;
@@ -194,8 +194,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompThroughPeg throughPeg = new CompThroughPeg(parent);
-			throughPeg.setPosition(globalPosition.add(rotatedFixPoint));
-			throughPeg.setRotation(globalRotation);
+			throughPeg.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			throughPeg.setAlignmentGlobal(globalRotation);
 			
 			return throughPeg;
 		}
@@ -205,8 +205,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompSnappingPeg snappingPeg = new CompSnappingPeg(parent);
-			snappingPeg.setPosition(globalPosition.add(rotatedFixPoint));
-			snappingPeg.setRotation(globalRotation);
+			snappingPeg.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			snappingPeg.setAlignmentGlobal(globalRotation);
 			
 			return snappingPeg;
 		}
@@ -215,8 +215,8 @@ public class TungBoardLoader
 			TungWire tungWire = (TungWire) object;
 			
 			CompWireRaw wire = new CompWireRaw(parent);
-			wire.setPosition(globalPosition);
-			wire.setRotation(globalRotation);
+			wire.setPositionGlobal(globalPosition);
+			wire.setAlignmentGlobal(globalRotation);
 			wire.setLength(tungWire.getLength());
 			wire.setPowered(true);
 			
@@ -228,8 +228,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompLabel label = new CompLabel(parent);
-			label.setPosition(globalPosition.add(rotatedFixPoint));
-			label.setRotation(globalRotation);
+			label.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			label.setAlignmentGlobal(globalRotation);
 			
 			TungLabel t = (TungLabel) object;
 			label.setFontSize(t.getFontSize());
@@ -243,8 +243,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelLabel label = new CompPanelLabel(parent);
-			label.setPosition(globalPosition.add(rotatedFixPoint));
-			label.setRotation(globalRotation);
+			label.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			label.setAlignmentGlobal(globalRotation);
 			
 			TungPanelLabel t = (TungPanelLabel) object;
 			label.setFontSize(t.getFontSize());
@@ -258,8 +258,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompDisplay display = new CompDisplay(parent);
-			display.setPosition(globalPosition.add(rotatedFixPoint));
-			display.setRotation(globalRotation);
+			display.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			display.setAlignmentGlobal(globalRotation);
 			TungColorEnum c = ((TungDisplay) object).getColor();
 			display.setColor(new Color(c.getR(), c.getG(), c.getB()));
 			
@@ -271,8 +271,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompSwitch toggle = new CompSwitch(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			toggle.setPowered(0, ((TungSwitch) object).isOn());
 			
 			return toggle;
@@ -283,8 +283,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompButton toggle = new CompButton(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			
 			return toggle;
 		}
@@ -294,8 +294,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelSwitch toggle = new CompPanelSwitch(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			toggle.setPowered(0, ((TungPanelSwitch) object).isOn());
 			
 			return toggle;
@@ -306,8 +306,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelDisplay display = new CompPanelDisplay(parent);
-			display.setPosition(globalPosition.add(rotatedFixPoint));
-			display.setRotation(globalRotation);
+			display.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			display.setAlignmentGlobal(globalRotation);
 			TungColorEnum c = ((TungPanelDisplay) object).getColor();
 			display.setColor(new Color(c.getR(), c.getG(), c.getB()));
 			
@@ -319,8 +319,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompThroughBlotter blotter = new CompThroughBlotter(parent);
-			blotter.setPosition(globalPosition.add(rotatedFixPoint));
-			blotter.setRotation(globalRotation);
+			blotter.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			blotter.setAlignmentGlobal(globalRotation);
 			blotter.setPowered(0, ((TungThroughBlotter) object).isOutputOn());
 			
 			return blotter;
@@ -331,8 +331,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelButton toggle = new CompPanelButton(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			
 			return toggle;
 		}
@@ -342,8 +342,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompColorDisplay toggle = new CompColorDisplay(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			
 			return toggle;
 		}
@@ -353,8 +353,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompPanelColorDisplay toggle = new CompPanelColorDisplay(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			
 			return toggle;
 		}
@@ -364,8 +364,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompNoisemaker toggle = new CompNoisemaker(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			toggle.setFrequency(((TungNoisemaker) object).getFrequency());
 			
 			return toggle;
@@ -376,8 +376,8 @@ public class TungBoardLoader
 			Vector3 rotatedFixPoint = parentRotation.inverse().multiply(fixPoint);
 			
 			CompDelayer toggle = new CompDelayer(parent);
-			toggle.setPosition(globalPosition.add(rotatedFixPoint));
-			toggle.setRotation(globalRotation);
+			toggle.setPositionGlobal(globalPosition.add(rotatedFixPoint));
+			toggle.setAlignmentGlobal(globalRotation);
 			toggle.setPowered(0, ((TungDelayer) object).isOutputOn());
 			toggle.setDelayCount(((TungDelayer) object).getDelayCount());
 			

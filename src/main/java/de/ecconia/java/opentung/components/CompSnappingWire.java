@@ -58,7 +58,7 @@ public class CompSnappingWire extends CompWireRaw
 		if(type == MeshTypeThing.Solid)
 		{
 			//TODO: This is very ungeneric. Well the model is known.
-			((CubeFull) getModelHolder().getSolid().get(0)).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
+			((CubeFull) getModelHolder().getSolid().get(0)).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPositionGlobal(), getAlignmentGlobal(), modelHolder.getPlacementOffset(), type);
 		}
 	}
 	
@@ -66,8 +66,8 @@ public class CompSnappingWire extends CompWireRaw
 	public Component copy()
 	{
 		CompSnappingWire copy = new CompSnappingWire(null);
-		copy.setRotation(getRotation());
-		copy.setPosition(getPosition());
+		copy.setAlignmentGlobal(getAlignmentGlobal());
+		copy.setPositionGlobal(getPositionGlobal());
 		copy.setLength(getLength());
 		return copy;
 	}

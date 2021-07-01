@@ -32,7 +32,7 @@ public class ResizeData
 	public ResizeData(CompBoard board)
 	{
 		this.board = board;
-		this.position = board.getPosition();
+		this.position = board.getPositionGlobal();
 		this.x = board.getX();
 		this.z = board.getZ();
 		
@@ -58,17 +58,17 @@ public class ResizeData
 			}
 			else
 			{
-				vec = parent.getRotation().inverse().multiply(Vector3.yp);
+				vec = parent.getAlignmentGlobal().inverse().multiply(Vector3.yp);
 				//Calculate placement position, as if mount is standing on board:
-				Vector3 globalPosition = parent.getPosition().add(vec.multiply(CompMount.MOUNT_HEIGHT + 0.15));
-				Vector3 positionBoardSpace = board.getRotation().multiply(globalPosition.subtract(position));
+				Vector3 globalPosition = parent.getPositionGlobal().add(vec.multiply(CompMount.MOUNT_HEIGHT + 0.15));
+				Vector3 positionBoardSpace = board.getAlignmentGlobal().multiply(globalPosition.subtract(position));
 				expandBounds(positionBoardSpace);
 				//Finalization:
 				vec = vec.multiply(-1.0); //Invert, cause the vector is from the parents view.
 			}
 			if(vec != null) //Might be missing, if the boards are complex related (as in relation is broken already)
 			{
-				vec = board.getRotation().multiply(vec);
+				vec = board.getAlignmentGlobal().multiply(vec);
 				removeSideIfMatch(vec);
 			}
 		}
@@ -87,14 +87,14 @@ public class ResizeData
 			}
 			else
 			{
-				vec = child.getRotation().inverse().multiply(Vector3.yp);
+				vec = child.getAlignmentGlobal().inverse().multiply(Vector3.yp);
 				//Calculate minimum:
-				Vector3 positionBoardSpace = board.getRotation().multiply(child.getPosition().subtract(position));
+				Vector3 positionBoardSpace = board.getAlignmentGlobal().multiply(child.getPositionGlobal().subtract(position));
 				expandBounds(positionBoardSpace);
 			}
 			if(vec != null) //Might be missing, if the boards are complex related (as in relation is broken already)
 			{
-				vec = board.getRotation().multiply(vec);
+				vec = board.getAlignmentGlobal().multiply(vec);
 				removeSideIfMatch(vec);
 			}
 		}
@@ -351,9 +351,9 @@ public class ResizeData
 	
 	private void modPos(double x, double z)
 	{
-		position = board.getRotation().multiply(position);
+		position = board.getAlignmentGlobal().multiply(position);
 		position = position.add(x, 0, z);
-		position = board.getRotation().inverse().multiply(position);
+		position = board.getAlignmentGlobal().inverse().multiply(position);
 	}
 	
 	public boolean allowsNX()

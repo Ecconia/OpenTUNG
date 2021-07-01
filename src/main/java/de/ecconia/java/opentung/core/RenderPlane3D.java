@@ -373,7 +373,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		//Raycast and see which component gets hit:
 		Vector3 snappingPegAConnectionPoint = snappingPegA.getConnectionPoint();
-		Vector3 rayA = snappingPegA.getRotation().inverse().multiply(Vector3.zn);
+		Vector3 rayA = snappingPegA.getAlignmentGlobal().inverse().multiply(Vector3.zn);
 		RayCastResult result = cpuRaycast.cpuRaycast(snappingPegAConnectionPoint, rayA, board.getRootBoard());
 		//Check if the result is not null, and a SnappingPeg within 0.2 distance.
 		if(result.getMatch() != null && result.getMatch() instanceof Connector && result.getMatch().getParent() instanceof CompSnappingPeg && result.getDistance() <= 0.2)
@@ -382,7 +382,7 @@ public class RenderPlane3D implements RenderPlane
 			if(!snappingPegB.hasPartner()) //Do not process it further, if it is already connected to somewhere.
 			{
 				//Calculate their angles to each other:
-				Vector3 rayB = snappingPegB.getRotation().inverse().multiply(Vector3.zn);
+				Vector3 rayB = snappingPegB.getAlignmentGlobal().inverse().multiply(Vector3.zn);
 				double angle = MathHelper.angleFromVectors(rayA, rayB);
 				if(angle > 178 && angle < 182)
 				{
@@ -405,8 +405,8 @@ public class RenderPlane3D implements RenderPlane
 						snappingPegA.setPartner(snappingPegB);
 						CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
 						wire.setLength((float) distance);
-						wire.setPosition(snappingPegAConnectionPoint.add(direction.divide(2)));
-						wire.setRotation(alignment);
+						wire.setPositionGlobal(snappingPegAConnectionPoint.add(direction.divide(2)));
+						wire.setAlignmentGlobal(alignment);
 						
 						worldMesh.addComponent(wire, board.getSimulation());
 						
@@ -600,11 +600,11 @@ public class RenderPlane3D implements RenderPlane
 			if(hitpoint.isBoard())
 			{
 				HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
-				hitpointBoard.setNormal(hitpoint.getHitPart().getRotation().inverse().multiply(hitpointBoard.getLocalNormal()).normalize());
+				hitpointBoard.setNormal(hitpoint.getHitPart().getAlignmentGlobal().inverse().multiply(hitpointBoard.getLocalNormal()).normalize());
 			}
 			else //TBI: Currently just assume Y-Pos
 			{
-				hitpointContainer.setNormal(hitpoint.getHitPart().getRotation().inverse().multiply(Vector3.yp).normalize());
+				hitpointContainer.setNormal(hitpoint.getHitPart().getAlignmentGlobal().inverse().multiply(Vector3.yp).normalize());
 			}
 		}
 		
@@ -647,7 +647,7 @@ public class RenderPlane3D implements RenderPlane
 	public double calculateFixRotationOffset(Quaternion newGlobalAlignment, Hitpoint hitpoint)
 	{
 		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
-		FourDirections axes = new FourDirections(hitpoint.isBoard() ? ((HitpointBoard) hitpoint).getLocalNormal() : Vector3.yp, hitpoint.getHitPart().getRotation());
+		FourDirections axes = new FourDirections(hitpoint.isBoard() ? ((HitpointBoard) hitpoint).getLocalNormal() : Vector3.yp, hitpoint.getHitPart().getAlignmentGlobal());
 		
 		//Get the angle, from the new X axis, to an "optimal" X axis.
 		Vector3 newVirtualXAxis = newGlobalAlignment.inverse().multiply(Vector3.xp);
@@ -709,8 +709,8 @@ public class RenderPlane3D implements RenderPlane
 		{
 			label.activate();
 			model.identity();
-			model.translate((float) label.getPosition().getX(), (float) label.getPosition().getY(), (float) label.getPosition().getZ());
-			Matrix rotMat = new Matrix(label.getRotation().createMatrix());
+			model.translate((float) label.getPositionGlobal().getX(), (float) label.getPositionGlobal().getY(), (float) label.getPositionGlobal().getZ());
+			Matrix rotMat = new Matrix(label.getAlignmentGlobal().createMatrix());
 			model.multiply(rotMat);
 			sdfShader.setUniformM4(2, model.getMat());
 			label.getModelHolder().drawTextures();

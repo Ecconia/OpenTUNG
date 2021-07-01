@@ -183,8 +183,8 @@ public class DrawBoard implements Tool
 		int x = boardDrawStartingPoint.getBoardX();
 		int z = boardDrawStartingPoint.getBoardZ();
 		Component newComponent = new CompBoard(parent, x, z);
-		newComponent.setRotation(boardDrawStartingPoint.getAlignment());
-		newComponent.setPosition(boardDrawStartingPoint.getBoardCenterPosition());
+		newComponent.setAlignmentGlobal(boardDrawStartingPoint.getAlignment());
+		newComponent.setPositionGlobal(boardDrawStartingPoint.getBoardCenterPosition());
 		
 		gpuTasks.add((worldRenderer) -> {
 			parent.addChild(newComponent);

@@ -79,9 +79,9 @@ public class EditWindow implements Tool
 			//TBI: Ehh skip the model? (For now yes, the component is very defined in TUNG and LW).
 			Matrix matrix = new Matrix();
 			//Apply global position:
-			Vector3 position = board.getPosition();
+			Vector3 position = board.getPositionGlobal();
 			matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-			Quaternion newAlignment = board.getRotation();
+			Quaternion newAlignment = board.getAlignmentGlobal();
 			matrix.multiply(new Matrix(newAlignment.createMatrix())); //Apply global rotation.
 			//The cube is centered, no translation.
 			matrix.scale((float) board.getX() * 0.15f, 0.075f, (float) board.getZ() * 0.15f); //Just use the right size from the start... At this point in code it always has that size.
@@ -103,8 +103,8 @@ public class EditWindow implements Tool
 			ShaderProgram visibleCubeShader = shaderStorage.getVisibleCubeShader();
 			GenericVAO visibleCube = shaderStorage.getVisibleOpTexCube();
 			ModelHolder model = component.getModelHolder();
-			Vector3 position = component.getPosition();
-			Quaternion alignment = component.getRotation();
+			Vector3 position = component.getPositionGlobal();
+			Quaternion alignment = component.getAlignmentGlobal();
 			
 			visibleCubeShader.use();
 			visibleCubeShader.setUniformM4(1, view);

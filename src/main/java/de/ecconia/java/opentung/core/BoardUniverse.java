@@ -257,7 +257,7 @@ public class BoardUniverse
 			}
 			
 			Vector3 snappingPegAConnectionPoint = snappingPegA.getConnectionPoint();
-			Vector3 rayA = snappingPegA.getRotation().inverse().multiply(Vector3.zn);
+			Vector3 rayA = snappingPegA.getAlignmentGlobal().inverse().multiply(Vector3.zn);
 			RayCastResult result = raycaster.cpuRaycast(snappingPegAConnectionPoint, rayA, rootBoard);
 			
 			//Check if the result is not null, and a SnappingPeg within 0.2 distance.
@@ -267,7 +267,7 @@ public class BoardUniverse
 				if(!snappingPegB.hasPartner()) //Do not process it further, if it is already connected to somewhere.
 				{
 					//Calculate their angles to each other:
-					Vector3 rayB = snappingPegB.getRotation().inverse().multiply(Vector3.zn);
+					Vector3 rayB = snappingPegB.getAlignmentGlobal().inverse().multiply(Vector3.zn);
 					double angle = MathHelper.angleFromVectors(rayA, rayB);
 					if(angle > 178 && angle < 182)
 					{
@@ -286,8 +286,8 @@ public class BoardUniverse
 						snappingPegA.setPartner(snappingPegB);
 						CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
 						wire.setLength((float) distance);
-						wire.setPosition(snappingPegAConnectionPoint.add(direction.divide(2)));
-						wire.setRotation(alignment);
+						wire.setPositionGlobal(snappingPegAConnectionPoint.add(direction.divide(2)));
+						wire.setAlignmentGlobal(alignment);
 						
 						componentsToRender.add(wire);
 						

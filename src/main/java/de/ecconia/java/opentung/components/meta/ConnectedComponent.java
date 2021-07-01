@@ -62,22 +62,22 @@ public abstract class ConnectedComponent extends Component
 	//TODO: Find a better long-term for this code. Currently the peg's get the injection from here.
 	//^This is dependant on how interaction uses the methods below.
 	@Override
-	public void setPosition(Vector3 position)
+	public void setPositionGlobal(Vector3 position)
 	{
-		super.setPosition(position);
+		super.setPositionGlobal(position);
 		for(Connector connector : connectors)
 		{
-			connector.setPosition(position);
+			connector.setPositionGlobal(position);
 		}
 	}
 	
 	@Override
-	public void setRotation(Quaternion rotation)
+	public void setAlignmentGlobal(Quaternion rotation)
 	{
-		super.setRotation(rotation);
+		super.setAlignmentGlobal(rotation);
 		for(Connector connector : connectors)
 		{
-			connector.setRotation(rotation);
+			connector.setAlignmentGlobal(rotation);
 		}
 	}
 	
@@ -115,7 +115,7 @@ public abstract class ConnectedComponent extends Component
 			return null;
 		}
 		
-		Vector3 localPoint = rotation.multiply(absolutePoint.subtract(position)).subtract(getModelHolder().getPlacementOffset());
+		Vector3 localPoint = alignmentGlobal.multiply(absolutePoint.subtract(positionGlobal)).subtract(getModelHolder().getPlacementOffset());
 		for(Connector connector : connectors)
 		{
 			if(connector.contains(localPoint))

@@ -51,12 +51,12 @@ public class WireRayCaster
 		Vector3 c = new Vector3(-0.025, +0.01, -halfLength);
 		Vector3 d = new Vector3(-0.025, -0.01, -halfLength);
 		
-		Quaternion rot = wire.getRotation().inverse();
+		Quaternion rot = wire.getAlignmentGlobal().inverse();
 		ray = rot.multiply(ray);
-		a = rot.multiply(a).add(wire.getPosition());
-		b = rot.multiply(b).add(wire.getPosition());
-		c = rot.multiply(c).add(wire.getPosition());
-		d = rot.multiply(d).add(wire.getPosition());
+		a = rot.multiply(a).add(wire.getPositionGlobal());
+		b = rot.multiply(b).add(wire.getPositionGlobal());
+		c = rot.multiply(c).add(wire.getPositionGlobal());
+		d = rot.multiply(d).add(wire.getPositionGlobal());
 		
 		int dx = ray.getX() < 0 ? 0 : 1;
 		int dy = ray.getY() < 0 ? 0 : 1;
@@ -81,12 +81,12 @@ public class WireRayCaster
 		Vector3 c = new Vector3(-0.025, +0.01, -halfLength);
 		Vector3 d = new Vector3(-0.025, -0.01, -halfLength);
 		
-		Quaternion rot = wire.getRotation().inverse();
+		Quaternion rot = wire.getAlignmentGlobal().inverse();
 		ray = rot.multiply(ray);
-		a = rot.multiply(a).add(wire.getPosition());
-		b = rot.multiply(b).add(wire.getPosition());
-		c = rot.multiply(c).add(wire.getPosition());
-		d = rot.multiply(d).add(wire.getPosition());
+		a = rot.multiply(a).add(wire.getPositionGlobal());
+		b = rot.multiply(b).add(wire.getPositionGlobal());
+		c = rot.multiply(c).add(wire.getPositionGlobal());
+		d = rot.multiply(d).add(wire.getPositionGlobal());
 		
 		int dx = ray.getX() < 0 ? 0 : 1;
 		int dy = ray.getY() < 0 ? 0 : 1;
@@ -220,8 +220,8 @@ public class WireRayCaster
 		CompWireRaw match = null;
 		for(CompWireRaw wire : chunk)
 		{
-			Quaternion wireRotation = wire.getRotation();
-			Vector3 cameraPositionBoardSpace = wireRotation.multiply(camPos.subtract(wire.getPosition()));
+			Quaternion wireRotation = wire.getAlignmentGlobal();
+			Vector3 cameraPositionBoardSpace = wireRotation.multiply(camPos.subtract(wire.getPositionGlobal()));
 			Vector3 cameraRayBoardSpace = wireRotation.multiply(camRay);
 			CubeFull shape = (CubeFull) wire.getModelHolder().getConductors().get(0);
 			Vector3 size = shape.getSize();

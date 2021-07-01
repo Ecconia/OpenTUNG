@@ -84,9 +84,9 @@ public class World3DHelper
 	{
 		//TBI: maybe optimize this a bit more, its quite a lot annoying matrix operations.
 		matrix.identity();
-		Vector3 position = part.getPosition();
+		Vector3 position = part.getPositionGlobal();
 		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-		Matrix rotMat = new Matrix(part.getRotation().createMatrix());
+		Matrix rotMat = new Matrix(part.getAlignmentGlobal().createMatrix());
 		matrix.multiply(rotMat);
 		Vector3 size = cube.getSize();
 		if(cube.getMapper() != null)

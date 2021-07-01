@@ -30,7 +30,7 @@ public abstract class Connector extends Part implements Clusterable
 		super(parent);
 		this.model = model;
 		
-		setRotation(Quaternion.angleAxis(0, Vector3.yp));
+		setAlignmentGlobal(Quaternion.angleAxis(0, Vector3.yp));
 	}
 	
 	@Override
@@ -102,7 +102,7 @@ public abstract class Connector extends Part implements Clusterable
 	{
 		if(type == MeshTypeThing.Conductor)
 		{
-			model.generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getParent().getModelHolder().getPlacementOffset(), type);
+			model.generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, positionGlobal, alignmentGlobal, getParent().getModelHolder().getPlacementOffset(), type);
 		}
 		else
 		{
@@ -122,8 +122,8 @@ public abstract class Connector extends Part implements Clusterable
 			
 			Quaternion rotation = ((CubeOpenRotated) model).getRotation();
 			
-			return getPosition()
-					.add(getParent().getRotation().inverse().multiply(
+			return getPositionGlobal()
+					.add(getParent().getAlignmentGlobal().inverse().multiply(
 							rotation.multiply(
 									getModel().getPosition()
 											.add(connectionOffset))
@@ -141,8 +141,8 @@ public abstract class Connector extends Part implements Clusterable
 			connectionOffset = new Vector3(0, halfHeight * 2.0 * connectionPercentage - halfHeight, 0);
 		}
 		
-		return getPosition().add(
-				getParent().getRotation().inverse().multiply(
+		return getPositionGlobal().add(
+				getParent().getAlignmentGlobal().inverse().multiply(
 						getModel().getPosition().add(connectionOffset).add(
 								getParent().getModelHolder().getPlacementOffset()
 						)

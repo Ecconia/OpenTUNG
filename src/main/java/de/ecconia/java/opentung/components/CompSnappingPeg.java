@@ -67,15 +67,15 @@ public class CompSnappingPeg extends ConnectedComponent
 		if(type == MeshTypeThing.Solid)
 		{
 			//TODO: This is still ungeneric.
-			getModelHolder().getPegModels().get(0).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPosition(), getRotation(), getModelHolder().getPlacementOffset(), type);
+			getModelHolder().getPegModels().get(0).generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, null, getPositionGlobal(), getAlignmentGlobal(), getModelHolder().getPlacementOffset(), type);
 		}
 	}
 	
 	public Vector3 getConnectionPoint()
 	{
 		Vector3 connectionPos = modelHolder.getPlacementOffset().add(new Vector3(0, 0.3 * 0.9, 0)); //Connection point in model
-		connectionPos = getRotation().inverse().multiply(connectionPos); //Rotate connection point to absolute grid
-		connectionPos = connectionPos.add(getPosition()); //Move connection point to absolute grid
+		connectionPos = getAlignmentGlobal().inverse().multiply(connectionPos); //Rotate connection point to absolute grid
+		connectionPos = connectionPos.add(getPositionGlobal()); //Move connection point to absolute grid
 		return connectionPos;
 	}
 	

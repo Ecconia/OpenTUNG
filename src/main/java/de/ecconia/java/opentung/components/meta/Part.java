@@ -8,8 +8,8 @@ import de.ecconia.java.opentung.simulation.SimulationManager;
 public abstract class Part
 {
 	//Main data:
-	protected Quaternion rotation;
-	protected Vector3 position;
+	protected Quaternion alignmentGlobal;
+	protected Vector3 positionGlobal;
 	
 	//Custom data:
 	private Component parent;
@@ -34,24 +34,24 @@ public abstract class Part
 	
 	//Getter/Setter:
 	
-	public void setPosition(Vector3 position)
+	public void setPositionGlobal(Vector3 position)
 	{
-		this.position = position;
+		this.positionGlobal = position;
 	}
 	
-	public Vector3 getPosition()
+	public Vector3 getPositionGlobal()
 	{
-		return position;
+		return positionGlobal;
 	}
 	
-	public void setRotation(Quaternion rotation)
+	public void setAlignmentGlobal(Quaternion rotation)
 	{
-		this.rotation = rotation;
+		this.alignmentGlobal = rotation;
 	}
 	
-	public Quaternion getRotation()
+	public Quaternion getAlignmentGlobal()
 	{
-		return rotation;
+		return alignmentGlobal;
 	}
 	
 	public void setParent(Component parent)

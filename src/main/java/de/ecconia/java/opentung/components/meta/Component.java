@@ -122,14 +122,14 @@ public abstract class Component extends Part
 		{
 			for(Meshable m : getModelHolder().getColorables())
 			{
-				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, positionGlobal, alignmentGlobal, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else if(type == MeshTypeThing.Solid)
 		{
 			for(Meshable m : getModelHolder().getSolid())
 			{
-				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, position, rotation, getModelHolder().getPlacementOffset(), type);
+				((CubeFull) m).generateMeshEntry(this, vertices, verticesOffset, indices, indicesOffset, vertexCounter, null, positionGlobal, alignmentGlobal, getModelHolder().getPlacementOffset(), type);
 			}
 		}
 		else
@@ -200,15 +200,15 @@ public abstract class Component extends Part
 		g = g.add(getModelHolder().getPlacementOffset());
 		h = h.add(getModelHolder().getPlacementOffset());
 		
-		Vector3 position = this.position;
-		a = rotation.inverse().multiply(a).add(position);
-		b = rotation.inverse().multiply(b).add(position);
-		c = rotation.inverse().multiply(c).add(position);
-		d = rotation.inverse().multiply(d).add(position);
-		e = rotation.inverse().multiply(e).add(position);
-		f = rotation.inverse().multiply(f).add(position);
-		g = rotation.inverse().multiply(g).add(position);
-		h = rotation.inverse().multiply(h).add(position);
+		Vector3 position = this.positionGlobal;
+		a = alignmentGlobal.inverse().multiply(a).add(position);
+		b = alignmentGlobal.inverse().multiply(b).add(position);
+		c = alignmentGlobal.inverse().multiply(c).add(position);
+		d = alignmentGlobal.inverse().multiply(d).add(position);
+		e = alignmentGlobal.inverse().multiply(e).add(position);
+		f = alignmentGlobal.inverse().multiply(f).add(position);
+		g = alignmentGlobal.inverse().multiply(g).add(position);
+		h = alignmentGlobal.inverse().multiply(h).add(position);
 		
 		if(mmBox == null)
 		{
@@ -280,8 +280,8 @@ public abstract class Component extends Part
 	public Component copy()
 	{
 		Component copy = getInfo().instance(null);
-		copy.setRotation(rotation);
-		copy.setPosition(position);
+		copy.setAlignmentGlobal(alignmentGlobal);
+		copy.setPositionGlobal(positionGlobal);
 		copy.init();
 		return copy;
 	}

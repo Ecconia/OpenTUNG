@@ -103,7 +103,7 @@ public class CompBoard extends CompContainer implements CustomData, CustomColor
 	{
 		//TODO: This is very ungeneric. Well the model is known.
 		CubeFull shape = (CubeFull) getModelHolder().getSolid().get(0);
-		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, this.color, getPosition(), getRotation(), modelHolder.getPlacementOffset(), type);
+		shape.generateMeshEntry(this, vertices, verticesIndex, indices, indicesIndex, vertexCounter, this.color, getPositionGlobal(), getAlignmentGlobal(), modelHolder.getPlacementOffset(), type);
 	}
 	
 	//### Save/Load ###
@@ -136,8 +136,8 @@ public class CompBoard extends CompContainer implements CustomData, CustomColor
 	public Component copy()
 	{
 		CompBoard copy = new CompBoard(null, x, z);
-		copy.setPosition(position);
-		copy.setRotation(rotation);
+		copy.setPositionGlobal(positionGlobal);
+		copy.setAlignmentGlobal(alignmentGlobal);
 		copy.init(); //Does nothing but better be sure.
 		copy.setColor(color);
 		return copy;

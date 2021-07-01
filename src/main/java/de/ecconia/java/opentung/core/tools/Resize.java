@@ -87,7 +87,7 @@ public class Resize implements Tool
 			//Apply resizing
 			gpuTasks.add((worldRenderer) -> {
 				CompBoard board = resizeData.getBoard();
-				board.setPosition(resizeData.getPosition());
+				board.setPositionGlobal(resizeData.getPosition());
 				board.setSize(resizeData.getBoardX(), resizeData.getBoardZ());
 				board.createOwnBounds(); //The board's own size has changed, update its bounds.
 				board.updateBounds(); //Notify the parents that the bounds of this component changed.
@@ -124,7 +124,7 @@ public class Resize implements Tool
 	{
 		boolean skipHitpoint = false;
 		//Check collision with drag-area:
-		Quaternion alignment = resizeData.getBoard().getRotation();
+		Quaternion alignment = resizeData.getBoard().getAlignmentGlobal();
 		Vector3 position = resizeData.getPosition();
 		
 		//Calculate the camera ray in board space:
@@ -209,7 +209,7 @@ public class Resize implements Tool
 		Matrix matrix = new Matrix();
 		//Apply global position:
 		matrix.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
-		matrix.multiply(new Matrix(board.getRotation().createMatrix())); //Apply global rotation.
+		matrix.multiply(new Matrix(board.getAlignmentGlobal().createMatrix())); //Apply global rotation.
 		//The cube is centered, no translation.
 		matrix.scale((float) x * 0.15f, 0.075f, (float) z * 0.15f);
 		
@@ -238,7 +238,7 @@ public class Resize implements Tool
 		resizeShader.use();
 		resizeShader.setUniformM4(1, view);
 		
-		Matrix parentRotation = new Matrix(board.getRotation().createMatrix());
+		Matrix parentRotation = new Matrix(board.getAlignmentGlobal().createMatrix());
 		
 		Matrix modelMatrix = new Matrix();
 		modelMatrix.translate(

@@ -31,8 +31,8 @@ public class BoardRelationHelper
 //		System.out.println(" Pos Rel: " + child.getPosition().subtract(parent.getPosition()));
 		
 		//Calculate child position and alignment in parent board space:
-		childCenter = parent.getRotation().multiply(child.getPosition().subtract(parent.getPosition()));
-		Quaternion childAlignment = child.getRotation().multiply(parent.getRotation().inverse());
+		childCenter = parent.getAlignmentGlobal().multiply(child.getPositionGlobal().subtract(parent.getPositionGlobal()));
+		Quaternion childAlignment = child.getAlignmentGlobal().multiply(parent.getAlignmentGlobal().inverse());
 		Quaternion childAlignmentInverse = childAlignment.inverse();
 		
 //		System.out.println();
@@ -247,7 +247,7 @@ public class BoardRelationHelper
 		{
 			return null;
 		}
-		return parent.getRotation().inverse().multiply(localParentFaceAxis); //Convert back to global space.
+		return parent.getAlignmentGlobal().inverse().multiply(localParentFaceAxis); //Convert back to global space.
 	}
 	
 	private static boolean almostSame(double a, double b)

@@ -228,9 +228,9 @@ public class GrabCopy implements Tool
 		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 		Component grabbedComponent = grabData.getComponent();
 		
-		Quaternion deltaAlignment = hitpointContainer.getAlignment();
+		Quaternion deltaAlignment = hitpointContainer.getAlignment(); //TODO: In some cases this is null, which causes an NPE. Happened when spam stacking.
 		Vector3 newPosition = hitpointContainer.getPosition();
-		Vector3 oldPosition = grabbedComponent.getPosition();
+		Vector3 oldPosition = grabbedComponent.getPositionGlobal();
 		for(GrabData.WireContainer wireContainer : grabData.getOutgoingWiresWithSides())
 		{
 			CompWireRaw wire = wireContainer.wire;
@@ -255,8 +255,8 @@ public class GrabCopy implements Tool
 			Vector3 position = thatPos.add(direction);
 			
 			CompWireRaw cWire = wire;
-			cWire.setPosition(position);
-			cWire.setRotation(rotation);
+			cWire.setPositionGlobal(position);
+			cWire.setAlignmentGlobal(rotation);
 			cWire.setLength((float) distance * 2f);
 		}
 		for(CompWireRaw wire : grabData.getInternalWires())
@@ -821,7 +821,7 @@ public class GrabCopy implements Tool
 					}
 					
 					//Finished the processing, now apply the grabbing:
-					Quaternion inverse = toBeGrabbed.getRotation().inverse();
+					Quaternion inverse = toBeGrabbed.getAlignmentGlobal().inverse();
 					sharedData.getRenderPlane3D().resetFixPos(inverse.multiply(Vector3.xp), inverse.multiply(Vector3.yp));
 					grabRotation = 0;
 					if(toBeGrabbed instanceof CompBoard)
@@ -847,11 +847,11 @@ public class GrabCopy implements Tool
 	
 	private void alignComponent(Component component, Vector3 oldPosition, Vector3 newPosition, Quaternion deltaRotation)
 	{
-		component.setRotation(component.getRotation().multiply(deltaRotation));
-		Vector3 newPos = component.getPosition().subtract(oldPosition);
+		component.setAlignmentGlobal(component.getAlignmentGlobal().multiply(deltaRotation));
+		Vector3 newPos = component.getPositionGlobal().subtract(oldPosition);
 		newPos = deltaRotation.inverse().multiply(newPos);
 		newPos = newPos.add(newPosition);
-		component.setPosition(newPos);
+		component.setPositionGlobal(newPos);
 	}
 	
 	private double getBoardDistance(Quaternion alignment, CompBoard board)
@@ -1195,7 +1195,7 @@ public class GrabCopy implements Tool
 					}
 					
 					//Finished the processing, now apply the grabbing:
-					Quaternion inverse = componentToCopy.getRotation().inverse();
+					Quaternion inverse = componentToCopy.getAlignmentGlobal().inverse();
 					sharedData.getRenderPlane3D().resetFixPos(inverse.multiply(Vector3.xp), inverse.multiply(Vector3.yp));
 					this.grabRotation = 0;
 					if(componentToCopy instanceof CompBoard)
@@ -1240,7 +1240,7 @@ public class GrabCopy implements Tool
 			if(currentAlignment == null)
 			{
 				//Generate the alignment:
-				currentAlignment = component.getRotation().multiply(absAlignment.inverse());
+				currentAlignment = component.getAlignmentGlobal().multiply(absAlignment.inverse());
 				((GrabContainerData) grabData).setAlignment(currentAlignment);
 			}
 			absAlignment = currentAlignment.multiply(absAlignment);
@@ -1266,7 +1266,7 @@ public class GrabCopy implements Tool
 			HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 			
 			Quaternion absoluteAlignment = getAbsoluteGrabRotation(hitpointContainer);
-			Quaternion relativeAlignment = grabData.getComponent().getRotation().inverse().multiply(absoluteAlignment);
+			Quaternion relativeAlignment = grabData.getComponent().getAlignmentGlobal().inverse().multiply(absoluteAlignment);
 			hitpointContainer.setAlignment(relativeAlignment);
 			
 			//Figure out the base position:
@@ -1280,7 +1280,7 @@ public class GrabCopy implements Tool
 					if(grabData.getComponent() instanceof CompBoard) //Special handling for boards, since it does not use "auto" placement mode as base.
 					{
 						position = placementHelper.middleEither();
-						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+						position = parent.getAlignmentGlobal().inverse().multiply(position).add(parent.getPositionGlobal());
 						
 						boolean isLaying;
 						boolean isSideX = false; //Which the top/bottom is not facing.
@@ -1303,7 +1303,7 @@ public class GrabCopy implements Tool
 								//TODO: This code depends on where the normal of the parent points, instead of the rotation of the child.
 								//Code should work like the one above, the problem is, that the offset has to be applied to either X or Z depending on rotation.
 								Vector3 offset = new Vector3(0, fineBoardOffset, 0); //In parent board space, thus only up/down = Y.
-								offset = parent.getRotation().inverse().multiply(offset);
+								offset = parent.getAlignmentGlobal().inverse().multiply(offset);
 								position = position.add(offset);
 							}
 						}
@@ -1330,7 +1330,7 @@ public class GrabCopy implements Tool
 						}
 						else
 						{
-							position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+							position = parent.getAlignmentGlobal().inverse().multiply(position).add(parent.getPositionGlobal());
 							if(grabData.getComponent() instanceof CompMount)
 							{
 								if(!placementHelper.isSide() && !controller.isControl())
@@ -1348,7 +1348,7 @@ public class GrabCopy implements Tool
 					ModelHolder model = grabData.getComponent().getModelHolder();
 					if(model.canBePlacedOnMounts())
 					{
-						position = parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT));
+						position = parent.getPositionGlobal().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT));
 						if(grabData.getComponent() instanceof CompBoard)
 						{
 							//Apply offsets:
@@ -1367,7 +1367,7 @@ public class GrabCopy implements Tool
 							double z = isLaying || !isSideX ? zBoardOffset : 0;
 							
 							Vector3 offset = new Vector3(x, 0, z);
-							Quaternion absAlignment = grabData.getComponent().getRotation().multiply(relativeAlignment);
+							Quaternion absAlignment = grabData.getComponent().getAlignmentGlobal().multiply(relativeAlignment);
 							offset = absAlignment.inverse().multiply(offset);
 							position = position.add(offset);
 						}
@@ -1424,7 +1424,7 @@ public class GrabCopy implements Tool
 		
 		//Move the component back to the world-origin:
 		Component grabbedComponent = grabData.getComponent();
-		Vector3 oldPosition = grabbedComponent.getPosition();
+		Vector3 oldPosition = grabbedComponent.getPositionGlobal();
 		modelMatrix.translate(
 				(float) -oldPosition.getX(),
 				(float) -oldPosition.getY(),
@@ -1483,11 +1483,11 @@ public class GrabCopy implements Tool
 			sdfShader.setUniformM4(1, view);
 			for(CompLabel label : grabData.getLabels())
 			{
-				Vector3 position = label.getPosition();
+				Vector3 position = label.getPositionGlobal();
 				position = position.subtract(oldPosition);
 				position = newRelativeAlignment.inverse().multiply(position);
 				position = position.add(newPosition);
-				Quaternion alignment = label.getRotation().multiply(newRelativeAlignment);
+				Quaternion alignment = label.getAlignmentGlobal().multiply(newRelativeAlignment);
 				
 				m.identity();
 				m.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
@@ -1521,7 +1521,7 @@ public class GrabCopy implements Tool
 		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 		Vector3 position = hitpointContainer.getPosition();
 		//Construct absolute rotation again...
-		Quaternion rotation = grabbedComponent.getRotation().multiply(hitpointContainer.getAlignment());
+		Quaternion rotation = grabbedComponent.getAlignmentGlobal().multiply(hitpointContainer.getAlignment());
 		
 		invisibleCubeShader.use();
 		invisibleCubeShader.setUniformM4(1, view);

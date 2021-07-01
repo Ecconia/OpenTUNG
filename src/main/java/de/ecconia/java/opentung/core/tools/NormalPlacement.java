@@ -179,8 +179,8 @@ public class NormalPlacement implements Tool
 			}
 			
 			Component newComponent = currentPlaceable.instance(parent);
-			newComponent.setRotation(hitpointContainer.getAlignment());
-			newComponent.setPosition(hitpointContainer.getPosition());
+			newComponent.setAlignmentGlobal(hitpointContainer.getAlignment());
+			newComponent.setPositionGlobal(hitpointContainer.getPosition());
 			newComponent.init(); //Initializes components such as the ThroughPeg (needs to be called after position is set). TBI: Does it?
 			newComponent.initClusters(); //Creates clusters for connectors of the component.
 			
@@ -228,14 +228,14 @@ public class NormalPlacement implements Tool
 					HitpointBoard hitpointBoard = (HitpointBoard) hitpoint;
 					OnBoardPlacementHelper helper = new OnBoardPlacementHelper((CompBoard) parent, hitpointBoard.getLocalNormal(), hitpointBoard.getCollisionPointBoardSpace());
 					Vector3 collisionPointBoardSpace = helper.middleEither();
-					hitpointContainer.setPosition(parent.getRotation().inverse().multiply(collisionPointBoardSpace)
-							.add(parent.getPosition())
+					hitpointContainer.setPosition(parent.getAlignmentGlobal().inverse().multiply(collisionPointBoardSpace)
+							.add(parent.getPositionGlobal())
 							.add(hitpointContainer.getNormal().multiply(0.075))
 					);
 				}
 				else //Mount:
 				{
-					hitpointContainer.setPosition(parent.getPosition()
+					hitpointContainer.setPosition(parent.getPositionGlobal()
 							.add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT + 0.075D)));
 				}
 			}
@@ -278,7 +278,7 @@ public class NormalPlacement implements Tool
 					}
 					else
 					{
-						position = parent.getRotation().inverse().multiply(position).add(parent.getPosition());
+						position = parent.getAlignmentGlobal().inverse().multiply(position).add(parent.getPositionGlobal());
 						if(currentPlaceable == CompMount.info)
 						{
 							if(!placementHelper.isSide() && !sharedData.getRenderPlane3D().getController().isControl())
@@ -308,7 +308,7 @@ public class NormalPlacement implements Tool
 									//TODO: This code depends on where the normal of the parent points, instead of the rotation of the child.
 									//Code should work like the one above, the problem is, that the offset has to be applied to either X or Z depending on rotation.
 									Vector3 offset = new Vector3(0, fineBoardOffset, 0); //In parent board space, thus only up/down = Y.
-									offset = parent.getRotation().inverse().multiply(offset);
+									offset = parent.getAlignmentGlobal().inverse().multiply(offset);
 									position = position.add(offset);
 								}
 							}
@@ -327,11 +327,11 @@ public class NormalPlacement implements Tool
 						{
 							extraY += 0.075;
 						}
-						hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT + extraY)));
+						hitpointContainer.setPosition(parent.getPositionGlobal().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT + extraY)));
 					}
 					else if(model.canBePlacedOnMounts())
 					{
-						hitpointContainer.setPosition(parent.getPosition().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT)));
+						hitpointContainer.setPosition(parent.getPositionGlobal().add(hitpointContainer.getNormal().multiply(CompMount.MOUNT_HEIGHT)));
 					}
 					else
 					{
