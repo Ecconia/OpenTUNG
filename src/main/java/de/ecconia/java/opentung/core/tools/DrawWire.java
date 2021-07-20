@@ -162,14 +162,19 @@ public class DrawWire implements Tool
 		}
 		
 		Connector secondConnector = this.secondConnector;
+		boolean isMWP = isChoosingSecondGroup || isControl;
 		
 		//If looking at a connector, apply that connector:
 		if(!hitpoint.isEmpty() && hitpoint.getHitPart() instanceof Connector)
 		{
 			secondConnector = (Connector) hitpoint.getHitPart();
 		}
+		else if(!isMWP)
+		{
+			//Allow aborting, thus set the second connector to null:
+			secondConnector = null;
+		}
 		
-		boolean isMWP = isChoosingSecondGroup || isControl;
 		if(secondConnector == this.secondConnector && isMWP == frameData.isMWP() && skipAmount == frameData.getSkipAmount() && flipSecondaryGroup == frameData.isFlipSecondaryGroup())
 		{
 			if(isControl != frameData.isControl())
