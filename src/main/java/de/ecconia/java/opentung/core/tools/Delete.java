@@ -227,7 +227,7 @@ public class Delete implements Tool
 					toBeDeleted.setParent(parent);
 					return false;
 				}
-				return true;
+				return false;
 			}
 			return null;
 		}

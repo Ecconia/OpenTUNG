@@ -46,16 +46,21 @@ public class EditWindow implements Tool
 			if(hitPart instanceof CustomColor)
 			{
 				this.component = (Component) hitPart;
-				sharedData.getGpuTasks().add((worldRenderer) -> {
-					worldRenderer.getWorldMesh().removeComponent(component, sharedData.getBoardUniverse().getSimulation());
-					sharedData.getRenderPlane2D().openCustomColorWindow(this, (CustomColor) component);
-					worldRenderer.toolReady();
-				});
-				return true;
+				return true; //Causes activateNow() to be called.
 			}
 			return false;
 		}
 		return null;
+	}
+	
+	@Override
+	public void activateNow(Hitpoint hitpoint)
+	{
+		sharedData.getGpuTasks().add((worldRenderer) -> {
+			worldRenderer.getWorldMesh().removeComponent(component, sharedData.getBoardUniverse().getSimulation());
+			sharedData.getRenderPlane2D().openCustomColorWindow(this, (CustomColor) component);
+			worldRenderer.toolReady();
+		});
 	}
 	
 	public void guiClosed()

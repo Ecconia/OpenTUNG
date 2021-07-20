@@ -49,22 +49,7 @@ public class Resize implements Tool
 			if(hitpoint.getHitPart() instanceof CompBoard)
 			{
 				System.out.println("Starting board resizing.");
-				gpuTasks.add((worldRenderer) -> {
-					CompBoard board = (CompBoard) hitpoint.getHitPart();
-					resizeData = new ResizeData(board);
-					if(!resizeData.isResizeAllowed())
-					{
-						System.out.println("Cannot resize this board, no side resizeable.");
-						resizeData = null;
-					}
-					else
-					{
-						worldMesh.removeComponent(board, simulation);
-					}
-					
-					worldRenderer.toolReady(); //Enable render and input thread access.
-				});
-				return true;
+				return true; //Causes activateNow() to be called.
 			}
 			else
 			{
@@ -74,6 +59,26 @@ public class Resize implements Tool
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public void activateNow(Hitpoint hitpoint)
+	{
+		gpuTasks.add((worldRenderer) -> {
+			CompBoard board = (CompBoard) hitpoint.getHitPart();
+			resizeData = new ResizeData(board);
+			if(!resizeData.isResizeAllowed())
+			{
+				System.out.println("Cannot resize this board, no side resizeable.");
+				resizeData = null;
+			}
+			else
+			{
+				worldMesh.removeComponent(board, simulation);
+			}
+			
+			worldRenderer.toolReady(); //Enable render and input thread access.
+		});
 	}
 	
 	@Override

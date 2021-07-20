@@ -128,13 +128,18 @@ public class DrawWire implements Tool
 			isChoosingSecondGroup = false;
 			flipSecondaryGroup = false;
 			this.skipAmount = emptyFrame.getSkipAmount(); //We do not skip when starting a new group.
-			gpuTasks.add((worldRenderer) -> {
-				worldRenderer.toolReady();
-			});
 			
-			return true;
+			return true; //Causes activateNow() to be called.
 		}
 		return null;
+	}
+	
+	@Override
+	public void activateNow(Hitpoint hitpoint)
+	{
+		gpuTasks.add((worldRenderer) -> {
+			worldRenderer.toolReady();
+		});
 	}
 	
 	@Override

@@ -78,6 +78,11 @@ public class GrabCopy implements Tool
 	private double zBoardOffset;
 	private double grabRotation;
 	
+	//ActivationNow transfer values:
+	private boolean isGrabbing;
+	private Component component;
+	private CompContainer parent;
+	
 	public GrabCopy(SharedData sharedData)
 	{
 		this.sharedData = sharedData;
@@ -111,14 +116,29 @@ public class GrabCopy implements Tool
 			this.hitpoint = hitpoint;
 			if(control)
 			{
+				isGrabbing = false;
 				return copy(component);
 			}
 			else
 			{
+				isGrabbing = true;
 				return grab(component);
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public void activateNow(Hitpoint hitpoint)
+	{
+		if(isGrabbing)
+		{
+			grabImpl();
+		}
+		else
+		{
+			copyImpl();
+		}
 	}
 	
 	//Input events:
@@ -604,7 +624,7 @@ public class GrabCopy implements Tool
 	
 	public boolean grab(Component toBeGrabbed)
 	{
-		CompContainer parent = (CompContainer) toBeGrabbed.getParent();
+		parent = (CompContainer) toBeGrabbed.getParent();
 		if(parent == null)
 		{
 			System.out.println("Can't grab component, since its either the root board or soon deleted.");
@@ -613,6 +633,16 @@ public class GrabCopy implements Tool
 		//Setting the parent to null is a thread-safe operation. It has to be. Doing this declares this component as "busy", means no other interaction with it should be possible.
 		toBeGrabbed.setParent(null);
 		
+		component = toBeGrabbed;
+		return true; //Causes activateNow() to be called.
+	}
+	
+	private void grabImpl()
+	{
+		CompContainer parent = this.parent;
+		this.parent = null;
+		Component toBeGrabbed = this.component;
+		this.component = null;
 		boolean isContainer = toBeGrabbed instanceof CompContainer;
 		GrabData newGrabData;
 		if(isContainer)
@@ -842,7 +872,6 @@ public class GrabCopy implements Tool
 				});
 			});
 		});
-		return true;
 	}
 	
 	private void alignComponent(Component component, Vector3 oldPosition, Vector3 newPosition, Quaternion deltaRotation)
@@ -897,7 +926,14 @@ public class GrabCopy implements Tool
 		}
 		
 		//No need to do the parent check, since we want to copy the component and not change it.
-		
+		this.component = componentToCopy;
+		return true; //Causes activateNow() to be called.
+	}
+	
+	private void copyImpl()
+	{
+		Component componentToCopy = this.component;
+		this.component = null;
 		gpuTasks.add((unused) -> {
 			boolean isContainer = componentToCopy instanceof CompContainer;
 			GrabData grabData;
@@ -1216,7 +1252,6 @@ public class GrabCopy implements Tool
 				});
 			});
 		});
-		return true;
 	}
 	
 	public Quaternion getAbsoluteGrabRotation(HitpointContainer hitpoint)

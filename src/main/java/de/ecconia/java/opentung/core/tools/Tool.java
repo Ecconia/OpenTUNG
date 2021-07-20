@@ -19,6 +19,10 @@ public interface Tool
 		return null;
 	}
 	
+	default void activateNow(Hitpoint hitpoint)
+	{
+	}
+	
 	//Keybindings:
 	
 	/**

@@ -56,17 +56,21 @@ public class DrawBoard implements Tool
 				return null;
 			}
 			
-			//TODO: Proper abort of the placement mode, once started.
-			//Only called when looking at a container.
-			gpuTasks.add((worldRenderer) -> {
-				//Start dragging until end.
-				boardDrawStartingPoint = hitpointContainer;
-				worldRenderer.toolReady();
-			});
-			
-			return true;
+			return true; //Causes activateNow() to be called.
 		}
 		return null;
+	}
+	
+	@Override
+	public void activateNow(Hitpoint hitpoint)
+	{
+		//TODO: Proper abort of the placement mode, once started.
+		//Only called when looking at a container.
+		gpuTasks.add((worldRenderer) -> {
+			//Start dragging until end.
+			boardDrawStartingPoint = (HitpointContainer) hitpoint;
+			worldRenderer.toolReady();
+		});
 	}
 	
 	@Override
