@@ -163,6 +163,7 @@ public class RenderPlane3D implements RenderPlane
 					toolDebug("Pre-Activating tool: " + tool.getClass().getSimpleName());
 					acceptInputs = false;
 					primaryToolReserve = tool; //Reserve this tool.
+					tool.activateNow(hitpoint);
 				}
 				else
 				{
