@@ -214,6 +214,10 @@ public class ClusterHighlighter
 	//Simulation thread.
 	public void clustersChanged(List<Cluster> clusters)
 	{
+		if(startingPoint == null)
+		{
+			return; //There is currently nothing highlighted.
+		}
 		//If null, regenerate cluster-highlighter.
 		//Else, check if affected and regenerate if so.
 		boolean regenerate = true;
