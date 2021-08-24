@@ -53,8 +53,6 @@ public class ColorSwitcher
 			new Color(52, 24, 0),
 	};
 	
-	Object a = new java.awt.Color(255, 2, 1);
-	
 	private final float windowWidth;
 	private final float windowHeight;
 	

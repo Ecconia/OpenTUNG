@@ -211,6 +211,14 @@ public class InputProcessor implements Controller
 		GLFW.glfwSetInputMode(windowID, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
 		activeController = controller2D;
 		receiver.setIntervalMode(false);
+		//Fix the absolute mouse position, since while the cursor was disabled, the numbers become incredible high.
+		{
+			double[] cursorPositionX = {0.0};
+			double[] cursorPositionY = {0.0};
+			GLFW.glfwGetCursorPos(windowID, cursorPositionX, cursorPositionY);
+			latestX = (int) cursorPositionX[0];
+			latestY = (int) cursorPositionY[0];
+		}
 	}
 	
 	public Controller2D get2DController()
