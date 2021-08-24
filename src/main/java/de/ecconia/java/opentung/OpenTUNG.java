@@ -56,6 +56,18 @@ public class OpenTUNG
 			JOptionPane.showMessageDialog(null, threadCrashMessage + " See console for stacktrace, please report it.");
 		});
 		
+		{
+			String arch = System.getProperty("sun.arch.data.model");
+			if(!"64".equals(arch))
+			{
+				System.out.println("### WARNING! ###");
+				System.out.println("Not running JVM 64-bit version. Arch reported was: '" + arch + "'");
+				System.out.println(" OpenTUNG might crash, cause there are only 64-bit OpenGL natives provided.");
+				System.out.println(" Please run OpenTUNG with a 64-bit JVM or build it yourself with the 32-bit natives.");
+				System.out.println("### WARNING! ###");
+			}
+		}
+		
 		bootstrap = new OpenTUNGBootstrap(args);
 		if(bootstrap.getFinalTarget() == OpenTUNGBootstrap.FinalTarget.Version)
 		{
