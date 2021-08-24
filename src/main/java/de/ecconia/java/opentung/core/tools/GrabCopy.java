@@ -532,6 +532,7 @@ public class GrabCopy implements Tool
 		}
 		simulation.updateJobNextTickThreadSafe((unused) -> {
 			Map<ConductorMeshBag, List<ConductorMeshBag.ConductorMBUpdate>> updates = new HashMap<>();
+			List<Cluster> modifiedClusters = null;
 			boolean isContainer = grabData instanceof GrabContainerData;
 			if(!isContainer) //Has to be done first before all cluster modifications. Delete only removes clusters.
 			{
@@ -539,18 +540,18 @@ public class GrabCopy implements Tool
 				if(grabData.getComponent() instanceof ConnectedComponent)
 				{
 					List<Connector> connectors = ((ConnectedComponent) grabData.getComponent()).getConnectors();
-					List<Cluster> modifiedClusters = new ArrayList<>(connectors.size());
+					modifiedClusters = new ArrayList<>(connectors.size());
 					for(Connector connector : connectors)
 					{
 						modifiedClusters.add(connector.getCluster());
 					}
-					sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
 				}
 			}
 			//TBI: Removing wires first? Or just all blots/pegs?
-			for(Wire wire : grabData.getOutgoingWires())
+			for(CompWireRaw wire : grabData.getOutgoingWires())
 			{
 				//Outgoing wires:
+				wire.setParent(null);
 				ClusterHelper.removeWire(simulation, wire, updates);
 			}
 			if(isContainer)
@@ -558,10 +559,12 @@ public class GrabCopy implements Tool
 				GrabContainerData grabContainerData = (GrabContainerData) grabData;
 				for(CompSnappingWire wire : grabContainerData.getInternalSnappingWires())
 				{
+					wire.setParent(null);
 					ClusterHelper.removeWire(simulation, wire, updates);
 				}
 				for(CompWireRaw wire : grabContainerData.getInternalWires())
 				{
+					wire.setParent(null);
 					ClusterHelper.removeWire(simulation, wire, updates);
 				}
 			}
@@ -580,6 +583,8 @@ public class GrabCopy implements Tool
 					}
 				}
 			}
+			//Now that all grab-deleted components have no parent and all clusters are taken apart, regenerate the highlighted cluster if required:
+			sharedData.getRenderPlane3D().clustersChanged(modifiedClusters);
 			
 			gpuTasks.add((worldRenderer) -> {
 				worldRenderer.clustersBackInPlace(); //Although possibly heavily modified...
