@@ -249,6 +249,16 @@ public class GrabCopy implements Tool
 		Component grabbedComponent = grabData.getComponent();
 		
 		Quaternion deltaAlignment = hitpointContainer.getAlignment(); //TODO: In some cases this is null, which causes an NPE. Happened when spam stacking.
+		//Round the rotation before placement, prevents horrible (deforming) issues:
+		{
+			double realAngle = Math.acos(deltaAlignment.getA());
+			Vector3 realVector = deltaAlignment.getV().divide(Math.sin(realAngle));
+			deltaAlignment = Quaternion.angleAxis(
+					Math.round(Math.toDegrees(realAngle) * 100.0) / 100.0,
+					realVector.normalize()
+			);
+		}
+		
 		Vector3 newPosition = hitpointContainer.getPosition();
 		Vector3 oldPosition = grabbedComponent.getPositionGlobal();
 		for(GrabData.WireContainer wireContainer : grabData.getOutgoingWiresWithSides())
