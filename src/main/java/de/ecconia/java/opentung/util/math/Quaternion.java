@@ -27,7 +27,7 @@ public class Quaternion
 	
 	public static Quaternion angleAxis(double angle, Vector3 axis)
 	{
-		angle = angle / 360D * Math.PI;
+		angle = angle * Math.PI / 360D;
 		return new Quaternion(
 				Math.cos(angle),
 				axis.multiply(Math.sin(angle))

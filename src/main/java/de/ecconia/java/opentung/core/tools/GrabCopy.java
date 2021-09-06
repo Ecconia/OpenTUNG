@@ -251,13 +251,14 @@ public class GrabCopy implements Tool
 		Quaternion deltaAlignment = hitpointContainer.getAlignment(); //TODO: In some cases this is null, which causes an NPE. Happened when spam stacking.
 		//Round the rotation before placement, prevents horrible (deforming) issues:
 		{
-			double realAngle = Math.acos(deltaAlignment.getA());
-			double divisor = Math.sin(realAngle);
+			double realAngleHalf = Math.acos(deltaAlignment.getA());
+			double divisor = Math.sin(realAngleHalf);
 			if(divisor != 0) //Do not round an sin(angle) of 0, causes division by 0 -> NaN
 			{
 				Vector3 realVector = deltaAlignment.getV().divide(divisor);
 				deltaAlignment = Quaternion.angleAxis(
-						Math.round(Math.toDegrees(realAngle) * 100.0) / 100.0,
+						//The real angle is actually always with *2.0, but for optimization reasons it has been moved down here.
+						Math.round(Math.toDegrees(realAngleHalf * 2.0) * 100.0) / 100.0,
 						realVector.normalize()
 				);
 			}
