@@ -252,11 +252,14 @@ public class GrabCopy implements Tool
 		//Round the rotation before placement, prevents horrible (deforming) issues:
 		{
 			double realAngle = Math.acos(deltaAlignment.getA());
-			Vector3 realVector = deltaAlignment.getV().divide(Math.sin(realAngle));
-			deltaAlignment = Quaternion.angleAxis(
-					Math.round(Math.toDegrees(realAngle) * 100.0) / 100.0,
-					realVector.normalize()
-			);
+			if(realAngle > 0.00000000000001 || realAngle < -0.00000000000001) //Do not round an angle close to 0, causes division by 0 -> NaN
+			{
+				Vector3 realVector = deltaAlignment.getV().divide(Math.sin(realAngle));
+				deltaAlignment = Quaternion.angleAxis(
+						Math.round(Math.toDegrees(realAngle) * 100.0) / 100.0,
+						realVector.normalize()
+				);
+			}
 		}
 		
 		Vector3 newPosition = hitpointContainer.getPosition();
