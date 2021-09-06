@@ -9,6 +9,7 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.CustomData;
 import de.ecconia.java.opentung.components.meta.ModelBuilder;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
+import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSide;
 import de.ecconia.java.opentung.components.meta.PlacementSettingBoardSquare;
@@ -49,8 +50,9 @@ public class CompLabel extends Component implements CustomData
 	
 	//### Non-Static ###
 	
-	private String text;
-	private float fontSize;
+	//Initialize these values, needed when a new component is created.
+	private String text = ""; //TODO: Default text is still wrong/missing.
+	private float fontSize = 3.0f; //TODO: Default is unknown right now.
 	
 	private TextureWrapper texture;
 	
@@ -79,23 +81,27 @@ public class CompLabel extends Component implements CustomData
 		return fontSize;
 	}
 	
+	//### Texture management: ###
+	//All methods in this section are render thread exclusive!
+	
 	public void activate()
 	{
-		texture.activate();
-	}
-	
-	public void setTexture(TextureWrapper texture)
-	{
-		this.texture = texture;
-	}
-	
-	public void updateTexture(TextureWrapper texture)
-	{
-		if(this.texture == null)
+		if(texture != null) //If this gets called, something went horribly wrong.
 		{
-			//Has already been removed by user!
-			//TODO: Do more properly. It might have not been uploaded at this point.
-			texture.unload();
+			texture.activate();
+		}
+	}
+	
+	public void setTexture(Component rootBoard, TextureWrapper texture)
+	{
+		//Unload any previous texture, cause it will be overwritten now:
+		unload();
+		//Check if this component got deleted, if so, do not apply this texture:
+		Part rootParent = getRootParent();
+		if(rootParent != rootBoard)
+		{
+			//Label is deleted: Do nothing more.
+			texture.unload(); //Texture is no longer used here, decrement its internal counter (if enabled).
 			return;
 		}
 		
@@ -106,11 +112,10 @@ public class CompLabel extends Component implements CustomData
 	{
 		if(texture == null)
 		{
-			System.out.println("[Debug] Texture of label is null, might be cause its placed without text.");
 			return;
 		}
 		texture.unload();
-		this.texture = null; //Reset texture.
+		texture = null; //Reset texture.
 	}
 	
 	public boolean hasTexture()
@@ -154,7 +159,11 @@ public class CompLabel extends Component implements CustomData
 		CompLabel copy = (CompLabel) super.copy();
 		copy.setText(text);
 		copy.setFontSize(fontSize);
-		copy.texture = texture.copy();
+		TextureWrapper texture = this.texture; //Make a copy, to prevent NPE by thread fighting.
+		if(texture != null) //Labels without any text, have no texture (to render).
+		{
+			copy.texture = texture.copy();
+		}
 		return copy;
 	}
 }

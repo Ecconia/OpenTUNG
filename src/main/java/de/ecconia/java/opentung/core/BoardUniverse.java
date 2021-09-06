@@ -315,7 +315,10 @@ public class BoardUniverse
 		
 		if(component instanceof CompLabel)
 		{
-			labelsToRender.add((CompLabel) component);
+			if(!((CompLabel) component).getText().isEmpty())
+			{
+				labelsToRender.add((CompLabel) component);
+			}
 			return;
 		}
 		

@@ -204,6 +204,7 @@ public class Delete implements Tool
 							}
 							if(component instanceof CompLabel)
 							{
+								//Assume there is a texture, code can handle that.
 								((CompLabel) component).unload();
 								board.getLabelsToRender().remove(component);
 							}

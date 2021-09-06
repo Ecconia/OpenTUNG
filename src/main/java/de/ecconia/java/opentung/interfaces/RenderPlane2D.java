@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.OpenTUNG;
+import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.meta.CustomColor;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
@@ -11,6 +12,7 @@ import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.interfaces.windows.ColorSwitcher;
 import de.ecconia.java.opentung.interfaces.windows.ComponentList;
 import de.ecconia.java.opentung.interfaces.windows.Hotbar;
+import de.ecconia.java.opentung.interfaces.windows.LabelEditor;
 import de.ecconia.java.opentung.interfaces.windows.PauseMenu;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
@@ -35,10 +37,12 @@ public class RenderPlane2D implements RenderPlane
 	private ComponentList componentList;
 	private PauseMenu pauseMenu;
 	private ColorSwitcher colorSwitcher;
+	private LabelEditor labelEditor;
 	
 	private boolean showComponentList;
 	private boolean showPauseMenu;
 	private boolean showColorSwitcher;
+	private boolean showLabelEditor;
 	
 	public long vg;
 	
@@ -88,10 +92,12 @@ public class RenderPlane2D implements RenderPlane
 		});
 		pauseMenu = new PauseMenu(this);
 		colorSwitcher = new ColorSwitcher(this);
+		labelEditor = new LabelEditor(this);
 		
 		text.createAtlas();
 		
 		pauseMenu.setup();
+		labelEditor.setup();
 		
 		//Only set this one if this plane is ready, we don't want to receive input events before here.
 		inputHandler.setController(new Controller2D(this));
@@ -127,9 +133,13 @@ public class RenderPlane2D implements RenderPlane
 		{
 			colorSwitcher.render();
 		}
+		if(showLabelEditor)
+		{
+			labelEditor.renderFrame();
+		}
 		NanoVG.nvgEndFrame(vg);
 		
-		//Restore everything, cause dunno.
+		//Restore everything, cause probably changed by NanoVG - now our code takes control again.
 		OpenTUNG.setOpenGLMode();
 		
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
@@ -142,7 +152,10 @@ public class RenderPlane2D implements RenderPlane
 		{
 			pauseMenu.renderDecor(getSharedData().getShaderStorage());
 		}
-		
+		if(showLabelEditor)
+		{
+			labelEditor.renderDecor(getSharedData().getShaderStorage());
+		}
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
 	
@@ -197,6 +210,13 @@ public class RenderPlane2D implements RenderPlane
 		showColorSwitcher = true;
 	}
 	
+	public void openLabelEditWindow(EditWindow editWindow, CompLabel component)
+	{
+		inputHandler.switchTo2D();
+		labelEditor.setComponent(editWindow, component);
+		showLabelEditor = true;
+	}
+	
 	public boolean closeColorSwitcher()
 	{
 		if(showColorSwitcher)
@@ -208,9 +228,18 @@ public class RenderPlane2D implements RenderPlane
 		return false;
 	}
 	
+	public void closeLabelEditor()
+	{
+		if(showLabelEditor)
+		{
+			showLabelEditor = false;
+			labelEditor.close();
+		}
+	}
+	
 	public boolean hasWindowOpen()
 	{
-		return showComponentList || showPauseMenu || showColorSwitcher;
+		return showComponentList || showPauseMenu || showColorSwitcher || showLabelEditor;
 	}
 	
 	public void closeWindows()
@@ -225,6 +254,11 @@ public class RenderPlane2D implements RenderPlane
 		{
 			colorSwitcher.close();
 			showColorSwitcher = false;
+		}
+		if(showLabelEditor)
+		{
+			showLabelEditor = false;
+			labelEditor.close();
 		}
 	}
 	

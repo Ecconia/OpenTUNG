@@ -172,6 +172,7 @@ public class OpenTUNG
 			
 			SWindowWrapper window = new SWindowWrapper(initialWidth, initialHeight, "OpenTUNG FPS: ? | TPS: ? | avg. UPT: ? | " + fileName);
 			inputHandler = new InputProcessor(window.getID());
+			sharedData.setWindow(window);
 			
 			//Has to be done now, since before here scancode resolving does not work.
 			new KeybindingsIO(bootstrap.getKeybindingFile(), watcher);

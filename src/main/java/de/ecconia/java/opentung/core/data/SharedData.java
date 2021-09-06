@@ -5,6 +5,7 @@ import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.structs.GPUTask;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
+import de.ecconia.java.opentung.libwrap.SWindowWrapper;
 import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
 
@@ -19,6 +20,7 @@ public class SharedData
 	private boolean simulationLoaded;
 	private ShaderStorage shaderStorage;
 	private int lastFPS;
+	private SWindowWrapper window;
 	
 	private final BoardUniverse boardUniverse;
 	
@@ -126,5 +128,15 @@ public class SharedData
 	public int getFPS()
 	{
 		return lastFPS;
+	}
+	
+	public void setWindow(SWindowWrapper window)
+	{
+		this.window = window;
+	}
+	
+	public SWindowWrapper getWindow()
+	{
+		return window;
 	}
 }

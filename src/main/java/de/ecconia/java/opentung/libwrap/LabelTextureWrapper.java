@@ -24,6 +24,7 @@ public class LabelTextureWrapper extends TextureWrapper
 		return new LabelTextureWrapper(image, usages, ColorInput.Binary, GL30.GL_REPEAT, GL30.GL_LINEAR, GL30.GL_LINEAR);
 	}
 	
+	//If null, this texture cannot be unloaded.
 	private Integer usages;
 	
 	private LabelTextureWrapper(BufferedImage image, Integer usages, ColorInput input, int wrapTypeGL, int nearFilterGL, int farFilterGL)
@@ -33,37 +34,23 @@ public class LabelTextureWrapper extends TextureWrapper
 	}
 	
 	@Override
-	public void upload()
-	{
-		if(usages != null && usages == 0)
-		{
-			//The Labels using this texture was already deleted. Do not upload this texture.
-			return;
-		}
-		super.upload();
-		//TBI: While uploading the id is already set, so there is a small time window where it could be deleted while it is still uploading. Handle that!
-	}
-	
-	@Override
 	public void unload()
 	{
-		if(usages != null)
+		if(usages == null)
 		{
-			usages--;
-			if(usages != 0)
-			{
-				return;
-			}
+			return; //Texture cannot be unloaded.
 		}
 		
-		if(id == 0)
+		usages--;
+		if(usages != 0)
 		{
-			System.out.println("WARNING: Deleted texture before it was fully uploaded to GPU. Might cause it to not being unloaded properly.");
 			return;
 		}
-		GL30.glDeleteTextures(id);
+		
+		super.unload();
 	}
 	
+	//TODO: This should be called from the render thread too... 'usages' is not thread-safe. (Or just wait, until the refactoring for text is done).
 	@Override
 	public TextureWrapper copy()
 	{

@@ -440,6 +440,7 @@ public class GrabCopy implements Tool
 			{
 				for(CompLabel label : grabData.getLabels())
 				{
+					//Unload the copied texture:
 					label.unload();
 				}
 				for(Component comp : grabData.getComponents())
@@ -612,6 +613,7 @@ public class GrabCopy implements Tool
 					secondaryMesh.removeComponent(component, simulation);
 					if(component instanceof CompLabel)
 					{
+						//Unload the texture, assuming there is one - code handles that.
 						((CompLabel) component).unload();
 					}
 				}

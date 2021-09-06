@@ -438,7 +438,7 @@ public class RenderPlane3D implements RenderPlane
 		CompLabel.initGL();
 		CompPanelLabel.initGL();
 		System.out.println("Starting label generation.");
-		labelToolkit.startProcessing(gpuTasks, board.getLabelsToRender());
+		labelToolkit.startProcessing(board.getRootBoard(), gpuTasks, board.getLabelsToRender());
 		
 		System.out.println("Broken wires rendered: " + board.getBrokenWires().size());
 		if(!board.getBrokenWires().isEmpty())
@@ -786,6 +786,11 @@ public class RenderPlane3D implements RenderPlane
 	public WireRayCaster getWireRayCaster()
 	{
 		return wireRayCaster;
+	}
+	
+	public LabelToolkit getLabelToolkit()
+	{
+		return labelToolkit;
 	}
 	
 	public void resetFixPos(Vector3 x, Vector3 y)

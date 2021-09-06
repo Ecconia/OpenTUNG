@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.core.tools;
 
 import de.ecconia.java.opentung.components.CompBoard;
+import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -48,6 +49,11 @@ public class EditWindow implements Tool
 				this.component = (Component) hitPart;
 				return true; //Causes activateNow() to be called.
 			}
+			if(hitPart instanceof CompLabel)
+			{
+				this.component = (Component) hitPart;
+				return true;
+			}
 			return false;
 		}
 		return null;
@@ -56,18 +62,31 @@ public class EditWindow implements Tool
 	@Override
 	public void activateNow(Hitpoint hitpoint)
 	{
-		sharedData.getGpuTasks().add((worldRenderer) -> {
-			worldRenderer.getWorldMesh().removeComponent(component, sharedData.getBoardUniverse().getSimulation());
-			sharedData.getRenderPlane2D().openCustomColorWindow(this, (CustomColor) component);
-			worldRenderer.toolReady();
-		});
+		if(component instanceof CustomColor)
+		{
+			sharedData.getGpuTasks().add((worldRenderer) -> {
+				worldRenderer.getWorldMesh().removeComponent(component, sharedData.getBoardUniverse().getSimulation());
+				sharedData.getRenderPlane2D().openCustomColorWindow(this, (CustomColor) component);
+				worldRenderer.toolReady();
+			});
+		}
+		else //Label
+		{
+			sharedData.getGpuTasks().add((worldRenderer) -> {
+				sharedData.getRenderPlane2D().openLabelEditWindow(this, (CompLabel) component);
+				worldRenderer.toolReady();
+			});
+		}
 	}
 	
 	public void guiClosed()
 	{
 		sharedData.getRenderPlane3D().toolStopInputs();
 		sharedData.getGpuTasks().add((worldRenderer) -> {
-			worldRenderer.getWorldMesh().addComponent(component, sharedData.getBoardUniverse().getSimulation());
+			if(component instanceof CustomColor)
+			{
+				worldRenderer.getWorldMesh().addComponent(component, sharedData.getBoardUniverse().getSimulation());
+			}
 			worldRenderer.toolDisable();
 		});
 	}
@@ -75,6 +94,11 @@ public class EditWindow implements Tool
 	@Override
 	public void renderWorld(float[] view)
 	{
+		if(component instanceof CompLabel)
+		{
+			return; //Do nothing, only the LabelEditor window does things.
+		}
+		
 		ShaderStorage shaderStorage = sharedData.getShaderStorage();
 		//Render the removed component:
 		if(component instanceof CompBoard)

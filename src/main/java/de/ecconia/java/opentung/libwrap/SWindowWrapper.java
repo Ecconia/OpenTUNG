@@ -23,6 +23,7 @@ public class SWindowWrapper
 {
 	private final int oWidth, oHeight;
 	private final long windowID;
+	private final int[] bounds = new int[4];
 	
 	private AtomicReference<Dimension> dim = new AtomicReference<>();
 	
@@ -30,6 +31,9 @@ public class SWindowWrapper
 	{
 		this.oWidth = width;
 		this.oHeight = height;
+		bounds[2] = width;
+		bounds[3] = height;
+		
 		GLFWErrorCallback.createPrint(LogStreamHandler.outputStreamBypass).set();
 		
 		if(!GLFW.glfwInit())
@@ -75,8 +79,15 @@ public class SWindowWrapper
 			e.printStackTrace(System.out);
 		}
 		
+		GLFW.glfwSetWindowPosCallback(windowID, (long window, int x, int y) -> {
+			bounds[0] = x;
+			bounds[1] = y;
+		});
+		
 		GLFW.glfwSetWindowSizeCallback(windowID, (window, width2, height2) -> {
 			dim.set(new Dimension(width2, height2));
+			bounds[2] = width2;
+			bounds[3] = height2;
 		});
 	}
 	
@@ -145,5 +156,10 @@ public class SWindowWrapper
 	public Dimension getNewDimension()
 	{
 		return dim.getAndSet(null);
+	}
+	
+	public int[] getWindowBounds()
+	{
+		return bounds;
 	}
 }

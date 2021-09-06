@@ -64,6 +64,16 @@ public abstract class Part
 		return parent;
 	}
 	
+	public Part getRootParent()
+	{
+		Part part = this;
+		while(part.getParent() != null)
+		{
+			part = part.getParent();
+		}
+		return part;
+	}
+	
 	//Interaction:
 	
 	/**

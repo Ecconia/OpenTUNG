@@ -1,7 +1,8 @@
 package de.ecconia.java.opentung.units;
 
-import de.ecconia.java.opentung.core.structs.GPUTask;
 import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.core.structs.GPUTask;
 import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.settings.Settings;
@@ -60,15 +61,35 @@ public class LabelToolkit
 	}
 	
 	private Map<LabelContainer, List<CompLabel>> map = new HashMap<>();
+	private TextureWrapper loading;
 	
-	public void startProcessing(BlockingQueue<GPUTask> gpuTasks, List<CompLabel> labelsToRender)
+	public void processSingleLabel(Component rootBoard, BlockingQueue<GPUTask> gpuTasks, CompLabel label)
 	{
-		if(labelsToRender.isEmpty())
-		{
-			return;
-		}
+		label.setTexture(rootBoard, loading);
 		
-		TextureWrapper loading;
+		Thread t = new Thread(() -> {
+			TextureWrapper texture = generateUploadTexture(label.getText(), label.getFontSize(), 1); //1 stands for 1 label currently using this texture
+			try
+			{
+				gpuTasks.put((world3D) -> {
+					texture.upload();
+					
+					label.setTexture(world3D.getSharedData().getBoardUniverse().getRootBoard(), texture);
+				});
+			}
+			catch(InterruptedException e)
+			{
+				//Should never happen.
+				e.printStackTrace(System.out);
+				return;
+			}
+		}, "SingleLabelRenderThread");
+		t.setDaemon(true);
+		t.start();
+	}
+	
+	public void startProcessing(Component rootBoard, BlockingQueue<GPUTask> gpuTasks, List<CompLabel> labelsToRender)
+	{
 		try
 		{
 			BufferedImage image = ImageIO.read(TextureWrapper.class.getClassLoader().getResourceAsStream("Loading.png"));
@@ -82,9 +103,14 @@ public class LabelToolkit
 			throw new RuntimeException("Tilt."); //Yes Java, this really means I stopped here.
 		}
 		
+		if(labelsToRender.isEmpty())
+		{
+			return;
+		}
+		
 		for(CompLabel label : labelsToRender)
 		{
-			label.setTexture(loading);
+			label.setTexture(rootBoard, loading);
 			LabelContainer labelHash = new LabelContainer(label.getText(), label.getFontSize());
 			List<CompLabel> list = map.get(labelHash);
 			if(list == null)
@@ -160,8 +186,14 @@ public class LabelToolkit
 		TextureWrapper texture = generateUploadTexture(entry.getKey().text, entry.getKey().fontSize, entry.getValue().size());
 		try
 		{
-			gpuTasks.put((unused) -> {
+			gpuTasks.put((world3D) -> {
 				texture.upload();
+				//Also apply all the textures. On Render thread, to not have any collision.
+				for(CompLabel label : entry.getValue())
+				{
+					//If the label is deleted, the texture will be unloaded.
+					label.setTexture(world3D.getSharedData().getBoardUniverse().getRootBoard(), texture);
+				}
 			});
 		}
 		catch(InterruptedException e)
@@ -169,11 +201,6 @@ public class LabelToolkit
 			//Should never happen.
 			e.printStackTrace(System.out);
 			return;
-		}
-		
-		for(CompLabel label : entry.getValue())
-		{
-			label.updateTexture(texture);
 		}
 	}
 	
