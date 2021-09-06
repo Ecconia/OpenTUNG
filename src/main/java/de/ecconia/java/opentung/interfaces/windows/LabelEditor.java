@@ -15,6 +15,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
@@ -136,11 +138,23 @@ public class LabelEditor
 				}
 			}
 		};
+		KeyAdapter controlListener = new KeyAdapter()
+		{
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				if(e.getKeyCode() == KeyEvent.VK_ENTER && e.isControlDown())
+				{
+					frame.dispose();
+				}
+			}
+		};
 		
 		area.setMinimumSize(new Dimension(400, 400));
 		area.setPreferredSize(new Dimension(400, 400));
 		area.setFont(new Font(Font.DIALOG, Font.BOLD, 60));
 		area.getDocument().addDocumentListener(listener);
+		area.addKeyListener(controlListener);
 		frame.getContentPane().add(area);
 		
 		JPanel south = new JPanel();
@@ -149,6 +163,7 @@ public class LabelEditor
 		
 		slider.setMinimumSize(new Dimension(400, 40));
 		slider.setPreferredSize(new Dimension(400, 40));
+		slider.setFocusable(false);
 		slider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -163,6 +178,7 @@ public class LabelEditor
 		field.setPreferredSize(new Dimension(100, 40));
 		field.getDocument().addDocumentListener(listener);
 		field.setText(String.valueOf(newFontSize));
+		field.addKeyListener(controlListener);
 		south.add(field, BorderLayout.EAST);
 		
 		//END
