@@ -120,7 +120,12 @@ public class CompLabel extends Component implements CustomData
 	
 	public boolean hasTexture()
 	{
-		return text != null;
+		return !text.isEmpty();
+	}
+	
+	public boolean hasText()
+	{
+		return !text.isEmpty();
 	}
 	
 	//### Save/Load ###

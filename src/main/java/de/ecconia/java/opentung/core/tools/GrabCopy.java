@@ -334,7 +334,7 @@ public class GrabCopy implements Tool
 			{
 				secondaryMesh.removeComponent(component, board.getSimulation());
 				worldMesh.addComponent(component, board.getSimulation());
-				if(component instanceof CompLabel && ((CompLabel) component).hasTexture())
+				if(component instanceof CompLabel && ((CompLabel) component).hasText())
 				{
 					board.getLabelsToRender().add((CompLabel) component);
 				}
@@ -500,7 +500,7 @@ public class GrabCopy implements Tool
 				worldMesh.addComponent(component, simulation);
 				if(component instanceof CompLabel)
 				{
-					if(((CompLabel) component).hasTexture())
+					if(((CompLabel) component).hasText())
 					{
 						board.getLabelsToRender().add((CompLabel) component);
 					}
@@ -712,7 +712,7 @@ public class GrabCopy implements Tool
 					if(component instanceof CompLabel)
 					{
 						board.getLabelsToRender().remove(component); //Remove the label from visible labels.
-						if(((CompLabel) component).hasTexture())
+						if(((CompLabel) component).hasText())
 						{
 							newGrabData.addLabel((CompLabel) component);
 						}
@@ -1015,7 +1015,7 @@ public class GrabCopy implements Tool
 					//Handle special components:
 					if(copyComponent instanceof CompLabel)
 					{
-						if(((CompLabel) copyComponent).hasTexture())
+						if(((CompLabel) copyComponent).hasText())
 						{
 							grabData.addLabel((CompLabel) copyComponent);
 						}
@@ -1551,6 +1551,10 @@ public class GrabCopy implements Tool
 			sdfShader.setUniformM4(1, view);
 			for(CompLabel label : grabData.getLabels())
 			{
+				if(!label.hasTexture())
+				{
+					continue;
+				}
 				Vector3 position = label.getPositionGlobal();
 				position = position.subtract(oldPosition);
 				position = newRelativeAlignment.inverse().multiply(position);

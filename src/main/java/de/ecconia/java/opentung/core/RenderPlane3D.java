@@ -709,6 +709,10 @@ public class RenderPlane3D implements RenderPlane
 		sdfShader.setUniformM4(1, view);
 		for(CompLabel label : board.getLabelsToRender())
 		{
+			if(!label.hasTexture())
+			{
+				continue;
+			}
 			label.activate();
 			model.identity();
 			model.translate((float) label.getPositionGlobal().getX(), (float) label.getPositionGlobal().getY(), (float) label.getPositionGlobal().getZ());

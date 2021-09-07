@@ -210,7 +210,7 @@ public class LabelEditor
 		{
 			//Update component:
 			interfaceRenderer.getSharedData().getGpuTasks().add((world3D -> {
-				boolean hadNoText = component.getText().isEmpty();
+				boolean hadNoText = !component.hasText();
 				component.setText(newText);
 				component.setFontSize(newFontSize);
 				
