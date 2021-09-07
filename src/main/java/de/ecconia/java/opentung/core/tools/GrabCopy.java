@@ -55,6 +55,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import javax.swing.JOptionPane;
 import org.lwjgl.opengl.GL30;
 
 public class GrabCopy implements Tool
@@ -256,12 +257,22 @@ public class GrabCopy implements Tool
 			if(divisor != 0) //Do not round an sin(angle) of 0, causes division by 0 -> NaN
 			{
 				Vector3 realVector = deltaAlignment.getV().divide(divisor);
-				deltaAlignment = Quaternion.angleAxis(
-						//The real angle is actually always with *2.0, but for optimization reasons it has been moved down here.
-						Math.round(Math.toDegrees(realAngleHalf * 2.0) * 100.0) / 100.0,
-						realVector.normalize()
-				);
+				if(realVector.lengthSquared() > 0) //Always positive.
+				{
+					deltaAlignment = Quaternion.angleAxis(
+							//The real angle is actually always with *2.0, but for optimization reasons it has been moved down here.
+							Math.round(Math.toDegrees(realAngleHalf * 2.0) * 100.0) / 100.0,
+							realVector.normalize()
+					);
+				}
 			}
+		}
+		if(Double.isNaN(deltaAlignment.getA()) || Double.isNaN(deltaAlignment.getV().getX()) || Double.isNaN(deltaAlignment.getV().getY()) || Double.isNaN(deltaAlignment.getV().getZ()))
+		{
+			System.out.println("Rounding the placement alignment went horribly wrong (or something before it), aborting your grabment for safety. Please report and reconstruct.");
+			JOptionPane.showMessageDialog(null, "Rounding the placement alignment went horribly wrong (or something before it), aborting your grabment for safety. Please report and reconstruct.");
+			abort();
+			return true;
 		}
 		
 		Vector3 newPosition = hitpointContainer.getPosition();

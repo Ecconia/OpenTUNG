@@ -106,7 +106,7 @@ public class Quaternion
 	
 	public double getLength()
 	{
-		return Math.sqrt(a * a + v.lengthSqared());
+		return Math.sqrt(a * a + v.lengthSquared());
 	}
 	
 	@Override

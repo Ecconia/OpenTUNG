@@ -106,7 +106,7 @@ public class Vector3
 		return Math.sqrt(x * x + y * y + z * z);
 	}
 	
-	public double lengthSqared()
+	public double lengthSquared()
 	{
 		return x * x + y * y + z * z;
 	}
