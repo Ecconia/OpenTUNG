@@ -21,6 +21,7 @@ import de.ecconia.java.opentung.core.structs.RenderPlane;
 import de.ecconia.java.opentung.core.systems.CPURaycast;
 import de.ecconia.java.opentung.core.systems.ClusterHighlighter;
 import de.ecconia.java.opentung.core.systems.Skybox;
+import de.ecconia.java.opentung.core.tools.DecoderSwapHelper;
 import de.ecconia.java.opentung.core.tools.Delete;
 import de.ecconia.java.opentung.core.tools.DrawBoard;
 import de.ecconia.java.opentung.core.tools.DrawWire;
@@ -133,6 +134,7 @@ public class RenderPlane3D implements RenderPlane
 		tools.add(new DrawWire(sharedData));
 		tools.add(new DrawBoard(sharedData));
 		tools.add(new EditWindow(sharedData));
+		tools.add(new DecoderSwapHelper(sharedData));
 	}
 	
 	private void toolDebug(String message)

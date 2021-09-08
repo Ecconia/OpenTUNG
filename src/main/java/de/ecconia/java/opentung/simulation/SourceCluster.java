@@ -6,11 +6,17 @@ import java.util.List;
 
 public class SourceCluster extends Cluster
 {
-	private final Blot source;
+	private Blot source;
 	private final List<InheritingCluster> drains = new ArrayList<>();
 	private boolean active;
 	
 	public SourceCluster(Blot source)
+	{
+		this.source = source;
+	}
+	
+	//Operation used, when a component is replaced, without modifying connected clusters.
+	public void overwriteSource(Blot source)
 	{
 		this.source = source;
 	}
