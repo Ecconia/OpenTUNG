@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core.tools;
+package de.ecconia.java.opentung.core.tools.grabbing;
 
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
@@ -17,8 +17,6 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ConnectedComponent;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.core.BoardUniverse;
-import de.ecconia.java.opentung.core.data.GrabContainerData;
-import de.ecconia.java.opentung.core.data.GrabData;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.core.data.HitpointBoard;
 import de.ecconia.java.opentung.core.data.HitpointContainer;
@@ -27,6 +25,9 @@ import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.helper.OnBoardPlacementHelper;
 import de.ecconia.java.opentung.core.helper.World3DHelper;
 import de.ecconia.java.opentung.core.structs.GPUTask;
+import de.ecconia.java.opentung.core.tools.Tool;
+import de.ecconia.java.opentung.core.tools.grabbing.data.GrabContainerData;
+import de.ecconia.java.opentung.core.tools.grabbing.data.GrabData;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;

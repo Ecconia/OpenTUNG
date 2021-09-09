@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core.data;
+package de.ecconia.java.opentung.core.tools.resize.data;
 
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompMount;

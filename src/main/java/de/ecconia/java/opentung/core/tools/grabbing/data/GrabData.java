@@ -1,4 +1,4 @@
-package de.ecconia.java.opentung.core.data;
+package de.ecconia.java.opentung.core.tools.grabbing.data;
 
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
