@@ -8,6 +8,7 @@ import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.MeshText;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.interfaces.Shapes;
+import de.ecconia.java.opentung.interfaces.Window;
 import de.ecconia.java.opentung.interfaces.elements.TextButton;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
@@ -18,7 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import org.lwjgl.nanovg.NanoVG;
 
-public class PauseMenu
+public class PauseMenu extends Window
 {
 	private static final String labelTextSave = "Save";
 	private static final String labelTextSaveAs = "Save as";
@@ -49,12 +50,18 @@ public class PauseMenu
 		text.addLetters(labelTextExit);
 	}
 	
+	public void activate()
+	{
+		isVisible = true;
+	}
+	
 	public void update(SharedData data)
 	{
 		buttonSave.setDisabled(!(data.isSimulationLoaded() && data.getCurrentBoardFile() != null));
 		buttonSaveAs.setDisabled(!data.isSimulationLoaded());
 	}
 	
+	@Override
 	public void setup()
 	{
 		MeshText fontUnit = renderPlane2D.getText();
@@ -72,6 +79,7 @@ public class PauseMenu
 	private float windowStartX;
 	private float windowStartY;
 	
+	@Override
 	public void renderFrame()
 	{
 		float scale = Settings.guiScale;
@@ -91,6 +99,7 @@ public class PauseMenu
 		buttonExit.renderFrame(nvg, middleX, middleY);
 	}
 	
+	@Override
 	public void renderDecor(ShaderStorage shaderStorage)
 	{
 		float scale = Settings.guiScale;
@@ -117,6 +126,7 @@ public class PauseMenu
 		buttonExit.renderText(textShader, middleX, middleY);
 	}
 	
+	@Override
 	public boolean leftMouseUp(int x, int y)
 	{
 		float scale = Settings.guiScale;
@@ -209,7 +219,8 @@ public class PauseMenu
 		return windowStartX < x && x < (windowStartX + windowWidth) && windowStartY < y && y < (windowStartY + windowHeight);
 	}
 	
-	public void mouseMoved(int x, int y)
+	@Override
+	public boolean mouseMoved(int x, int y, boolean leftDown)
 	{
 		float scale = Settings.guiScale;
 		float sx = (float) x / scale;
@@ -223,10 +234,14 @@ public class PauseMenu
 		buttonSaveAs.testHover(xx, yy);
 		buttonKeybindings.testHover(xx, yy);
 		buttonExit.testHover(xx, yy);
+		return true;
 	}
 	
+	@Override
 	public void close()
 	{
+		super.close();
+		
 		buttonSave.resetHover();
 		buttonSaveAs.resetHover();
 		buttonKeybindings.resetHover();

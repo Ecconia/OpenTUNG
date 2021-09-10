@@ -6,14 +6,16 @@ import de.ecconia.java.opentung.core.tools.EditWindow;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.interfaces.Shapes;
+import de.ecconia.java.opentung.interfaces.Window;
 import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.util.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
-public class ColorSwitcher
+public class ColorSwitcher extends Window
 {
 	private final RenderPlane2D interfaceRenderer;
 	
@@ -93,14 +95,24 @@ public class ColorSwitcher
 		}
 	}
 	
-	public void setComponent(EditWindow editWindow, CustomColor component)
+	public void activate(EditWindow editWindow, CustomColor component)
+	{
+		interfaceRenderer.getInputHandler().switchTo2D(); //TBI: Should be more generic?
+		setComponent(editWindow, component);
+		isVisible = true;
+	}
+	
+	private void setComponent(EditWindow editWindow, CustomColor component)
 	{
 		this.editWindow = editWindow;
 		this.component = component;
 	}
 	
+	@Override
 	public void close()
 	{
+		super.close();
+		
 		component = null;
 		editWindow.guiClosed();
 		//Also clear this data:
@@ -111,7 +123,8 @@ public class ColorSwitcher
 	private float middleX;
 	private float middleY;
 	
-	public void render()
+	@Override
+	public void renderFrame()
 	{
 		float scale = Settings.guiScale;
 		long nvg = interfaceRenderer.vg;
@@ -131,11 +144,24 @@ public class ColorSwitcher
 	private Color startColor; //Also serves as "isMouseDown" bool.
 	private ColorSlot lastSlot;
 	
-	public void mouseMoved(int x, int y)
+	@Override
+	public boolean keyUp(int scancode)
+	{
+		if(scancode == Keybindings.KeyEditComponent)
+		{
+			close();
+			interfaceRenderer.getInputHandler().switchTo3D();
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
+	public boolean mouseMoved(int x, int y, boolean leftDown)
 	{
 		if(startColor == null)
 		{
-			return;
+			return true;
 		}
 		float scale = Settings.guiScale;
 		float sx = (float) x / scale;
@@ -145,8 +171,10 @@ public class ColorSwitcher
 		{
 			doMovementUpdate(sx, sy);
 		}
+		return true;
 	}
 	
+	@Override
 	public boolean leftMouseDown(int x, int y)
 	{
 		startColor = component.getColor(); //Mouse down.
@@ -178,6 +206,7 @@ public class ColorSwitcher
 		}
 	}
 	
+	@Override
 	public boolean leftMouseUp(int x, int y)
 	{
 		float scale = Settings.guiScale;
@@ -197,7 +226,7 @@ public class ColorSwitcher
 		{
 			//Apply/Keep color:
 			//TBI: Is the manual handling an okay-ish solution?
-			interfaceRenderer.closeColorSwitcher();
+			close();
 			interfaceRenderer.getInputHandler().switchTo3D();
 		}
 		

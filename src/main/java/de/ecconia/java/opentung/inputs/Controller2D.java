@@ -82,23 +82,11 @@ public class Controller2D implements Controller
 			if(renderPlane2D.hasWindowOpen())
 			{
 				renderPlane2D.closeWindows();
-				mouseOnGUI = false; //Reset regardless.
 				inputProcessor.switchTo3D(); //If closed just go here.
 			}
 			else
 			{
-				openPauseMenu();
-			}
-		}
-		else if(scancode == Keybindings.KeyToggleComponentsList)
-		{
-			if(!renderPlane2D.toggleComponentList())
-			{
-				if(!renderPlane2D.hasWindowOpen())
-				{
-					mouseOnGUI = false; //Reset regardless.
-					inputProcessor.switchTo3D(); //If closed just go here.
-				}
+				renderPlane2D.openPauseMenu();
 			}
 		}
 		else if(scancode == Keybindings.KeyUnlockMouseCursor)
@@ -106,12 +94,15 @@ public class Controller2D implements Controller
 			//The cursor is already unlocked, thus here it just closes the window...
 			renderPlane2D.closeWindows();
 		}
-		else if(scancode == Keybindings.KeyEditComponent)
+		else if(!renderPlane2D.keyUp(scancode))
 		{
-			if(renderPlane2D.closeColorSwitcher())
+			//Only check the following keybindings, if no window consumed it:
+			if(scancode == Keybindings.KeyToggleComponentsList)
 			{
-				mouseOnGUI = false; //Reset regardless.
-				inputProcessor.switchTo3D(); //If closed just go here.
+				if(!renderPlane2D.hasWindowOpen())
+				{
+					renderPlane2D.openComponentList();
+				}
 			}
 		}
 	}
@@ -131,25 +122,20 @@ public class Controller2D implements Controller
 		renderPlane2D.getHotbar().selectOrAdd(info);
 	}
 	
-	public void openComponentList()
-	{
-		inputProcessor.switchTo2D();
-		renderPlane2D.openComponentList();
-	}
-	
 	public void openPauseMenu()
 	{
 		inputProcessor.switchTo2D();
 		renderPlane2D.openPauseMenu();
 	}
 	
-	public void updatePauseMenu()
-	{
-		renderPlane2D.updatePauseMenu();
-	}
-	
 	public void dropHotbarEntry()
 	{
 		renderPlane2D.getHotbar().dropHotbarEntry();
+	}
+	
+	public void switchedTo3D()
+	{
+		//Generic method, called whenever something switched to 3D. Then the mouse is definitely not on GUI anymore.
+		mouseOnGUI = false;
 	}
 }

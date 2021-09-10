@@ -1,19 +1,24 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.components.meta.ComponentAwareness;
+import de.ecconia.java.opentung.core.data.SharedData;
+import de.ecconia.java.opentung.core.tools.Tool;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.interfaces.Shapes;
+import de.ecconia.java.opentung.interfaces.Window;
 import de.ecconia.java.opentung.interfaces.elements.IconButton;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ComponentList
+public class ComponentList extends Window
 {
 	private final RenderPlane2D renderPlane2D;
 	private final Hotbar hotbar;
@@ -26,8 +31,23 @@ public class ComponentList
 	
 	private final List<IconButton> components = new ArrayList<>();
 	
-	public ComponentList(RenderPlane2D renderPlane2D, Hotbar hotbar)
+	public ComponentList(SharedData sharedData, RenderPlane2D renderPlane2D, Hotbar hotbar)
 	{
+		sharedData.getRenderPlane3D().addTool(new Tool()
+		{
+			@Override
+			public Boolean activateKeyUp(Hitpoint hitpoint, int scancode, boolean control)
+			{
+				if(scancode == Keybindings.KeyToggleComponentsList)
+				{
+					renderPlane2D.getInputHandler().switchTo2D();
+					isVisible = true;
+					return false;
+				}
+				return null;
+			}
+		});
+		
 		this.hotbar = hotbar;
 		this.renderPlane2D = renderPlane2D;
 		
@@ -69,7 +89,13 @@ public class ComponentList
 	private Integer insertedAt;
 	private Integer extractedIsActive;
 	
-	public void draw()
+	public void activate()
+	{
+		isVisible = true;
+	}
+	
+	@Override
+	public void renderFrame()
 	{
 		float scale = Settings.guiScale;
 		long nvg = renderPlane2D.vg;
@@ -83,7 +109,8 @@ public class ComponentList
 		}
 	}
 	
-	public void drawIcons(ShaderStorage shaderStorage)
+	@Override
+	public void renderDecor(ShaderStorage shaderStorage)
 	{
 		float scale = Settings.guiScale;
 		ShaderProgram textureShader = shaderStorage.getFlatTextureShader();
@@ -105,6 +132,20 @@ public class ComponentList
 		}
 	}
 	
+	@Override
+	public boolean keyUp(int scancode)
+	{
+		if(scancode == Keybindings.KeyToggleComponentsList)
+		{
+			abort();
+			close();
+			renderPlane2D.getInputHandler().switchTo3D();
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
 	public boolean leftMouseDown(int x, int y)
 	{
 		float scale = Settings.guiScale;
@@ -176,6 +217,7 @@ public class ComponentList
 		guiOperationOverwrite = false;
 	}
 	
+	@Override
 	public boolean leftMouseUp(int x, int y)
 	{
 		for(IconButton component : components)
@@ -197,7 +239,21 @@ public class ComponentList
 		return downInside(sx, sy);
 	}
 	
-	public void mouseDragged(int x, int y)
+	@Override
+	public boolean mouseMoved(int x, int y, boolean leftDown)
+	{
+		if(leftDown)
+		{
+			mouseDragged(x, y);
+		}
+		else
+		{
+			mouseMoved(x, y);
+		}
+		return true;
+	}
+	
+	private void mouseDragged(int x, int y)
 	{
 		float scale = Settings.guiScale;
 		mousePosX = (float) x / scale;
@@ -274,7 +330,8 @@ public class ComponentList
 		}
 	}
 	
-	public void middleMouse(int x, int y)
+	@Override
+	public boolean middleMouse(int x, int y)
 	{
 		float scale = Settings.guiScale;
 		float sx = (float) x / scale;
@@ -288,9 +345,10 @@ public class ComponentList
 				hotbar.justAdd(component);
 			}
 		}
+		return true;
 	}
 	
-	public void mouseMoved(int x, int y)
+	private void mouseMoved(int x, int y)
 	{
 		float scale = Settings.guiScale;
 		float sx = (float) x / scale;

@@ -1,24 +1,21 @@
 package de.ecconia.java.opentung.interfaces;
 
 import de.ecconia.java.opentung.OpenTUNG;
-import de.ecconia.java.opentung.components.CompLabel;
-import de.ecconia.java.opentung.components.meta.CustomColor;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.structs.RenderPlane;
-import de.ecconia.java.opentung.core.tools.EditWindow;
 import de.ecconia.java.opentung.inputs.Controller2D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
-import de.ecconia.java.opentung.interfaces.windows.ColorSwitcher;
 import de.ecconia.java.opentung.interfaces.windows.ComponentList;
 import de.ecconia.java.opentung.interfaces.windows.Hotbar;
-import de.ecconia.java.opentung.interfaces.windows.LabelEditor;
 import de.ecconia.java.opentung.interfaces.windows.PauseMenu;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
+import java.util.LinkedList;
+import java.util.List;
 import javax.imageio.ImageIO;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
@@ -34,15 +31,15 @@ public class RenderPlane2D implements RenderPlane
 	
 	private Point indicator;
 	private Hotbar hotbar;
+	
+	//Windows:
+	
 	private ComponentList componentList;
 	private PauseMenu pauseMenu;
-	private ColorSwitcher colorSwitcher;
-	private LabelEditor labelEditor;
 	
-	private boolean showComponentList;
-	private boolean showPauseMenu;
-	private boolean showColorSwitcher;
-	private boolean showLabelEditor;
+	private final List<Window> windows = new LinkedList<>();
+	
+	//Other:
 	
 	public long vg;
 	
@@ -58,6 +55,11 @@ public class RenderPlane2D implements RenderPlane
 		sharedData.setRenderPlane2D(this);
 		
 		text = new MeshText();
+	}
+	
+	public void addWindow(Window window)
+	{
+		windows.add(window);
 	}
 	
 	@Override
@@ -88,16 +90,19 @@ public class RenderPlane2D implements RenderPlane
 		//Windows:
 		hotbar = new Hotbar(this, sharedData);
 		sharedData.getGpuTasks().add((unused) -> {
-			componentList = new ComponentList(this, hotbar);
+			componentList = new ComponentList(sharedData, this, hotbar);
+			windows.add(componentList);
 		});
 		pauseMenu = new PauseMenu(this);
-		colorSwitcher = new ColorSwitcher(this);
-		labelEditor = new LabelEditor(this);
+		
+		windows.add(pauseMenu);
 		
 		text.createAtlas();
 		
-		pauseMenu.setup();
-		labelEditor.setup();
+		for(Window window : windows)
+		{
+			window.setup();
+		}
 		
 		//Only set this one if this plane is ready, we don't want to receive input events before here.
 		inputHandler.setController(new Controller2D(this));
@@ -119,23 +124,13 @@ public class RenderPlane2D implements RenderPlane
 		float scale = Settings.guiScale;
 		NanoVG.nnvgScale(vg, scale, scale);
 		hotbar.draw();
-		boolean tsShowComponentList = showComponentList;
-		if(tsShowComponentList)
+		for(Window window : windows)
 		{
-			componentList.draw();
-		}
-		boolean tsShowPauseMenu = showPauseMenu;
-		if(tsShowPauseMenu)
-		{
-			pauseMenu.renderFrame();
-		}
-		if(showColorSwitcher)
-		{
-			colorSwitcher.render();
-		}
-		if(showLabelEditor)
-		{
-			labelEditor.renderFrame();
+			window.storeRenderVisibility();
+			if(window.isRenderVisibilitySet())
+			{
+				window.renderFrame();
+			}
 		}
 		NanoVG.nvgEndFrame(vg);
 		
@@ -144,17 +139,12 @@ public class RenderPlane2D implements RenderPlane
 		
 		GL30.glDisable(GL30.GL_DEPTH_TEST);
 		hotbar.drawIcons(sharedData.getShaderStorage());
-		if(tsShowComponentList)
+		for(Window window : windows)
 		{
-			componentList.drawIcons(sharedData.getShaderStorage());
-		}
-		if(tsShowPauseMenu)
-		{
-			pauseMenu.renderDecor(getSharedData().getShaderStorage());
-		}
-		if(showLabelEditor)
-		{
-			labelEditor.renderDecor(getSharedData().getShaderStorage());
+			if(window.isRenderVisibilitySet())
+			{
+				window.renderDecor(sharedData.getShaderStorage());
+			}
 		}
 		GL30.glEnable(GL30.GL_DEPTH_TEST);
 	}
@@ -184,160 +174,114 @@ public class RenderPlane2D implements RenderPlane
 		return hotbar;
 	}
 	
-	public void openComponentList()
-	{
-		showComponentList = true;
-	}
-	
 	public void updatePauseMenu()
 	{
-		if(showPauseMenu)
+		if(pauseMenu.isVisible())
 		{
 			pauseMenu.update(sharedData);
 		}
 	}
 	
+	public void openComponentList()
+	{
+		componentList.activate();
+	}
+	
 	public void openPauseMenu()
 	{
-		showPauseMenu = true;
+		pauseMenu.activate();
 		pauseMenu.update(sharedData);
-	}
-	
-	public void openCustomColorWindow(EditWindow editWindow, CustomColor component)
-	{
-		inputHandler.switchTo2D();
-		colorSwitcher.setComponent(editWindow, component);
-		showColorSwitcher = true;
-	}
-	
-	public void openLabelEditWindow(EditWindow editWindow, CompLabel component)
-	{
-		inputHandler.switchTo2D();
-		labelEditor.setComponent(editWindow, component);
-		showLabelEditor = true;
-	}
-	
-	public boolean closeColorSwitcher()
-	{
-		if(showColorSwitcher)
-		{
-			showColorSwitcher = false;
-			colorSwitcher.close();
-			return true;
-		}
-		return false;
-	}
-	
-	public void closeLabelEditor()
-	{
-		if(showLabelEditor)
-		{
-			showLabelEditor = false;
-			labelEditor.close();
-		}
 	}
 	
 	public boolean hasWindowOpen()
 	{
-		return showComponentList || showPauseMenu || showColorSwitcher || showLabelEditor;
+		for(Window window : windows)
+		{
+			if(window.isVisible())
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public void closeWindows()
 	{
-		showComponentList = false;
-		if(showPauseMenu)
+		for(Window window : windows)
 		{
-			pauseMenu.close();
-			showPauseMenu = false;
+			if(window.isVisible())
+			{
+				window.close();
+			}
 		}
-		if(showColorSwitcher)
+	}
+	
+	public boolean keyUp(int scancode)
+	{
+		for(Window window : windows)
 		{
-			colorSwitcher.close();
-			showColorSwitcher = false;
+			if(window.isVisible())
+			{
+				if(window.keyUp(scancode))
+				{
+					return true;
+				}
+			}
 		}
-		if(showLabelEditor)
-		{
-			showLabelEditor = false;
-			labelEditor.close();
-		}
+		return false;
 	}
 	
 	public boolean leftMouseDown(int x, int y)
 	{
-		if(showComponentList)
+		for(Window window : windows)
 		{
-			return componentList.leftMouseDown(x, y);
+			if(window.isVisible())
+			{
+				//TODO: Not exactly the right solution, accept Boolean and let null slide?
+				return window.leftMouseDown(x, y);
+			}
 		}
-		else if(showColorSwitcher)
-		{
-			return colorSwitcher.leftMouseDown(x, y);
-		}
-		
 		return false;
 	}
 	
 	public boolean leftMouseUp(int x, int y)
 	{
-		if(showComponentList)
+		for(Window window : windows)
 		{
-			return componentList.leftMouseUp(x, y);
+			if(window.isVisible())
+			{
+				//TODO: Not exactly the right solution, accept Boolean and let null slide?
+				return window.leftMouseUp(x, y);
+			}
 		}
-		else if(showPauseMenu)
-		{
-			return pauseMenu.leftMouseUp(x, y);
-		}
-		else if(showColorSwitcher)
-		{
-			return colorSwitcher.leftMouseUp(x, y);
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	public boolean toggleComponentList()
-	{
-		if(showComponentList)
-		{
-			componentList.abort();
-			showComponentList = false;
-		}
-		else if(!hasWindowOpen())
-		{
-			showComponentList = true;
-		}
-		return showComponentList;
+		return false;
 	}
 	
 	public void mouseMoved(int xAbs, int yAbs, boolean leftDown)
 	{
-		if(showPauseMenu)
+		for(Window window : windows)
 		{
-			pauseMenu.mouseMoved(xAbs, yAbs);
-		}
-		else if(showComponentList)
-		{
-			if(leftDown)
+			if(window.isVisible())
 			{
-				componentList.mouseDragged(xAbs, yAbs);
+				if(window.mouseMoved(xAbs, yAbs, leftDown))
+				{
+					break;
+				}
 			}
-			else
-			{
-				componentList.mouseMoved(xAbs, yAbs);
-			}
-		}
-		else if(showColorSwitcher)
-		{
-			colorSwitcher.mouseMoved(xAbs, yAbs);
 		}
 	}
 	
 	public void middleMouse(int x, int y)
 	{
-		if(showComponentList)
+		for(Window window : windows)
 		{
-			componentList.middleMouse(x, y);
+			if(window.isVisible())
+			{
+				if(window.middleMouse(x, y))
+				{
+					break;
+				}
+			}
 		}
 	}
 	

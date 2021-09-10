@@ -7,6 +7,7 @@ import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.MeshText;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.interfaces.Shapes;
+import de.ecconia.java.opentung.interfaces.Window;
 import de.ecconia.java.opentung.libwrap.FloatShortArraysInt;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
@@ -31,7 +32,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.lwjgl.opengl.GL30;
 
-public class LabelEditor
+public class LabelEditor extends Window
 {
 	private static final String[] labelTextInstruction = {
 			"Please use external editor to change the label text.",
@@ -60,11 +61,18 @@ public class LabelEditor
 		text.addLetters(labelTextInstruction[2]);
 	}
 	
+	public void activate(EditWindow editWindow, CompLabel component)
+	{
+		interfaceRenderer.getInputHandler().switchTo2D(); //TBI: Should be more generic?
+		setComponent(editWindow, component);
+		isVisible = true;
+	}
+	
 	private JFrame frame;
 	private String newText;
 	private float newFontSize;
 	
-	public void setComponent(EditWindow editWindow, CompLabel component)
+	private void setComponent(EditWindow editWindow, CompLabel component)
 	{
 		this.editWindow = editWindow;
 		this.component = component;
@@ -84,8 +92,11 @@ public class LabelEditor
 			{
 				//TODO: Warning: Interaction with input thread methods, but this is not the input thread.
 				// As in, might explode. But minor issues. Lets ignore this for now and hope for the best.
-				interfaceRenderer.closeLabelEditor();
-				interfaceRenderer.getInputHandler().switchTo3D();
+				if(frame != null)
+				{
+					close();
+					interfaceRenderer.getInputHandler().switchTo3D();
+				}
 			}
 		});
 		
@@ -203,8 +214,11 @@ public class LabelEditor
 		frame.setVisible(true);
 	}
 	
+	@Override
 	public void close()
 	{
+		super.close();
+		
 		final CompLabel component = this.component;
 		if(component.getFontSize() != newFontSize || !component.getText().equals(newText))
 		{
@@ -231,7 +245,9 @@ public class LabelEditor
 		}
 		if(frame != null)
 		{
-			frame.dispose();
+			JFrame copy = frame;
+			frame = null;
+			copy.dispose();
 		}
 		this.component = null;
 		editWindow.guiClosed();
@@ -240,6 +256,7 @@ public class LabelEditor
 	private final GenericVAO[] textMesh = new GenericVAO[3];
 	private final int[] textWidth = new int[3];
 	
+	@Override
 	public void setup()
 	{
 		MeshText fontUnit = interfaceRenderer.getText();
@@ -268,6 +285,7 @@ public class LabelEditor
 	private float middleX;
 	private float middleY;
 	
+	@Override
 	public void renderFrame()
 	{
 		float scale = Settings.guiScale;
@@ -278,6 +296,7 @@ public class LabelEditor
 		Shapes.drawBox(nvg, middleX, middleY, windowWidth, windowHeight, GUIColors.background, GUIColors.outline);
 	}
 	
+	@Override
 	public void renderDecor(ShaderStorage shaderStorage)
 	{
 		float scale = Settings.guiScale;

@@ -115,10 +115,6 @@ public class Controller3D implements Controller
 				}
 			});
 		}
-		else if(scancode == Keybindings.KeyToggleComponentsList)
-		{
-			inputProcessor.get2DController().openComponentList();
-		}
 		else if(!renderPlane3D.toolKeyUp(scancode, isControl()))
 		{
 			if(!renderPlane3D.checkToolActivation(scancode, isControl()))

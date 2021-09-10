@@ -199,6 +199,7 @@ public class InputProcessor implements Controller
 	
 	public void switchTo3D()
 	{
+		controller2D.switchedTo3D();
 		//Disable cursor.
 		GLFW.glfwSetInputMode(windowID, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		activeController = controller3D;
@@ -253,10 +254,5 @@ public class InputProcessor implements Controller
 			//TODO: Add setting for this behavior:
 			issueShutdown();
 		}
-	}
-	
-	public void updatePauseMenu()
-	{
-		controller2D.updatePauseMenu();
 	}
 }

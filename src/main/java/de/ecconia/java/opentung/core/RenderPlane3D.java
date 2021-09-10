@@ -135,6 +135,11 @@ public class RenderPlane3D implements RenderPlane
 		tools.add(new EditWindow(sharedData));
 	}
 	
+	public void addTool(Tool tool)
+	{
+		tools.add(tool);
+	}
+	
 	private void toolDebug(String message)
 	{
 		System.out.println("[ActiveToolDebug] " + message + " (Active: " + (primaryTool == null ? "null" : primaryTool.getClass().getSimpleName()) + " | PreActive: " + (primaryToolReserve == null ? "null" : primaryToolReserve.getClass().getSimpleName()) + ")");
@@ -483,7 +488,7 @@ public class RenderPlane3D implements RenderPlane
 		board.getSimulation().start();
 		fullyLoaded = true;
 		sharedData.setSimulationLoaded(true);
-		inputHandler.updatePauseMenu();
+		sharedData.getRenderPlane2D().updatePauseMenu();
 		System.out.println("[MeshDebug] P-W-L Done.");
 	}
 	

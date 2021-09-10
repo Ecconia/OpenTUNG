@@ -16,6 +16,9 @@ import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.helper.World3DHelper;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
+import de.ecconia.java.opentung.interfaces.windows.ColorSwitcher;
+import de.ecconia.java.opentung.interfaces.windows.LabelEditor;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
@@ -29,9 +32,18 @@ public class EditWindow implements Tool
 	
 	private Component component;
 	
+	ColorSwitcher colorSwitcher;
+	LabelEditor labelEditor;
+	
 	public EditWindow(SharedData sharedData)
 	{
 		this.sharedData = sharedData;
+		
+		RenderPlane2D interfaceRenderer = sharedData.getRenderPlane2D();
+		colorSwitcher = new ColorSwitcher(interfaceRenderer);
+		labelEditor = new LabelEditor(interfaceRenderer);
+		interfaceRenderer.addWindow(colorSwitcher);
+		interfaceRenderer.addWindow(labelEditor);
 	}
 	
 	@Override
@@ -66,14 +78,14 @@ public class EditWindow implements Tool
 		{
 			sharedData.getGpuTasks().add((worldRenderer) -> {
 				worldRenderer.getWorldMesh().removeComponent(component, sharedData.getBoardUniverse().getSimulation());
-				sharedData.getRenderPlane2D().openCustomColorWindow(this, (CustomColor) component);
+				colorSwitcher.activate(this, (CustomColor) component);
 				worldRenderer.toolReady();
 			});
 		}
 		else //Label
 		{
 			sharedData.getGpuTasks().add((worldRenderer) -> {
-				sharedData.getRenderPlane2D().openLabelEditWindow(this, (CompLabel) component);
+				labelEditor.activate(this, (CompLabel) component);
 				worldRenderer.toolReady();
 			});
 		}
