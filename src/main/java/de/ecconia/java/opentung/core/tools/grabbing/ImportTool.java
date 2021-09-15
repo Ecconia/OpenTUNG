@@ -23,7 +23,6 @@ import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.Wire;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -137,13 +136,19 @@ public class ImportTool implements Tool
 				}
 			}
 		}
-		grabData.setInternalSnappingWires(Collections.emptyList());
 		
 		//Link snapping wires:
 		LinkedList<CompSnappingWire> internalSnappingWires = new LinkedList<>();
 		//The list cast in the next line is ugly. But each of the two caller locations has its own list type. So there is no way around casting here.
 		BoardUniverse.linkSnappingPegs(grabData.getComponents(), grabData.getComponent(), (List<Component>) (List<?>) internalSnappingWires);
 		grabData.setInternalSnappingWires(internalSnappingWires);
+		//Remove the snapping pegs from the unconnected list, which by now are connected:
+		for(CompSnappingWire wire : internalSnappingWires)
+		{
+			//Get the parent of each wire-side peg, which is the snapping peg, and remove it.
+			unconnectedSnappingPegs.remove(wire.getConnectorA().getParent());
+			unconnectedSnappingPegs.remove(wire.getConnectorB().getParent());
+		}
 		
 		//Add wires to their known connectors. (Snapping wires are not included and its done already).
 		for(Wire wire : baw.getWires())
