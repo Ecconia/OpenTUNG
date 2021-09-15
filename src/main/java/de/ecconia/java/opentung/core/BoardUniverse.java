@@ -74,7 +74,7 @@ public class BoardUniverse
 		
 		System.out.println("[BoardImport] Linking SnappingPegs.");
 		//Connect snapping pegs:
-		linkSnappingPegs(board);
+		linkSnappingPegs(componentsToRender, rootBoard, componentsToRender);
 	}
 	
 	public void startFinalizeImport(BlockingQueue<GPUTask> gpuTasks, WireRayCaster wireRayCaster)
@@ -232,10 +232,10 @@ public class BoardUniverse
 		return simulation;
 	}
 	
-	private void linkSnappingPegs(CompBoard board)
+	public static void linkSnappingPegs(List<Component> components, Component rootComponent, List<Component> exportList)
 	{
 		List<CompSnappingPeg> snappingPegs = new ArrayList<>();
-		for(Component comp : componentsToRender)
+		for(Component comp : components)
 		{
 			if(comp instanceof CompSnappingPeg)
 			{
@@ -258,7 +258,7 @@ public class BoardUniverse
 			
 			Vector3 snappingPegAConnectionPoint = snappingPegA.getConnectionPoint();
 			Vector3 rayA = snappingPegA.getAlignmentGlobal().inverse().multiply(Vector3.zn);
-			RayCastResult result = raycaster.cpuRaycast(snappingPegAConnectionPoint, rayA, rootBoard);
+			RayCastResult result = raycaster.cpuRaycast(snappingPegAConnectionPoint, rayA, rootComponent);
 			
 			//Check if the result is not null, and a SnappingPeg within 0.2 distance.
 			if(result.getMatch() != null && result.getMatch() instanceof Connector && result.getMatch().getParent() instanceof CompSnappingPeg && result.getDistance() <= 0.2)
@@ -289,7 +289,7 @@ public class BoardUniverse
 						wire.setPositionGlobal(snappingPegAConnectionPoint.add(direction.divide(2)));
 						wire.setAlignmentGlobal(alignment);
 						
-						componentsToRender.add(wire);
+						exportList.add(wire);
 						
 						//Currently no cluster has been created, thus link the wires manually, for the cluster creation to use it.
 						wire.setConnectorA(snappingPegA.getPegs().get(0));

@@ -211,10 +211,19 @@ public class RenderPlane3D implements RenderPlane
 		return false;
 	}
 	
+	//Input thread only.
+	public void switchTool(Tool replacement)
+	{
+		toolDebug("Switching tool, inputs are disabled, waiting for replacement to be ready.");
+		acceptInputs = false;
+		primaryToolReserve = replacement;
+	}
+	
 	private Tool primaryTool; //This variable may only be modified by the render thread.
 	
 	//Tool own state management:
 	
+	//Render thread only.
 	public void toolReady()
 	{
 		toolDebug("Activating tool, its ready.");
@@ -222,12 +231,14 @@ public class RenderPlane3D implements RenderPlane
 		primaryTool = primaryToolReserve;
 	}
 	
+	//Input thread only.
 	public void toolStopInputs()
 	{
 		toolDebug("Pre-Stop tool.");
 		acceptInputs = false;
 	}
 	
+	//Render thread only.
 	public void toolDisable()
 	{
 		toolDebug("Disabling tool.");

@@ -97,6 +97,8 @@ public class Grabbing implements Tool
 		simulation = sharedData.getBoardUniverse().getSimulation();
 		board = sharedData.getBoardUniverse();
 		wireRayCaster = sharedData.getRenderPlane3D().getWireRayCaster();
+		
+		sharedData.getRenderPlane3D().addTool(new ImportTool(sharedData, this));
 	}
 	
 	@Override
@@ -544,6 +546,62 @@ public class Grabbing implements Tool
 			worldRenderer.toolDisable();
 		});
 		return true;
+	}
+	
+	//Take overs:
+	
+	public void takeImportOver(GrabContainerData grabData)
+	{
+		//Data post-processing has already been done.
+		
+		//Simulation trigger:
+		simulation.updateJobNextTickThreadSafe((unused -> {
+			for(Component component : grabData.getComponents())
+			{
+				if(component instanceof Updateable)
+				{
+					simulation.updateNextTickThreadSafe((Updateable) component);
+				}
+			}
+			
+			//GPU stuff:
+			gpuTasks.add((world3D -> {
+				for(Component comp : grabData.getComponents())
+				{
+					secondaryMesh.addComponent(comp, simulation);
+				}
+				
+				for(CompWireRaw wire : grabData.getInternalWires())
+				{
+					secondaryMesh.addComponent(wire, simulation);
+				}
+				
+				for(CompSnappingWire wire : grabData.getInternalSnappingWires())
+				{
+					secondaryMesh.addComponent(wire, simulation);
+				}
+				
+				Component component = grabData.getComponent();
+				Quaternion inverse = component.getAlignmentGlobal().inverse();
+				sharedData.getRenderPlane3D().resetFixPos(inverse.multiply(Vector3.xp), inverse.multiply(Vector3.yp));
+				this.grabRotation = 0;
+				if(component instanceof CompBoard)
+				{
+					CompBoard board = (CompBoard) component;
+					this.xBoardOffset = ((board.getX() & 1) == 0) ? -0.15 : 0;
+					this.zBoardOffset = ((board.getZ() & 1) == 0) ? -0.15 : 0;
+				}
+				else //Any other component:
+				{
+					this.xBoardOffset = 0;
+					this.zBoardOffset = 0;
+				}
+				this.fineBoardOffset = 0;
+				this.grabData = grabData;
+				
+				world3D.toolReady();
+			}));
+		}));
 	}
 	
 	//Internal:

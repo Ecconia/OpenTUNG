@@ -49,7 +49,7 @@ public class CPURaycast
 		return new RaycastResult(match, dist);
 	}
 	
-	public RayCastResult cpuRaycast(Vector3 position, Vector3 ray, CompBoard rootBoard)
+	public RayCastResult cpuRaycast(Vector3 position, Vector3 ray, Component rootBoard)
 	{
 		match = null;
 		dist = Double.MAX_VALUE;

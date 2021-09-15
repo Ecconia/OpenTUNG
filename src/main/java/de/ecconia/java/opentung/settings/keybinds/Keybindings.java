@@ -62,6 +62,9 @@ public class Keybindings
 	@KeybindingDefaults(key = "MWP-FlipOrder", defaultValue = "F")
 	public static int KeyMWPFlipOrder;
 	
+	@KeybindingDefaults(key = "Grab-Import", defaultValue = "L")
+	public static int KeyGrabImport;
+	
 	@KeybindingDefaults(key = "Hotbar-Drop", defaultValue = "Q", comment = "" +
 			"\n" +
 			"General functions used for building:\n")
