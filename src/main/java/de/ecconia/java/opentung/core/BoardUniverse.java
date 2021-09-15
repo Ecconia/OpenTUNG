@@ -271,31 +271,36 @@ public class BoardUniverse
 					double angle = MathHelper.angleFromVectors(rayA, rayB);
 					if(angle > 178 && angle < 182)
 					{
-						//Angles and ray-cast match, now perform the actual linking:
+						//Do ray-cast from the other side:
 						Vector3 snappingPegBConnectionPoint = snappingPegB.getConnectionPoint();
-						Vector3 direction = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
-						double distance = direction.length();
-						Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
-						if(Double.isNaN(alignment.getA()))
+						result = raycaster.cpuRaycast(snappingPegBConnectionPoint, rayB, rootComponent);
+						if(result.getMatch() != null && result.getMatch().getParent() == snappingPegA)
 						{
-							System.out.println("[ERROR] Cannot place snapping peg wire, cause start- and end-point are probably the same... Please try to not abuse OpenTUNG. If you did not intentionally cause this, send your save to a developer.");
-							continue; //Do not connect these, there is something horribly wrong here.
+							//Angles and ray-cast match, now perform the actual linking:
+							Vector3 direction = snappingPegBConnectionPoint.subtract(snappingPegAConnectionPoint);
+							double distance = direction.length();
+							Quaternion alignment = MathHelper.rotationFromVectors(Vector3.zp, direction.normalize());
+							if(Double.isNaN(alignment.getA()))
+							{
+								System.out.println("[ERROR] Cannot place snapping peg wire, cause start- and end-point are probably the same... Please try to not abuse OpenTUNG. If you did not intentionally cause this, send your save to a developer.");
+								continue; //Do not connect these, there is something horribly wrong here.
+							}
+							
+							snappingPegB.setPartner(snappingPegA);
+							snappingPegA.setPartner(snappingPegB);
+							CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
+							wire.setLength((float) distance);
+							wire.setPositionGlobal(snappingPegAConnectionPoint.add(direction.divide(2)));
+							wire.setAlignmentGlobal(alignment);
+							
+							exportList.add(wire);
+							
+							//Currently no cluster has been created, thus link the wires manually, for the cluster creation to use it.
+							wire.setConnectorA(snappingPegA.getPegs().get(0));
+							wire.setConnectorB(snappingPegB.getPegs().get(0));
+							wire.getConnectorA().addWire(wire);
+							wire.getConnectorB().addWire(wire);
 						}
-						
-						snappingPegB.setPartner(snappingPegA);
-						snappingPegA.setPartner(snappingPegB);
-						CompSnappingWire wire = new CompSnappingWire(snappingPegA.getParent());
-						wire.setLength((float) distance);
-						wire.setPositionGlobal(snappingPegAConnectionPoint.add(direction.divide(2)));
-						wire.setAlignmentGlobal(alignment);
-						
-						exportList.add(wire);
-						
-						//Currently no cluster has been created, thus link the wires manually, for the cluster creation to use it.
-						wire.setConnectorA(snappingPegA.getPegs().get(0));
-						wire.setConnectorB(snappingPegB.getPegs().get(0));
-						wire.getConnectorA().addWire(wire);
-						wire.getConnectorB().addWire(wire);
 					}
 				}
 			}
