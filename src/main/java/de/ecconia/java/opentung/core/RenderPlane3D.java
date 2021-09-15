@@ -25,7 +25,7 @@ import de.ecconia.java.opentung.core.tools.Delete;
 import de.ecconia.java.opentung.core.tools.DrawBoard;
 import de.ecconia.java.opentung.core.tools.DrawWire;
 import de.ecconia.java.opentung.core.tools.EditWindow;
-import de.ecconia.java.opentung.core.tools.grabbing.GrabCopy;
+import de.ecconia.java.opentung.core.tools.grabbing.Grabbing;
 import de.ecconia.java.opentung.core.tools.NormalPlacement;
 import de.ecconia.java.opentung.core.tools.resize.Resize;
 import de.ecconia.java.opentung.core.tools.Tool;
@@ -128,7 +128,7 @@ public class RenderPlane3D implements RenderPlane
 	{
 		primaryTool = defaultTool = new NormalPlacement(sharedData);
 		tools.add(new Resize(sharedData));
-		tools.add(new GrabCopy(sharedData));
+		tools.add(new Grabbing(sharedData));
 		tools.add(new Delete(sharedData));
 		tools.add(new DrawWire(sharedData));
 		tools.add(new DrawBoard(sharedData));

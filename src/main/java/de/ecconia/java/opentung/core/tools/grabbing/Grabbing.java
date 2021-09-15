@@ -59,7 +59,7 @@ import java.util.concurrent.BlockingQueue;
 import javax.swing.JOptionPane;
 import org.lwjgl.opengl.GL30;
 
-public class GrabCopy implements Tool
+public class Grabbing implements Tool
 {
 	private final SharedData sharedData;
 	private final Controller3D controller;
@@ -85,7 +85,7 @@ public class GrabCopy implements Tool
 	private Component component;
 	private CompContainer parent;
 	
-	public GrabCopy(SharedData sharedData)
+	public Grabbing(SharedData sharedData)
 	{
 		this.sharedData = sharedData;
 		
