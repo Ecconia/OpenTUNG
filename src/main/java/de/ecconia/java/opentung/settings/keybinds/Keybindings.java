@@ -62,6 +62,8 @@ public class Keybindings
 	@KeybindingDefaults(key = "MWP-FlipOrder", defaultValue = "F")
 	public static int KeyMWPFlipOrder;
 	
+	@KeybindingDefaults(key = "Grab-Export", defaultValue = "K")
+	public static int KeyGrabExport;
 	@KeybindingDefaults(key = "Grab-Import", defaultValue = "L")
 	public static int KeyGrabImport;
 	

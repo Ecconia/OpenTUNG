@@ -2,7 +2,7 @@ package de.ecconia.java.opentung.interfaces.windows;
 
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
-import de.ecconia.java.opentung.core.tools.grabbing.ImportTool;
+import de.ecconia.java.opentung.core.tools.grabbing.Grabbing;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.MeshText;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
@@ -23,10 +23,10 @@ import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileFilter;
 import org.lwjgl.opengl.GL30;
 
-public class ImportWindow extends Window
+public class ExportWindow extends Window
 {
 	private static final String[] labelTextInstruction = {
-			"Please use the external file-chooser to select a board to import.",
+			"Please use the external window to choose a file to export the board to.",
 			"Click inside of OpenTUNG or close the external window to abort."
 	};
 	
@@ -34,7 +34,7 @@ public class ImportWindow extends Window
 	private final int[] textWidth = new int[labelTextInstruction.length];
 	
 	private final RenderPlane2D interfaceRenderer;
-	private final ImportTool importTool;
+	private final Grabbing grabbing;
 	
 	private final float windowWidth;
 	private final float windowHeight;
@@ -42,12 +42,12 @@ public class ImportWindow extends Window
 	private JFrame frame;
 	private Path chosenPath;
 	
-	public ImportWindow(ImportTool importTool, RenderPlane2D interfaceRenderer)
+	public ExportWindow(Grabbing grabbing, RenderPlane2D interfaceRenderer)
 	{
-		this.importTool = importTool;
+		this.grabbing = grabbing;
 		this.interfaceRenderer = interfaceRenderer;
 		
-		windowWidth = 800;
+		windowWidth = 830;
 		windowHeight = 80;
 		
 		MeshText text = interfaceRenderer.getText();
@@ -60,7 +60,7 @@ public class ImportWindow extends Window
 		interfaceRenderer.getInputHandler().switchTo2D(); //TBI: Should be more generic?
 		isVisible = true;
 		
-		frame = new JFrame("Choose board to import");
+		frame = new JFrame("Choose file to export to");
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter()
 		{
@@ -82,7 +82,7 @@ public class ImportWindow extends Window
 		JFileChooser chooser = new JFileChooser();
 		chooser.setCurrentDirectory(OpenTUNG.bootstrap.getBoardFolder().toFile());
 		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		chooser.setApproveButtonText("Import");
+		chooser.setApproveButtonText("Export");
 		chooser.addActionListener(e -> {
 			File file = chooser.getSelectedFile();
 			if(file != null)
@@ -142,7 +142,7 @@ public class ImportWindow extends Window
 			copy.dispose();
 		}
 		
-		importTool.guiImportClosed(chosenPath);
+		grabbing.guiExportClosed(chosenPath);
 		chosenPath = null;
 	}
 	

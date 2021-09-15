@@ -29,12 +29,15 @@ import de.ecconia.java.opentung.core.tools.Tool;
 import de.ecconia.java.opentung.core.tools.grabbing.data.GrabContainerData;
 import de.ecconia.java.opentung.core.tools.grabbing.data.GrabData;
 import de.ecconia.java.opentung.inputs.Controller3D;
+import de.ecconia.java.opentung.interfaces.RenderPlane2D;
+import de.ecconia.java.opentung.interfaces.windows.ExportWindow;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.MeshBagContainer;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
+import de.ecconia.java.opentung.savefile.Saver;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.simulation.Cluster;
@@ -49,6 +52,7 @@ import de.ecconia.java.opentung.util.Tuple;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -85,6 +89,8 @@ public class Grabbing implements Tool
 	private Component component;
 	private CompContainer parent;
 	
+	private ExportWindow exportWindow;
+	
 	public Grabbing(SharedData sharedData)
 	{
 		this.sharedData = sharedData;
@@ -99,6 +105,9 @@ public class Grabbing implements Tool
 		wireRayCaster = sharedData.getRenderPlane3D().getWireRayCaster();
 		
 		sharedData.getRenderPlane3D().addTool(new ImportTool(sharedData, this));
+		RenderPlane2D interfaceRenderer = sharedData.getRenderPlane2D();
+		exportWindow = new ExportWindow(this, interfaceRenderer);
+		interfaceRenderer.addWindow(exportWindow);
 	}
 	
 	@Override
@@ -165,7 +174,19 @@ public class Grabbing implements Tool
 		}
 		else if(grabData.getComponent() instanceof CompBoard)
 		{
-			if(scancode == Keybindings.KeyGrabRotateY)
+			if(scancode == Keybindings.KeyGrabExport)
+			{
+				if(grabData.getComponent().getClass() == CompBoard.class)
+				{
+					exportWindow.activate();
+				}
+				else
+				{
+					System.out.println("Can only export boards.");
+				}
+				return true;
+			}
+			else if(scancode == Keybindings.KeyGrabRotateY)
 			{
 				rotateGrabbedBoard(Quaternion.angleAxis(-90, Vector3.yp));
 				return true;
@@ -602,6 +623,33 @@ public class Grabbing implements Tool
 				world3D.toolReady();
 			}));
 		}));
+	}
+	
+	public void guiExportClosed(Path chosenPath)
+	{
+		if(chosenPath == null)
+		{
+			return;
+		}
+		
+		String fileName = chosenPath.getFileName().toString();
+		int endingIndex = fileName.lastIndexOf('.');
+		if(endingIndex < 0)
+		{
+			chosenPath = chosenPath.resolveSibling(fileName + ".opentung");
+		}
+		else
+		{
+			String ending = fileName.substring(endingIndex + 1);
+			if(!ending.equals("opentung"))
+			{
+				//Just overwrite the path with something ending on '.opentung':
+				chosenPath = chosenPath.resolveSibling(chosenPath.getFileName().toString() + ".opentung");
+			}
+		}
+		
+		Saver.save((CompBoard) grabData.getComponent(), grabData.getInternalWires(), chosenPath);
+		System.out.println("Exported board to: " + chosenPath);
 	}
 	
 	//Internal:

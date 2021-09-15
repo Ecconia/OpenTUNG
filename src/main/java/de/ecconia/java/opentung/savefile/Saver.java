@@ -30,10 +30,11 @@ public class Saver
 {
 	public static void save(BoardUniverse boardWrapper, Path saveFile)
 	{
-		//Getting:
-		List<CompWireRaw> wires = boardWrapper.getWiresToRender();
-		CompBoard rootBoard = boardWrapper.getRootBoard();
-		
+		save(boardWrapper.getRootBoard(), boardWrapper.getWiresToRender(), saveFile);
+	}
+	
+	public static void save(CompBoard rootBoard, List<CompWireRaw> wires, Path saveFile)
+	{
 		//Collecting:
 		List<Component> components = new ArrayList<>();
 		{
