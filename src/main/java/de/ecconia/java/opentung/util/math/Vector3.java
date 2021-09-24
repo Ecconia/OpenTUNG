@@ -72,14 +72,22 @@ public class Vector3
 	
 	public Vector3 normalize()
 	{
-		Vector3 v = divide(length());
-		v = new Vector3(round(v.getX()), round(v.getY()), round(v.getZ()));
-		return v;
+		double length = length();
+		if(length == 1.0)
+		{
+			return this;
+		}
+		return new Vector3(
+				round(x / length),
+				round(y / length),
+				round(z / length)
+		);
 	}
 	
-	private static double round(double in)
+	public static double round(double in)
 	{
-		//TODO: This is quite ugly, but the only thing which currently helps (quick and dirty workaround).
+		//TBI: This is quite ugly, but the only thing which currently helps (quick and dirty workaround).
+		//Actually needed, cause something divided by something else cannot be zero, but something very small only.
 		double delta = 0.000000000000001D;
 		if(in < delta && in > -delta)
 		{
@@ -145,6 +153,14 @@ public class Vector3
 	public String toString()
 	{
 		return "[X: " + Ansi.yellow + fix(x) + Ansi.r + " Y: " + Ansi.yellow + fix(y) + Ansi.r + " Z: " + Ansi.yellow + fix(z) + Ansi.r + "]";
+	}
+	
+	public void debug()
+	{
+		System.out.println("X: " + x + "\n" +
+				"Y: " + y + "\n" +
+				"Z: " + z + "\n" +
+				"Length: " + length());
 	}
 	
 	private String fix(double value)

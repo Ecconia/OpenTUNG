@@ -125,6 +125,7 @@ public class Loader
 			//Rotation:
 			Vector3 qV = new Vector3(reader.readDouble(), reader.readDouble(), reader.readDouble());
 			Quaternion rotation = new Quaternion(reader.readDouble(), qV);
+			rotation = rotation.normalize(); //The origin of these quaternions are unsafe, so they should be normalized.
 			component.setAlignmentGlobal(rotation);
 			//Blot outputs:
 			for(int j = 0; j < data.getBlots(); j++)

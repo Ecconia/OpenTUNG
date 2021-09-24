@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.util.math;
 
+import de.ecconia.java.opentung.util.Ansi;
+
 public class Quaternion
 {
 	public static final Quaternion zero = Quaternion.angleAxis(0, Vector3.yp);
@@ -115,6 +117,41 @@ public class Quaternion
 		return "Q[X: " + fix(v.getX()) + " Y: " + fix(v.getY()) + " Z: " + fix(v.getZ()) + " W: " + fix(a) + " | X: " + multiply(Vector3.xp) + " Y: " + multiply(Vector3.yp) + " Z: " + multiply(Vector3.zp) + "]";
 	}
 	
+	public void debug()
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append("Quaternion:\n");
+		//General:
+		double length = getLength();
+		sb.append(" Length: ").append(length == 1.0 ? Ansi.green : Ansi.red).append(length).append(Ansi.r).append(" (==1?)\n");
+		//Angle:
+		sb.append(" Angle:\n");
+		sb.append("  A: ").append(a).append('\n');
+		double angleHalf = Math.acos(a);
+		double angle = angleHalf * 2.0;
+		sb.append("  Rad: ").append(angle).append(" Deg: ").append(Math.toDegrees(angle)).append('\n');
+		
+		sb.append(" Vector:\n");
+		sb.append("  X: ").append(v.getX()).append('\n');
+		sb.append("  Y: ").append(v.getY()).append('\n');
+		sb.append("  Z: ").append(v.getZ()).append('\n');
+		sb.append("  L: ").append(v.length()).append('\n');
+		
+		double divisor = Math.sin(angleHalf);
+		if(divisor != 0) //Can be 0, if angle is 0° or 180°.
+		{
+			sb.append(" Rotation axis:\n");
+			Vector3 vector = v.divide(divisor);
+			sb.append("  X: ").append(vector.getX()).append('\n');
+			sb.append("  Y: ").append(vector.getY()).append('\n');
+			sb.append("  Z: ").append(vector.getZ()).append('\n');
+			sb.append("  L: ").append(vector.length()).append('\n');
+		}
+		
+		sb.setLength(sb.length() - 1); //Remove last '\n'
+		System.out.println(sb);
+	}
+	
 	private String fix(double value)
 	{
 		double a = Math.abs(value);
@@ -149,8 +186,21 @@ public class Quaternion
 	
 	public Quaternion normalize()
 	{
-		double length = getLength();
-		return new Quaternion(a / length, v.multiply(1d / length));
+		double lengthSquared = a * a + v.lengthSquared();
+		if(lengthSquared == 1.0)
+		{
+			return this;
+		}
+		double length = Math.sqrt(lengthSquared);
+		double inv = 1.0 / length;
+		return new Quaternion(
+				Vector3.round(a * inv),
+				new Vector3(
+						Vector3.round(v.getX() * inv),
+						Vector3.round(v.getY() * inv),
+						Vector3.round(v.getZ() * inv)
+				)
+		);
 	}
 	
 	public Vector3 getV()

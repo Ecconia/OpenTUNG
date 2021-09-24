@@ -258,6 +258,7 @@ public class NormalPlacement implements Tool
 					Quaternion boardAlignment = Quaternion.angleAxis(placeableBoardIsLaying ? 0 : 90, Vector3.xn);
 					alignment = boardAlignment.multiply(alignment);
 				}
+				alignment = alignment.normalize(); //Prevent any broken parent quaternion, from sharing its corruption.
 				hitpointContainer.setAlignment(alignment);
 				
 				//Calculate new position:

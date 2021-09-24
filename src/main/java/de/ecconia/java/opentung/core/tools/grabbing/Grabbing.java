@@ -273,7 +273,7 @@ public class Grabbing implements Tool
 		HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 		Component grabbedComponent = grabData.getComponent();
 		
-		Quaternion deltaAlignment = hitpointContainer.getAlignment(); //TODO: In some cases this is null, which causes an NPE. Happened when spam stacking.
+		Quaternion deltaAlignment = hitpointContainer.getAlignment(); //TODO: In some cases this is null, which causes an NPE. Happened when spam stacking. Still the case 2021.09.16
 		//Round the rotation before placement, prevents horrible (deforming) issues:
 		{
 			double realAngleHalf = Math.acos(deltaAlignment.getA());
@@ -1016,7 +1016,7 @@ public class Grabbing implements Tool
 	
 	private void alignComponent(Component component, Vector3 oldPosition, Vector3 newPosition, Quaternion deltaRotation)
 	{
-		component.setAlignmentGlobal(component.getAlignmentGlobal().multiply(deltaRotation));
+		component.setAlignmentGlobal(component.getAlignmentGlobal().multiply(deltaRotation).normalize()); //Normalization shall prevent parent quaternion corruption to spread further.
 		Vector3 newPos = component.getPositionGlobal().subtract(oldPosition);
 		newPos = deltaRotation.inverse().multiply(newPos);
 		newPos = newPos.add(newPosition);
@@ -1394,7 +1394,7 @@ public class Grabbing implements Tool
 		});
 	}
 	
-	public Quaternion getAbsoluteGrabRotation(HitpointContainer hitpoint)
+	public Quaternion getAbsoluteGrabAlignment(HitpointContainer hitpoint)
 	{
 		Component component = grabData.getComponent();
 		boolean grabbingBoard = component instanceof CompBoard;
@@ -1440,8 +1440,9 @@ public class Grabbing implements Tool
 			
 			HitpointContainer hitpointContainer = (HitpointContainer) hitpoint;
 			
-			Quaternion absoluteAlignment = getAbsoluteGrabRotation(hitpointContainer);
+			Quaternion absoluteAlignment = getAbsoluteGrabAlignment(hitpointContainer);
 			Quaternion relativeAlignment = grabData.getComponent().getAlignmentGlobal().inverse().multiply(absoluteAlignment);
+			relativeAlignment = relativeAlignment.normalize(); //Already normalize the relative alignment. Since it is used for drawing.
 			hitpointContainer.setAlignment(relativeAlignment);
 			
 			//Figure out the base position:
