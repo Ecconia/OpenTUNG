@@ -36,6 +36,12 @@ public class Quaternion
 		);
 	}
 	
+	public Quaternion(Vector3 n, double a)
+	{
+		this.a = a;
+		this.v = n;
+	}
+	
 	public Quaternion(double a, Vector3 n)
 	{
 		this.a = a;
@@ -211,5 +217,216 @@ public class Quaternion
 	public double getA()
 	{
 		return a;
+	}
+	
+	public String griddyDebug()
+	{
+		Vector3 toX = multiply(Vector3.xp);
+		Vector3 toY = multiply(Vector3.yp);
+		Vector3 toZ = multiply(Vector3.zp);
+		
+		StringBuilder sb = new StringBuilder();
+		
+		griddyDebugHelper(sb, toX, 1);
+		sb.append(" | ");
+		griddyDebugHelper(sb, toY, 2);
+		sb.append(" | ");
+		griddyDebugHelper(sb, toZ, 3);
+		
+		return sb.toString();
+	}
+	
+	private void griddyDebugHelper(StringBuilder sb, Vector3 vec, int axis)
+	{
+		double x = vec.getX();
+		double y = vec.getY();
+		double z = vec.getZ();
+		
+		if(x < 0.00001 && x > -0.00001)
+		{
+			x = 0;
+		}
+		else if(x > 0.9999)
+		{
+			x = 1;
+		}
+		else if(x < -0.9999)
+		{
+			x = -1;
+		}
+		
+		if(y < 0.00001 && y > -0.00001)
+		{
+			y = 0;
+		}
+		else if(y > 0.9999)
+		{
+			y = 1;
+		}
+		else if(y < -0.9999)
+		{
+			y = -1;
+		}
+		
+		if(z < 0.00001 && z > -0.00001)
+		{
+			z = 0;
+		}
+		else if(z > 0.9999)
+		{
+			z = 1;
+		}
+		else if(z < -0.9999)
+		{
+			z = -1;
+		}
+		
+		boolean found = false;
+//		if(x == 1 || x == -1)
+//		{
+//			if(y == 0 && z == 0)
+//			{
+//				found = true;
+//				if(axis == 1 && x > 0) //Matching
+//				{
+//					sb.append("\033[38;2;0;255;0mX\033[m");
+//				}
+//				else //Converted.
+//				{
+//					sb.append("\033[38;2;255;200;0mX -> ");
+//					if(x < 0)
+//					{
+//						sb.append('-');
+//					}
+//					sb.append(numberToAxis(axis)).append("\033[m");
+//				}
+//			}
+//		}
+//		else if(y == 1 || y == -1)
+//		{
+//			if(x == 0 && z == 0)
+//			{
+//				found = true;
+//				if(axis == 2 && y > 0) //Matching
+//				{
+//					sb.append("\033[38;2;0;255;0mY\033[m");
+//				}
+//				else //Converted.
+//				{
+//					sb.append("\033[38;2;255;200;0mY -> ");
+//					if(y < 0)
+//					{
+//						sb.append('-');
+//					}
+//					sb.append(numberToAxis(axis)).append("\033[m");
+//				}
+//			}
+//		}
+//		else if(z == 1 || z == -1)
+//		{
+//			if(x == 0 && y == 0)
+//			{
+//				found = true;
+//				if(axis == 3 && z > 0) //Matching
+//				{
+//					sb.append("\033[38;2;0;255;0mZ\033[m");
+//				}
+//				else //Converted.
+//				{
+//					sb.append("\033[38;2;255;200;0mZ -> ");
+//					if(z < 0)
+//					{
+//						sb.append('-');
+//					}
+//					sb.append(numberToAxis(axis)).append("\033[m");
+//				}
+//			}
+//		}
+//
+//		sb.append(' ');
+		
+		found = false;
+		if(x == 1 || x == -1)
+		{
+			if(y == 0 && z == 0)
+			{
+				found = true;
+				if(axis == 1 && x > 0) //Matching
+				{
+					sb.append("\033[38;2;0;255;0mX\033[m");
+				}
+				else //Converted.
+				{
+					sb.append("\033[38;2;255;200;0m");
+					sb.append(numberToAxis(axis));
+					sb.append(" -> ");
+					if(x < 0)
+					{
+						sb.append('-');
+					}
+					sb.append('X');
+					sb.append("\033[m");
+				}
+			}
+		}
+		else if(y == 1 || y == -1)
+		{
+			if(x == 0 && z == 0)
+			{
+				found = true;
+				if(axis == 2 && y > 0) //Matching
+				{
+					sb.append("\033[38;2;0;255;0mY\033[m");
+				}
+				else //Converted.
+				{
+					sb.append("\033[38;2;255;200;0m");
+					sb.append(numberToAxis(axis));
+					sb.append(" -> ");
+					if(y < 0)
+					{
+						sb.append('-');
+					}
+					sb.append('Y');
+					sb.append("\033[m");
+				}
+			}
+		}
+		else if(z == 1 || z == -1)
+		{
+			if(x == 0 && y == 0)
+			{
+				found = true;
+				if(axis == 3 && z > 0) //Matching
+				{
+					sb.append("\033[38;2;0;255;0mZ\033[m");
+				}
+				else //Converted.
+				{
+					sb.append("\033[38;2;255;200;0m");
+					sb.append(numberToAxis(axis));
+					sb.append(" -> ");
+					if(z < 0)
+					{
+						sb.append('-');
+					}
+					sb.append('Z');
+					sb.append("\033[m");
+				}
+			}
+		}
+
+		if(!found)
+		{
+			sb.append('[')
+					.append(x).append(',').append(' ')
+					.append(y).append(',').append(' ')
+					.append(z).append("] -> ").append(numberToAxis(axis));
+		}
+	}
+	
+	private String numberToAxis(int number)
+	{
+		return number == 1 ? "X" : number == 2 ? "Y" : "Z";
 	}
 }

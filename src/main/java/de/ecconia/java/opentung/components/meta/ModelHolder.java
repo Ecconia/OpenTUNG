@@ -18,6 +18,7 @@ public class ModelHolder
 	
 	//Offset section. The offset moves the model center relative to the component position.
 	private Vector3 offset = Vector3.zero;
+	private Vector3 importOffset = null; //This offset is applied when converting from LW (and eventually even from TUNG) components.
 	
 	public void setPlacementOffset(Vector3 offset)
 	{
@@ -27,6 +28,16 @@ public class ModelHolder
 	public Vector3 getPlacementOffset()
 	{
 		return offset;
+	}
+	
+	public void setImportOffset(Vector3 importOffset)
+	{
+		this.importOffset = importOffset;
+	}
+	
+	public Vector3 getImportOffset()
+	{
+		return importOffset;
 	}
 	
 	//Contains the solid parts of the model. Each has one color which doesn't change.

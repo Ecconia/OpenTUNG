@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.util.io;
 
+import java.nio.charset.StandardCharsets;
+
 import de.ecconia.java.opentung.savefile.CompactText;
 
 public class ByteReader
@@ -139,9 +141,21 @@ public class ByteReader
 		return new String(readBytes(byteAmount));
 	}
 	
+	public String readIntLEPrefixedString()
+	{
+		int byteAmount = readIntLE();
+		return new String(readBytes(byteAmount), StandardCharsets.UTF_8);
+	}
+	
 	public float readFloatLE()
 	{
 		int value = readIntLE();
+		return Float.intBitsToFloat(value);
+	}
+	
+	public float readFloatBE()
+	{
+		int value = readIntBE();
 		return Float.intBitsToFloat(value);
 	}
 	

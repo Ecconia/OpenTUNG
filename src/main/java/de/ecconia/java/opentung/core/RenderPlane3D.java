@@ -1,5 +1,14 @@
 package de.ecconia.java.opentung.core;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.swing.JOptionPane;
+
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
@@ -9,6 +18,7 @@ import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.meta.CompContainer;
+import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.Holdable;
 import de.ecconia.java.opentung.components.meta.Part;
 import de.ecconia.java.opentung.core.data.Hitpoint;
@@ -25,10 +35,10 @@ import de.ecconia.java.opentung.core.tools.Delete;
 import de.ecconia.java.opentung.core.tools.DrawBoard;
 import de.ecconia.java.opentung.core.tools.DrawWire;
 import de.ecconia.java.opentung.core.tools.EditWindow;
-import de.ecconia.java.opentung.core.tools.grabbing.Grabbing;
 import de.ecconia.java.opentung.core.tools.NormalPlacement;
-import de.ecconia.java.opentung.core.tools.resize.Resize;
 import de.ecconia.java.opentung.core.tools.Tool;
+import de.ecconia.java.opentung.core.tools.grabbing.Grabbing;
+import de.ecconia.java.opentung.core.tools.resize.Resize;
 import de.ecconia.java.opentung.inputs.Controller3D;
 import de.ecconia.java.opentung.inputs.InputProcessor;
 import de.ecconia.java.opentung.libwrap.Matrix;
@@ -48,13 +58,6 @@ import de.ecconia.java.opentung.util.FourDirections;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import javax.swing.JOptionPane;
 
 public class RenderPlane3D implements RenderPlane
 {
@@ -567,10 +570,13 @@ public class RenderPlane3D implements RenderPlane
 			}
 			
 			//Draw old things:
+			
+			//Draw axis for components...
 			ShaderProgram lineShader = shaderStorage.getLineShader();
 			lineShader.use();
 			lineShader.setUniformM4(1, view);
 			Matrix model = new Matrix();
+			
 			if(Settings.drawWorldAxisIndicator)
 			{
 				GenericVAO axisIndicator = shaderStorage.getAxisIndicator();
@@ -582,12 +588,41 @@ public class RenderPlane3D implements RenderPlane
 				axisIndicator.draw();
 			}
 			
+			//Recursively assign alignment helpers to each board:
+			 //GL30.glDepthFunc(GL30.GL_ALWAYS);
+			 //drawComponentIndicator(model, lineShader, sharedData.getBoardUniverse().getRootBoard());
+			 //GL30.glDepthFunc(GL30.GL_LESS);
+			
 			//Draw the skybox as last step:
 			//TODO: This should be done before the overlay.
 			if(Settings.drawSkybox)
 			{
 				//Warning this instruction destroys the view-matrix.
 				skybox.render(view);
+			}
+		}
+	}
+	
+	private void drawComponentIndicator(Matrix model, ShaderProgram lineShader, Component component)
+	{
+		if(component instanceof CompBoard)
+		{
+			GenericVAO axisIndicator = shaderStorage.getAxisIndicator();
+			model.identity();
+			Vector3 position = component.getPositionGlobal();
+			model.translate((float) position.getX(), (float) position.getY(), (float) position.getZ());
+			Matrix rotMat = new Matrix(component.getAlignmentGlobal().createMatrix());
+			model.multiply(rotMat);
+			lineShader.setUniformM4(2, model.getMat());
+			axisIndicator.use();
+			axisIndicator.draw();
+		}
+		
+		if(component instanceof CompContainer)
+		{
+			for(Component child : ((CompContainer) component).getChildren())
+			{
+				drawComponentIndicator(model, lineShader, child);
 			}
 		}
 	}

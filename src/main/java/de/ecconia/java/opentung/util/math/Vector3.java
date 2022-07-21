@@ -1,7 +1,8 @@
 package de.ecconia.java.opentung.util.math;
 
-import de.ecconia.java.opentung.util.Ansi;
 import java.util.Objects;
+
+import de.ecconia.java.opentung.util.Ansi;
 
 public class Vector3
 {
@@ -243,5 +244,27 @@ public class Vector3
 			array[index++] = (float) v.getZ();
 		}
 		return array;
+	}
+	
+	public String griddyDebug()
+	{
+		double x = Math.round(this.x * 1000D) / 1000D;
+		double y = Math.round(this.y * 1000D) / 1000D;
+		double z = Math.round(this.z * 1000D) / 1000D;
+		double ux = x / 0.075D;
+		double uy = y / 0.075D;
+		double uz = z / 0.075D;
+		ux = Math.round(ux * 1000D) / 1000D;
+		uy = Math.round(uy * 1000D) / 1000D;
+		uz = Math.round(uz * 1000D) / 1000D;
+		double uux = ux / 4D;
+		double uuy = uy / 4D;
+		double uuz = uz / 4D;
+		uux = Math.round(uux * 1000D) / 1000D;
+		uuy = Math.round(uuy * 1000D) / 1000D;
+		uuz = Math.round(uuz * 1000D) / 1000D;
+		return "[" + Ansi.yellow + x + Ansi.r + ", " + Ansi.yellow + y + Ansi.r + ", " + Ansi.yellow + z + Ansi.r + "] " +
+				"| [" + Ansi.blue + ux + Ansi.r + ", " + Ansi.blue + uy + Ansi.r + ", " + Ansi.blue + uz + Ansi.r + "] " +
+				"| [" + Ansi.orange + uux + Ansi.r + ", " + Ansi.orange + uuy + Ansi.r + ", " + Ansi.orange + uuz + Ansi.r + "]";
 	}
 }

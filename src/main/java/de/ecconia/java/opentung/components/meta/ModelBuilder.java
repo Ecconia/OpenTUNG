@@ -27,6 +27,12 @@ public class ModelBuilder
 		return this;
 	}
 	
+	public ModelBuilder setImportOffset(Vector3 importOffset)
+	{
+		modelHolder.setImportOffset(importOffset);
+		return this;
+	}
+	
 	public ModelBuilder addSolid(Meshable solidMeshable)
 	{
 		modelHolder.addSolid(solidMeshable);

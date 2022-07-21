@@ -53,8 +53,8 @@ public class CompBoard extends CompContainer implements CustomData, CustomColor
 	
 	//### Non-Static ###
 	
-	private Color color = Color.boardDefault;
-	private int x, z;
+	protected Color color = Color.boardDefault;
+	protected int x, z;
 	
 	public CompBoard(CompContainer parent)
 	{

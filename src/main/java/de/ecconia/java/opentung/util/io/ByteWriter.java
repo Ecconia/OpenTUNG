@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.util.io;
 
-import de.ecconia.java.opentung.savefile.CompactText;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+
+import de.ecconia.java.opentung.savefile.CompactText;
 
 public class ByteWriter
 {
@@ -76,6 +77,13 @@ public class ByteWriter
 		writeBytes(bytes);
 	}
 	
+	public void writeIntLEPrefixedString(String value)
+	{
+		byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+		writeInt(bytes.length);
+		writeBytes(bytes);
+	}
+	
 	public void writeBytes(byte[] bytes)
 	{
 		if(bytes.length > buffer.length) //Array does not fit into buffer.
@@ -140,6 +148,13 @@ public class ByteWriter
 		value >>>= 8;
 		writeByte(value & 0xFF);
 		value >>>= 8;
+		writeByte(value & 0xFF);
+		value >>>= 8;
+		writeByte(value & 0xFF);
+	}
+	
+	public void writeShort(int value)
+	{
 		writeByte(value & 0xFF);
 		value >>>= 8;
 		writeByte(value & 0xFF);
