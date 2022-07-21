@@ -1,5 +1,12 @@
 package de.ecconia.java.opentung;
 
+import java.awt.Dimension;
+import java.io.IOException;
+import java.nio.file.Path;
+
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.OpenTUNGVersion;
@@ -19,11 +26,6 @@ import de.ecconia.java.opentung.tungboard.TungBoardLoader;
 import de.ecconia.java.opentung.util.logging.LogStreamHandler;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.awt.Dimension;
-import java.io.IOException;
-import java.nio.file.Path;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL30;

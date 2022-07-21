@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.settings.keybinds.manager;
 
-import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -19,12 +18,15 @@ import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
+
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+
+import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
 
 //DISCLAIMER: At some point, I stopped cleaning up this class. Means validation and repaint calls are redundant. However they do their job now.
 public class KeybindingGUI extends JFrame

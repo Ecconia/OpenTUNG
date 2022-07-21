@@ -1,7 +1,8 @@
 package de.ecconia.java.opentung.components.meta;
 
-import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import java.awt.image.BufferedImage;
+
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 
 public class PlaceableInfo
 {

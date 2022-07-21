@@ -1,5 +1,10 @@
 package de.ecconia.java.opentung.meshing;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.meta.Colorable;
@@ -7,10 +12,6 @@ import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.components.meta.ModelHolder;
 import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.SimulationManager;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
 import org.lwjgl.opengl.GL30;
 
 public class ColorMeshBag extends MeshBag

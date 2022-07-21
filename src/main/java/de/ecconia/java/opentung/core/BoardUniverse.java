@@ -1,5 +1,9 @@
 package de.ecconia.java.opentung.core;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -28,9 +32,6 @@ import de.ecconia.java.opentung.util.Ansi;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
 
 public class BoardUniverse
 {

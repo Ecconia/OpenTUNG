@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.core.tools;
 
+import java.util.concurrent.BlockingQueue;
+
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.meta.CompContainer;
@@ -17,7 +19,6 @@ import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.concurrent.BlockingQueue;
 
 public class DrawBoard implements Tool
 {

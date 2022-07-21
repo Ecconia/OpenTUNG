@@ -1,5 +1,16 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
+import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.nio.file.Path;
+
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+import javax.swing.filechooser.FileFilter;
+
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.tools.grabbing.ImportTool;
@@ -12,15 +23,6 @@ import de.ecconia.java.opentung.libwrap.FloatShortArraysInt;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
-import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.File;
-import java.nio.file.Path;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
-import javax.swing.filechooser.FileFilter;
 import org.lwjgl.opengl.GL30;
 
 public class ImportWindow extends Window

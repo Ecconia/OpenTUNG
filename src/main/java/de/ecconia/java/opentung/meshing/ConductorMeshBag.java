@@ -1,5 +1,12 @@
 package de.ecconia.java.opentung.meshing;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.fragments.CubeFull;
@@ -11,12 +18,6 @@ import de.ecconia.java.opentung.libwrap.vaos.LargeGenericVAO;
 import de.ecconia.java.opentung.simulation.Cluster;
 import de.ecconia.java.opentung.simulation.Clusterable;
 import de.ecconia.java.opentung.simulation.SimulationManager;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 import org.lwjgl.opengl.GL30;
 
 public class ConductorMeshBag extends MeshBag

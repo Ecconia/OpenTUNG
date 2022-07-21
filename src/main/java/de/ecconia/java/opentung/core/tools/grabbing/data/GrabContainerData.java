@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.core.tools.grabbing.data;
 
+import java.util.Collection;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.util.math.Quaternion;
-import java.util.Collection;
-import java.util.List;
 
 public class GrabContainerData extends GrabData
 {

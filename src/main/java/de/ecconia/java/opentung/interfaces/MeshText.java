@@ -1,7 +1,5 @@
 package de.ecconia.java.opentung.interfaces;
 
-import de.ecconia.java.opentung.libwrap.FloatShortArraysInt;
-import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -18,6 +16,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import de.ecconia.java.opentung.libwrap.FloatShortArraysInt;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
 
 public class MeshText
 {

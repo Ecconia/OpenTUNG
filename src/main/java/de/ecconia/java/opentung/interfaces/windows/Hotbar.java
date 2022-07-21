@@ -1,13 +1,13 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
-import de.ecconia.java.opentung.components.meta.PlaceableInfo;
-import de.ecconia.java.opentung.core.data.ShaderStorage;
-import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
 import de.ecconia.java.opentung.components.CompDisplay;
 import de.ecconia.java.opentung.components.CompInverter;
 import de.ecconia.java.opentung.components.CompPeg;
+import de.ecconia.java.opentung.components.meta.PlaceableInfo;
+import de.ecconia.java.opentung.core.data.ShaderStorage;
+import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.interfaces.GUIColors;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.interfaces.Shapes;

@@ -1,9 +1,5 @@
 package de.ecconia.java.opentung.util.logging;
 
-import de.ecconia.java.opentung.util.logging.stream.CachingFileLogger;
-import de.ecconia.java.opentung.util.logging.stream.PrintLineEnforcer;
-import de.ecconia.java.opentung.util.logging.stream.PrintLineFormatter;
-import de.ecconia.java.opentung.util.logging.stream.SplitStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -14,6 +10,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+
+import de.ecconia.java.opentung.util.logging.stream.CachingFileLogger;
+import de.ecconia.java.opentung.util.logging.stream.PrintLineEnforcer;
+import de.ecconia.java.opentung.util.logging.stream.PrintLineFormatter;
+import de.ecconia.java.opentung.util.logging.stream.SplitStream;
 
 public class LogStreamHandler
 {

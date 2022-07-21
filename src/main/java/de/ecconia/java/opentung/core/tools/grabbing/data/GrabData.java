@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.core.tools.grabbing.data;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.meta.CompContainer;
 import de.ecconia.java.opentung.components.meta.Component;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 public class GrabData
 {

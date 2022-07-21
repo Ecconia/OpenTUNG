@@ -1,5 +1,9 @@
 package de.ecconia.java.opentung.tungboard.netremoting;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArray;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArrayObject;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArrayPrimitive;
@@ -8,9 +12,6 @@ import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRProperDefinedClass;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRReferencedClass;
 import de.ecconia.java.opentung.util.io.ByteReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class NRParser
 {

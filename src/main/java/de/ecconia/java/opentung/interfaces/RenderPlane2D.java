@@ -1,5 +1,11 @@
 package de.ecconia.java.opentung.interfaces;
 
+import java.awt.image.BufferedImage;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
@@ -13,10 +19,6 @@ import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
 import de.ecconia.java.opentung.settings.Settings;
-import java.awt.image.BufferedImage;
-import java.util.LinkedList;
-import java.util.List;
-import javax.imageio.ImageIO;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL30;

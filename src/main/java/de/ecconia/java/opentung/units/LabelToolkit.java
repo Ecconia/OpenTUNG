@@ -1,11 +1,5 @@
 package de.ecconia.java.opentung.units;
 
-import de.ecconia.java.opentung.components.CompLabel;
-import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.core.structs.GPUTask;
-import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
-import de.ecconia.java.opentung.libwrap.TextureWrapper;
-import de.ecconia.java.opentung.settings.Settings;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -19,7 +13,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
 import javax.imageio.ImageIO;
+
+import de.ecconia.java.opentung.components.CompLabel;
+import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.core.structs.GPUTask;
+import de.ecconia.java.opentung.libwrap.LabelTextureWrapper;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.settings.Settings;
 
 public class LabelToolkit
 {

@@ -1,9 +1,9 @@
 package de.ecconia.java.opentung.components.meta;
 
 import de.ecconia.java.opentung.meshing.MeshTypeThing;
+import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import de.ecconia.java.opentung.simulation.SimulationManager;
 
 public abstract class Part
 {

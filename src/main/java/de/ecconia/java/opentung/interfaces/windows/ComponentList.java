@@ -1,9 +1,12 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import de.ecconia.java.opentung.components.meta.ComponentAwareness;
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.core.data.Hitpoint;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
-import de.ecconia.java.opentung.components.meta.ComponentAwareness;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.tools.Tool;
 import de.ecconia.java.opentung.interfaces.GUIColors;
@@ -15,8 +18,6 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ComponentList extends Window
 {

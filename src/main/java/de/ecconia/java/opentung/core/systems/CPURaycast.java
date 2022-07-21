@@ -1,5 +1,8 @@
 package de.ecconia.java.opentung.core.systems;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompSnappingWire;
 import de.ecconia.java.opentung.components.conductor.Connector;
@@ -15,8 +18,6 @@ import de.ecconia.java.opentung.raycast.RayCastResult;
 import de.ecconia.java.opentung.raycast.WireRayCaster;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CPURaycast
 {

@@ -1,5 +1,9 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 import de.ecconia.java.opentung.OpenTUNG;
 import de.ecconia.java.opentung.OpenTUNGBootstrap;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
@@ -14,9 +18,6 @@ import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.savefile.SavePrepareUnit;
 import de.ecconia.java.opentung.settings.Settings;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import org.lwjgl.nanovg.NanoVG;
 
 public class PauseMenu extends Window

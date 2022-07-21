@@ -1,13 +1,14 @@
 package de.ecconia.java.opentung.components.meta;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.Meshable;
 import de.ecconia.java.opentung.components.fragments.TexturedFace;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LabelVAO;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ModelHolder
 {

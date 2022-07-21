@@ -1,6 +1,7 @@
 package de.ecconia.java.opentung.libwrap;
 
 import java.awt.image.BufferedImage;
+
 import org.lwjgl.opengl.GL30;
 
 public class LabelTextureWrapper extends TextureWrapper

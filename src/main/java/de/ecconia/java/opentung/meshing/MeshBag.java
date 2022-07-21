@@ -1,9 +1,10 @@
 package de.ecconia.java.opentung.meshing;
 
-import de.ecconia.java.opentung.components.meta.Component;
-import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 import java.util.ArrayList;
 import java.util.List;
+
+import de.ecconia.java.opentung.components.meta.Component;
+import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
 
 public abstract class MeshBag
 {

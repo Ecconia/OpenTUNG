@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.components.conductor.Blot;
-import de.ecconia.java.opentung.components.conductor.Connector;
-import de.ecconia.java.opentung.components.conductor.Peg;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import de.ecconia.java.opentung.components.conductor.Blot;
+import de.ecconia.java.opentung.components.conductor.Connector;
+import de.ecconia.java.opentung.components.conductor.Peg;
 
 public class InitClusterHelper
 {

@@ -1,13 +1,14 @@
 package de.ecconia.java.opentung.core.data;
 
+import java.nio.file.Path;
+import java.util.concurrent.BlockingQueue;
+
 import de.ecconia.java.opentung.components.meta.PlaceableInfo;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.structs.GPUTask;
 import de.ecconia.java.opentung.interfaces.RenderPlane2D;
 import de.ecconia.java.opentung.libwrap.SWindowWrapper;
-import java.nio.file.Path;
-import java.util.concurrent.BlockingQueue;
 
 public class SharedData
 {

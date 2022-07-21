@@ -1,14 +1,16 @@
 package de.ecconia.java.opentung.core.tools.resize;
 
+import java.util.concurrent.BlockingQueue;
+
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.core.Camera;
 import de.ecconia.java.opentung.core.RenderPlane3D;
 import de.ecconia.java.opentung.core.data.Hitpoint;
-import de.ecconia.java.opentung.core.tools.resize.data.ResizeData;
 import de.ecconia.java.opentung.core.data.ShaderStorage;
 import de.ecconia.java.opentung.core.data.SharedData;
 import de.ecconia.java.opentung.core.structs.GPUTask;
 import de.ecconia.java.opentung.core.tools.Tool;
+import de.ecconia.java.opentung.core.tools.resize.data.ResizeData;
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.vaos.GenericVAO;
@@ -17,7 +19,6 @@ import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.simulation.SimulationManager;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.concurrent.BlockingQueue;
 import org.lwjgl.opengl.GL30;
 
 public class Resize implements Tool

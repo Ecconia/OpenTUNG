@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.tungboard;
 
+import java.nio.file.Path;
+
 import de.ecconia.java.opentung.components.CompBlotter;
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompButton;
@@ -53,7 +55,6 @@ import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungPosition;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.nio.file.Path;
 
 public class TungBoardLoader
 {

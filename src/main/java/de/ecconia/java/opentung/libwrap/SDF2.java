@@ -1,7 +1,8 @@
 package de.ecconia.java.opentung.libwrap;
 
-import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
+
+import de.ecconia.java.opentung.settings.Settings;
 
 public class SDF2
 {

@@ -1,5 +1,10 @@
 package de.ecconia.java.opentung.tungboard;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.List;
+
 import de.ecconia.java.opentung.tungboard.netremoting.NRFile;
 import de.ecconia.java.opentung.tungboard.netremoting.NRParser;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
@@ -9,10 +14,6 @@ import de.ecconia.java.opentung.tungboard.tungobjects.TungPeg;
 import de.ecconia.java.opentung.tungboard.tungobjects.TungWire;
 import de.ecconia.java.opentung.tungboard.tungobjects.common.TungChildable;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.List;
 
 public class PrimitiveParser
 {

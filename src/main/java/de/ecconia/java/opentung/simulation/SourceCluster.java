@@ -1,8 +1,9 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.components.conductor.Blot;
 import java.util.ArrayList;
 import java.util.List;
+
+import de.ecconia.java.opentung.components.conductor.Blot;
 
 public class SourceCluster extends Cluster
 {

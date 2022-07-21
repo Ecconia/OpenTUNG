@@ -1,5 +1,8 @@
 package de.ecconia.java.opentung.components.conductor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.fragments.CubeFull;
 import de.ecconia.java.opentung.components.fragments.CubeOpen;
 import de.ecconia.java.opentung.components.fragments.CubeOpenRotated;
@@ -15,8 +18,6 @@ import de.ecconia.java.opentung.simulation.SourceCluster;
 import de.ecconia.java.opentung.simulation.Wire;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class Connector extends Part implements Clusterable
 {

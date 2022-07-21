@@ -1,11 +1,12 @@
 package de.ecconia.java.opentung.core;
 
-import de.ecconia.java.json.JSONObject;
-import de.ecconia.java.json.JSONParser;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.stream.Collectors;
+
+import de.ecconia.java.json.JSONObject;
+import de.ecconia.java.json.JSONParser;
 
 public class OpenTUNGVersion
 {

@@ -1,7 +1,8 @@
 package de.ecconia.java.opentung.inputs;
 
-import de.ecconia.java.opentung.core.structs.SimpleCallback;
 import javax.swing.JOptionPane;
+
+import de.ecconia.java.opentung.core.structs.SimpleCallback;
 import org.lwjgl.glfw.GLFW;
 
 public class InputReceiver

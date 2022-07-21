@@ -1,15 +1,16 @@
 package de.ecconia.java.opentung.simulation;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import de.ecconia.java.opentung.components.conductor.Blot;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.components.meta.Component;
 import de.ecconia.java.opentung.core.BoardUniverse;
 import de.ecconia.java.opentung.meshing.ConductorMeshBag;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class ClusterHelper
 {

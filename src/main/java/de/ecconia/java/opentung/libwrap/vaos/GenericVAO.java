@@ -2,6 +2,7 @@ package de.ecconia.java.opentung.libwrap.vaos;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.lwjgl.opengl.GL30;
 
 public abstract class GenericVAO

@@ -1,9 +1,5 @@
 package de.ecconia.java.opentung.core.systems;
 
-import de.ecconia.java.opentung.core.data.ShaderStorage;
-import de.ecconia.java.opentung.libwrap.ShaderProgram;
-import de.ecconia.java.opentung.libwrap.TextureWrapper;
-import de.ecconia.java.opentung.settings.Settings;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +7,13 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+
 import javax.imageio.ImageIO;
+
+import de.ecconia.java.opentung.core.data.ShaderStorage;
+import de.ecconia.java.opentung.libwrap.ShaderProgram;
+import de.ecconia.java.opentung.libwrap.TextureWrapper;
+import de.ecconia.java.opentung.settings.Settings;
 import org.lwjgl.opengl.GL30;
 
 public class Skybox

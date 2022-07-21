@@ -1,11 +1,12 @@
 package de.ecconia.java.opentung.components.meta;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.conductor.CompWireRaw;
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.util.MinMaxBox;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class CompContainer extends Component
 {

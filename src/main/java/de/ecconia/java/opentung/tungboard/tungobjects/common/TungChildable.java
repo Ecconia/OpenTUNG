@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.tungboard.tungobjects.common;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRArray;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRField;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.fields.NRClassField;
 import de.ecconia.java.opentung.tungboard.tungobjects.meta.TungObject;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TungChildable extends TungObject
 {

@@ -1,11 +1,12 @@
 package de.ecconia.java.opentung.simulation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.conductor.Connector;
 import de.ecconia.java.opentung.components.conductor.Peg;
 import de.ecconia.java.opentung.meshing.ConductorMeshBag;
 import de.ecconia.java.opentung.meshing.ConductorMeshBagReference;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class Cluster implements Updateable
 {

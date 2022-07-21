@@ -1,5 +1,8 @@
 package de.ecconia.java.opentung.core.data;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+
 import de.ecconia.java.opentung.libwrap.Matrix;
 import de.ecconia.java.opentung.libwrap.ShaderProgram;
 import de.ecconia.java.opentung.libwrap.TextureWrapper;
@@ -9,8 +12,6 @@ import de.ecconia.java.opentung.libwrap.vaos.InvisibleCubeVAO;
 import de.ecconia.java.opentung.libwrap.vaos.LineVAO;
 import de.ecconia.java.opentung.libwrap.vaos.VisibleCubeVAO;
 import de.ecconia.java.opentung.settings.Settings;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import org.lwjgl.opengl.GL30;
 
 public class ShaderStorage

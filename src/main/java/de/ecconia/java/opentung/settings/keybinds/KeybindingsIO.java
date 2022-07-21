@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.settings.keybinds;
 
-import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +10,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import de.ecconia.java.opentung.settings.DataFolderWatcher;
 import org.lwjgl.glfw.GLFW;
 
 public class KeybindingsIO

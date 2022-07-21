@@ -1,14 +1,15 @@
 package de.ecconia.java.opentung.raycast;
 
-import de.ecconia.java.opentung.components.conductor.CompWireRaw;
-import de.ecconia.java.opentung.components.fragments.CubeFull;
-import de.ecconia.java.opentung.util.math.Quaternion;
-import de.ecconia.java.opentung.util.math.Vector3;
-import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import de.ecconia.java.opentung.components.conductor.CompWireRaw;
+import de.ecconia.java.opentung.components.fragments.CubeFull;
+import de.ecconia.java.opentung.settings.Settings;
+import de.ecconia.java.opentung.util.math.Quaternion;
+import de.ecconia.java.opentung.util.math.Vector3;
 
 public class WireRayCaster
 {

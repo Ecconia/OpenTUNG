@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.settings;
 
-import de.ecconia.java.opentung.util.Ansi;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -11,6 +10,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import de.ecconia.java.opentung.util.Ansi;
 
 public class SettingsIO
 {

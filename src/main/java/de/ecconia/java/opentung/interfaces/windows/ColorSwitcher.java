@@ -1,5 +1,8 @@
 package de.ecconia.java.opentung.interfaces.windows;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.fragments.Color;
 import de.ecconia.java.opentung.components.meta.CustomColor;
 import de.ecconia.java.opentung.core.tools.EditWindow;
@@ -10,8 +13,6 @@ import de.ecconia.java.opentung.interfaces.Window;
 import de.ecconia.java.opentung.settings.Settings;
 import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.ArrayList;
-import java.util.List;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 

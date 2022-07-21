@@ -1,7 +1,8 @@
 package de.ecconia.java.opentung.settings.keybinds.manager;
 
-import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
 import java.nio.file.Path;
+
+import de.ecconia.java.opentung.settings.keybinds.KeybindingsIO;
 
 public class KeybindingManager
 {

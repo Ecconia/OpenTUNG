@@ -1,5 +1,7 @@
 package de.ecconia.java.opentung.core.tools;
 
+import java.util.concurrent.BlockingQueue;
+
 import de.ecconia.java.opentung.components.CompBoard;
 import de.ecconia.java.opentung.components.CompMount;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
@@ -29,7 +31,6 @@ import de.ecconia.java.opentung.simulation.Updateable;
 import de.ecconia.java.opentung.util.math.MathHelper;
 import de.ecconia.java.opentung.util.math.Quaternion;
 import de.ecconia.java.opentung.util.math.Vector3;
-import java.util.concurrent.BlockingQueue;
 import org.lwjgl.opengl.GL30;
 
 public class NormalPlacement implements Tool

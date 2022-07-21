@@ -1,12 +1,13 @@
 package de.ecconia.java.opentung.tungboard.netremoting;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRClass;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRFieldVarReference;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRLibrary;
 import de.ecconia.java.opentung.tungboard.netremoting.elements.NRObject;
 import de.ecconia.java.opentung.util.io.ByteReader;
-import java.util.ArrayList;
-import java.util.List;
 
 public class NRParseBundle
 {

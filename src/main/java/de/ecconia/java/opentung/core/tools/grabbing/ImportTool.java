@@ -1,5 +1,11 @@
 package de.ecconia.java.opentung.core.tools.grabbing;
 
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+
 import de.ecconia.java.opentung.components.CompLabel;
 import de.ecconia.java.opentung.components.CompSnappingPeg;
 import de.ecconia.java.opentung.components.CompSnappingWire;
@@ -21,11 +27,6 @@ import de.ecconia.java.opentung.settings.keybinds.Keybindings;
 import de.ecconia.java.opentung.simulation.InitClusterHelper;
 import de.ecconia.java.opentung.simulation.Powerable;
 import de.ecconia.java.opentung.simulation.Wire;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 public class ImportTool implements Tool
 {

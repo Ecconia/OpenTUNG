@@ -1,9 +1,11 @@
 package de.ecconia.java.opentung.simulation;
 
-import de.ecconia.java.opentung.settings.Settings;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JOptionPane;
+
+import de.ecconia.java.opentung.settings.Settings;
 
 public class SimulationManager extends Thread
 {

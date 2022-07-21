@@ -1,6 +1,5 @@
 package de.ecconia.java.opentung.libwrap;
 
-import de.ecconia.java.opentung.util.logging.LogStreamHandler;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +9,8 @@ import java.nio.IntBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.concurrent.atomic.AtomicReference;
+
+import de.ecconia.java.opentung.util.logging.LogStreamHandler;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
