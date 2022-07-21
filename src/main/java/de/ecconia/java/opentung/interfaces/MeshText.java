@@ -175,6 +175,8 @@ public class MeshText
 		{
 			if(letter.rendered != null)
 			{
+				xOffset += letter.xOffset;
+				
 				float yOffset = ((float) letter.yOffset + (float) xHeight / 2f) * scale;
 				float w = (float) letter.rendered.getWidth() * scale;
 				float h = (float) letter.rendered.getHeight() * scale;
@@ -218,6 +220,7 @@ public class MeshText
 		private final BufferedImage rendered;
 		private final float lWidth;
 		private final int yOffset;
+		private final int xOffset;
 		
 		private Rectangle2D textureBounds;
 		
@@ -242,6 +245,7 @@ public class MeshText
 			{
 				rendered = null;
 				yOffset = 0;
+				xOffset = 0;
 				return;
 			}
 			
@@ -255,7 +259,8 @@ public class MeshText
 			
 			g.setColor(Color.black);
 			yOffset = (int) Math.floor(vBounds.getY());
-			g.drawChars(text, 0, 1, -(int) Math.floor(vBounds.getX()), -yOffset);
+			xOffset = (int) Math.floor(vBounds.getX());
+			g.drawChars(text, 0, 1, -xOffset, -yOffset);
 			g.dispose();
 		}
 	}
